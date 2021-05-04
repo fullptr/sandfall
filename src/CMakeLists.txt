@@ -14,6 +14,7 @@ add_executable(
     alchimia.m.cpp
     window.cpp
     log.cpp
+    shader.cpp
 )
 
 target_include_directories(alchimia PUBLIC .)

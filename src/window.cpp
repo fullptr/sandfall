@@ -42,7 +42,7 @@ window::window(const std::string& name, int width, int height)
 	int versionMinor;
 	glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
 	glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
-	log::info("OpenGL version: {}.{}", versionMajor, versionMinor);
+	log::info("OpenGL version: {}.{}\n", versionMajor, versionMinor);
 
 	// Set OpenGL error callback
 	glEnable(GL_DEBUG_OUTPUT);
@@ -51,13 +51,13 @@ window::window(const std::string& name, int width, int height)
 		switch (severity) {
 			case GL_DEBUG_SEVERITY_NOTIFICATION: return;
 			case GL_DEBUG_SEVERITY_LOW: {
-				log::info("{}, {}, {}, {}, {}", source, type, id, length, message);
+				log::info("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 			case GL_DEBUG_SEVERITY_MEDIUM: {
-				log::warn("{}, {}, {}, {}, {}", source, type, id, length, message);
+				log::warn("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 			case GL_DEBUG_SEVERITY_HIGH: {
-				log::error("{}, {}, {}, {}, {}", source, type, id, length, message);
+				log::error("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 		}
 	}, nullptr);
