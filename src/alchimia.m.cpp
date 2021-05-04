@@ -22,40 +22,64 @@ int main()
 
     alc::window window("alchimia", 1280, 720);
 
-    std::uint32_t vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f,  0.5f, 0.0f
+    };
 
-    std::uint32_t vbo, ebo;
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-    vertex quad[4] = { {{0.0, 0.0}}, {{0.5, 0.0}}, {{0.0, 0.5}}, {{0.5, 0.5}} };
-    glCreateBuffers(1, &vbo);
-    glNamedBufferData(vbo, sizeof(vertex) * 4, quad, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    std::uint32_t indices[6] = {0, 1, 2, 1, 2, 3};
-    glCreateBuffers(1, &ebo);
-    glNamedBufferData(ebo, sizeof(std::uint32_t) * 6, indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
 
-    glVertexAttribPointer(
-        0, 2, GL_FLOAT, GL_FALSE,
-        sizeof(glm::vec2), (void*)0
-    );
+    const char* fragmentShaderSource = "#version 330 core"
+    "out vec4 FragColor;"
+    ""
+    "void main()"
+    "{"
+    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);"
+    "}";
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    alc::shader shader("res/vertex.glsl", "res/fragment.glsl");
-    shader.bind();
-    shader.load_mat4("u_proj_matrix", glm::ortho(0.0, 1280.0, 720.0, 0.0));
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     while (window.is_running()) {
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         window.on_update(0.0);
+        
         auto mouse = window.get_mouse_pos();
         window.set_name(fmt::format("Mouse at ({}, {})", mouse.x, mouse.y));
     }
 
-    log::info("Cleaning up\n");
-    glBindVertexArray(0);
-    glDeleteVertexArrays(1, &vao);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader); 
 }

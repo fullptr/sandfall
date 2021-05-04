@@ -7,6 +7,8 @@
 
 namespace alc {
 
+std::string parse_shader(const std::string& filepath);
+
 class shader
 {
     std::uint32_t d_program;

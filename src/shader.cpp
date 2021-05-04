@@ -11,17 +11,6 @@
 namespace alc {
 namespace {
 
-std::string parse_shader(const std::string& filepath)
-{
-	if (!std::filesystem::exists(filepath)) {
-		log::fatal("Shader file '{}' does not exist!", filepath);
-	}
-	std::ifstream stream(filepath);
-	std::string shader((std::istreambuf_iterator<char>(stream)),
-		                std::istreambuf_iterator<char>());
-	return shader;
-}
-
 std::uint32_t compile_shader(std::uint32_t type, const std::string& source)
 {
 	std::uint32_t id = glCreateShader(type);
@@ -41,6 +30,17 @@ std::uint32_t compile_shader(std::uint32_t type, const std::string& source)
 	return id;
 }
 
+}
+
+std::string parse_shader(const std::string& filepath)
+{
+	if (!std::filesystem::exists(filepath)) {
+		log::fatal("Shader file '{}' does not exist!", filepath);
+	}
+	std::ifstream stream(filepath);
+	std::string shader((std::istreambuf_iterator<char>(stream)),
+		                std::istreambuf_iterator<char>());
+	return shader;
 }
 
 shader::shader(const std::string& vertex_shader, const std::string& fragment_shader)
