@@ -24,10 +24,10 @@ int main()
     alc::window window("alchimia", 1280, 720);
 
     float vertices[] = {
-        -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.5f,  0.5f,
-        -0.5f, 0.5f
+        0.0f, 0.0f,
+        600.0f, 0.0f,
+        600.0f,  600.0f,
+        0.0f, 600.0f
     };
 
     unsigned int indices[] = {0, 1, 2, 0, 2, 3};
@@ -52,6 +52,7 @@ int main()
     glEnableVertexAttribArray(0);
 
     shader.bind();
+    shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, 1280.0f, 720.0f, 0.0f));
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 

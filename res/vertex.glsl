@@ -5,5 +5,5 @@ uniform mat4 u_proj_matrix;
 
 void main()
 {
-    gl_Position = vec4(position, 0, 1);
+    gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
