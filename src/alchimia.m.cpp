@@ -10,11 +10,14 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <array>
 
 struct vertex
 {
     glm::vec2 pos;
     glm::vec2 uv;
+
+    vertex(glm::vec2 p, glm::vec2 u) : pos(p), uv(u) {}
 };
 
 int main()
@@ -24,10 +27,10 @@ int main()
     alc::window window("alchimia", 1280, 720);
 
     float vertices[] = {
-        0.0f, 0.0f,
-        600.0f, 0.0f,
-        600.0f,  600.0f,
-        0.0f, 600.0f
+        0.0f, 0.0f, 0.0f, 0.0f,
+        600.0f, 0.0f, 1.0, 0.0f,
+        600.0f,  600.0f, 1.0f, 1.0f,
+        0.0f, 600.0f, 0.0f, 1.0f
     };
 
     unsigned int indices[] = {0, 1, 2, 0, 2, 3};
@@ -48,7 +51,7 @@ int main()
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     shader.bind();
