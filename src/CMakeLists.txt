@@ -12,7 +12,11 @@ find_package(fmt CONFIG REQUIRED)
 add_executable(
     alchimia
     alchimia.m.cpp
+    window.cpp
+    log.cpp
 )
+
+target_include_directories(alchimia PUBLIC .)
 
 target_link_libraries(
     alchimia PUBLIC

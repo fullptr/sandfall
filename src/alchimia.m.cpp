@@ -1,41 +1,21 @@
-#include <fmt/format.h>
+#include "window.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <fmt/format.h>
 
 int main()
 {
     // Set up window
-    if (GLFW_TRUE != glfwInit()) {
-        fmt::print("Failed to initialise GLFW\n");
-        return -1;
-    }
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Alchimia", nullptr, nullptr);
-    if (!window) {
-        fmt::print("Failed to create window\n");
-        return -2;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    if (0 == gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        fmt::print("Failed to initialise GLAD\n");
-        return -3;
-    }
+    alc::window window("alchimia", 1280, 720);
 
     // Set callbacks here
 
     // Main game loop
     while (true) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	    glClearColor(0.0, 0.0, 0.0, 1.0);
+        window.on_update(0.0);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        glfwSetWindowTitle(window, fmt::format("Mouse at ({}, {})", x, y).c_str());
+        auto mouse = window.get_mouse_pos();
+        window.set_name(fmt::format("Mouse at ({}, {})", mouse.x, mouse.y));
     }
 }
