@@ -37,7 +37,7 @@ void _prefixed_log(std::string_view prefix, std::string_view message)
 
 	fmt::print(fmt::fg(fmt::color::white), "{:%H:%M:%S} [", time_today());
     fmt::print(prefix);
-    fmt::print(fmt::fg(fmt::color::white), "] {}\n", message);
+    fmt::print(fmt::fg(fmt::color::white), "] {}", message);
 }
 
 }

@@ -26,7 +26,7 @@ struct window_data
     bool running;
     bool focused;
 
-    callback_t callback;
+    callback_t callback = [](event&) {};
 };
 
 class window
@@ -40,6 +40,8 @@ public:
     ~window();
 
     void on_update(double dt);
+
+    bool is_running() const;
 
     glm::vec2 get_mouse_pos() const;
 

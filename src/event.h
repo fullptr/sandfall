@@ -34,7 +34,7 @@ public:
 template <typename T, typename... Args>
 event make_event(Args&&... args)
 {
-	return Event(std::in_place_type<T>, std::forward<Args>(args)...);
+	return event(std::in_place_type<T>, std::forward<Args>(args)...);
 }
 
 // KEYBOARD EVENTS 
