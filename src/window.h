@@ -49,6 +49,9 @@ public:
     void set_name(const std::string& name);
     void set_callback(const callback_t& callback);
 
+    float width() const { return (float)d_data.width; }
+    float height() const { return (float)d_data.height; }
+
 private:
     window(const window&) = delete;
     window& operator=(const window&) = delete;
