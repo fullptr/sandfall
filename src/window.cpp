@@ -173,7 +173,13 @@ window::~window()
 	glfwTerminate();
 }
 
-void window::on_update(double dt)
+void window::clear() const
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+}
+
+void window::swap_and_poll()
 {
     glfwSwapBuffers(d_native_window);
     glfwPollEvents();

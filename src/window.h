@@ -39,7 +39,8 @@ public:
     window(const std::string&, int width, int height);
     ~window();
 
-    void on_update(double dt);
+    void clear() const;
+    void swap_and_poll();
 
     bool is_running() const;
 
