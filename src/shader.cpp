@@ -74,4 +74,9 @@ void shader::load_mat4(const std::string& name, const glm::mat4& matrix) const
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+void shader::load_sampler(const std::string& name, int value) const
+{
+	glProgramUniform1i(d_program, get_location(name), value);
+}
+
 }

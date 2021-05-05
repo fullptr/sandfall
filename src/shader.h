@@ -24,6 +24,7 @@ public:
     void unbind() const;
 
     void load_mat4(const std::string& name, const glm::mat4& matrix) const;
+    void load_sampler(const std::string& name, int value) const;
 };
 
 }

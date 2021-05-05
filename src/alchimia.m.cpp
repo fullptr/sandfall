@@ -1,6 +1,7 @@
 #include "window.h"
 #include "log.h"
 #include "shader.h"
+#include "texture.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -11,6 +12,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <memory>
 
 struct vertex
 {
@@ -50,13 +52,23 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+    auto texture_data = std::make_unique<std::array<glm::vec4, 64 * 64>>();
+    for (auto& pixel : *texture_data) {
+        pixel = {0.0, 1.0, 0.0, 1.0};
+    }
+
+    alc::texture texture(*texture_data);
+    //texture.set_buffer(*texture_data);
+
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     shader.bind();
+    shader.load_sampler("u_texture", 0);
     shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
+    texture.bind();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
