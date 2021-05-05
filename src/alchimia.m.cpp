@@ -14,18 +14,8 @@
 #include <array>
 #include <memory>
 
-struct vertex
-{
-    glm::vec2 pos;
-    glm::vec2 uv;
-
-    vertex(glm::vec2 p, glm::vec2 u) : pos(p), uv(u) {}
-};
-
-std::uint32_t pos(std::uint32_t x, std::uint32_t y)
-{
-    return alc::tile::SIZE * y + x;
-}
+constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
+constexpr glm::vec4 WHITE = {1.0, 1.0, 1.0, 1.0};
 
 int main()
 {
@@ -57,22 +47,11 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Change to dealing with uint8_t (0 - 255)
     alc::tile tile;
-
-    for (size_t i = 0; i != alc::tile::SIZE; ++i) {
-        for (size_t j = 0; j != alc::tile::SIZE; ++j) {
-            tile.at(i, j) = {
-                (float)j / alc::tile::SIZE,
-                0.0f,
-                (float)i / alc::tile::SIZE,
-                1.0
-            };
-        }
-    }
-    tile.at(0, 0) = {1.0, 1.0, 1.0, 1.0};
-    tile.at(5, 0) = {1.0, 1.0, 1.0, 1.0};
-    tile.at(8, 8) = {1.0, 1.0, 1.0, 1.0};
+    tile.fill(BACKGROUND);
+    tile.at(0, 0) = WHITE;
+    tile.at(5, 0) = WHITE;
+    tile.at(8, 8) = WHITE;
     tile.update_texture();
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");

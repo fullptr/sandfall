@@ -10,7 +10,7 @@ namespace alc {
 class tile
 {
 public:
-    static constexpr std::uint32_t SIZE = 128;
+    static constexpr std::uint32_t SIZE = 32;
 
     using buffer = std::array<glm::vec4, SIZE * SIZE>;
 
@@ -26,6 +26,7 @@ public:
     void update_texture();
 
     glm::vec4& at(std::uint32_t x, std::uint32_t y);
+    void fill(const glm::vec4& value);
 };
 
 }
