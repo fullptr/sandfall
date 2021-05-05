@@ -58,19 +58,19 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Change to dealing with uint8_t (0 - 255)
-    auto texture_data = std::make_unique<std::array<glm::vec4, alc::texture::SIZE * alc::texture::SIZE>>();
+    std::array<glm::vec4, alc::texture::SIZE * alc::texture::SIZE> texture_data;
+
+    alc::texture texture;
+
     for (size_t i = 0; i != alc::texture::SIZE; ++i) {
         for (size_t j = 0; j != alc::texture::SIZE; ++j) {
-            (*texture_data)[pos(i, j)] = {(float)i / 256.0f, (float)j / 256.0f, 0.0, 1.0};
+            texture_data[pos(i, j)] = {(float)j / 256.0f, 0.0f, (float)i / 256.0f, 1.0};
         }
     }
-    (*texture_data)[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
-    (*texture_data)[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
-    (*texture_data)[pos(2, 3)] = {1.0, 1.0, 1.0, 1.0};
-
-
-    alc::texture texture(*texture_data);
-    //texture.set_buffer(*texture_data);
+    texture_data[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
+    texture_data[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
+    texture_data[pos(8, 8)] = {1.0, 1.0, 1.0, 1.0};
+    texture.set_buffer(texture_data);
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
 

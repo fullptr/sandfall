@@ -10,13 +10,13 @@ namespace alc {
 class texture
 {
 public:
-    static constexpr std::uint32_t SIZE = 64;
+    static constexpr std::uint32_t SIZE = 128;
 
 private:
     std::uint32_t d_texture;
 
 public:
-    texture(const std::array<glm::vec4, SIZE * SIZE>& data);
+    texture();
 
     void bind() const;
 
