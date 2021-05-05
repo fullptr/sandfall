@@ -60,16 +60,21 @@ int main()
     // Change to dealing with uint8_t (0 - 255)
     std::array<glm::vec4, alc::texture::SIZE * alc::texture::SIZE> texture_data;
 
-    alc::texture texture;
-
     for (size_t i = 0; i != alc::texture::SIZE; ++i) {
         for (size_t j = 0; j != alc::texture::SIZE; ++j) {
-            texture_data[pos(i, j)] = {(float)j / 256.0f, 0.0f, (float)i / 256.0f, 1.0};
+            texture_data[pos(i, j)] = {
+                (float)j / alc::texture::SIZE,
+                0.0f,
+                (float)i / alc::texture::SIZE,
+                1.0
+            };
         }
     }
     texture_data[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
     texture_data[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
     texture_data[pos(8, 8)] = {1.0, 1.0, 1.0, 1.0};
+
+    alc::texture texture;
     texture.set_buffer(texture_data);
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
