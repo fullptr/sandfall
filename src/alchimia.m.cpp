@@ -22,6 +22,11 @@ struct vertex
     vertex(glm::vec2 p, glm::vec2 u) : pos(p), uv(u) {}
 };
 
+std::uint32_t pos(std::uint32_t x, std::uint32_t y)
+{
+    return alc::texture::SIZE * y + x;
+}
+
 int main()
 {
     using namespace alc;
@@ -52,10 +57,17 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    auto texture_data = std::make_unique<std::array<glm::vec4, 64 * 64>>();
-    for (auto& pixel : *texture_data) {
-        pixel = {0.0, 1.0, 0.0, 1.0};
+    // Change to dealing with uint8_t (0 - 255)
+    auto texture_data = std::make_unique<std::array<glm::vec4, alc::texture::SIZE * alc::texture::SIZE>>();
+    for (size_t i = 0; i != alc::texture::SIZE; ++i) {
+        for (size_t j = 0; j != alc::texture::SIZE; ++j) {
+            (*texture_data)[pos(i, j)] = {(float)i / 256.0f, (float)j / 256.0f, 0.0, 1.0};
+        }
     }
+    (*texture_data)[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
+    (*texture_data)[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
+    (*texture_data)[pos(2, 3)] = {1.0, 1.0, 1.0, 1.0};
+
 
     alc::texture texture(*texture_data);
     //texture.set_buffer(*texture_data);

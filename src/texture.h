@@ -9,8 +9,10 @@ namespace alc {
 
 class texture
 {
+public:
     static constexpr std::uint32_t SIZE = 64;
 
+private:
     std::uint32_t d_texture;
 
 public:
