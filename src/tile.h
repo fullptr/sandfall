@@ -37,10 +37,9 @@ private:
     bool d_stale = false;
 
     // Returns true if the given position exists and false otherwise
-    bool valid(std::uint32_t x, std::uint32_t y) const;
-    bool valid(std::size_t pos) const;
+    bool valid(glm::ivec2 pos) const;
 
-    void update_sand(std::uint32_t x, std::uint32_t y);
+    void update_sand(glm::ivec2 pos);
 
 public:
     tile();
@@ -50,7 +49,7 @@ public:
     void simulate();
     void update_if_needed();
 
-    void set(std::uint32_t x, std::uint32_t y, const glm::vec4& value);
+    void set(glm::ivec2 pos, const glm::vec4& value);
     void fill(const glm::vec4& value);
 };
 

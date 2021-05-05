@@ -9,9 +9,9 @@
 namespace alc {
 namespace {
 
-std::size_t pos(std::uint32_t x, std::uint32_t y)
+std::size_t get_pos(glm::vec2 pos)
 {
-    return x + alc::tile::SIZE * y;
+    return pos.x + alc::tile::SIZE * pos.y;
 }
 
 }
@@ -32,23 +32,19 @@ tile::tile()
     d_pixels.fill(default_pixel);
 }
 
-bool tile::valid(std::uint32_t x, std::uint32_t y) const
+bool tile::valid(glm::ivec2 pos) const
 {
-    return 0 <= x && x < SIZE && 0 <= y && y < SIZE;
+    return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-bool tile::valid(std::size_t pos) const
+void tile::update_sand(glm::ivec2 pos)
 {
-    return 0 <= pos && pos < SIZE * SIZE;
-}
+    std::size_t curr_pos = get_pos(pos);
+    std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
 
-void tile::update_sand(std::uint32_t x, std::uint32_t y)
-{
-    std::size_t curr_pos = pos(x, y);
-    std::array<std::size_t, 3> positions{ pos(x, y+1), pos(x-1, y+1), pos(x+1, y+1) };
-
-    for (auto next_pos : positions) {
-        if (valid(next_pos) && d_pixels[next_pos].type == pixel_type::air) {
+    for (auto new_x : positions) {
+        auto next_pos = get_pos({new_x, pos.y + 1});
+        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
             return;
@@ -65,11 +61,11 @@ void tile::simulate()
 {
     for (std::uint32_t y = 0; y != SIZE; ++y) {
         for (std::uint32_t x = 0; x != SIZE; ++ x) {
-            auto& pixel = d_pixels[pos(x, y)];
+            auto& pixel = d_pixels[get_pos({x, y})];
             if (pixel.updated_this_frame) { continue; }
             switch (pixel.type) {
                 case pixel_type::sand: {
-                    update_sand(x, y);
+                    update_sand({x, y});
                 } break;
                 case pixel_type::air: continue;
             }
@@ -99,11 +95,11 @@ void tile::update_if_needed()
     }
 }
 
-void tile::set(std::uint32_t x, std::uint32_t y, const glm::vec4& value)
+void tile::set(glm::ivec2 pos, const glm::vec4& value)
 {
-    assert(valid(x, y));
-    d_buffer[pos(x, y)] = value;
-    d_pixels[pos(x, y)] = { pixel_type::sand };
+    assert(valid(pos));
+    d_buffer[get_pos(pos)] = value;
+    d_pixels[get_pos(pos)] = { pixel_type::sand };
     d_stale = true;
 }
 

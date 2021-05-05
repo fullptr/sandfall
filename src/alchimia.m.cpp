@@ -50,11 +50,17 @@ int main()
     alc::tile tile;
     tile.fill(BACKGROUND);
 
+    bool mouse_down = false; // TODO: Remove, do it in a better way
+
     window.set_callback([&](alc::event& event) {
         if (auto e = event.get_if<alc::mouse_pressed_event>()) {
             if (e->button == 0) {  // Left click
-                auto coord = glm::floor(((float)alc::tile::SIZE / size) * e->pos);
-                tile.set(coord.x, coord.y, WHITE);
+                mouse_down = true;
+            }
+        }
+        else if (auto e = event.get_if<alc::mouse_released_event>()) {
+            if (e->button == 0) {  // Left click
+                mouse_down = false;
             }
         }
     });
@@ -74,6 +80,10 @@ int main()
     while (window.is_running()) {
         window.clear();
         tile.simulate();
+        if (mouse_down) {
+            auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
+            tile.set(coord, WHITE);
+        }
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
         
