@@ -28,4 +28,9 @@ void tile::update_texture()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SIZE, SIZE, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
 }
 
+glm::vec4& tile::at(std::uint32_t x, std::uint32_t y)
+{
+    return d_buffer[x + alc::tile::SIZE * y];
+}
+
 }

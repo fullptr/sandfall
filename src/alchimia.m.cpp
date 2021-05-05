@@ -59,11 +59,10 @@ int main()
 
     // Change to dealing with uint8_t (0 - 255)
     alc::tile tile;
-    auto& buffer = tile.get_buffer();
 
     for (size_t i = 0; i != alc::tile::SIZE; ++i) {
         for (size_t j = 0; j != alc::tile::SIZE; ++j) {
-            buffer[pos(i, j)] = {
+            tile.at(i, j) = {
                 (float)j / alc::tile::SIZE,
                 0.0f,
                 (float)i / alc::tile::SIZE,
@@ -71,9 +70,9 @@ int main()
             };
         }
     }
-    buffer[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
-    buffer[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
-    buffer[pos(8, 8)] = {1.0, 1.0, 1.0, 1.0};
+    tile.at(0, 0) = {1.0, 1.0, 1.0, 1.0};
+    tile.at(5, 0) = {1.0, 1.0, 1.0, 1.0};
+    tile.at(8, 8) = {1.0, 1.0, 1.0, 1.0};
     tile.update_texture();
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");

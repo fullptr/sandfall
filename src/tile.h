@@ -23,8 +23,9 @@ public:
 
     void bind() const;
 
-    buffer& get_buffer() { return d_buffer; }
     void update_texture();
+
+    glm::vec4& at(std::uint32_t x, std::uint32_t y);
 };
 
 }
