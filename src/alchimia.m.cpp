@@ -54,6 +54,17 @@ int main()
     tile.at(8, 8) = WHITE;
     tile.update_texture();
 
+    window.set_callback([&](alc::event& event) {
+        if (auto e = event.get_if<alc::mouse_pressed_event>()) {
+            if (e->button == 0) {  // Left click
+                auto coord = glm::floor(((float)alc::tile::SIZE / size) * e->pos);
+                log::info("At coord {} {}\n", coord.x, coord.y);
+                tile.at(coord.x, coord.y) = WHITE;
+                tile.update_texture();
+            }
+        }
+    });
+
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);

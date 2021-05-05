@@ -1,5 +1,7 @@
 #ifndef INCLUDED_ALCHIMIA_EVENT
 #define INCLUDED_ALCHIMIA_EVENT
+#include <glm/glm.hpp>
+
 #include <any>
 #include <string>
 #include <cstdint>
@@ -69,14 +71,18 @@ struct mouse_pressed_event {
 	int button;
 	int action;
 	int mods;
-	mouse_pressed_event(int b, int a, int m) : button(b), action(a), mods(m) {}
+	glm::vec2 pos;
+	mouse_pressed_event(int b, int a, int m, const glm::vec2& p)
+		: button(b), action(a), mods(m), pos(p) {}
 };
 
 struct mouse_released_event {
 	int button;
 	int action;
 	int mods;
-	mouse_released_event(int b, int a, int m) : button(b), action(a), mods(m) {}
+	glm::vec2 pos;
+	mouse_released_event(int b, int a, int m, const glm::vec2& p)
+		: button(b), action(a), mods(m), pos(p) {}
 };
 
 struct mouse_moved_event {

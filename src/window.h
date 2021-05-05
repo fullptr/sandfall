@@ -26,13 +26,13 @@ struct window_data
     bool running;
     bool focused;
 
+    GLFWwindow* native_window;
+
     callback_t callback = [](event&) {};
 };
 
 class window
 {
-    GLFWwindow* d_native_window;
-
     window_data d_data;
 
 public:

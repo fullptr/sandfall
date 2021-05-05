@@ -11,25 +11,26 @@
 namespace alc {
 
 window::window(const std::string& name, int width, int height)
-    : d_native_window(nullptr)
-    , d_data({name, width, height, true, true, true})
+    : d_data({name, width, height, true, true, true, nullptr})
 {
     if (GLFW_TRUE != glfwInit()) {
 		log::fatal("Failed to initialise GLFW\n");
 		std::exit(-1);
 	}
 
-	d_native_window = glfwCreateWindow(
+	d_data.native_window = glfwCreateWindow(
 		width, height, name.c_str(), nullptr, nullptr
 	);
 
-	if (!d_native_window) {
+	if (!d_data.native_window) {
 		log::fatal("Failed to create window\n");
 		std::exit(-2);
 	}
 
-	glfwMakeContextCurrent(d_native_window);
-    glfwSetWindowUserPointer(d_native_window, &d_data);
+	auto native_window = d_data.native_window;
+
+	glfwMakeContextCurrent(native_window);
+    glfwSetWindowUserPointer(native_window, &d_data);
 
 	// Initialise GLAD
 	if (0 == gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -63,7 +64,7 @@ window::window(const std::string& name, int width, int height)
 	}, nullptr);
 
 	// Set GLFW callbacks
-	glfwSetWindowSizeCallback(d_native_window, [](GLFWwindow* window, int width, int height)
+	glfwSetWindowSizeCallback(native_window, [](GLFWwindow* window, int width, int height)
 	{
 		glViewport(0, 0, width, height);
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
@@ -74,7 +75,7 @@ window::window(const std::string& name, int width, int height)
 		data->callback(event);
 	});
 
-	glfwSetWindowCloseCallback(d_native_window, [](GLFWwindow* window)
+	glfwSetWindowCloseCallback(native_window, [](GLFWwindow* window)
 	{
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
@@ -83,7 +84,7 @@ window::window(const std::string& name, int width, int height)
 		data->callback(event);
 	});
 
-	glfwSetKeyCallback(d_native_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+	glfwSetKeyCallback(native_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
 		switch (action)
@@ -103,37 +104,45 @@ window::window(const std::string& name, int width, int height)
 		}
 	});
 
-	glfwSetMouseButtonCallback(d_native_window, [](GLFWwindow* window, int button, int action, int mods) {
+	glfwSetMouseButtonCallback(native_window, [](GLFWwindow* window, int button, int action, int mods) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
+
+		double x, y;
+    	glfwGetCursorPos(data->native_window, &x, &y);
+
 		switch (action)
 		{
 		case GLFW_PRESS: {
-			auto event = alc::make_event<alc::mouse_pressed_event>(button, action, mods);
+			auto event = alc::make_event<alc::mouse_pressed_event>(
+				button, action, mods, glm::vec2{x, y}
+			);
 			data->callback(event);
 		} break;
 		case GLFW_RELEASE: {
-			auto event = alc::make_event<alc::mouse_released_event>(button, action, mods);
+			auto event = alc::make_event<alc::mouse_released_event>(
+				button, action, mods, glm::vec2{x, y}
+			);
 			data->callback(event);
 		} break;
 		}
 	});
 
-	glfwSetCursorPosCallback(d_native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
+	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
 		auto event = alc::make_event<alc::mouse_moved_event>(x_pos, y_pos);
 		data->callback(event);
 	});
 
-	glfwSetScrollCallback(d_native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
+	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
 		auto event = alc::make_event<alc::mouse_scrolled_event>(x_offset, y_offset);
 		data->callback(event);
 	});
 
-	glfwSetWindowFocusCallback(d_native_window, [](GLFWwindow* window, int focused) {
+	glfwSetWindowFocusCallback(native_window, [](GLFWwindow* window, int focused) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (focused) {
 			auto event = alc::make_event<alc::window_got_focus_event>();
@@ -147,7 +156,7 @@ window::window(const std::string& name, int width, int height)
 		}
 	});
 
-	glfwSetWindowMaximizeCallback(d_native_window, [](GLFWwindow* window, int maximized) {
+	glfwSetWindowMaximizeCallback(native_window, [](GLFWwindow* window, int maximized) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (maximized) {
 			auto event = alc::make_event<alc::window_maximise_event>();
@@ -159,7 +168,7 @@ window::window(const std::string& name, int width, int height)
 		}
 	});
 
-	glfwSetCharCallback(d_native_window, [](GLFWwindow* window, std::uint32_t key) {
+	glfwSetCharCallback(native_window, [](GLFWwindow* window, std::uint32_t key) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
 		auto event = alc::make_event<alc::keyboard_typed_event>(key);
@@ -169,7 +178,7 @@ window::window(const std::string& name, int width, int height)
 
 window::~window()
 {
-    glfwDestroyWindow(d_native_window);
+    glfwDestroyWindow(d_data.native_window);
 	glfwTerminate();
 }
 
@@ -181,7 +190,7 @@ void window::clear() const
 
 void window::swap_and_poll()
 {
-    glfwSwapBuffers(d_native_window);
+    glfwSwapBuffers(d_data.native_window);
     glfwPollEvents();
 }
 
@@ -193,13 +202,13 @@ bool window::is_running() const
 glm::vec2 window::get_mouse_pos() const
 {
     double x, y;
-    glfwGetCursorPos(d_native_window, &x, &y);
+    glfwGetCursorPos(d_data.native_window, &x, &y);
     return {x, y};
 }
 
 void window::set_name(const std::string& name)
 {
-    glfwSetWindowTitle(d_native_window, name.c_str());
+    glfwSetWindowTitle(d_data.native_window, name.c_str());
 }
 
 void window::set_callback(const callback_t& callback)
