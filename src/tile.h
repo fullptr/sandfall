@@ -30,6 +30,7 @@ private:
     bool valid(glm::ivec2 pos) const;
 
     void update_sand(glm::ivec2 pos);
+    void update_rock(glm::ivec2 pos);
 
 public:
     tile();

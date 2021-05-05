@@ -7,7 +7,8 @@ namespace alc {
 enum class pixel_type
 {
     air,
-    sand
+    sand,
+    rock
 };
 
 struct pixel
@@ -19,6 +20,7 @@ struct pixel
 
     static pixel air();
     static pixel sand();
+    static pixel rock();
 };
 
 }

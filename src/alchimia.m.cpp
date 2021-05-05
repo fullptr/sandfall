@@ -50,17 +50,20 @@ int main()
     alc::tile tile;
     tile.fill(pixel::air());
 
-    bool mouse_down = false; // TODO: Remove, do it in a better way
+    bool left_mouse_down = false; // TODO: Remove, do it in a better way
+    bool right_mouse_down = false;
 
     window.set_callback([&](alc::event& event) {
         if (auto e = event.get_if<alc::mouse_pressed_event>()) {
-            if (e->button == 0) {  // Left click
-                mouse_down = true;
+            switch (e->button) {
+                case 0: left_mouse_down = true; return;
+                case 1: right_mouse_down = true; return;
             }
         }
         else if (auto e = event.get_if<alc::mouse_released_event>()) {
-            if (e->button == 0) {  // Left click
-                mouse_down = false;
+            switch (e->button) {
+                case 0: left_mouse_down = false; return;
+                case 1: right_mouse_down = false; return;
             }
         }
     });
@@ -80,9 +83,12 @@ int main()
     while (window.is_running()) {
         window.clear();
         tile.simulate();
-        if (mouse_down) {
+        if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
             tile.set(coord, pixel::sand());
+        } else if (right_mouse_down) {
+            auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
+            tile.set(coord, pixel::rock());
         }
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();

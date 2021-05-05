@@ -32,4 +32,18 @@ pixel pixel::sand()
     };
 }
 
+pixel pixel::rock()
+{
+    return {
+        pixel_type::rock,
+        {
+            (200.0f + (rand() % 20) - 10) / 256.0f,
+            (200.0f + (rand() % 20) - 10) / 256.0f,
+            (200.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        },
+        false
+    };
+}
+
 }

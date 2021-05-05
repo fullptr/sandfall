@@ -52,6 +52,11 @@ void tile::update_sand(glm::ivec2 pos)
     }
 }
 
+void tile::update_rock(glm::ivec2 pos)
+{
+    d_pixels[get_pos(pos)].updated_this_frame = true;
+}
+
 void tile::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, d_texture);
@@ -59,13 +64,17 @@ void tile::bind() const
 
 void tile::simulate()
 {
-    for (std::uint32_t y = 0; y != SIZE; ++y) {
+    for (std::uint32_t y = SIZE; y != 0;) {
+        --y;
         for (std::uint32_t x = 0; x != SIZE; ++ x) {
             auto& pixel = d_pixels[get_pos({x, y})];
             if (pixel.updated_this_frame) { continue; }
             switch (pixel.type) {
                 case pixel_type::sand: {
                     update_sand({x, y});
+                } break;
+                case pixel_type::rock: {
+                    update_rock({x, y});
                 } break;
                 case pixel_type::air: continue;
             }
