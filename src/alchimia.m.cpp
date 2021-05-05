@@ -2,6 +2,7 @@
 #include "log.h"
 #include "shader.h"
 #include "tile.h"
+#include "pixel.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,7 +16,6 @@
 #include <memory>
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
-constexpr glm::vec4 WHITE = {1.0, 1.0, 1.0, 1.0};
 
 int main()
 {
@@ -48,7 +48,7 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     alc::tile tile;
-    tile.fill(BACKGROUND);
+    tile.fill(pixel::air());
 
     bool mouse_down = false; // TODO: Remove, do it in a better way
 
@@ -82,7 +82,7 @@ int main()
         tile.simulate();
         if (mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, WHITE);
+            tile.set(coord, pixel::sand());
         }
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();

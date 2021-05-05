@@ -1,23 +1,13 @@
 #ifndef INCLUDED_ALCHIMIA_TEXTURE
 #define INCLUDED_ALCHIMIA_TEXTURE
+#include "pixel.h"
+
 #include <cstdint>
 #include <array>
 
 #include <glm/glm.hpp>
 
 namespace alc {
-
-enum class pixel_type
-{
-    air,
-    sand
-};
-
-struct pixel
-{
-    pixel_type type;
-    bool updated_this_frame = false;
-};
 
 class tile
 {
@@ -49,8 +39,8 @@ public:
     void simulate();
     void update_if_needed();
 
-    void set(glm::ivec2 pos, const glm::vec4& value);
-    void fill(const glm::vec4& value);
+    void set(glm::ivec2 pos, const pixel& p);
+    void fill(const pixel& p);
 };
 
 }

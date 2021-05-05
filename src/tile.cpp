@@ -74,14 +74,7 @@ void tile::simulate()
     }
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {
-        switch (d_pixels[pos].type) {
-            case pixel_type::sand: {
-                d_buffer[pos] = {1.0, 1.0, 1.0, 1.0};
-            } break;
-            case pixel_type::air: {
-                d_buffer[pos] = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
-            } break;
-        }
+        d_buffer[pos] = d_pixels[pos].colour;
     }
     update_if_needed();
 }
@@ -95,17 +88,16 @@ void tile::update_if_needed()
     }
 }
 
-void tile::set(glm::ivec2 pos, const glm::vec4& value)
+void tile::set(glm::ivec2 pos, const pixel& pixel)
 {
     assert(valid(pos));
-    d_buffer[get_pos(pos)] = value;
-    d_pixels[get_pos(pos)] = { pixel_type::sand };
+    d_pixels[get_pos(pos)] = pixel;
     d_stale = true;
 }
 
-void tile::fill(const glm::vec4& value)
+void tile::fill(const pixel& p)
 {
-    d_buffer.fill(value);
+    d_pixels.fill(p);
     d_stale = true;
 }
 
