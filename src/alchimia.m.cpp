@@ -49,18 +49,12 @@ int main()
 
     alc::tile tile;
     tile.fill(BACKGROUND);
-    tile.at(0, 0) = WHITE;
-    tile.at(5, 0) = WHITE;
-    tile.at(8, 8) = WHITE;
-    tile.update_texture();
 
     window.set_callback([&](alc::event& event) {
         if (auto e = event.get_if<alc::mouse_pressed_event>()) {
             if (e->button == 0) {  // Left click
                 auto coord = glm::floor(((float)alc::tile::SIZE / size) * e->pos);
-                log::info("At coord {} {}\n", coord.x, coord.y);
-                tile.at(coord.x, coord.y) = WHITE;
-                tile.update_texture();
+                tile.set(coord.x, coord.y, WHITE);
             }
         }
     });
@@ -79,6 +73,7 @@ int main()
 
     while (window.is_running()) {
         window.clear();
+        tile.simulate();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
         
