@@ -1,7 +1,7 @@
 #include "window.h"
 #include "log.h"
 #include "shader.h"
-#include "texture.h"
+#include "tile.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -24,7 +24,7 @@ struct vertex
 
 std::uint32_t pos(std::uint32_t x, std::uint32_t y)
 {
-    return alc::texture::SIZE * y + x;
+    return alc::tile::SIZE * y + x;
 }
 
 int main()
@@ -58,24 +58,23 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Change to dealing with uint8_t (0 - 255)
-    std::array<glm::vec4, alc::texture::SIZE * alc::texture::SIZE> texture_data;
+    alc::tile tile;
+    auto& buffer = tile.get_buffer();
 
-    for (size_t i = 0; i != alc::texture::SIZE; ++i) {
-        for (size_t j = 0; j != alc::texture::SIZE; ++j) {
-            texture_data[pos(i, j)] = {
-                (float)j / alc::texture::SIZE,
+    for (size_t i = 0; i != alc::tile::SIZE; ++i) {
+        for (size_t j = 0; j != alc::tile::SIZE; ++j) {
+            buffer[pos(i, j)] = {
+                (float)j / alc::tile::SIZE,
                 0.0f,
-                (float)i / alc::texture::SIZE,
+                (float)i / alc::tile::SIZE,
                 1.0
             };
         }
     }
-    texture_data[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
-    texture_data[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
-    texture_data[pos(8, 8)] = {1.0, 1.0, 1.0, 1.0};
-
-    alc::texture texture;
-    texture.set_buffer(texture_data);
+    buffer[pos(0, 0)] = {1.0, 1.0, 1.0, 1.0};
+    buffer[pos(5, 0)] = {1.0, 1.0, 1.0, 1.0};
+    buffer[pos(8, 8)] = {1.0, 1.0, 1.0, 1.0};
+    tile.update_texture();
 
     alc::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
 
@@ -85,7 +84,7 @@ int main()
     shader.bind();
     shader.load_sampler("u_texture", 0);
     shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
-    texture.bind();
+    tile.bind();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
