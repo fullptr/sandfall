@@ -37,25 +37,22 @@ bool tile::valid(std::uint32_t x, std::uint32_t y) const
     return 0 <= x && x < SIZE && 0 <= y && y < SIZE;
 }
 
+bool tile::valid(std::size_t pos) const
+{
+    return 0 <= pos && pos < SIZE * SIZE;
+}
+
 void tile::update_sand(std::uint32_t x, std::uint32_t y)
 {
-    if (valid(x, y + 1) && d_pixels[pos(x, y + 1)].type == pixel_type::air) {
-        d_pixels[pos(x, y + 1)].type = pixel_type::sand;
-        d_pixels[pos(x, y + 1)].updated_this_frame = true;
-        d_pixels[pos(x, y)].type = pixel_type::air;
-        d_pixels[pos(x, y)].updated_this_frame = false;
-    }
-    else if (valid(x - 1, y + 1) && d_pixels[pos(x - 1, y + 1)].type == pixel_type::air) {
-        d_pixels[pos(x - 1, y + 1)].type = pixel_type::sand;
-        d_pixels[pos(x - 1, y + 1)].updated_this_frame = true;
-        d_pixels[pos(x, y)].type = pixel_type::air;
-        d_pixels[pos(x, y)].updated_this_frame = false;
-    }
-    else if (valid(x + 1, y + 1) && d_pixels[pos(x + 1, y + 1)].type == pixel_type::air) {
-        d_pixels[pos(x + 1, y + 1)].type = pixel_type::sand;
-        d_pixels[pos(x + 1, y + 1)].updated_this_frame = true;
-        d_pixels[pos(x, y)].type = pixel_type::air;
-        d_pixels[pos(x, y)].updated_this_frame = false;
+    std::size_t curr_pos = pos(x, y);
+    std::array<std::size_t, 3> positions{ pos(x, y+1), pos(x-1, y+1), pos(x+1, y+1) };
+
+    for (auto next_pos : positions) {
+        if (valid(next_pos) && d_pixels[next_pos].type == pixel_type::air) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
     }
 }
 

@@ -22,7 +22,7 @@ struct pixel
 class tile
 {
 public:
-    static constexpr std::uint32_t SIZE = 64;
+    static constexpr std::uint32_t SIZE = 128;
 
     using buffer = std::array<glm::vec4, SIZE * SIZE>;
     using pixels = std::array<pixel, SIZE * SIZE>;
@@ -38,6 +38,7 @@ private:
 
     // Returns true if the given position exists and false otherwise
     bool valid(std::uint32_t x, std::uint32_t y) const;
+    bool valid(std::size_t pos) const;
 
     void update_sand(std::uint32_t x, std::uint32_t y);
 
