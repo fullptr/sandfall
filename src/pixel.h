@@ -8,7 +8,8 @@ enum class pixel_type
 {
     air,
     sand,
-    rock
+    rock,
+    water
 };
 
 struct pixel
@@ -21,6 +22,7 @@ struct pixel
     static pixel air();
     static pixel sand();
     static pixel rock();
+    static pixel water();
 };
 
 }

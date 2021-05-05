@@ -52,6 +52,36 @@ void tile::update_sand(glm::ivec2 pos)
     }
 }
 
+void tile::update_water(glm::ivec2 pos)
+{
+    std::size_t curr_pos = get_pos(pos);
+    std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
+
+    for (auto new_x : positions) {
+        auto next_pos = get_pos({new_x, pos.y + 1});
+        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
+    }
+
+    auto next_pos = get_pos({pos.x-1, pos.y});
+    if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air) {
+        std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+        d_pixels[next_pos].updated_this_frame = true;
+        return;
+    }
+
+    next_pos = get_pos({pos.x+1, pos.y});
+    if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air) {
+        std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+        d_pixels[next_pos].updated_this_frame = true;
+        return;
+    }
+
+}
+
 void tile::update_rock(glm::ivec2 pos)
 {
     d_pixels[get_pos(pos)].updated_this_frame = true;
@@ -76,6 +106,9 @@ void tile::simulate()
                 case pixel_type::rock: {
                     update_rock({x, y});
                 } break;
+                case pixel_type::water: {
+                    update_water({x, y});
+                }
                 case pixel_type::air: continue;
             }
             d_stale = true;

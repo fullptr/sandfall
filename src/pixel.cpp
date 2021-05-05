@@ -46,4 +46,13 @@ pixel pixel::rock()
     };
 }
 
+pixel pixel::water()
+{
+    return {
+        pixel_type::water,
+        {0.0, 0.0, 1.0, 1.0},
+        false
+    };
+}
+
 }

@@ -31,6 +31,7 @@ private:
 
     void update_sand(glm::ivec2 pos);
     void update_rock(glm::ivec2 pos);
+    void update_water(glm::ivec2 pos);
 
 public:
     tile();

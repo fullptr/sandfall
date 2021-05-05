@@ -85,10 +85,10 @@ int main()
         tile.simulate();
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::sand());
+            tile.set(coord, pixel::rock());
         } else if (right_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::rock());
+            tile.set(coord, pixel::water());
         }
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
