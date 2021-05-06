@@ -47,8 +47,8 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    alc::tile tile;
-    tile.fill(pixel::air());
+    auto tile = std::make_unique<alc::tile>();
+    tile->fill(pixel::air());
 
     bool left_mouse_down = false; // TODO: Remove, do it in a better way
     bool right_mouse_down = false;
@@ -76,19 +76,19 @@ int main()
     shader.bind();
     shader.load_sampler("u_texture", 0);
     shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
-    tile.bind();
+    tile->bind();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     while (window.is_running()) {
         window.clear();
-        tile.simulate();
+        tile->simulate();
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::rock());
+            tile->set(coord, pixel::sand());
         } else if (right_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::water());
+            tile->set(coord, pixel::water());
         }
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();

@@ -42,11 +42,18 @@ void tile::update_sand(glm::ivec2 pos)
     std::size_t curr_pos = get_pos(pos);
     std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
 
+    const auto can_displace = [](pixel_type type) {
+        return type == pixel_type::air || type == pixel_type::water;
+    };
+
     for (auto new_x : positions) {
         auto next_pos = get_pos({new_x, pos.y + 1});
-        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air) {
+        if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type)) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
+            if (d_pixels[curr_pos].type == pixel_type::water) {
+                d_pixels[curr_pos] = pixel::air();
+            }
             return;
         }
     }
