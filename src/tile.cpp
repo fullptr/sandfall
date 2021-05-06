@@ -118,36 +118,29 @@ void tile::simulate()
                 }
                 case pixel_type::air: continue;
             }
-            d_stale = true;
         }
     }
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
     }
-    update_if_needed();
 }
 
-void tile::update_if_needed()
+void tile::update_texture()
 {
-    if (d_stale) {
-        bind();
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
-        d_stale = false;
-    }
+    bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
 }
 
 void tile::set(glm::ivec2 pos, const pixel& pixel)
 {
     assert(valid(pos));
     d_pixels[get_pos(pos)] = pixel;
-    d_stale = true;
 }
 
 void tile::fill(const pixel& p)
 {
     d_pixels.fill(p);
-    d_stale = true;
 }
 
 }

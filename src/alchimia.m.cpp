@@ -104,11 +104,17 @@ int main()
         window.clear();
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile->set(coord, pixel::sand());
+            if (tile->valid(coord)) {
+                tile->set(coord, pixel::sand());
+            }
         } else if (right_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile->set(coord, pixel::air());
+            if (tile->valid(coord)) {
+                tile->set(coord, pixel::air());
+            }
         }
+
+        tile->update_texture();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
         

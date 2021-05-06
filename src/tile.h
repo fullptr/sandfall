@@ -22,12 +22,6 @@ private:
     buffer        d_buffer;
     pixels        d_pixels;
 
-    // Will be set to true if the buffer is changed, indicating that the buffer on the
-    // GPU is stale and needs updating.
-    bool d_stale = false;
-
-    // Returns true if the given position exists and false otherwise
-    bool valid(glm::ivec2 pos) const;
 
     void update_sand(glm::ivec2 pos);
     void update_rock(glm::ivec2 pos);
@@ -38,8 +32,11 @@ public:
 
     void bind() const;
 
+    // Returns true if the given position exists and false otherwise
+    bool valid(glm::ivec2 pos) const;
+    
     void simulate();
-    void update_if_needed();
+    void update_texture();
 
     void set(glm::ivec2 pos, const pixel& p);
     void fill(const pixel& p);
