@@ -7,42 +7,39 @@ namespace alc {
 pixel pixel::air()
 {
     return {
-        pixel_type::air,
-        {
+        .type = pixel_type::air,
+        .colour = {
             44.0f / 256.0f,
             58.0f / 256.0f,
             71.0f / 256.0f,
             1.0
-        },
-        false
+        }
     };
 }
 
 pixel pixel::sand()
 {
     return {
-        pixel_type::sand,
-        {
+        .type = pixel_type::sand,
+        .colour = {
             (248.0f + (rand() % 20) - 10) / 256.0f,
             (239.0f + (rand() % 20) - 10) / 256.0f,
             (186.0f + (rand() % 20) - 10) / 256.0f,
             1.0
-        },
-        false
+        }
     };
 }
 
 pixel pixel::rock()
 {
     return {
-        pixel_type::rock,
-        {
+        .type = pixel_type::rock,
+        .colour = {
             (200.0f + (rand() % 20) - 10) / 256.0f,
             (200.0f + (rand() % 20) - 10) / 256.0f,
             (200.0f + (rand() % 20) - 10) / 256.0f,
             1.0
-        },
-        false
+        }
     };
 }
 

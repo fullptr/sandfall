@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <array>
 #include <memory>
+#include <chrono>
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
@@ -47,8 +48,8 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    alc::tile tile;
-    tile.fill(pixel::air());
+    auto tile = std::make_unique<alc::tile>();
+    tile->fill(pixel::air());
 
     bool left_mouse_down = false; // TODO: Remove, do it in a better way
     bool right_mouse_down = false;
@@ -76,20 +77,44 @@ int main()
     shader.bind();
     shader.load_sampler("u_texture", 0);
     shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
-    tile.bind();
+    tile->bind();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+    std::chrono::steady_clock clock;
+    auto prev = clock.now();
+    auto now = clock.now();
+    double dt = 0;
+
+    double frame_length = 1.0 / 60.0;
+    double accumulator = 0;
+
     while (window.is_running()) {
+        prev = now;
+        now = clock.now();
+        std::chrono::duration<double> dt_duration = (now - prev);
+        double dt = dt_duration.count();
+
+        accumulator += dt;
+        while (accumulator > frame_length) {
+            tile->simulate();
+            accumulator -= frame_length;
+        }
+
         window.clear();
-        tile.simulate();
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::rock());
+            if (tile->valid(coord)) {
+                tile->set(coord, pixel::sand());
+            }
         } else if (right_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
-            tile.set(coord, pixel::water());
+            if (tile->valid(coord)) {
+                tile->set(coord, pixel::air());
+            }
         }
+
+        tile->update_texture();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
         
