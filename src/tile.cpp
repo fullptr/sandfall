@@ -48,12 +48,10 @@ void tile::update_sand(glm::ivec2 pos)
 
     for (auto new_x : positions) {
         auto next_pos = get_pos({new_x, pos.y + 1});
-        if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type)) {
+        if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
-            if (d_pixels[curr_pos].type == pixel_type::water) {
-                d_pixels[curr_pos] = pixel::air();
-            }
+            d_pixels[curr_pos].updated_this_frame = true;
             return;
         }
     }
@@ -66,24 +64,27 @@ void tile::update_water(glm::ivec2 pos)
 
     for (auto new_x : positions) {
         auto next_pos = get_pos({new_x, pos.y + 1});
-        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air) {
+        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
+            d_pixels[curr_pos].updated_this_frame = true;
             return;
         }
     }
 
     auto next_pos = get_pos({pos.x-1, pos.y});
-    if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air) {
+    if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
         std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
         d_pixels[next_pos].updated_this_frame = true;
+        d_pixels[curr_pos].updated_this_frame = true;
         return;
     }
 
     next_pos = get_pos({pos.x+1, pos.y});
-    if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air) {
+    if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
         std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
         d_pixels[next_pos].updated_this_frame = true;
+        d_pixels[curr_pos].updated_this_frame = true;
         return;
     }
 
@@ -101,25 +102,55 @@ void tile::bind() const
 
 void tile::simulate()
 {
-    for (std::uint32_t y = SIZE; y != 0;) {
-        --y;
-        for (std::uint32_t x = 0; x != SIZE; ++ x) {
-            auto& pixel = d_pixels[get_pos({x, y})];
-            if (pixel.updated_this_frame) { continue; }
-            switch (pixel.type) {
-                case pixel_type::sand: {
-                    update_sand({x, y});
-                } break;
-                case pixel_type::rock: {
-                    update_rock({x, y});
-                } break;
-                case pixel_type::water: {
-                    update_water({x, y});
+    const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
+        auto& pixel = d_pixels[get_pos({x, y})];
+        if (pixel.updated_this_frame) { return; }
+        switch (pixel.type) {
+            case pixel_type::sand: {
+                update_sand({x, y});
+            } break;
+            case pixel_type::rock: {
+                update_rock({x, y});
+            } break;
+            case pixel_type::water: {
+                update_water({x, y});
+            }
+            case pixel_type::air: return;
+        }
+    };
+
+    if (rand() % 2) {
+        for (std::uint32_t y = 0; y != SIZE; ++y) {
+            if (rand() % 2) {
+                for (std::uint32_t x = 0; x != SIZE; ++x) {
+                    inner(x, y);
                 }
-                case pixel_type::air: continue;
+            }
+            else {
+                for (std::uint32_t x = SIZE; x != 0; ) {
+                    --x;
+                    inner(x, y);
+                }
             }
         }
     }
+    else {
+        for (std::uint32_t y = SIZE; y != 0; ) {
+            --y;
+            if (rand() % 2) {
+                for (std::uint32_t x = 0; x != SIZE; ++x) {
+                    inner(x, y);
+                }
+            }
+            else {
+                for (std::uint32_t x = SIZE; x != 0; ) {
+                    --x;
+                    inner(x, y);
+                }
+            }
+        }
+    }
+
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
