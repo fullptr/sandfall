@@ -47,8 +47,25 @@ pixel pixel::water()
 {
     return {
         pixel_type::water,
-        {0.0, 0.0, 1.0, 1.0},
-        false
+        {
+            (27.0f  + (rand() % 20) - 10) / 256.0f,
+            (156.0f + (rand() % 20) - 10) / 256.0f,
+            (252.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        }
+    };
+}
+
+pixel pixel::red_sand()
+{
+    return {
+        .type = pixel_type::sand,
+        .colour = {
+            (254.0f + (rand() % 20) - 10) / 256.0f,
+            (164.0f + (rand() % 20) - 10) / 256.0f,
+            (127.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        }
     };
 }
 
