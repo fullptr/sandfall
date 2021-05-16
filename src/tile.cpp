@@ -121,8 +121,9 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
     };
     // End of interface
     
+    auto offset = glm::ivec2{0, 1};
     auto next_pos = get_pos({pos.x, pos.y + 1});
-    if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+    if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
         d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
         if (d_pixels[curr_pos].velocity.y > alc::TERMINAL_VELOCITY) {
             d_pixels[curr_pos].velocity.y = alc::TERMINAL_VELOCITY;
