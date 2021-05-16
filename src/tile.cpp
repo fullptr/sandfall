@@ -162,7 +162,7 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
             d_pixels[get_pos(new_pos)].updated_this_frame = true;
             return;
         }
-    } else {
+    } else if (is_valid(offset) && get_pixel(offset).type != pixel_type::water) {
         d_pixels[curr_pos].velocity = {0.0, 0.0};
     }
 
