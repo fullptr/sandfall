@@ -1,5 +1,6 @@
 #include "tile.h"
 #include "log.h"
+#include "generator.h"
 
 #include <glad/glad.h>
 
@@ -72,9 +73,6 @@ void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos
     auto next_pos = get_pos({pos.x, pos.y + 1});
     if (valid({pos.x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
         d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
-        if (d_pixels[curr_pos].velocity.y > alc::TERMINAL_VELOCITY) {
-            d_pixels[curr_pos].velocity.y = alc::TERMINAL_VELOCITY;
-        }
         int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
 
         glm::ivec2 new_pos = move_down(d_pixels, pos.x, pos.y, glm::max(1, spaces_down));
@@ -82,7 +80,7 @@ void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos
             d_pixels[get_pos(new_pos)].updated_this_frame = true;
             return;
         }
-    } else {
+    } else if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type != pixel_type::sand) {
         d_pixels[curr_pos].velocity = {0.0, 0.0};
     }
 
@@ -105,6 +103,24 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
 {
     std::size_t curr_pos = get_pos(pos);
     
+    // Interface: TODO: Extract into an API object to pass into this function.
+    const auto move = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+        auto curr_pos = get_pos(pos);
+        auto next_pos = get_pos(pos + offset);
+        std::swap(pixels[curr_pos], pixels[next_pos]);
+        pixels[next_pos].updated_this_frame = true;
+    };
+
+    const auto get_pixel = [&pixels = d_pixels, &pos](glm::ivec2 offset) -> pixel& {
+        auto next_pos = get_pos(pos + offset);
+        return pixels[next_pos];
+    };
+
+    const auto is_valid = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+        return tile::valid(pos + offset) && !pixels[get_pos(pos + offset)].updated_this_frame;
+    };
+    // End of interface
+    
     auto next_pos = get_pos({pos.x, pos.y + 1});
     if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
         d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
@@ -122,48 +138,43 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
         d_pixels[curr_pos].velocity = {0.0, 0.0};
     }
 
-    std::array<int, 2> positions = {pos.x-1, pos.x+1};
+    std::array<int, 2> positions = {-1, 1};
     if (rand() % 2) {
-         positions = {pos.x+1, pos.x-1};
+         positions = {1, -1};
     }
 
     for (auto new_x : positions) {
-        auto next_pos = get_pos({new_x, pos.y + 1});
-        if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+        auto offset =  glm::ivec2{new_x, 1};
+        if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
+            move(offset);
             return;
         }
     }
 
     bool coin = rand() % 2;
     if (coin) {
-        auto next_pos = get_pos({pos.x-1, pos.y});
-        if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+        auto offset = glm::ivec2{-1, 0};
+        if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
+            move(offset);
             return;
         }
 
-        next_pos = get_pos({pos.x+1, pos.y});
-        if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+        offset = {1, 0};
+        if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
+            move(offset);
             return;
         }
     }
     else {
-        auto next_pos = get_pos({pos.x+1, pos.y});
-        if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+        auto offset = glm::ivec2{1, 0};
+        if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
+            move(offset);
             return;
         }
 
-        next_pos = get_pos({pos.x-1, pos.y});
-        if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+        offset = {-1, 0};
+        if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
+            move(offset);
             return;
         }
     }
@@ -198,8 +209,7 @@ void tile::simulate(const world_settings& settings, double dt)
         }
     };
 
-    static bool coin = false;
-    if (coin) {
+    if (rand() % 2) {
         for (std::uint32_t y = 0; y != SIZE; ++y) {
             if (rand() % 2) {
                 for (std::uint32_t x = 0; x != SIZE; ++x) {
@@ -230,7 +240,6 @@ void tile::simulate(const world_settings& settings, double dt)
             }
         }
     }
-    coin = !coin;
 
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {

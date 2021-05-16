@@ -23,7 +23,6 @@ private:
     buffer        d_buffer;
     pixels        d_pixels;
 
-
     void update_sand(const world_settings& settings, double dt, glm::ivec2 pos);
     void update_rock(const world_settings& settings, double dt, glm::ivec2 pos);
     void update_water(const world_settings& settings, double dt, glm::ivec2 pos);
