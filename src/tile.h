@@ -10,6 +10,8 @@
 
 namespace alc {
 
+class pixel_api;
+
 class tile
 {
 public:
@@ -23,9 +25,9 @@ private:
     buffer        d_buffer;
     pixels        d_pixels;
 
-    void update_sand(const world_settings& settings, double dt, glm::ivec2 pos);
-    void update_rock(const world_settings& settings, double dt, glm::ivec2 pos);
-    void update_water(const world_settings& settings, double dt, glm::ivec2 pos);
+    void update_sand(pixel_api api, double dt);
+    void update_rock(pixel_api api, double dt);
+    void update_water(pixel_api api, double dt);
 
 public:
     tile();

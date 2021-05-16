@@ -24,7 +24,7 @@ std::size_t get_pos(glm::vec2 pos)
 
 }
 
-bool pixel_api::move(glm::ivec2 offset)
+bool pixel_api::move_to(glm::ivec2 offset)
 {
     const auto can_displace = [](const pixel& src, const pixel& dst) {
         if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {

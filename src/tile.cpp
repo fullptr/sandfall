@@ -1,6 +1,7 @@
 #include "tile.h"
 #include "log.h"
 #include "generator.h"
+#include "pixel_api.h"
 
 #include <glad/glad.h>
 
@@ -76,52 +77,13 @@ bool tile::valid(glm::ivec2 pos)
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos)
+void tile::update_sand(pixel_api api, double dt)
 {
-// Interface: TODO: Extract into an API object to pass into this function.
-    const auto move_towards = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
-
-        const auto can_displace = [](const pixel& src, const pixel& dst) {
-            if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
-                return true;
-            }
-            else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
-                return true;
-            }
-            return false;
-        };
-
-        std::size_t curr_pos = get_pos(pos);
-        auto start = curr_pos;
-        for (auto p : pixel_path(pos, pos + offset)) {
-            auto next_pos = get_pos(p);
-            if (can_displace(pixels[curr_pos], pixels[next_pos])) {
-                std::swap(pixels[curr_pos], pixels[next_pos]);
-                curr_pos = next_pos;
-            } else {
-                break;
-            }
-        }
-        if (curr_pos != start) {
-            pixels[curr_pos].updated_this_frame = true;
-        }
-        return curr_pos != start;
-    };
-
-    const auto get_pixel = [&pixels = d_pixels, &pos](glm::ivec2 offset) -> pixel& {
-        return pixels[get_pos(pos + offset)];
-    };
-
-    const auto is_valid = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
-        return tile::valid(pos + offset);
-    };
-    // End of interface
-
-    auto& vel = get_pixel({0, 0}).velocity;
-    vel += settings.gravity * (float)dt;
+    auto& vel = api.get({0, 0}).velocity;
+    vel += api.world_settings().gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (is_valid(offset) && move_towards(offset)) {
+    if (api.valid(offset) && api.move_to(offset)) {
         return;
     }
 
@@ -135,61 +97,22 @@ void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos
     }
 
     for (auto offset : offsets) {
-        if (is_valid(offset) && move_towards(offset)) {
+        if (api.valid(offset) && api.move_to(offset)) {
             if (offset.y == 0) {
-                get_pixel(offset).velocity = {0.0, 0.0};
+                api.get(offset).velocity = {0.0, 0.0};
             }
             return;
         }
     }
 }
 
-void tile::update_water(const world_settings& settings, double dt, glm::ivec2 pos)
+void tile::update_water(pixel_api api, double dt)
 {
-    // Interface: TODO: Extract into an API object to pass into this function.
-    const auto move_towards = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
-
-        const auto can_displace = [](const pixel& src, const pixel& dst) {
-            if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
-                return !dst.updated_this_frame;
-            }
-            else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
-                return !dst.updated_this_frame;
-            }
-            return false;
-        };
-
-        std::size_t curr_pos = get_pos(pos);
-        auto start = curr_pos;
-        for (auto p : pixel_path(pos, pos + offset)) {
-            auto next_pos = get_pos(p);
-            if (can_displace(pixels[curr_pos], pixels[next_pos])) {
-                std::swap(pixels[curr_pos], pixels[next_pos]);
-                curr_pos = next_pos;
-            } else {
-                break;
-            }
-        }
-        if (curr_pos != start) {
-            pixels[curr_pos].updated_this_frame = true;
-        }
-        return curr_pos != start;
-    };
-
-    const auto get_pixel = [&pixels = d_pixels, &pos](glm::ivec2 offset) -> pixel& {
-        return pixels[get_pos(pos + offset)];
-    };
-
-    const auto is_valid = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
-        return tile::valid(pos + offset);
-    };
-    // End of interface
-
-    auto& vel = get_pixel({0, 0}).velocity;
-    vel += settings.gravity * (float)dt;
+    auto& vel = api.get({0, 0}).velocity;
+    vel += api.world_settings().gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (is_valid(offset) && move_towards(offset)) {
+    if (api.valid(offset) && api.move_to(offset)) {
         return;
     }
 
@@ -206,18 +129,18 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
     }
 
     for (auto offset : offsets) {
-        if (is_valid(offset) && move_towards(offset)) {
+        if (api.valid(offset) && api.move_to(offset)) {
             if (offset.y == 0) {
-                get_pixel(offset).velocity = {0.0, 0.0};
+                api.get(offset).velocity = {0.0, 0.0};
             }
             return;
         }
     }
 }
 
-void tile::update_rock(const world_settings&, double, glm::ivec2 pos)
+void tile::update_rock(pixel_api api, double dt)
 {
-    d_pixels[get_pos(pos)].updated_this_frame = true;
+    api.get({0, 0}).updated_this_frame = true;
 }
 
 void tile::bind() const
@@ -232,13 +155,13 @@ void tile::simulate(const world_settings& settings, double dt)
         if (pixel.updated_this_frame) { return; }
         switch (pixel.type) {
             case pixel_type::sand: {
-                update_sand(settings, dt, {x, y});
+                update_sand({settings, d_pixels, {x, y}}, dt);
             } break;
             case pixel_type::rock: {
-                update_rock(settings, dt, {x, y});
+                update_rock({settings, d_pixels, {x, y}}, dt);
             } break;
             case pixel_type::water: {
-                update_water(settings, dt, {x, y});
+                update_water({settings, d_pixels, {x, y}}, dt);
             }
             case pixel_type::air: return;
         }
