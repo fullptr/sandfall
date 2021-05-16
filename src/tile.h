@@ -13,7 +13,7 @@ namespace alc {
 class tile
 {
 public:
-    static constexpr std::uint32_t SIZE = 128;
+    static constexpr std::uint32_t SIZE = 256;
 
     using buffer = std::array<glm::vec4, SIZE * SIZE>;
     using pixels = std::array<pixel, SIZE * SIZE>;

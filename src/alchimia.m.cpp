@@ -77,12 +77,6 @@ int main()
 {
     using namespace alc;
 
-    for (auto pos : pixel_path({0, 0}, {10, 20})) {
-        log::info("({}, {})\n", pos.x, pos.y);
-    }
-
-    return 0;
-
     alc::window window("alchimia", 1280, 720);
 
     alc::world_settings settings{

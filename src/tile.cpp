@@ -23,8 +23,8 @@ glm::ivec2 move_down(alc::tile::pixels& pixels, int start_x, int start_y, int am
         return type == pixel_type::air || type == pixel_type::water;
     };
 
-    const auto valid = [](glm::ivec2 pos) { // TODO: Replace 128 with SIZE
-        return 0 <= pos.x && pos.x < 128 && 0 <= pos.y && pos.y < 128;
+    const auto valid = [](glm::ivec2 pos) {
+        return 0 <= pos.x && pos.x < alc::tile::SIZE && 0 <= pos.y && pos.y < alc::tile::SIZE;
     };
 
     auto current = get_pos({start_x, start_y});
