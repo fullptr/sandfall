@@ -34,7 +34,7 @@ public:
     void bind() const;
 
     // Returns true if the given position exists and false otherwise
-    bool valid(glm::ivec2 pos) const;
+    static bool valid(glm::ivec2 pos);
     
     void simulate(const world_settings& settings, double dt);
     void update_texture();

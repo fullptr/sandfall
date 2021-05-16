@@ -23,15 +23,11 @@ glm::ivec2 move_down(alc::tile::pixels& pixels, int start_x, int start_y, int am
         return type == pixel_type::air || type == pixel_type::water;
     };
 
-    const auto valid = [](glm::ivec2 pos) {
-        return 0 <= pos.x && pos.x < alc::tile::SIZE && 0 <= pos.y && pos.y < alc::tile::SIZE;
-    };
-
     auto current = get_pos({start_x, start_y});
     auto start = current;
     for (int y = start_y + 1; y != start_y + amount + 1; ++y) {
         auto next = get_pos({start_x, y});
-        if (valid({start_x, y}) && can_displace(pixels[next].type)) {
+        if (tile::valid({start_x, y}) && can_displace(pixels[next].type)) {
             std::swap(pixels[current], pixels[next]);
             current = next;
             new_y = y;
@@ -61,7 +57,7 @@ tile::tile()
     d_pixels.fill(default_pixel);
 }
 
-bool tile::valid(glm::ivec2 pos) const
+bool tile::valid(glm::ivec2 pos)
 {
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
