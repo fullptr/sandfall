@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "tile.h"
 #include "pixel.h"
+#include "generator.h"
 #include "world_settings.h"
 
 #include <glad/glad.h>
@@ -59,7 +60,7 @@ public:
     }
 };
 
-void pixel_path(glm::ivec2 a, glm::ivec2 b)
+alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
 {
     // The number of steps taken will be the number of pixels in the longest
     // direction. This will ensure no missing pixels.
@@ -68,13 +69,19 @@ void pixel_path(glm::ivec2 a, glm::ivec2 b)
     for (int i = 0; i != steps; ++i) {
         int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
         int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        alc::log::info("({}, {})\n", x, y);
+        co_yield {x, y};
     }
 }
 
 int main()
 {
     using namespace alc;
+
+    for (auto pos : pixel_path({0, 0}, {10, 20})) {
+        log::info("({}, {})\n", pos.x, pos.y);
+    }
+
+    return 0;
 
     alc::window window("alchimia", 1280, 720);
 
