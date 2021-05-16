@@ -77,13 +77,13 @@ bool tile::valid(glm::ivec2 pos)
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-void tile::update_sand(pixel_api api, double dt)
+void tile::update_sand(pixel_api&& api, double dt)
 {
     auto& vel = api.get({0, 0}).velocity;
     vel += api.world_settings().gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (api.valid(offset) && api.move_to(offset)) {
+    if (api.move_to(offset)) {
         return;
     }
 
@@ -97,22 +97,20 @@ void tile::update_sand(pixel_api api, double dt)
     }
 
     for (auto offset : offsets) {
-        if (api.valid(offset) && api.move_to(offset)) {
-            if (offset.y == 0) {
-                api.get(offset).velocity = {0.0, 0.0};
-            }
+        if (api.move_to(offset)) {
+            if (offset.y == 0) { api.get(offset).velocity = {0.0, 0.0}; }
             return;
         }
     }
 }
 
-void tile::update_water(pixel_api api, double dt)
+void tile::update_water(pixel_api&& api, double dt)
 {
     auto& vel = api.get({0, 0}).velocity;
     vel += api.world_settings().gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (api.valid(offset) && api.move_to(offset)) {
+    if (api.move_to(offset)) {
         return;
     }
 
@@ -129,7 +127,7 @@ void tile::update_water(pixel_api api, double dt)
     }
 
     for (auto offset : offsets) {
-        if (api.valid(offset) && api.move_to(offset)) {
+        if (api.move_to(offset)) {
             if (offset.y == 0) {
                 api.get(offset).velocity = {0.0, 0.0};
             }
@@ -138,7 +136,7 @@ void tile::update_water(pixel_api api, double dt)
     }
 }
 
-void tile::update_rock(pixel_api api, double dt)
+void tile::update_rock(pixel_api&& api, double dt)
 {
     api.get({0, 0}).updated_this_frame = true;
 }
