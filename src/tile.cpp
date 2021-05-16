@@ -9,9 +9,6 @@
 namespace alc {
 namespace {
 
-constexpr float gravity = 15.0f;
-constexpr float terminal_velocity = 5.0f;
-
 std::size_t get_pos(glm::vec2 pos)
 {
     return pos.x + alc::tile::SIZE * pos.y;
@@ -69,7 +66,7 @@ bool tile::valid(glm::ivec2 pos) const
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-void tile::update_sand(double dt, glm::ivec2 pos)
+void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
     const auto can_displace = [](pixel_type type) {
@@ -78,9 +75,9 @@ void tile::update_sand(double dt, glm::ivec2 pos)
 
     auto next_pos = get_pos({pos.x, pos.y + 1});
     if (valid({pos.x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
-        d_pixels[curr_pos].velocity += glm::vec2{0.0f, gravity * dt};
-        if (d_pixels[curr_pos].velocity.y > terminal_velocity) {
-            d_pixels[curr_pos].velocity.y = terminal_velocity;
+        d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
+        if (d_pixels[curr_pos].velocity.y > alc::TERMINAL_VELOCITY) {
+            d_pixels[curr_pos].velocity.y = alc::TERMINAL_VELOCITY;
         }
         int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
 
@@ -108,15 +105,15 @@ void tile::update_sand(double dt, glm::ivec2 pos)
     }
 }
 
-void tile::update_water(double dt, glm::ivec2 pos)
+void tile::update_water(const world_settings& settings, double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
     
     auto next_pos = get_pos({pos.x, pos.y + 1});
     if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-        d_pixels[curr_pos].velocity += glm::vec2{0.0f, gravity * dt};
-        if (d_pixels[curr_pos].velocity.y > terminal_velocity) {
-            d_pixels[curr_pos].velocity.y = terminal_velocity;
+        d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
+        if (d_pixels[curr_pos].velocity.y > alc::TERMINAL_VELOCITY) {
+            d_pixels[curr_pos].velocity.y = alc::TERMINAL_VELOCITY;
         }
         int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
 
@@ -176,7 +173,7 @@ void tile::update_water(double dt, glm::ivec2 pos)
     }
 }
 
-void tile::update_rock(double dt, glm::ivec2 pos)
+void tile::update_rock(const world_settings&, double, glm::ivec2 pos)
 {
     d_pixels[get_pos(pos)].updated_this_frame = true;
 }
@@ -186,20 +183,20 @@ void tile::bind() const
     glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
-void tile::simulate(double dt)
+void tile::simulate(const world_settings& settings, double dt)
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         auto& pixel = d_pixels[get_pos({x, y})];
         if (pixel.updated_this_frame) { return; }
         switch (pixel.type) {
             case pixel_type::sand: {
-                update_sand(dt, {x, y});
+                update_sand(settings, dt, {x, y});
             } break;
             case pixel_type::rock: {
-                update_rock(dt, {x, y});
+                update_rock(settings, dt, {x, y});
             } break;
             case pixel_type::water: {
-                update_water(dt, {x, y});
+                update_water(settings, dt, {x, y});
             }
             case pixel_type::air: return;
         }

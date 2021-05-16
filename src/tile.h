@@ -1,6 +1,7 @@
 #ifndef INCLUDED_ALCHIMIA_TEXTURE
 #define INCLUDED_ALCHIMIA_TEXTURE
 #include "pixel.h"
+#include "world_settings.h"
 
 #include <cstdint>
 #include <array>
@@ -23,9 +24,9 @@ private:
     pixels        d_pixels;
 
 
-    void update_sand(double dt, glm::ivec2 pos);
-    void update_rock(double dt, glm::ivec2 pos);
-    void update_water(double dt, glm::ivec2 pos);
+    void update_sand(const world_settings& settings, double dt, glm::ivec2 pos);
+    void update_rock(const world_settings& settings, double dt, glm::ivec2 pos);
+    void update_water(const world_settings& settings, double dt, glm::ivec2 pos);
 
 public:
     tile();
@@ -35,7 +36,7 @@ public:
     // Returns true if the given position exists and false otherwise
     bool valid(glm::ivec2 pos) const;
     
-    void simulate(double dt);
+    void simulate(const world_settings& settings, double dt);
     void update_texture();
 
     void set(glm::ivec2 pos, const pixel& p);
