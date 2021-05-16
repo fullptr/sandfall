@@ -10,48 +10,10 @@
 
 namespace alc {
 namespace {
-    
-alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
-{
-    // The number of steps taken will be the number of pixels in the longest
-    // direction. This will ensure no missing pixels.
-    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
-
-    for (int i = 0; i != steps; ++i) {
-        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
-        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        co_yield {x, y};
-    }
-}
 
 std::size_t get_pos(glm::vec2 pos)
 {
     return pos.x + alc::tile::SIZE * pos.y;
-}
-
-glm::ivec2 move_down(alc::tile::pixels& pixels, int start_x, int start_y, int amount)
-{
-    if (amount < 1) { return {start_x, start_y}; }
-    int new_y = start_y;
-
-    const auto can_displace = [](pixel_type type) {
-        return type == pixel_type::air || type == pixel_type::water;
-    };
-
-    auto current = get_pos({start_x, start_y});
-    auto start = current;
-    for (int y = start_y + 1; y != start_y + amount + 1; ++y) {
-        auto next = get_pos({start_x, y});
-        if (tile::valid({start_x, y}) && can_displace(pixels[next].type)) {
-            std::swap(pixels[current], pixels[next]);
-            current = next;
-            new_y = y;
-        }
-        else {
-            break;
-        }
-    }
-    return {start_x, new_y};
 }
 
 }
@@ -81,7 +43,7 @@ void tile::update_sand(pixel_api&& api, double dt)
 {
     auto& vel = api.get({0, 0}).velocity;
     vel += api.world_settings().gravity * (float)dt;
-    auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
+    glm::ivec2 offset{0, glm::max(1, (int)vel.y)};
     
     if (api.move_to(offset)) {
         return;

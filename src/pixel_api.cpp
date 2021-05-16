@@ -26,16 +26,12 @@ std::size_t get_pos(glm::vec2 pos)
 
 bool pixel_api::move_to(glm::ivec2 offset)
 {
-    if (!valid(offset)) {
-        return false;
-    }
-    
     const auto can_displace = [](const pixel& src, const pixel& dst) {
         if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
-            return !dst.updated_this_frame;
+            return true;
         }
         else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
-            return !dst.updated_this_frame;
+            return true;
         }
         return false;
     };
@@ -43,6 +39,7 @@ bool pixel_api::move_to(glm::ivec2 offset)
     std::size_t curr_pos = get_pos(d_pos);
     auto start = curr_pos;
     for (auto p : pixel_path(d_pos, d_pos + offset)) {
+        if (!tile::valid(p)) { break; }
         auto next_pos = get_pos(p);
         if (can_displace(d_pixels_ref[curr_pos], d_pixels_ref[next_pos])) {
             std::swap(d_pixels_ref[curr_pos], d_pixels_ref[next_pos]);
