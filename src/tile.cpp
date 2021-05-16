@@ -99,11 +99,41 @@ void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos
     }
 }
 
+alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
+{
+    // The number of steps taken will be the number of pixels in the longest
+    // direction. This will ensure no missing pixels.
+    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+
+    for (int i = 0; i != steps; ++i) {
+        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
+        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
+        co_yield {x, y};
+    }
+}
+
 void tile::update_water(const world_settings& settings, double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
-    
+
     // Interface: TODO: Extract into an API object to pass into this function.
+    const auto move_by = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+        std::size_t curr_pos = get_pos(pos);
+        auto start = curr_pos;
+        for (auto p : pixel_path(pos, pos + offset)) {
+            auto next_pos = get_pos(p);
+            if (pixels[next_pos].type == pixel_type::air) {
+                std::swap(pixels[curr_pos], pixels[next_pos]);
+                curr_pos = next_pos;
+            } else {
+                break;
+            }
+        }
+        if (curr_pos != start) {
+            pixels[curr_pos].updated_this_frame = true;
+        }
+    };
+
     const auto move = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
         auto curr_pos = get_pos(pos);
         auto next_pos = get_pos(pos + offset);
@@ -125,9 +155,6 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
     auto next_pos = get_pos({pos.x, pos.y + 1});
     if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
         d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
-        if (d_pixels[curr_pos].velocity.y > alc::TERMINAL_VELOCITY) {
-            d_pixels[curr_pos].velocity.y = alc::TERMINAL_VELOCITY;
-        }
         int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
 
         glm::ivec2 new_pos = move_down(d_pixels, pos.x, pos.y, glm::max(1, spaces_down));
@@ -147,7 +174,7 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
     for (auto new_x : positions) {
         auto offset =  glm::ivec2{new_x, 1};
         if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
-            move(offset);
+            move_by(offset);
             return;
         }
     }
@@ -156,26 +183,26 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
     if (coin) {
         auto offset = glm::ivec2{-1, 0};
         if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
-            move(offset);
+            move_by(offset);
             return;
         }
 
         offset = {1, 0};
         if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
-            move(offset);
+            move_by(offset);
             return;
         }
     }
     else {
         auto offset = glm::ivec2{1, 0};
         if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
-            move(offset);
+            move_by(offset);
             return;
         }
 
         offset = {-1, 0};
         if (is_valid(offset) && get_pixel(offset).type == pixel_type::air) {
-            move(offset);
+            move_by(offset);
             return;
         }
     }
