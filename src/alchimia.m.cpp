@@ -145,7 +145,7 @@ int main()
 
         accumulator += dt;
         while (accumulator > frame_length) {
-            tile->simulate();
+            tile->simulate(frame_length);
             accumulator -= frame_length;
         }
 

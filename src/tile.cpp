@@ -9,9 +9,41 @@
 namespace alc {
 namespace {
 
+constexpr float gravity = 10.0f;
+constexpr float terminal_velocity = 5.0f;
+
 std::size_t get_pos(glm::vec2 pos)
 {
     return pos.x + alc::tile::SIZE * pos.y;
+}
+
+glm::ivec2 move_down(alc::tile::pixels& pixels, int start_x, int start_y, int amount)
+{
+    if (amount < 1) { return {start_x, start_y}; }
+    int new_y = start_y;
+
+    const auto can_displace = [](pixel_type type) {
+        return type == pixel_type::air || type == pixel_type::water;
+    };
+
+    const auto valid = [](glm::ivec2 pos) { // TODO: Replace 128 with SIZE
+        return 0 <= pos.x && pos.x < 128 && 0 <= pos.y && pos.y < 128;
+    };
+
+    auto current = get_pos({start_x, start_y});
+    auto start = current;
+    for (int y = start_y + 1; y != start_y + amount + 1; ++y) {
+        auto next = get_pos({start_x, y});
+        if (valid({start_x, y}) && can_displace(pixels[next].type)) {
+            std::swap(pixels[current], pixels[next]);
+            current = next;
+            new_y = y;
+        }
+        else {
+            break;
+        }
+    }
+    return {start_x, new_y};
 }
 
 }
@@ -37,17 +69,34 @@ bool tile::valid(glm::ivec2 pos) const
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-void tile::update_sand(glm::ivec2 pos)
+void tile::update_sand(double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
-    std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
-    if (rand() % 2) {
-         positions = {pos.x, pos.x+1, pos.x-1};
-    }
-
     const auto can_displace = [](pixel_type type) {
         return type == pixel_type::air || type == pixel_type::water;
     };
+
+    auto next_pos = get_pos({pos.x, pos.y + 1});
+    if (valid({pos.x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
+        d_pixels[curr_pos].velocity += glm::vec2{0.0f, gravity * dt};
+        if (d_pixels[curr_pos].velocity.y > terminal_velocity) {
+            d_pixels[curr_pos].velocity.y = terminal_velocity;
+        }
+        int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
+
+        glm::ivec2 new_pos = move_down(d_pixels, pos.x, pos.y, glm::max(1, spaces_down));
+        if (new_pos != glm::ivec2{pos.x, pos.y}) {
+            d_pixels[get_pos(new_pos)].updated_this_frame = true;
+            return;
+        }
+    } else {
+        d_pixels[curr_pos].velocity = {0.0, 0.0};
+    }
+
+    std::array<int, 2> positions = {pos.x-1, pos.x+1};
+    if (rand() % 2) {
+         positions = {pos.x+1, pos.x-1};
+    }
 
     for (auto new_x : positions) {
         auto next_pos = get_pos({new_x, pos.y + 1});
@@ -59,7 +108,7 @@ void tile::update_sand(glm::ivec2 pos)
     }
 }
 
-void tile::update_water(glm::ivec2 pos)
+void tile::update_water(double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
     std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
@@ -109,7 +158,7 @@ void tile::update_water(glm::ivec2 pos)
     }
 }
 
-void tile::update_rock(glm::ivec2 pos)
+void tile::update_rock(double dt, glm::ivec2 pos)
 {
     d_pixels[get_pos(pos)].updated_this_frame = true;
 }
@@ -119,20 +168,20 @@ void tile::bind() const
     glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
-void tile::simulate()
+void tile::simulate(double dt)
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         auto& pixel = d_pixels[get_pos({x, y})];
         if (pixel.updated_this_frame) { return; }
         switch (pixel.type) {
             case pixel_type::sand: {
-                update_sand({x, y});
+                update_sand(dt, {x, y});
             } break;
             case pixel_type::rock: {
-                update_rock({x, y});
+                update_rock(dt, {x, y});
             } break;
             case pixel_type::water: {
-                update_water({x, y});
+                update_water(dt, {x, y});
             }
             case pixel_type::air: return;
         }

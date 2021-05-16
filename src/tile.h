@@ -23,9 +23,9 @@ private:
     pixels        d_pixels;
 
 
-    void update_sand(glm::ivec2 pos);
-    void update_rock(glm::ivec2 pos);
-    void update_water(glm::ivec2 pos);
+    void update_sand(double dt, glm::ivec2 pos);
+    void update_rock(double dt, glm::ivec2 pos);
+    void update_water(double dt, glm::ivec2 pos);
 
 public:
     tile();
@@ -35,7 +35,7 @@ public:
     // Returns true if the given position exists and false otherwise
     bool valid(glm::ivec2 pos) const;
     
-    void simulate();
+    void simulate(double dt);
     void update_texture();
 
     void set(glm::ivec2 pos, const pixel& p);
