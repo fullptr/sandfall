@@ -57,4 +57,17 @@ pixel pixel::water()
     };
 }
 
+pixel pixel::red_sand()
+{
+    return {
+        .type = pixel_type::sand,
+        .colour = {
+            (254.0f + (rand() % 20) - 10) / 256.0f,
+            (164.0f + (rand() % 20) - 10) / 256.0f,
+            (127.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        }
+    };
+}
+
 }

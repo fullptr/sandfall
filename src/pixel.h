@@ -9,7 +9,8 @@ enum class pixel_type
     air,
     sand,
     rock,
-    water
+    water,
+    red_sand
 };
 
 struct pixel
@@ -23,6 +24,7 @@ struct pixel
     static pixel sand();
     static pixel rock();
     static pixel water();
+    static pixel red_sand();
 };
 
 }

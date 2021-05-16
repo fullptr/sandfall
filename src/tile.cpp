@@ -54,7 +54,6 @@ void tile::update_sand(glm::ivec2 pos)
         if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
-            //d_pixels[curr_pos].updated_this_frame = true;
             return;
         }
     }

@@ -26,6 +26,7 @@ std::string_view to_string(alc::pixel_type type)
         case alc::pixel_type::sand: return "sand";
         case alc::pixel_type::water: return "water";
         case alc::pixel_type::rock: return "rock";
+        case alc::pixel_type::red_sand: return "red_sand";
     }
 }
 
@@ -41,16 +42,18 @@ public:
             case alc::pixel_type::air: d_type = alc::pixel_type::sand; return;
             case alc::pixel_type::sand: d_type = alc::pixel_type::water; return;
             case alc::pixel_type::water: d_type = alc::pixel_type::rock; return;
-            case alc::pixel_type::rock: d_type = alc::pixel_type::air; return;
+            case alc::pixel_type::rock: d_type = alc::pixel_type::red_sand; return;
+            case alc::pixel_type::red_sand: d_type = alc::pixel_type::air; return;
         }
     }
 
     inline void operator--() {
         switch (d_type) {
-            case alc::pixel_type::air: d_type = alc::pixel_type::rock; return;
+            case alc::pixel_type::air: d_type = alc::pixel_type::red_sand; return;
             case alc::pixel_type::sand: d_type = alc::pixel_type::air; return;
             case alc::pixel_type::water: d_type = alc::pixel_type::sand; return;
             case alc::pixel_type::rock: d_type = alc::pixel_type::water; return;
+            case alc::pixel_type::red_sand: d_type = alc::pixel_type::rock; return;
         }
     }
 };
@@ -61,7 +64,7 @@ int main()
 
     alc::window window("alchimia", 1280, 720);
 
-    float size = 512.0f;
+    float size = 720.0f;
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
         size, 0.0f, 1.0f, 0.0f,
@@ -148,13 +151,14 @@ int main()
 
         window.clear();
         if (left_mouse_down) {
-            auto coord = glm::floor(((float)alc::tile::SIZE / size) * window.get_mouse_pos());
+            auto coord = glm::floor(((float)alc::tile::SIZE / (float)size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 switch (loop.get()) {
                     case alc::pixel_type::air: tile->set(coord, pixel::air()); break;
                     case alc::pixel_type::sand: tile->set(coord, pixel::sand()); break;
                     case alc::pixel_type::water: tile->set(coord, pixel::water()); break;
                     case alc::pixel_type::rock: tile->set(coord, pixel::rock()); break;
+                    case alc::pixel_type::red_sand: tile->set(coord, pixel::red_sand()); break;
                 }
             }
         }
