@@ -21,7 +21,7 @@ public:
     pixel_api(const world_settings& settings, tile::pixels& pixels_ref, glm::ivec2 pos)
         : d_world_settings_ref(settings), d_pixels_ref(pixels_ref), d_pos(pos) {}
 
-    bool move_to(glm::ivec2 offset);
+    glm::ivec2 move_to(glm::ivec2 offset);
     pixel& get(glm::ivec2 offset);
     bool valid(glm::ivec2 offset);
 
