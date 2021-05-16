@@ -9,6 +9,19 @@
 
 namespace alc {
 namespace {
+    
+alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
+{
+    // The number of steps taken will be the number of pixels in the longest
+    // direction. This will ensure no missing pixels.
+    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+
+    for (int i = 0; i != steps; ++i) {
+        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
+        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
+        co_yield {x, y};
+    }
+}
 
 std::size_t get_pos(glm::vec2 pos)
 {
@@ -65,50 +78,69 @@ bool tile::valid(glm::ivec2 pos)
 
 void tile::update_sand(const world_settings& settings, double dt, glm::ivec2 pos)
 {
-    std::size_t curr_pos = get_pos(pos);
-    const auto can_displace = [](pixel_type type) {
-        return type == pixel_type::air || type == pixel_type::water;
+// Interface: TODO: Extract into an API object to pass into this function.
+    const auto move_towards = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+
+        const auto can_displace = [](const pixel& src, const pixel& dst) {
+            if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
+                return true;
+            }
+            else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
+                return true;
+            }
+            return false;
+        };
+
+        std::size_t curr_pos = get_pos(pos);
+        auto start = curr_pos;
+        for (auto p : pixel_path(pos, pos + offset)) {
+            auto next_pos = get_pos(p);
+            if (can_displace(pixels[curr_pos], pixels[next_pos])) {
+                std::swap(pixels[curr_pos], pixels[next_pos]);
+                curr_pos = next_pos;
+            } else {
+                break;
+            }
+        }
+        if (curr_pos != start) {
+            pixels[curr_pos].updated_this_frame = true;
+        }
+        return curr_pos != start;
     };
 
-    auto next_pos = get_pos({pos.x, pos.y + 1});
-    if (valid({pos.x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
-        d_pixels[curr_pos].velocity += settings.gravity * (float)dt;
-        int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
+    const auto get_pixel = [&pixels = d_pixels, &pos](glm::ivec2 offset) -> pixel& {
+        return pixels[get_pos(pos + offset)];
+    };
 
-        glm::ivec2 new_pos = move_down(d_pixels, pos.x, pos.y, glm::max(1, spaces_down));
-        if (new_pos != glm::ivec2{pos.x, pos.y}) {
-            d_pixels[get_pos(new_pos)].updated_this_frame = true;
-            return;
-        }
-    } else if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type != pixel_type::sand) {
-        d_pixels[curr_pos].velocity = {0.0, 0.0};
+    const auto is_valid = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+        return tile::valid(pos + offset);
+    };
+    // End of interface
+
+    auto& vel = get_pixel({0, 0}).velocity;
+    vel += settings.gravity * (float)dt;
+    auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
+    
+    if (is_valid(offset) && move_towards(offset)) {
+        return;
     }
 
-    std::array<int, 2> positions = {pos.x-1, pos.x+1};
+    std::array<glm::ivec2, 2> offsets = {
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, 1},
+    };
+
     if (rand() % 2) {
-         positions = {pos.x+1, pos.x-1};
+        std::swap(offsets[0], offsets[1]);
     }
 
-    for (auto new_x : positions) {
-        auto next_pos = get_pos({new_x, pos.y + 1});
-        if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
-            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-            d_pixels[next_pos].updated_this_frame = true;
+    for (auto offset : offsets) {
+        if (is_valid(offset) && move_towards(offset)) {
+            if (offset.y == 0) {
+                get_pixel(offset).velocity = {0.0, 0.0};
+            }
             return;
         }
-    }
-}
-
-alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
-{
-    // The number of steps taken will be the number of pixels in the longest
-    // direction. This will ensure no missing pixels.
-    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
-
-    for (int i = 0; i != steps; ++i) {
-        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
-        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        co_yield {x, y};
     }
 }
 
@@ -116,11 +148,22 @@ void tile::update_water(const world_settings& settings, double dt, glm::ivec2 po
 {
     // Interface: TODO: Extract into an API object to pass into this function.
     const auto move_towards = [&pixels = d_pixels, &pos](glm::ivec2 offset) {
+
+        const auto can_displace = [](const pixel& src, const pixel& dst) {
+            if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
+                return !dst.updated_this_frame;
+            }
+            else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
+                return !dst.updated_this_frame;
+            }
+            return false;
+        };
+
         std::size_t curr_pos = get_pos(pos);
         auto start = curr_pos;
         for (auto p : pixel_path(pos, pos + offset)) {
             auto next_pos = get_pos(p);
-            if (pixels[next_pos].type == pixel_type::air) {
+            if (can_displace(pixels[curr_pos], pixels[next_pos])) {
                 std::swap(pixels[curr_pos], pixels[next_pos]);
                 curr_pos = next_pos;
             } else {
