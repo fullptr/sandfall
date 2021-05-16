@@ -47,7 +47,12 @@ pixel pixel::water()
 {
     return {
         pixel_type::water,
-        {0.0, 0.0, 1.0, 1.0},
+        {
+            (27.0f  + (rand() % 20) - 10) / 256.0f,
+            (156.0f + (rand() % 20) - 10) / 256.0f,
+            (252.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        },
         false
     };
 }

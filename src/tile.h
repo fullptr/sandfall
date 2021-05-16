@@ -40,6 +40,8 @@ public:
 
     void set(glm::ivec2 pos, const pixel& p);
     void fill(const pixel& p);
+
+    const pixel& at(glm::ivec2 pos) const;
 };
 
 }

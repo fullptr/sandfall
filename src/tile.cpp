@@ -41,6 +41,9 @@ void tile::update_sand(glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
     std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
+    if (rand() % 2) {
+         positions = {pos.x, pos.x+1, pos.x-1};
+    }
 
     const auto can_displace = [](pixel_type type) {
         return type == pixel_type::air || type == pixel_type::water;
@@ -51,7 +54,7 @@ void tile::update_sand(glm::ivec2 pos)
         if (valid({new_x, pos.y + 1}) && can_displace(d_pixels[next_pos].type) && !d_pixels[next_pos].updated_this_frame) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
-            d_pixels[curr_pos].updated_this_frame = true;
+            //d_pixels[curr_pos].updated_this_frame = true;
             return;
         }
     }
@@ -61,33 +64,50 @@ void tile::update_water(glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
     std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
+    if (rand() % 2) {
+         positions = {pos.x, pos.x+1, pos.x-1};
+    }
 
     for (auto new_x : positions) {
         auto next_pos = get_pos({new_x, pos.y + 1});
         if (valid({new_x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
             std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
             d_pixels[next_pos].updated_this_frame = true;
-            d_pixels[curr_pos].updated_this_frame = true;
             return;
         }
     }
 
-    auto next_pos = get_pos({pos.x-1, pos.y});
-    if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-        std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-        d_pixels[next_pos].updated_this_frame = true;
-        d_pixels[curr_pos].updated_this_frame = true;
-        return;
-    }
+    bool coin = rand() % 2;
+    if (coin) {
+        auto next_pos = get_pos({pos.x-1, pos.y});
+        if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
 
-    next_pos = get_pos({pos.x+1, pos.y});
-    if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
-        std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
-        d_pixels[next_pos].updated_this_frame = true;
-        d_pixels[curr_pos].updated_this_frame = true;
-        return;
+        next_pos = get_pos({pos.x+1, pos.y});
+        if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
     }
+    else {
+        auto next_pos = get_pos({pos.x+1, pos.y});
+        if (valid({pos.x+1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
 
+        next_pos = get_pos({pos.x-1, pos.y});
+        if (valid({pos.x-1, pos.y}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+            std::swap(d_pixels[curr_pos], d_pixels[next_pos]);
+            d_pixels[next_pos].updated_this_frame = true;
+            return;
+        }
+    }
 }
 
 void tile::update_rock(glm::ivec2 pos)
@@ -119,7 +139,8 @@ void tile::simulate()
         }
     };
 
-    if (rand() % 2) {
+    static bool coin = false;
+    if (coin) {
         for (std::uint32_t y = 0; y != SIZE; ++y) {
             if (rand() % 2) {
                 for (std::uint32_t x = 0; x != SIZE; ++x) {
@@ -150,6 +171,7 @@ void tile::simulate()
             }
         }
     }
+    coin = !coin;
 
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {
