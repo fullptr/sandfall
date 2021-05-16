@@ -9,7 +9,7 @@
 namespace alc {
 namespace {
 
-constexpr float gravity = 10.0f;
+constexpr float gravity = 15.0f;
 constexpr float terminal_velocity = 5.0f;
 
 std::size_t get_pos(glm::vec2 pos)
@@ -111,9 +111,27 @@ void tile::update_sand(double dt, glm::ivec2 pos)
 void tile::update_water(double dt, glm::ivec2 pos)
 {
     std::size_t curr_pos = get_pos(pos);
-    std::array<int, 3> positions = {pos.x, pos.x-1, pos.x+1};
+    
+    auto next_pos = get_pos({pos.x, pos.y + 1});
+    if (valid({pos.x, pos.y + 1}) && d_pixels[next_pos].type == pixel_type::air && !d_pixels[next_pos].updated_this_frame) {
+        d_pixels[curr_pos].velocity += glm::vec2{0.0f, gravity * dt};
+        if (d_pixels[curr_pos].velocity.y > terminal_velocity) {
+            d_pixels[curr_pos].velocity.y = terminal_velocity;
+        }
+        int spaces_down = glm::floor(d_pixels[curr_pos].velocity.y);
+
+        glm::ivec2 new_pos = move_down(d_pixels, pos.x, pos.y, glm::max(1, spaces_down));
+        if (new_pos != glm::ivec2{pos.x, pos.y}) {
+            d_pixels[get_pos(new_pos)].updated_this_frame = true;
+            return;
+        }
+    } else {
+        d_pixels[curr_pos].velocity = {0.0, 0.0};
+    }
+
+    std::array<int, 2> positions = {pos.x-1, pos.x+1};
     if (rand() % 2) {
-         positions = {pos.x, pos.x+1, pos.x-1};
+         positions = {pos.x+1, pos.x-1};
     }
 
     for (auto new_x : positions) {
