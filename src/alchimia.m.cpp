@@ -155,6 +155,7 @@ int main()
         }
 
         window.clear();
+        
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / (float)size) * window.get_mouse_pos());
             if (tile->valid(coord)) {

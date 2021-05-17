@@ -10,8 +10,6 @@
 
 namespace alc {
 
-class pixel_api;
-
 class tile
 {
 public:
@@ -24,10 +22,6 @@ private:
     std::uint32_t d_texture;
     buffer        d_buffer;
     pixels        d_pixels;
-
-    void update_sand(pixel_api&& api, double dt);
-    void update_rock(pixel_api&& api, double dt);
-    void update_water(pixel_api&& api, double dt);
 
 public:
     tile();

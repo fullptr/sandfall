@@ -38,7 +38,7 @@ bool tile::valid(glm::ivec2 pos)
     return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
 }
 
-void tile::update_sand(pixel_api&& api, double dt)
+void update_sand(pixel_api&& api, double dt)
 {
     auto& vel = api.get({0, 0}).velocity;
     vel += api.world_settings().gravity * (float)dt;
@@ -65,7 +65,7 @@ void tile::update_sand(pixel_api&& api, double dt)
     }
 }
 
-void tile::update_water(pixel_api&& api, double dt)
+void update_water(pixel_api&& api, double dt)
 {
     auto& vel = api.get({0, 0}).velocity;
     vel += api.world_settings().gravity * (float)dt;
@@ -94,7 +94,7 @@ void tile::update_water(pixel_api&& api, double dt)
     }
 }
 
-void tile::update_rock(pixel_api&& api, double dt)
+void update_rock(pixel_api&& api, double dt)
 {
     api.get({0, 0}).updated_this_frame = true;
 }
