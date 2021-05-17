@@ -63,34 +63,18 @@ void tile::simulate(const world_settings& settings, double dt)
         }
     };
 
-    if (rand() % 2) {
-        for (std::uint32_t y = 0; y != SIZE; ++y) {
-            if (rand() % 2) {
-                for (std::uint32_t x = 0; x != SIZE; ++x) {
-                    inner(x, y);
-                }
-            }
-            else {
-                for (std::uint32_t x = SIZE; x != 0; ) {
-                    --x;
-                    inner(x, y);
-                }
+
+    for (std::uint32_t y = SIZE; y != 0; ) {
+        --y;
+        if (rand() % 2) {
+            for (std::uint32_t x = 0; x != SIZE; ++x) {
+                inner(x, y);
             }
         }
-    }
-    else {
-        for (std::uint32_t y = SIZE; y != 0; ) {
-            --y;
-            if (rand() % 2) {
-                for (std::uint32_t x = 0; x != SIZE; ++x) {
-                    inner(x, y);
-                }
-            }
-            else {
-                for (std::uint32_t x = SIZE; x != 0; ) {
-                    --x;
-                    inner(x, y);
-                }
+        else {
+            for (std::uint32_t x = SIZE; x != 0; ) {
+                --x;
+                inner(x, y);
             }
         }
     }
