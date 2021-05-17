@@ -1,21 +1,7 @@
 #include "pixel_api.h"
-#include "generator.h"
 
 namespace alc {
 namespace {
-
-alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
-{
-    // The number of steps taken will be the number of pixels in the longest
-    // direction. This will ensure no missing pixels.
-    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
-
-    for (int i = 0; i != steps; ++i) {
-        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
-        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        co_yield {x, y};
-    }
-}
 
 std::size_t get_pos(glm::vec2 pos)
 {
@@ -37,8 +23,17 @@ glm::ivec2 pixel_api::move_to(glm::ivec2 offset)
     };
 
     glm::ivec2 position = d_pos;
-    for (auto p : pixel_path(d_pos, d_pos + offset)) {
+
+    auto a = d_pos;
+    auto b = d_pos + offset;
+    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+
+    for (int i = 0; i != steps; ++i) {
+        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
+        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
+        glm::ivec2 p{x, y};
         if (!tile::valid(p)) { break; }
+
         auto curr_pos = get_pos(position);
         auto next_pos = get_pos(p);
         if (can_displace(d_pixels_ref[curr_pos], d_pixels_ref[next_pos])) {

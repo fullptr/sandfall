@@ -3,7 +3,6 @@
 #include "shader.h"
 #include "tile.h"
 #include "pixel.h"
-#include "generator.h"
 #include "world_settings.h"
 
 #include <glad/glad.h>
@@ -59,19 +58,6 @@ public:
         }
     }
 };
-
-alc::generator<glm::ivec2> pixel_path(glm::ivec2 a, glm::ivec2 b)
-{
-    // The number of steps taken will be the number of pixels in the longest
-    // direction. This will ensure no missing pixels.
-    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
-
-    for (int i = 0; i != steps; ++i) {
-        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
-        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        co_yield {x, y};
-    }
-}
 
 int main()
 {

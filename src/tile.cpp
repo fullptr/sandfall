@@ -1,6 +1,5 @@
 #include "tile.h"
 #include "log.h"
-#include "generator.h"
 #include "pixel_api.h"
 
 #include <glad/glad.h>
