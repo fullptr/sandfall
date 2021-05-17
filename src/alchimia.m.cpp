@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "tile.h"
 #include "pixel.h"
+#include "world_settings.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -63,6 +64,10 @@ int main()
     using namespace alc;
 
     alc::window window("alchimia", 1280, 720);
+
+    alc::world_settings settings{
+        .gravity = {0.0f, 9.81f}
+    };
 
     float size = 720.0f;
     float vertices[] = {
@@ -145,11 +150,12 @@ int main()
 
         accumulator += dt;
         while (accumulator > frame_length) {
-            tile->simulate(frame_length);
+            tile->simulate(settings, frame_length);
             accumulator -= frame_length;
         }
 
         window.clear();
+        
         if (left_mouse_down) {
             auto coord = glm::floor(((float)alc::tile::SIZE / (float)size) * window.get_mouse_pos());
             if (tile->valid(coord)) {

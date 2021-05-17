@@ -17,6 +17,8 @@ add_executable(
     shader.cpp
     tile.cpp
     pixel.cpp
+    pixel_api.cpp
+    update_functions.cpp
 )
 
 target_include_directories(alchimia PUBLIC .)
