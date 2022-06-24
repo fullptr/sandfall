@@ -1,2 +1,2 @@
-# alchimia
-A pixel simulation game
+# sandfall
+A pixel simulation engine

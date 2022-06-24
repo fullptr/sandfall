@@ -1,10 +1,9 @@
-#ifndef INCLUDED_ALCHIMIA_LOG
-#define INCLUDED_ALCHIMIA_LOG
+#pragma once
 #include <string>
 #include <fmt/core.h>
 #include <fmt/color.h>
 
-namespace alc {
+namespace sand {
 namespace log {
 
 void _prefixed_log(std::string_view prefix, std::string_view message);
@@ -43,5 +42,3 @@ void fatal(std::string_view format, Args&&... args)
 
 }
 }
-
-#endif // INCLUDED_ALCHIMIA_LOG

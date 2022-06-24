@@ -10,7 +10,7 @@
 #include "Windows.h"
 #endif
 
-namespace alc {
+namespace sand {
 namespace log {
 namespace {
 

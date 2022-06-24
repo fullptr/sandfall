@@ -1,5 +1,4 @@
-#ifndef INCLUDED_ALCHIMIA_TEXTURE
-#define INCLUDED_ALCHIMIA_TEXTURE
+#pragma once
 #include "pixel.h"
 #include "world_settings.h"
 
@@ -8,7 +7,7 @@
 
 #include <glm/glm.hpp>
 
-namespace alc {
+namespace sand {
 
 class tile
 {
@@ -41,5 +40,3 @@ public:
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_WINDOW

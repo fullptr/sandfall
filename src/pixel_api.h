@@ -1,11 +1,10 @@
-#ifndef INCLUDED_ALCHIMIA_PIXEL_API
-#define INCLUDED_ALCHIMIA_PIXEL_API
+#pragma once
 #include "tile.h"
 #include "world_settings.h"
 
 #include <glm/glm.hpp>
 
-namespace alc {
+namespace sand {
 
 class pixel_api
 // A light wrapper around pixel data to make the material update functions simpler.
@@ -29,5 +28,3 @@ public:
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_PIXEL_API

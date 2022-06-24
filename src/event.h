@@ -1,12 +1,11 @@
-#ifndef INCLUDED_ALCHIMIA_EVENT
-#define INCLUDED_ALCHIMIA_EVENT
+#pragma once
 #include <glm/glm.hpp>
 
 #include <any>
 #include <string>
 #include <cstdint>
 
-namespace alc {
+namespace sand {
 
 class event
 {
@@ -111,5 +110,3 @@ struct window_maximise_event {};
 struct window_minimise_event {};
 
 }
-
-#endif // INCLUDED_ALCHIMIA_EVENT

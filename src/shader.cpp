@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <fstream>
 
-namespace alc {
+namespace sand {
 namespace {
 
 std::uint32_t compile_shader(std::uint32_t type, const std::string& source)

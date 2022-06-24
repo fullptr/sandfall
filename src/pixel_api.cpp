@@ -1,11 +1,11 @@
 #include "pixel_api.h"
 
-namespace alc {
+namespace sand {
 namespace {
 
 std::size_t get_pos(glm::vec2 pos)
 {
-    return pos.x + alc::tile::SIZE * pos.y;
+    return pos.x + tile::SIZE * pos.y;
 }
 
 }
