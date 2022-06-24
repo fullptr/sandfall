@@ -10,8 +10,8 @@ find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
 add_executable(
-    alchimia
-    alchimia.m.cpp
+    sandfall
+    sandfall.m.cpp
     window.cpp
     log.cpp
     shader.cpp
@@ -21,10 +21,10 @@ add_executable(
     update_functions.cpp
 )
 
-target_include_directories(alchimia PUBLIC .)
+target_include_directories(sandfall PUBLIC .)
 
 target_link_libraries(
-    alchimia PUBLIC
+    sandfall PUBLIC
     glfw
     glad::glad
     glm

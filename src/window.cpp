@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <cstdint>
 
-namespace alc {
+namespace sand {
 
 window::window(const std::string& name, int width, int height)
     : d_data({name, width, height, true, true, true, nullptr})
@@ -69,7 +69,7 @@ window::window(const std::string& name, int width, int height)
 		glViewport(0, 0, width, height);
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = alc::make_event<alc::window_resize_event>(width, height);
+		auto event = make_event<window_resize_event>(width, height);
 		data->width = width;
 		data->height = height;
 		data->callback(event);
@@ -79,7 +79,7 @@ window::window(const std::string& name, int width, int height)
 	{
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = alc::make_event<alc::window_closed_event>();
+		auto event = make_event<window_closed_event>();
 		data->running = false;
 		data->callback(event);
 	});
@@ -90,15 +90,15 @@ window::window(const std::string& name, int width, int height)
 		switch (action)
 		{
 			case GLFW_PRESS: {
-				auto event = alc::make_event<alc::keyboard_pressed_event>(key, scancode, mods);
+				auto event = make_event<keyboard_pressed_event>(key, scancode, mods);
 				data->callback(event);
 			} break;
 			case GLFW_RELEASE: {
-				auto event = alc::make_event<alc::keyboard_released_event>(key, scancode, mods);
+				auto event = make_event<keyboard_released_event>(key, scancode, mods);
 				data->callback(event);
 			} break;
 			case GLFW_REPEAT: {
-				auto event = alc::make_event<alc::keyboard_held_event>(key, scancode, mods);
+				auto event = make_event<keyboard_held_event>(key, scancode, mods);
 				data->callback(event);
 			} break;
 		}
@@ -114,13 +114,13 @@ window::window(const std::string& name, int width, int height)
 		switch (action)
 		{
 		case GLFW_PRESS: {
-			auto event = alc::make_event<alc::mouse_pressed_event>(
+			auto event = make_event<mouse_pressed_event>(
 				button, action, mods, glm::vec2{x, y}
 			);
 			data->callback(event);
 		} break;
 		case GLFW_RELEASE: {
-			auto event = alc::make_event<alc::mouse_released_event>(
+			auto event = make_event<mouse_released_event>(
 				button, action, mods, glm::vec2{x, y}
 			);
 			data->callback(event);
@@ -131,26 +131,26 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = alc::make_event<alc::mouse_moved_event>(x_pos, y_pos);
+		auto event = make_event<mouse_moved_event>(x_pos, y_pos);
 		data->callback(event);
 	});
 
 	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = alc::make_event<alc::mouse_scrolled_event>(x_offset, y_offset);
+		auto event = make_event<mouse_scrolled_event>(x_offset, y_offset);
 		data->callback(event);
 	});
 
 	glfwSetWindowFocusCallback(native_window, [](GLFWwindow* window, int focused) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (focused) {
-			auto event = alc::make_event<alc::window_got_focus_event>();
+			auto event = make_event<window_got_focus_event>();
 			data->focused = true;
 			data->callback(event);
 		}
 		else {
-			auto event = alc::make_event<alc::window_lost_focus_event>();
+			auto event = make_event<window_lost_focus_event>();
 			data->focused = false;
 			data->callback(event);
 		}
@@ -159,11 +159,11 @@ window::window(const std::string& name, int width, int height)
 	glfwSetWindowMaximizeCallback(native_window, [](GLFWwindow* window, int maximized) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (maximized) {
-			auto event = alc::make_event<alc::window_maximise_event>();
+			auto event = make_event<window_maximise_event>();
 			data->callback(event);
 		}
 		else {
-			auto event = alc::make_event<alc::window_minimise_event>();
+			auto event = make_event<window_minimise_event>();
 			data->callback(event);
 		}
 	});
@@ -171,7 +171,7 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCharCallback(native_window, [](GLFWwindow* window, std::uint32_t key) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = alc::make_event<alc::keyboard_typed_event>(key);
+		auto event = make_event<keyboard_typed_event>(key);
 		data->callback(event);
 	});
 }

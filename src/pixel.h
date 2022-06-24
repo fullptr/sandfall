@@ -1,8 +1,7 @@
-#ifndef INCLUDED_ALCHIMIA_PIXEL
-#define INCLUDED_ALCHIMIA_PIXEL
+#pragma once
 #include <glm/glm.hpp>
 
-namespace alc {
+namespace sand {
 
 enum class pixel_type
 {
@@ -31,5 +30,3 @@ struct pixel
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_PIXEL

@@ -1,8 +1,7 @@
-#ifndef INCLUDED_ALCHIMIA_WORLD_SETTINGS
-#define INCLUDED_ALCHIMIA_WORLD_SETTINGS
+#pragma once
 #include <glm/glm.hpp>
 
-namespace alc {
+namespace sand {
 
 // Static Settings
 static constexpr float TERMINAL_VELOCITY = 5.0f;
@@ -15,5 +14,3 @@ struct world_settings
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_WORLD_SETTINGS

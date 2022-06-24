@@ -1,11 +1,10 @@
-#ifndef INCLUDED_ALCHIMIA_SHADER
-#define INCLUDED_ALCHIMIA_SHADER
+#pragma once
 #include <glm/glm.hpp>
 
 #include <cstdint>
 #include <string>
 
-namespace alc {
+namespace sand {
 
 std::string parse_shader(const std::string& filepath);
 
@@ -28,5 +27,3 @@ public:
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_SHADER

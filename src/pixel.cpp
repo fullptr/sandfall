@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-namespace alc {
+namespace sand {
 
 pixel pixel::air()
 {

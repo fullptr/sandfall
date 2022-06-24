@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 
-namespace alc {
+namespace sand {
 
 void update_sand(pixel_api&& api, double dt)
 {

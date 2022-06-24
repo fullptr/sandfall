@@ -1,5 +1,4 @@
-#ifndef INCLUDED_ALCHIMIA_WINDOW
-#define INCLUDED_ALCHIMIA_WINDOW
+#pragma once
 #include "event.h"
 
 #include <glm/glm.hpp>
@@ -11,9 +10,9 @@
 
 struct GLFWwindow;
 
-namespace alc {
+namespace sand {
 
-using callback_t = std::function<void(alc::event&)>;
+using callback_t = std::function<void(event&)>;
 
 struct window_data
 {
@@ -61,5 +60,3 @@ private:
 };
 
 }
-
-#endif // INCLUDED_ALCHIMIA_WINDOW
