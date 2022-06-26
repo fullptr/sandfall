@@ -85,15 +85,15 @@ struct mouse_released_event {
 };
 
 struct mouse_moved_event {
-	float x_pos;
-	float y_pos;
-	mouse_moved_event(float x, float y) : x_pos(x), y_pos(y) {}
+	double x_pos;
+	double y_pos;
+	mouse_moved_event(double x, double y) : x_pos(x), y_pos(y) {}
 };
 
 struct mouse_scrolled_event {
-	float x_offset;
-	float y_offset;
-	mouse_scrolled_event(float x, float y) : x_offset(x), y_offset(y) {}
+	double x_offset;
+	double y_offset;
+	mouse_scrolled_event(double x, double y) : x_offset(x), y_offset(y) {}
 };
 
 // WINDOW EVENTS

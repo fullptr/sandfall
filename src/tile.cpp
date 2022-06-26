@@ -21,6 +21,7 @@ tile::tile()
 {
     const auto default_pixel = pixel{pixel_type::air};
     d_pixels.fill(default_pixel);
+    d_buffer.fill(default_pixel.colour);
 }
 
 bool tile::valid(glm::ivec2 pos)
