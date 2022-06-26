@@ -18,9 +18,9 @@ public:
     pixel_api(tile::pixels& pixels_ref, glm::ivec2 pos)
         : d_pixels_ref(pixels_ref), d_pos(pos) {}
 
-    glm::ivec2 move_to(glm::ivec2 offset);
-    pixel& get(glm::ivec2 offset);
-    bool valid(glm::ivec2 offset);
+    bool move_to(glm::ivec2 offset);
 };
+
+auto move_to(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool;
 
 }

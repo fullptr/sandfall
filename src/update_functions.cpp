@@ -22,7 +22,7 @@ void update_sand(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const wo
     vel += settings.gravity * (float)dt;
     glm::ivec2 offset{0, glm::max(1, (int)vel.y)};
 
-    if (api.move_to(offset) != glm::ivec2{0, 0}) {
+    if (api.move_to(offset)) {
         return;
     }
 
@@ -35,7 +35,7 @@ void update_sand(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const wo
     }
 
     for (auto offset : offsets) {
-        if (api.move_to(offset) != glm::ivec2{0, 0}) {
+        if (api.move_to(offset)) {
             return;
         } else {
             pixels[get_pos(pos)].velocity = {0.0, 0.0};
@@ -49,7 +49,7 @@ void update_water(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const w
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (api.move_to(offset) != glm::ivec2{0, 0}) {
+    if (api.move_to(offset)) {
         return;
     }
 
@@ -63,7 +63,7 @@ void update_water(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const w
     }
 
     for (auto offset : offsets) {
-        if (api.move_to(offset) != glm::ivec2{0, 0}) {
+        if (api.move_to(offset)) {
             if (offset.y == 0) {
                 pixels[get_pos(pos + offset)].velocity = {0.0, 0.0};
             }
