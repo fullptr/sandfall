@@ -16,6 +16,8 @@
 #include <array>
 #include <memory>
 #include <chrono>
+#include <random>
+#include <numbers>
 #include <string_view>
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
@@ -59,6 +61,19 @@ public:
         }
     }
 };
+
+float random_from_range(float min, float max)
+{
+    static std::default_random_engine gen;
+    return std::uniform_real_distribution(min, max)(gen);
+}
+
+auto circle_offset(float radius) -> glm::ivec2
+{
+    const auto r = random_from_range(0, radius);
+    const auto theta = random_from_range(0, 2 * std::numbers::pi);
+    return { r * std::cos(theta), r * std::sin(theta) };
+}
 
 int main()
 {
@@ -159,6 +174,7 @@ int main()
         
         if (left_mouse_down) {
             auto coord = glm::floor(((float)sand::tile::SIZE / (float)size) * window.get_mouse_pos());
+            coord += circle_offset(7.0f);
             if (tile->valid(coord)) {
                 switch (loop.get()) {
                     case sand::pixel_type::air: tile->set(coord, pixel::air()); break;
