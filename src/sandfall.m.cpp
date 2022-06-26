@@ -174,7 +174,7 @@ int main()
         window.clear();
         
         if (left_mouse_down) {
-            auto coord = glm::floor(((float)sand::tile::SIZE / (float)size) * window.get_mouse_pos());
+            auto coord = glm::floor(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
             coord += circle_offset(7.0f);
             if (tile->valid(coord)) {
                 switch (loop.get()) {

@@ -12,7 +12,7 @@ namespace {
 
 std::size_t get_pos(glm::vec2 pos)
 {
-    return pos.x + tile::SIZE * pos.y;
+    return pos.x + tile_size * pos.y;
 }
 
 }
@@ -27,7 +27,7 @@ tile::tile()
     glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SIZE, SIZE, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tile_size, tile_size, 0, GL_RGBA, GL_FLOAT, nullptr);
 
     pixel default_pixel{ pixel_type::air };
     d_pixels.fill(default_pixel);
@@ -35,7 +35,7 @@ tile::tile()
 
 bool tile::valid(glm::ivec2 pos)
 {
-    return 0 <= pos.x && pos.x < SIZE && 0 <= pos.y && pos.y < SIZE;
+    return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
 void tile::bind() const
@@ -63,15 +63,15 @@ void tile::simulate(const world_settings& settings, double dt)
     };
 
 
-    for (std::uint32_t y = SIZE; y != 0; ) {
+    for (std::uint32_t y = tile_size; y != 0; ) {
         --y;
         if (rand() % 2) {
-            for (std::uint32_t x = 0; x != SIZE; ++x) {
+            for (std::uint32_t x = 0; x != tile_size; ++x) {
                 inner(x, y);
             }
         }
         else {
-            for (std::uint32_t x = SIZE; x != 0; ) {
+            for (std::uint32_t x = tile_size; x != 0; ) {
                 --x;
                 inner(x, y);
             }
@@ -79,7 +79,7 @@ void tile::simulate(const world_settings& settings, double dt)
     }
 
     std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
-    for (std::size_t pos = 0; pos != SIZE * SIZE; ++pos) {
+    for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
     }
 }
@@ -87,7 +87,7 @@ void tile::simulate(const world_settings& settings, double dt)
 void tile::update_texture()
 {
     bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tile_size, tile_size, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
 }
 
 void tile::set(glm::ivec2 pos, const pixel& pixel)

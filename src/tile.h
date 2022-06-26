@@ -9,13 +9,14 @@
 
 namespace sand {
 
+static constexpr std::uint32_t tile_size = 256;
+
 class tile
 {
 public:
-    static constexpr std::uint32_t SIZE = 256;
 
-    using buffer = std::array<glm::vec4, SIZE * SIZE>;
-    using pixels = std::array<pixel, SIZE * SIZE>;
+    using buffer = std::array<glm::vec4, tile_size * tile_size>;
+    using pixels = std::array<pixel, tile_size * tile_size>;
 
 private:
     std::uint32_t d_texture;
