@@ -6,10 +6,19 @@
 #include <glm/glm.hpp>
 
 namespace sand {
+namespace {
 
-void update_sand(pixel_api&& api, const world_settings& settings, double dt)
+std::size_t get_pos(glm::vec2 pos)
 {
-    auto& vel = api.get({0, 0}).velocity;
+    return pos.x + tile::SIZE * pos.y;
+}
+
+}
+
+
+void update_sand(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+{
+    auto& vel = pixels[get_pos(pos)].velocity;
     vel += settings.gravity * (float)dt;
     glm::ivec2 offset{0, glm::max(1, (int)vel.y)};
 
@@ -29,14 +38,14 @@ void update_sand(pixel_api&& api, const world_settings& settings, double dt)
         if (api.move_to(offset) != glm::ivec2{0, 0}) {
             return;
         } else {
-            api.get({0, 0}).velocity = {0.0, 0.0};
+            pixels[get_pos(pos)].velocity = {0.0, 0.0};
         }
     }
 }
 
-void update_water(pixel_api&& api, const world_settings& settings, double dt)
+void update_water(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    auto& vel = api.get({0, 0}).velocity;
+    auto& vel = pixels[get_pos(pos)].velocity;
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
@@ -56,16 +65,16 @@ void update_water(pixel_api&& api, const world_settings& settings, double dt)
     for (auto offset : offsets) {
         if (api.move_to(offset) != glm::ivec2{0, 0}) {
             if (offset.y == 0) {
-                api.get(offset).velocity = {0.0, 0.0};
+                pixels[get_pos(pos + offset)].velocity = {0.0, 0.0};
             }
             return;
         }
     }
 }
 
-void update_rock(pixel_api&& api, const world_settings& settings, double dt)
+void update_rock(pixel_api&& api, tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    api.get({0, 0}).updated_this_frame = true;
+    pixels[get_pos(pos)].updated_this_frame = true;
 }
 
 }
