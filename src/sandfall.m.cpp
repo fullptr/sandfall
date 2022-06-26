@@ -1,9 +1,10 @@
-#include "window.h"
 #include "log.h"
-#include "shader.h"
 #include "tile.h"
 #include "pixel.h"
 #include "world_settings.h"
+
+#include "graphics/window.h"
+#include "graphics/shader.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
