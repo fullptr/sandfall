@@ -10,7 +10,7 @@ texture::texture(std::uint32_t width, std::uint32_t height)
     : d_width(width)
     , d_height(height)
 {
-    glGenTextures(1, &d_texture); 
+    glGenTextures(1, &d_texture);
     bind();
 
     glTextureParameteri(d_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -19,6 +19,11 @@ texture::texture(std::uint32_t width, std::uint32_t height)
     glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+}
+
+texture::~texture()
+{
+    glDeleteTextures(1, &d_texture);
 }
 
 auto texture::set_data(std::span<const glm::vec4> data) -> void
