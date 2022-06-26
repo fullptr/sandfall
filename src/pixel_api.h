@@ -21,6 +21,6 @@ public:
     bool move_to(glm::ivec2 offset);
 };
 
-auto move_to(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool;
+auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool;
 
 }
