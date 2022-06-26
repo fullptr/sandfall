@@ -19,6 +19,7 @@ add_executable(
 
     graphics/window.cpp
     graphics/shader.cpp
+    graphics/texture.cpp
 )
 
 target_include_directories(sandfall PUBLIC .)

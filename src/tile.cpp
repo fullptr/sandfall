@@ -19,16 +19,6 @@ std::size_t get_pos(glm::vec2 pos)
 
 tile::tile()
 {
-    glGenTextures(1, &d_texture); 
-    bind();
-
-    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tile_size, tile_size, 0, GL_RGBA, GL_FLOAT, nullptr);
-
     pixel default_pixel{ pixel_type::air };
     d_pixels.fill(default_pixel);
 }
@@ -36,11 +26,6 @@ tile::tile()
 bool tile::valid(glm::ivec2 pos)
 {
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
-}
-
-void tile::bind() const
-{
-    glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
 void tile::simulate(const world_settings& settings, double dt)
@@ -82,12 +67,6 @@ void tile::simulate(const world_settings& settings, double dt)
     for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
     }
-}
-
-void tile::update_texture()
-{
-    bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tile_size, tile_size, 0, GL_RGBA, GL_FLOAT, d_buffer.data());
 }
 
 void tile::set(glm::ivec2 pos, const pixel& pixel)

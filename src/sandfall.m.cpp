@@ -5,6 +5,7 @@
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
+#include "graphics/texture.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -80,9 +81,9 @@ int main()
 {
     using namespace sand;
 
-    sand::window window("alchimia", 1280, 720);
+    auto window = sand::window{"alchimia", 1280, 720};
 
-    sand::world_settings settings{
+    auto settings = sand::world_settings{
         .gravity = {0.0f, 9.81f}
     };
 
@@ -94,24 +95,23 @@ int main()
         0.0f, size, 0.0f, 1.0f
     };
 
-    unsigned int indices[] = {0, 1, 2, 0, 2, 3};
+    std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
-    unsigned int VAO;
+    std::uint32_t VAO = 0;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    unsigned int VBO;
+    std::uint32_t VBO = 0;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    unsigned int EBO;
+    std::uint32_t EBO = 0;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     auto tile = std::make_unique<sand::tile>();
-    tile->fill(pixel::air());
 
     pixel_type_loop loop;
 
@@ -139,7 +139,8 @@ int main()
         }
     });
 
-    sand::shader shader("res\\vertex.glsl", "res\\fragment.glsl");
+    auto shader = sand::shader{"res\\vertex.glsl", "res\\fragment.glsl"};
+    auto texture = sand::texture{sand::tile_size, sand::tile_size};
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -147,7 +148,6 @@ int main()
     shader.bind();
     shader.load_sampler("u_texture", 0);
     shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
-    tile->bind();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -187,7 +187,7 @@ int main()
             }
         }
 
-        tile->update_texture();
+        texture.set_data(tile->data());
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         window.swap_and_poll();
         
