@@ -9,7 +9,7 @@ namespace sand {
 
 class event
 {
-    std::any d_event;
+    std::any d_event; // TODO: Make a variant instead
     bool     d_consumed;
 
 public:

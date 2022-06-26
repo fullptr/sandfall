@@ -19,7 +19,6 @@ public:
     using pixels = std::array<pixel, tile_size * tile_size>;
 
 private:
-    std::uint32_t d_texture;
     buffer        d_buffer;
     pixels        d_pixels;
 
