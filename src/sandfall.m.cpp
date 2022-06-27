@@ -2,6 +2,7 @@
 #include "tile.h"
 #include "pixel.h"
 #include "world_settings.h"
+#include "timer.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
@@ -146,11 +147,10 @@ int main()
     double frame_length = 1.0 / 60.0;
     double accumulator = 0;
 
+    auto timer = sand::timer{};
+
     while (window.is_running()) {
-        prev = now;
-        now = clock.now();
-        std::chrono::duration<double> dt_duration = (now - prev);
-        double dt = dt_duration.count();
+        double dt = timer.on_update();
 
         accumulator += dt;
         bool updated = false;
@@ -160,12 +160,12 @@ int main()
             updated = true;
         }
 
-        if (updated) {
+        //if (updated) {
             window.clear();
             texture.set_data(tile->data());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             window.swap_buffers();
-        }
+        //}
         
         if (left_mouse_down) {
             auto coord = glm::floor(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
@@ -178,6 +178,6 @@ int main()
         window.poll_events();
         
         auto mouse = window.get_mouse_pos();
-        window.set_name(fmt::format("Alchimia - Current tool: {}", loop.get_pixel_name()));
+        window.set_name(fmt::format("Alchimia - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
     }
 }

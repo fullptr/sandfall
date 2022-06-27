@@ -16,6 +16,7 @@ add_executable(
     tile.cpp
     pixel.cpp
     update_functions.cpp
+    timer.cpp
 
     graphics/window.cpp
     graphics/shader.cpp
