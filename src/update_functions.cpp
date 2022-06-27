@@ -10,7 +10,7 @@ namespace {
 
 std::size_t get_pos(glm::vec2 pos)
 {
-    return pos.x + tile::SIZE * pos.y;
+    return pos.x + tile_size * pos.y;
 }
 
 auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool

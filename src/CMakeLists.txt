@@ -12,12 +12,14 @@ find_package(fmt CONFIG REQUIRED)
 add_executable(
     sandfall
     sandfall.m.cpp
-    window.cpp
     log.cpp
-    shader.cpp
     tile.cpp
     pixel.cpp
     update_functions.cpp
+
+    graphics/window.cpp
+    graphics/shader.cpp
+    graphics/texture.cpp
 )
 
 target_include_directories(sandfall PUBLIC .)
