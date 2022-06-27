@@ -16,7 +16,8 @@ struct static_solid
 
 struct liquid
 {
-    glm::vec2 velocity = {0.0, 0.0};
+    glm::vec2 velocity        = {0.0, 0.0};
+    int       dispersion_rate = 3;
 };
 
 struct gas

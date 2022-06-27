@@ -10,7 +10,7 @@
 namespace sand {
 
 static constexpr std::uint32_t tile_size = 256;
-static constexpr float         tile_size_d = static_cast<double>(tile_size);
+static constexpr float         tile_size_f = static_cast<double>(tile_size);
 
 class tile
 {

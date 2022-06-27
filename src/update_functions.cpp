@@ -123,15 +123,15 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (move_towards(pixels, pos, offset)) {
+    if (move_towards_new(pixels, pos, offset)) {
         return;
     }
 
     auto offsets = std::array{
         glm::ivec2{-1, 1},
         glm::ivec2{1, 1},
-        glm::ivec2{-1, 0},
-        glm::ivec2{1, 0}
+        glm::ivec2{-1 * data.dispersion_rate, 0},
+        glm::ivec2{data.dispersion_rate, 0}
     };
 
     if (rand() % 2) {
@@ -143,7 +143,7 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
         if (offset.y == 0) {
             data.velocity = {0.0, 0.0};
         }
-        if (move_towards(pixels, pos, offset)) {
+        if (move_towards_new(pixels, pos, offset)) {
             return;
         }
     }

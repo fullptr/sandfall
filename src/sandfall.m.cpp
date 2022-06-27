@@ -139,14 +139,8 @@ int main()
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    std::chrono::steady_clock clock;
-    auto prev = clock.now();
-    auto now = clock.now();
-    double dt = 0;
-
-    double frame_length = 1.0 / 60.0;
-    double accumulator = 0;
-
+    auto frame_length = 1.0 / 60.0;
+    auto accumulator = 0.0;
     auto timer = sand::timer{};
 
     while (window.is_running()) {
@@ -168,7 +162,7 @@ int main()
         }
         
         if (left_mouse_down) {
-            auto coord = circle_offset(10.0f) + glm::ivec2(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
+            auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, loop.get_pixel());
             }
