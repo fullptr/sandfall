@@ -58,7 +58,8 @@ auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> b
 
 void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    auto& vel = pixels[get_pos(pos)].velocity;
+    auto& data = std::get<movable_solid>(pixels[get_pos(pos)].data);
+    auto& vel = data.velocity;
     vel += settings.gravity * (float)dt;
     glm::ivec2 offset{0, glm::max(1, (int)vel.y)};
 
@@ -78,14 +79,15 @@ void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& set
         if (move_towards(pixels, pos, offset)) {
             return;
         } else {
-            pixels[get_pos(pos)].velocity = {0.0, 0.0};
+            data.velocity = {0.0, 0.0};
         }
     }
 }
 
 void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    auto& vel = pixels[get_pos(pos)].velocity;
+    auto& data = std::get<liquid>(pixels[get_pos(pos)].data);
+    auto& vel = data.velocity;
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
@@ -105,7 +107,7 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
     for (auto offset : offsets) {
         if (move_towards(pixels, pos, offset)) {
             if (offset.y == 0) {
-                pixels[get_pos(pos + offset)].velocity = {0.0, 0.0};
+                std::get<liquid>(pixels[get_pos(pos + offset)].data).velocity = {0.0, 0.0};
             }
             return;
         }

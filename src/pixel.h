@@ -14,23 +14,6 @@ enum class pixel_type
     red_sand
 };
 
-struct pixel
-{
-    // Static Data
-    pixel_type type;
-    glm::vec4  colour;
-
-    // Dynamic Data
-    glm::vec2 velocity = {0.0, 0.0};
-    bool updated_this_frame = false;
-
-    static pixel air();
-    static pixel sand();
-    static pixel rock();
-    static pixel water();
-    static pixel red_sand();
-};
-
 struct movable_solid
 {
     glm::vec2 velocity = {0.0, 0.0};
@@ -63,15 +46,19 @@ using pixel_data = std::variant<
     empty
 >;
 
-struct pixel2
+struct pixel
 {
     pixel_data data;
+    pixel_type type;
     glm::vec4  colour;
     bool       updated_this_frame = false;
-};
 
-auto make_sand() -> pixel2;
-auto make_water() -> pixel2;
-auto make_stone() -> pixel2;
+    // TODO: Move out of struct
+    static pixel air();
+    static pixel sand();
+    static pixel rock();
+    static pixel water();
+    static pixel red_sand();
+};
 
 }
