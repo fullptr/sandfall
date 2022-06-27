@@ -7,7 +7,7 @@ namespace sand {
 pixel pixel::air()
 {
     return {
-        .data = empty{},
+        .data = std::monostate{},
         .colour = {
             44.0f / 256.0f,
             58.0f / 256.0f,

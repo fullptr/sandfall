@@ -153,12 +153,19 @@ int main()
         double dt = dt_duration.count();
 
         accumulator += dt;
+        bool updated = false;
         while (accumulator > frame_length) {
             tile->simulate(settings, frame_length);
             accumulator -= frame_length;
+            updated = true;
         }
 
-        window.clear();
+        if (updated) {
+            window.clear();
+            texture.set_data(tile->data());
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+            window.swap_buffers();
+        }
         
         if (left_mouse_down) {
             auto coord = glm::floor(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
@@ -168,9 +175,7 @@ int main()
             }
         }
 
-        texture.set_data(tile->data());
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-        window.swap_and_poll();
+        window.poll_events();
         
         auto mouse = window.get_mouse_pos();
         window.set_name(fmt::format("Alchimia - Current tool: {}", loop.get_pixel_name()));

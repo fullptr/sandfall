@@ -23,16 +23,12 @@ struct gas
 {
 };
 
-struct empty
-{
-};
-
 using pixel_data = std::variant<
     movable_solid,
     static_solid,
     liquid,
     gas,
-    empty
+    std::monostate
 >;
 
 struct pixel
