@@ -28,10 +28,6 @@ struct pixel_type_loop
 {
     int type = 0;
 
-public:
-    inline void operator++() { type = (type + 1) % 5; }
-    inline void operator--() { type = (type - 1) % 5; }
-
     auto get_pixel() -> sand::pixel
     {
         switch (type) {
@@ -123,9 +119,9 @@ int main()
         }
         else if (auto e = event.get_if<sand::mouse_scrolled_event>()) {
             if (e->y_offset > 0) {
-                ++loop;
+                ++loop.type;
             } else if (e->y_offset < 0) {
-                --loop;
+                --loop.type;
             }
         }
     });

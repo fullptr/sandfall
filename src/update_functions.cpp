@@ -67,8 +67,9 @@ void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& set
         return;
     }
 
-    std::array<glm::ivec2, 2> offsets = {
-        glm::ivec2{-1, 1}, glm::ivec2{1, 1},
+    auto offsets = std::array{
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, 1},
     };
 
     if (rand() % 2) {
@@ -95,8 +96,11 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
         return;
     }
 
-    std::array<glm::ivec2, 4> offsets = {
-        glm::ivec2{-1, 1}, glm::ivec2{1, 1}, glm::ivec2{-1, 0}, glm::ivec2{1, 0}
+    auto offsets = std::array{
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, 1},
+        glm::ivec2{-1, 0},
+        glm::ivec2{1, 0}
     };
 
     if (rand() % 2) {
