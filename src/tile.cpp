@@ -19,7 +19,7 @@ std::size_t get_pos(glm::vec2 pos)
 
 tile::tile()
 {
-    const auto default_pixel = pixel{pixel_type::air};
+    const auto default_pixel = pixel::air();
     d_pixels.fill(default_pixel);
     d_buffer.fill(default_pixel.colour);
 }
