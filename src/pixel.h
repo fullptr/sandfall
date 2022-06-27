@@ -5,15 +5,6 @@
 
 namespace sand {
 
-enum class pixel_type
-{
-    air,
-    sand,
-    rock,
-    water,
-    red_sand
-};
-
 struct movable_solid
 {
     glm::vec2 velocity = {0.0, 0.0};
@@ -21,7 +12,6 @@ struct movable_solid
 
 struct static_solid
 {
-
 };
 
 struct liquid
@@ -31,7 +21,6 @@ struct liquid
 
 struct gas
 {
-
 };
 
 struct empty
@@ -49,7 +38,6 @@ using pixel_data = std::variant<
 struct pixel
 {
     pixel_data data;
-    pixel_type type;
     glm::vec4  colour;
     bool       updated_this_frame = false;
 

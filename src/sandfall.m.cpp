@@ -24,42 +24,35 @@
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
-std::string_view to_string(sand::pixel_type type)
+struct pixel_type_loop
 {
-    switch (type) {
-        case sand::pixel_type::air: return "air";
-        case sand::pixel_type::sand: return "sand";
-        case sand::pixel_type::water: return "water";
-        case sand::pixel_type::rock: return "rock";
-        case sand::pixel_type::red_sand: return "red_sand";
-        default: return "unknown";
-    }
-}
-
-class pixel_type_loop
-{
-    sand::pixel_type d_type = sand::pixel_type::air;
+    int type = 0;
 
 public:
-    sand::pixel_type get() const { return d_type; }
-    
-    inline void operator++() {
-        switch (d_type) {
-            case sand::pixel_type::air: d_type = sand::pixel_type::sand; return;
-            case sand::pixel_type::sand: d_type = sand::pixel_type::water; return;
-            case sand::pixel_type::water: d_type = sand::pixel_type::rock; return;
-            case sand::pixel_type::rock: d_type = sand::pixel_type::red_sand; return;
-            case sand::pixel_type::red_sand: d_type = sand::pixel_type::air; return;
+    inline void operator++() { type = (type + 1) % 5; }
+    inline void operator--() { type = (type - 1) % 5; }
+
+    auto get_pixel() -> sand::pixel
+    {
+        switch (type) {
+            case 0: return sand::pixel::air();
+            case 1: return sand::pixel::sand();
+            case 2: return sand::pixel::water();
+            case 3: return sand::pixel::rock();
+            case 4: return sand::pixel::red_sand();
+            default: return sand::pixel::air();
         }
     }
 
-    inline void operator--() {
-        switch (d_type) {
-            case sand::pixel_type::air: d_type = sand::pixel_type::red_sand; return;
-            case sand::pixel_type::sand: d_type = sand::pixel_type::air; return;
-            case sand::pixel_type::water: d_type = sand::pixel_type::sand; return;
-            case sand::pixel_type::rock: d_type = sand::pixel_type::water; return;
-            case sand::pixel_type::red_sand: d_type = sand::pixel_type::rock; return;
+    auto get_pixel_name() -> std::string_view
+    {
+        switch (type) {
+            case 0: return "air";
+            case 1: return "sand";
+            case 2: return "water";
+            case 3: return "rock";
+            case 4: return "red_sand";
+            default: return "unknown";
         }
     }
 };
@@ -114,8 +107,6 @@ int main()
     auto tile = std::make_unique<sand::tile>();
 
     pixel_type_loop loop;
-
-    auto current_tool = pixel_type::sand;
 
     bool left_mouse_down = false; // TODO: Remove, do it in a better way
 
@@ -177,13 +168,7 @@ int main()
             auto coord = glm::floor(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
             coord += circle_offset(7.0f);
             if (tile->valid(coord)) {
-                switch (loop.get()) {
-                    case sand::pixel_type::air: tile->set(coord, pixel::air()); break;
-                    case sand::pixel_type::sand: tile->set(coord, pixel::sand()); break;
-                    case sand::pixel_type::water: tile->set(coord, pixel::water()); break;
-                    case sand::pixel_type::rock: tile->set(coord, pixel::rock()); break;
-                    case sand::pixel_type::red_sand: tile->set(coord, pixel::red_sand()); break;
-                }
+                tile->set(coord, loop.get_pixel());
             }
         }
 
@@ -192,6 +177,6 @@ int main()
         window.swap_and_poll();
         
         auto mouse = window.get_mouse_pos();
-        window.set_name(fmt::format("Alchimia - Current tool: {}", to_string(loop.get())));
+        window.set_name(fmt::format("Alchimia - Current tool: {}", loop.get_pixel_name()));
     }
 }

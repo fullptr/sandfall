@@ -16,10 +16,10 @@ std::size_t get_pos(glm::vec2 pos)
 auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool
 {
     const auto can_displace = [](const pixel& src, const pixel& dst) {
-        if (src.type == pixel_type::sand && (dst.type == pixel_type::air || dst.type == pixel_type::water)) {
+        if (std::holds_alternative<movable_solid>(src.data) && (std::holds_alternative<empty>(dst.data) || std::holds_alternative<liquid>(dst.data))) {
             return true;
         }
-        else if (src.type == pixel_type::water && dst.type == pixel_type::air) {
+        else if (std::holds_alternative<liquid>(src.data) && std::holds_alternative<empty>(dst.data)) {
             return true;
         }
         return false;
