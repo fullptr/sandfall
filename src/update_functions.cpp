@@ -105,10 +105,10 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
     }
 
     for (auto offset : offsets) {
+        if (offset.y == 0) {
+            data.velocity = {0.0, 0.0};
+        }
         if (move_towards(pixels, pos, offset)) {
-            if (offset.y == 0) {
-                std::get<liquid>(pixels[get_pos(pos + offset)].data).velocity = {0.0, 0.0};
-            }
             return;
         }
     }
