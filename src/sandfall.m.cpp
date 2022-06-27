@@ -150,7 +150,7 @@ int main()
     auto timer = sand::timer{};
 
     while (window.is_running()) {
-        double dt = timer.on_update();
+        const double dt = timer.on_update();
 
         accumulator += dt;
         bool updated = false;
@@ -160,24 +160,21 @@ int main()
             updated = true;
         }
 
-        //if (updated) {
+        if (updated) {
             window.clear();
             texture.set_data(tile->data());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             window.swap_buffers();
-        //}
+        }
         
         if (left_mouse_down) {
-            auto coord = glm::floor(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
-            coord += circle_offset(7.0f);
+            auto coord = circle_offset(10.0f) + glm::ivec2(((float)sand::tile_size / (float)size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, loop.get_pixel());
             }
         }
 
         window.poll_events();
-        
-        auto mouse = window.get_mouse_pos();
         window.set_name(fmt::format("Alchimia - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
     }
 }
