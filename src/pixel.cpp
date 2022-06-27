@@ -69,4 +69,44 @@ pixel pixel::red_sand()
     };
 }
 
+auto make_sand() -> pixel2
+{
+    auto ret = pixel2{};
+    auto& data = ret.data.emplace<movable_solid>();
+    ret.colour = {
+        (248.0f + (rand() % 20) - 10) / 256.0f,
+        (239.0f + (rand() % 20) - 10) / 256.0f,
+        (186.0f + (rand() % 20) - 10) / 256.0f,
+        1.0
+    };
+    return ret;
+}
+
+auto make_water() -> pixel2
+{
+    auto ret = pixel2{};
+    auto& data = ret.data.emplace<liquid>();
+    ret.colour = {
+        (27.0f  + (rand() % 20) - 10) / 256.0f,
+        (156.0f + (rand() % 20) - 10) / 256.0f,
+        (252.0f + (rand() % 20) - 10) / 256.0f,
+        1.0
+    };
+    return ret;
+}
+
+auto make_stone() -> pixel2
+{
+    auto ret = pixel2{};
+    auto& data = ret.data.emplace<static_solid>();
+    ret.colour = {
+        (200.0f + (rand() % 20) - 10) / 256.0f,
+        (200.0f + (rand() % 20) - 10) / 256.0f,
+        (200.0f + (rand() % 20) - 10) / 256.0f,
+        1.0
+    };
+    return ret;
+}
+
+
 }
