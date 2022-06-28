@@ -35,6 +35,7 @@ public:
     void fill(const pixel& p);
 
     const pixel& at(glm::ivec2 pos) const;
+    pixel& at(glm::ivec2 pos);
 
     const buffer& data() const { return d_buffer; }
 };

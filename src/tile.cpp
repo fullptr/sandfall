@@ -37,13 +37,13 @@ void tile::simulate(const world_settings& settings, double dt)
 
         // TODO: Use std::visit
         if (std::holds_alternative<movable_solid>(pixel.data)) {
-            update_sand(d_pixels, {x, y}, settings, dt);
+            update_sand(*this, {x, y}, settings, dt);
         }
         else if (std::holds_alternative<static_solid>(pixel.data)) {
-            update_rock(d_pixels, {x, y}, settings, dt);
+            update_rock(*this, {x, y}, settings, dt);
         }
         else if (std::holds_alternative<liquid>(pixel.data)) {
-            update_water(d_pixels, {x, y}, settings, dt);
+            update_water(*this, {x, y}, settings, dt);
         }
     };
 
@@ -78,6 +78,16 @@ void tile::set(glm::ivec2 pos, const pixel& pixel)
 void tile::fill(const pixel& p)
 {
     d_pixels.fill(p);
+}
+
+const pixel& tile::at(glm::ivec2 pos) const
+{
+    return d_pixels[get_pos(pos)];
+}
+
+pixel& tile::at(glm::ivec2 pos)
+{
+    return d_pixels[get_pos(pos)];
 }
 
 }

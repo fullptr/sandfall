@@ -25,12 +25,12 @@ auto below(glm::ivec2 pos) -> glm::ivec2
     return pos + glm::ivec2{0, 1};
 }
 
-auto can_pixel_move_to(tile::pixels& pixels, glm::ivec2 src, glm::ivec2 dst) -> bool
+auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bool
 {
     if (!tile::valid(src) || !tile::valid(dst)) { return false; }
 
-    const auto& from = pixels[get_pos(src)];
-    const auto& to   = pixels[get_pos(dst)];
+    const auto& from = pixels.at(src);
+    const auto& to   = pixels.at(dst);
 
     if (from.is<movable_solid>() && to.is<empty, liquid>()) {
         return true;
@@ -41,7 +41,7 @@ auto can_pixel_move_to(tile::pixels& pixels, glm::ivec2 src, glm::ivec2 dst) -> 
     return false;
 }
 
-auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
+auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
 {
     glm::ivec2 position = from;
 
@@ -55,18 +55,15 @@ auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> g
         glm::ivec2 p{x, y};
         if (!tile::valid(p)) { break; }
 
-        auto curr_pos = get_pos(position);
-        auto next_pos = get_pos(p);
         if (can_pixel_move_to(pixels, position, p)) {
-            std::swap(pixels[curr_pos], pixels[next_pos]);
-            curr_pos = next_pos;
+            std::swap(pixels.at(position), pixels.at(p));
             position = p;
         } else {
             break;
         }
     }
     if (position != from) {
-        pixels[get_pos(position)].updated_this_frame = true;
+        pixels.at(position).updated_this_frame = true;
     }
     return position;
 }
@@ -74,10 +71,13 @@ auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> g
 }
 
 
-void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
+    // Store a copy to compare against later
+    const auto orignal_pos = pos;
+
     if (can_pixel_move_to(pixels, pos, below(pos))) {
-        auto& data = std::get<movable_solid>(pixels[get_pos(pos)].data);
+        auto& data = std::get<movable_solid>(pixels.at(pos).data);
         auto& vel = data.velocity;
         vel.y += 0.2f;
         
@@ -88,7 +88,7 @@ void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& set
         // Transfer velocity
     }
 
-    if (pixels[get_pos(pos)].updated_this_frame) {
+    if (pixels.at(pos).updated_this_frame) {
         return;
     }
 
@@ -101,7 +101,7 @@ void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& set
         std::swap(offsets[0], offsets[1]);
     }
 
-    auto& data = std::get<movable_solid>(pixels[get_pos(pos)].data);
+    auto& data = std::get<movable_solid>(pixels.at(pos).data);
     for (auto offset : offsets) {
         if (move_towards(pixels, pos, offset) != pos) {
             return;
@@ -111,9 +111,9 @@ void update_sand(tile::pixels& pixels, glm::ivec2 pos, const world_settings& set
     }
 }
 
-void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    auto& data = std::get<liquid>(pixels[get_pos(pos)].data);
+    auto& data = std::get<liquid>(pixels.at(pos).data);
     auto& vel = data.velocity;
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
@@ -144,9 +144,9 @@ void update_water(tile::pixels& pixels, glm::ivec2 pos, const world_settings& se
     }
 }
 
-void update_rock(tile::pixels& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+void update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    pixels[get_pos(pos)].updated_this_frame = true;
+    pixels.at(pos).updated_this_frame = true;
 }
 
 }
