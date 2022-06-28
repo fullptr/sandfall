@@ -3,6 +3,7 @@
 #include "pixel.h"
 #include "world_settings.h"
 #include "timer.hpp"
+#include "random.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"

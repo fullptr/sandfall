@@ -1,5 +1,6 @@
 #include "update_functions.h"
 #include "overloaded.hpp"
+#include "random.hpp"
 
 #include <array>
 #include <utility>
@@ -9,16 +10,6 @@
 
 namespace sand {
 namespace {
-
-std::size_t get_pos(glm::ivec2 pos)
-{
-    return pos.x + tile_size * pos.y;
-}
-
-std::size_t get_below(glm::ivec2 pos)
-{
-    return pos.x + tile_size * (pos.y + 1);
-}
 
 auto below(glm::ivec2 pos) -> glm::ivec2
 {
@@ -55,7 +46,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
         if (!can_pixel_move_to(pixels, curr_pos, next_pos)) {
             break;
         }
-        
+
         curr_pos = pixels.swap(curr_pos, next_pos);
     }
 
@@ -71,19 +62,26 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
 void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
-    // Store a copy to compare against later
-    const auto orignal_pos = pos;
-
+    // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
-        auto& data = std::get<movable_solid>(pixels.at(pos).data);
-        auto& vel = data.velocity;
-        vel.y += 0.2f;
+        auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
+        vel.y += 0.2f; // gravity
+        vel.y = glm::max(1.0f, vel.y);
         
-        const auto offset = glm::ivec2{0, 1 + vel.y};
-        pos = move_towards(pixels, pos, offset);
+        pos = move_towards(pixels, pos, vel);
+    }
 
-    } else {
-        // Transfer velocity
+    // Transfer to horizontal
+    else {
+        auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
+        if (vel.y > 5.0 && vel.x == 0.0) {
+            vel.x = 0.2 * vel.y * sign_flip();
+            vel.y = 0.0;
+        }
+        vel.x *= 0.8;
+
+        pos = move_towards(pixels, pos, vel);
+        
     }
 
     if (pixels.at(pos).updated_this_frame) {
@@ -103,8 +101,6 @@ void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     for (auto offset : offsets) {
         if (move_towards(pixels, pos, offset) != pos) {
             return;
-        } else {
-            data.velocity = {0.0, 0.0};
         }
     }
 }
