@@ -90,4 +90,10 @@ pixel& tile::at(glm::ivec2 pos)
     return d_pixels[get_pos(pos)];
 }
 
+auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
+{
+    std::swap(at(lhs), at(rhs));
+    return rhs;
+}
+
 }

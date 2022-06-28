@@ -43,29 +43,27 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bo
 
 auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
 {
-    glm::ivec2 position = from;
+    glm::ivec2 curr_pos = from;
 
-    auto a = from;
-    auto b = from + offset;
-    int steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+    const auto a = from;
+    const auto b = from + offset;
+    const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
 
     for (int i = 0; i != steps; ++i) {
-        int x = a.x + (float)(i + 1)/steps * (b.x - a.x);
-        int y = a.y + (float)(i + 1)/steps * (b.y - a.y);
-        glm::ivec2 p{x, y};
-        if (!tile::valid(p)) { break; }
+        glm::ivec2 next_pos = a + (b - a) * (i + 1)/steps;
 
-        if (can_pixel_move_to(pixels, position, p)) {
-            std::swap(pixels.at(position), pixels.at(p));
-            position = p;
-        } else {
+        if (!can_pixel_move_to(pixels, curr_pos, next_pos)) {
             break;
         }
+        
+        curr_pos = pixels.swap(curr_pos, next_pos);
     }
-    if (position != from) {
-        pixels.at(position).updated_this_frame = true;
+
+    if (curr_pos != from) {
+        pixels.at(curr_pos).updated_this_frame = true;
     }
-    return position;
+
+    return curr_pos;
 }
 
 }
