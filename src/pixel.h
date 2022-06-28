@@ -24,12 +24,14 @@ struct gas
 {
 };
 
+using empty = std::monostate;
+
 using pixel_data = std::variant<
     movable_solid,
     static_solid,
     liquid,
     gas,
-    std::monostate
+    empty
 >;
 
 struct pixel
@@ -37,6 +39,9 @@ struct pixel
     pixel_data data;
     glm::vec4  colour;
     bool       updated_this_frame = false;
+
+    template <typename... Ts>
+    auto is() const -> bool { return (std::holds_alternative<Ts>(data) || ...); }
 
     // TODO: Move out of struct
     static pixel air();

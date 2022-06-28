@@ -1,7 +1,9 @@
 #include "update_functions.h"
+#include "overloaded.hpp"
 
 #include <array>
 #include <utility>
+#include <variant>
 
 #include <glm/glm.hpp>
 
@@ -16,10 +18,10 @@ std::size_t get_pos(glm::vec2 pos)
 auto move_towards(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) -> bool
 {
     const auto can_displace = [](const pixel& src, const pixel& dst) {
-        if (std::holds_alternative<movable_solid>(src.data) && (std::holds_alternative<std::monostate>(dst.data) || std::holds_alternative<liquid>(dst.data))) {
+        if (src.is<movable_solid>() && dst.is<empty, liquid>()) {
             return true;
         }
-        else if (std::holds_alternative<liquid>(src.data) && std::holds_alternative<std::monostate>(dst.data)) {
+        else if (src.is<liquid>() && dst.is<empty>()) {
             return true;
         }
         return false;
@@ -70,7 +72,7 @@ auto move_towards_new(tile::pixels& pixels, glm::ivec2 from, glm::ivec2 offset) 
 
         auto curr_pos = get_pos(new_position);
         auto next_pos = get_pos(p);
-        if (std::holds_alternative<std::monostate>(pixels[next_pos].data)) {
+        if (pixels[next_pos].is<empty>()) {
             std::swap(pixels[curr_pos], pixels[next_pos]);
             curr_pos = next_pos;
             new_position = p;
