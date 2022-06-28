@@ -39,7 +39,8 @@ public:
     ~window();
 
     void clear() const;
-    void swap_and_poll();
+    void swap_buffers();
+    void poll_events();
 
     bool is_running() const;
 

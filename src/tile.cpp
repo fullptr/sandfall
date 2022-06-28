@@ -34,17 +34,16 @@ void tile::simulate(const world_settings& settings, double dt)
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         auto& pixel = d_pixels[get_pos({x, y})];
         if (pixel.updated_this_frame) { return; }
-        switch (pixel.type) {
-            case pixel_type::sand: {
-                update_sand(d_pixels, {x, y}, settings, dt);
-            } break;
-            case pixel_type::rock: {
-                update_rock(d_pixels, {x, y}, settings, dt);
-            } break;
-            case pixel_type::water: {
-                update_water(d_pixels, {x, y}, settings, dt);
-            }
-            case pixel_type::air: return;
+
+        // TODO: Use std::visit
+        if (std::holds_alternative<movable_solid>(pixel.data)) {
+            update_sand(*this, {x, y}, settings, dt);
+        }
+        else if (std::holds_alternative<static_solid>(pixel.data)) {
+            update_rock(*this, {x, y}, settings, dt);
+        }
+        else if (std::holds_alternative<liquid>(pixel.data)) {
+            update_water(*this, {x, y}, settings, dt);
         }
     };
 
@@ -79,6 +78,22 @@ void tile::set(glm::ivec2 pos, const pixel& pixel)
 void tile::fill(const pixel& p)
 {
     d_pixels.fill(p);
+}
+
+const pixel& tile::at(glm::ivec2 pos) const
+{
+    return d_pixels[get_pos(pos)];
+}
+
+pixel& tile::at(glm::ivec2 pos)
+{
+    return d_pixels[get_pos(pos)];
+}
+
+auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
+{
+    std::swap(at(lhs), at(rhs));
+    return rhs;
 }
 
 }

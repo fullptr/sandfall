@@ -10,6 +10,7 @@
 namespace sand {
 
 static constexpr std::uint32_t tile_size = 256;
+static constexpr float         tile_size_f = static_cast<double>(tile_size);
 
 class tile
 {
@@ -34,6 +35,10 @@ public:
     void fill(const pixel& p);
 
     const pixel& at(glm::ivec2 pos) const;
+    pixel& at(glm::ivec2 pos);
+
+    // Returns the rhs
+    auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
 
     const buffer& data() const { return d_buffer; }
 };

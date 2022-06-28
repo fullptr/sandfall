@@ -7,7 +7,7 @@ namespace sand {
 pixel pixel::air()
 {
     return {
-        .type = pixel_type::air,
+        .data = std::monostate{},
         .colour = {
             44.0f / 256.0f,
             58.0f / 256.0f,
@@ -20,7 +20,7 @@ pixel pixel::air()
 pixel pixel::sand()
 {
     return {
-        .type = pixel_type::sand,
+        .data = movable_solid{},
         .colour = {
             (248.0f + (rand() % 20) - 10) / 256.0f,
             (239.0f + (rand() % 20) - 10) / 256.0f,
@@ -33,7 +33,7 @@ pixel pixel::sand()
 pixel pixel::rock()
 {
     return {
-        .type = pixel_type::rock,
+        .data = static_solid{},
         .colour = {
             (200.0f + (rand() % 20) - 10) / 256.0f,
             (200.0f + (rand() % 20) - 10) / 256.0f,
@@ -46,8 +46,8 @@ pixel pixel::rock()
 pixel pixel::water()
 {
     return {
-        pixel_type::water,
-        {
+        .data = liquid{},
+        .colour = {
             (27.0f  + (rand() % 20) - 10) / 256.0f,
             (156.0f + (rand() % 20) - 10) / 256.0f,
             (252.0f + (rand() % 20) - 10) / 256.0f,
@@ -59,7 +59,7 @@ pixel pixel::water()
 pixel pixel::red_sand()
 {
     return {
-        .type = pixel_type::sand,
+        .data = movable_solid{},
         .colour = {
             (254.0f + (rand() % 20) - 10) / 256.0f,
             (164.0f + (rand() % 20) - 10) / 256.0f,
@@ -68,5 +68,6 @@ pixel pixel::red_sand()
         }
     };
 }
+
 
 }

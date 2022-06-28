@@ -188,10 +188,14 @@ void window::clear() const
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-void window::swap_and_poll()
+void window::poll_events()
+{
+    glfwPollEvents();
+}
+
+void window::swap_buffers()
 {
     glfwSwapBuffers(d_data.native_window);
-    glfwPollEvents();
 }
 
 bool window::is_running() const
