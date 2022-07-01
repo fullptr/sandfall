@@ -36,9 +36,10 @@ struct pixel_type_loop
         switch (type) {
             case 0: return sand::pixel::air();
             case 1: return sand::pixel::sand();
-            case 2: return sand::pixel::water();
-            case 3: return sand::pixel::rock();
-            case 4: return sand::pixel::red_sand();
+            case 2: return sand::pixel::coal();
+            case 3: return sand::pixel::water();
+            case 4: return sand::pixel::rock();
+            case 5: return sand::pixel::red_sand();
             default: return sand::pixel::air();
         }
     }
@@ -48,9 +49,10 @@ struct pixel_type_loop
         switch (type) {
             case 0: return "air";
             case 1: return "sand";
-            case 2: return "water";
-            case 3: return "rock";
-            case 4: return "red_sand";
+            case 2: return "coal";
+            case 3: return "water";
+            case 4: return "rock";
+            case 5: return "red_sand";
             default: return "unknown";
         }
     }
@@ -154,6 +156,7 @@ int main()
             tile->simulate(settings, frame_length);
             accumulator -= frame_length;
             updated = true;
+
         }
 
         if (updated) {
@@ -161,16 +164,15 @@ int main()
             texture.set_data(tile->data());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             window.swap_buffers();
+            window.poll_events();
+            window.set_name(fmt::format("Sandfall - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
         }
         
         if (left_mouse_down) {
-            auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+            const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, loop.get_pixel());
             }
         }
-
-        window.poll_events();
-        window.set_name(fmt::format("Alchimia - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
     }
 }
