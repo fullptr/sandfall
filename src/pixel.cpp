@@ -23,7 +23,7 @@ pixel pixel::sand()
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .intertial_resistance = 0.1f
+            .inertial_resistance = 0.1f
         },
         .colour = {
             (248.0f + (rand() % 20) - 10) / 256.0f,
@@ -40,7 +40,7 @@ pixel pixel::coal()
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .intertial_resistance = 0.95f
+            .inertial_resistance = 0.95f
         },
         .colour = {
             (30.0f + (rand() % 20) - 10) / 256.0f,
@@ -83,7 +83,7 @@ pixel pixel::red_sand()
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .intertial_resistance = 0.1f
+            .inertial_resistance = 0.1f
         },
         .colour = {
             (254.0f + (rand() % 20) - 10) / 256.0f,

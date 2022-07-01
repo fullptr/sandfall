@@ -39,12 +39,12 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
 
     if (pixels.valid(l) && pixels.at(l).is<movable_solid>()) {
         auto& px = pixels.at(l).as<movable_solid>();
-        px.is_falling = random_from_range(0.0f, 1.0f) > px.intertial_resistance || px.is_falling;
+        px.is_falling = random_from_range(0.0f, 1.0f) > px.inertial_resistance || px.is_falling;
     }
 
     if (pixels.valid(r) && pixels.at(r).is<movable_solid>()) {
         auto& px = pixels.at(r).as<movable_solid>();
-        px.is_falling = random_from_range(0.0f, 1.0f) > px.intertial_resistance || px.is_falling;
+        px.is_falling = random_from_range(0.0f, 1.0f) > px.inertial_resistance || px.is_falling;
     }
 }
 

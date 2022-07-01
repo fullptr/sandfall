@@ -12,7 +12,7 @@ struct movable_solid
     bool      is_falling;
 
     // Static values - these define how the element behaves and should stay const
-    float     intertial_resistance;
+    float     inertial_resistance;
 };
 
 struct static_solid
