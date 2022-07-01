@@ -40,7 +40,7 @@ pixel pixel::coal()
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .intertial_resistance = 0.9f
+            .intertial_resistance = 0.95f
         },
         .colour = {
             (30.0f + (rand() % 20) - 10) / 256.0f,
