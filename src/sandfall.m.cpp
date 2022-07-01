@@ -36,9 +36,10 @@ struct pixel_type_loop
         switch (type) {
             case 0: return sand::pixel::air();
             case 1: return sand::pixel::sand();
-            case 2: return sand::pixel::water();
-            case 3: return sand::pixel::rock();
-            case 4: return sand::pixel::red_sand();
+            case 2: return sand::pixel::coal();
+            case 3: return sand::pixel::water();
+            case 4: return sand::pixel::rock();
+            case 5: return sand::pixel::red_sand();
             default: return sand::pixel::air();
         }
     }
@@ -48,9 +49,10 @@ struct pixel_type_loop
         switch (type) {
             case 0: return "air";
             case 1: return "sand";
-            case 2: return "water";
-            case 3: return "rock";
-            case 4: return "red_sand";
+            case 2: return "coal";
+            case 3: return "water";
+            case 4: return "rock";
+            case 5: return "red_sand";
             default: return "unknown";
         }
     }

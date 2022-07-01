@@ -20,11 +20,32 @@ pixel pixel::air()
 pixel pixel::sand()
 {
     return {
-        .data = movable_solid{},
+        .data = movable_solid{
+            .velocity = {0.0, 0.0},
+            .is_falling = true,
+            .intertial_resistance = 0.1f
+        },
         .colour = {
             (248.0f + (rand() % 20) - 10) / 256.0f,
             (239.0f + (rand() % 20) - 10) / 256.0f,
             (186.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        }
+    };
+}
+
+pixel pixel::coal()
+{
+    return {
+        .data = movable_solid{
+            .velocity = {0.0, 0.0},
+            .is_falling = true,
+            .intertial_resistance = 0.9f
+        },
+        .colour = {
+            (30.0f + (rand() % 20) - 10) / 256.0f,
+            (39.0f + (rand() % 20) - 10) / 256.0f,
+            (46.0f + (rand() % 20) - 10) / 256.0f,
             1.0
         }
     };
@@ -59,7 +80,11 @@ pixel pixel::water()
 pixel pixel::red_sand()
 {
     return {
-        .data = movable_solid{},
+        .data = movable_solid{
+            .velocity = {0.0, 0.0},
+            .is_falling = true,
+            .intertial_resistance = 0.1f
+        },
         .colour = {
             (254.0f + (rand() % 20) - 10) / 256.0f,
             (164.0f + (rand() % 20) - 10) / 256.0f,

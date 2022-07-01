@@ -7,9 +7,9 @@ namespace sand {
 
 struct movable_solid
 {
-    glm::vec2 velocity = {0.0, 0.0};
-    bool      is_falling = true;
-    float     intertial_resistance = 0.1f;
+    glm::vec2 velocity;
+    bool      is_falling;
+    float     intertial_resistance;
 };
 
 struct static_solid
@@ -54,6 +54,7 @@ struct pixel
     // TODO: Move out of struct
     static pixel air();
     static pixel sand();
+    static pixel coal();
     static pixel rock();
     static pixel water();
     static pixel red_sand();
