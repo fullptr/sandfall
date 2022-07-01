@@ -17,7 +17,7 @@ inline auto random_from_range(int min, int max) -> int
 
 inline auto coin_flip() -> bool
 {
-    return random_from_range(0, 1) == 0;
+    return random_from_range(0.0f, 1.0f) > 0.5;
 }
 
 inline auto sign_flip() -> int

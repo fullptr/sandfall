@@ -154,6 +154,7 @@ int main()
             tile->simulate(settings, frame_length);
             accumulator -= frame_length;
             updated = true;
+
         }
 
         if (updated) {
@@ -161,16 +162,15 @@ int main()
             texture.set_data(tile->data());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
             window.swap_buffers();
+            window.poll_events();
+            window.set_name(fmt::format("Sandfall - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
         }
         
         if (left_mouse_down) {
-            auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+            const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, loop.get_pixel());
             }
         }
-
-        window.poll_events();
-        window.set_name(fmt::format("Alchimia - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
     }
 }

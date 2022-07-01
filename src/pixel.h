@@ -8,6 +8,8 @@ namespace sand {
 struct movable_solid
 {
     glm::vec2 velocity = {0.0, 0.0};
+    bool      is_falling = true;
+    float     intertial_resistance = 0.1f;
 };
 
 struct static_solid
@@ -42,6 +44,12 @@ struct pixel
 
     template <typename... Ts>
     auto is() const -> bool { return (std::holds_alternative<Ts>(data) || ...); }
+
+    template <typename T>
+    auto as() -> T& { return std::get<T>(data); }
+
+    template <typename T>
+    auto as() const -> const T& { return std::get<T>(data); }
 
     // TODO: Move out of struct
     static pixel air();
