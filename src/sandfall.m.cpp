@@ -75,7 +75,7 @@ int main()
 {
     using namespace sand;
 
-    auto window = sand::window{"alchimia", 1280, 720};
+    auto window = sand::window{"sandfall", 1280, 720};
 
     auto settings = sand::world_settings{
         .gravity = {0.0f, 9.81f}
@@ -91,25 +91,22 @@ int main()
 
     std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
-    std::uint32_t VAO = 0;
+    auto VAO = std::uint32_t{};
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    std::uint32_t VBO = 0;
+    auto VBO = std::uint32_t{};
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    std::uint32_t EBO = 0;
+    auto EBO = std::uint32_t{};
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    auto tile = std::make_unique<sand::tile>();
-
-    pixel_type_loop loop;
-
-    bool left_mouse_down = false; // TODO: Remove, do it in a better way
+    auto loop = pixel_type_loop{};
+    auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
     window.set_callback([&](sand::event& event) {
         if (auto e = event.get_if<sand::mouse_pressed_event>()) {
@@ -131,6 +128,7 @@ int main()
         }
     });
 
+    auto tile = std::make_unique<sand::tile>();
     auto shader = sand::shader{"res\\vertex.glsl", "res\\fragment.glsl"};
     auto texture = sand::texture{sand::tile_size, sand::tile_size};
 
