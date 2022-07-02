@@ -15,6 +15,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+
 #include <cstdint>
 #include <cstddef>
 #include <array>

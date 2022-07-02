@@ -8,6 +8,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 add_executable(
     sandfall
@@ -31,4 +32,5 @@ target_link_libraries(
     glad::glad
     glm
     fmt::fmt
+    imgui::imgui
 )
