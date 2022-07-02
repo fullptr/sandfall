@@ -52,6 +52,8 @@ public:
     float width() const { return (float)d_data.width; }
     float height() const { return (float)d_data.height; }
 
+    GLFWwindow* native_handle() { return d_data.native_window; }
+
 private:
     window(const window&) = delete;
     window& operator=(const window&) = delete;

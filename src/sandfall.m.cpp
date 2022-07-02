@@ -15,9 +15,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <imgui.h>
-#include <imgui_impl_opengl3.h>
-
 #include <cstdint>
 #include <cstddef>
 #include <array>
@@ -27,6 +24,11 @@
 #include <random>
 #include <numbers>
 #include <string_view>
+
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
@@ -148,8 +150,22 @@ int main()
     auto accumulator = 0.0;
     auto timer = sand::timer{};
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window.native_handle(), true);
+    ImGui_ImplOpenGL3_Init("#version 410");
+
     while (window.is_running()) {
         const double dt = timer.on_update();
+        window.poll_events();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        bool show = true;
+        ImGui::ShowDemoWindow(&show);
 
         accumulator += dt;
         bool updated = false;
@@ -161,13 +177,12 @@ int main()
         }
 
         if (updated) {
-            window.clear();
             texture.set_data(tile->data());
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-            window.swap_buffers();
-            window.poll_events();
             window.set_name(fmt::format("Sandfall - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
         }
+
+        window.clear();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
         if (left_mouse_down) {
             const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
@@ -175,5 +190,15 @@ int main()
                 tile->set(coord, loop.get_pixel());
             }
         }
+
+        ImGui::EndFrame();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        window.swap_buffers();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
