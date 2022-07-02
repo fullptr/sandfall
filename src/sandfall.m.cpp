@@ -140,12 +140,10 @@ int main()
         ImGui::ShowDemoWindow(&show);
 
         if (ImGui::Begin("Editor")) {
-            std::size_t i = 0;
-            for (const auto& [name, _] : editor.pixel_makers) {
-                if (ImGui::Selectable(name.c_str(), editor.current == i)) {
+            for (std::size_t i = 0; i != editor.pixel_makers.size(); ++i) {
+                if (ImGui::Selectable(editor.pixel_makers[i].first.c_str(), editor.current == i)) {
                     editor.current = i;
                 }
-                ++i;
             }
             ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 20);
             if (ImGui::Button("Clear")) {
