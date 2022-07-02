@@ -30,12 +30,10 @@
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
-struct pixel_type_loop
+struct editor
 {
-    using pixel_maker = sand::pixel(*)();
-
     std::size_t current = 0;
-    std::vector<std::pair<std::string, pixel_maker>> pixel_makers = {
+    std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
         {"air", sand::pixel::air},
         {"sand", sand::pixel::sand},
         {"coal", sand::pixel::coal},
@@ -97,7 +95,7 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    auto loop = pixel_type_loop{};
+    auto editor = ::editor{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
     auto ui = sand::ui{window};
@@ -153,11 +151,11 @@ int main()
 
         if (ImGui::Begin("Editor")) {
             std::size_t i = 0;
-            for (const auto& [name, _] : loop.pixel_makers) {
+            for (const auto& [name, _] : editor.pixel_makers) {
                 char buf[32];
                 sprintf(buf, name.c_str());
-                if (ImGui::Selectable(buf, loop.current == i)) {
-                    loop.current = i;
+                if (ImGui::Selectable(buf, editor.current == i)) {
+                    editor.current = i;
                 }
                 ++i;
             }
@@ -184,7 +182,7 @@ int main()
         if (left_mouse_down) {
             const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
-                tile->set(coord, loop.get_pixel());
+                tile->set(coord, editor.get_pixel());
             }
         }
 
