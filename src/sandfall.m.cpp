@@ -41,6 +41,8 @@ struct editor
         {"rock", sand::pixel::rock},
         {"red_sand", sand::pixel::red_sand},
     };
+
+    float brush_size = 5.0f;
     
     auto get_pixel() -> sand::pixel
     {
@@ -159,6 +161,10 @@ int main()
                 }
                 ++i;
             }
+            ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 20);
+            if (ImGui::Button("Clear")) {
+                tile->fill(sand::pixel::air());
+            }
         }
         ImGui::End();
 
@@ -180,7 +186,8 @@ int main()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
         if (left_mouse_down) {
-            const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+            const auto coord = circle_offset(editor.brush_size)
+                             + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, editor.get_pixel());
             }
