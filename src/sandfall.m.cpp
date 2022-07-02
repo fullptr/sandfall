@@ -17,18 +17,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 
-#include <cstdint>
 #include <cstddef>
 #include <array>
 #include <utility>
 #include <memory>
-#include <chrono>
-#include <unordered_map>
 #include <random>
 #include <numbers>
-#include <string_view>
-
-constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
 struct editor
 {
@@ -50,16 +44,10 @@ struct editor
     }
 };
 
-float random_from_range(float min, float max)
-{
-    static std::default_random_engine gen;
-    return std::uniform_real_distribution(min, max)(gen);
-}
-
 auto circle_offset(float radius) -> glm::ivec2
 {
-    const auto r = random_from_range(0, radius);
-    const auto theta = random_from_range(0, 2 * std::numbers::pi);
+    const auto r = sand::random_from_range(0.0f, radius);
+    const auto theta = sand::random_from_range(0.0f, 2.0f * std::numbers::pi);
     return { r * std::cos(theta), r * std::sin(theta) };
 }
 
@@ -154,9 +142,7 @@ int main()
         if (ImGui::Begin("Editor")) {
             std::size_t i = 0;
             for (const auto& [name, _] : editor.pixel_makers) {
-                char buf[32];
-                sprintf(buf, name.c_str());
-                if (ImGui::Selectable(buf, editor.current == i)) {
+                if (ImGui::Selectable(name.c_str(), editor.current == i)) {
                     editor.current = i;
                 }
                 ++i;
