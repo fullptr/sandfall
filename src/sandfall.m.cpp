@@ -8,12 +8,14 @@
 #include "graphics/window.h"
 #include "graphics/shader.h"
 #include "graphics/texture.hpp"
+#include "graphics/ui.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui/imgui.h>
 
 #include <cstdint>
 #include <cstddef>
@@ -24,11 +26,6 @@
 #include <random>
 #include <numbers>
 #include <string_view>
-
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-
 
 constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
 
@@ -150,19 +147,13 @@ int main()
     auto accumulator = 0.0;
     auto timer = sand::timer{};
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window.native_handle(), true);
-    ImGui_ImplOpenGL3_Init("#version 410");
+    auto ui = sand::ui{window};
 
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.poll_events();
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        ui.begin_frame();
 
         bool show = true;
         ImGui::ShowDemoWindow(&show);
@@ -191,14 +182,8 @@ int main()
             }
         }
 
-        ImGui::EndFrame();
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
+        ui.end_frame();
+
         window.swap_buffers();
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 }
