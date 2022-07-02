@@ -8,66 +8,46 @@
 #include "graphics/window.h"
 #include "graphics/shader.h"
 #include "graphics/texture.hpp"
+#include "graphics/ui.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui/imgui.h>
 
-#include <cstdint>
 #include <cstddef>
 #include <array>
 #include <utility>
 #include <memory>
-#include <chrono>
 #include <random>
 #include <numbers>
-#include <string_view>
 
-constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0f, 1.0 };
-
-struct pixel_type_loop
+struct editor
 {
-    int type = 0;
+    std::size_t current = 0;
+    std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
+        {"air", sand::pixel::air},
+        {"sand", sand::pixel::sand},
+        {"coal", sand::pixel::coal},
+        {"water", sand::pixel::water},
+        {"rock", sand::pixel::rock},
+        {"red_sand", sand::pixel::red_sand},
+    };
 
+    float brush_size = 5.0f;
+    
     auto get_pixel() -> sand::pixel
     {
-        switch (type) {
-            case 0: return sand::pixel::air();
-            case 1: return sand::pixel::sand();
-            case 2: return sand::pixel::coal();
-            case 3: return sand::pixel::water();
-            case 4: return sand::pixel::rock();
-            case 5: return sand::pixel::red_sand();
-            default: return sand::pixel::air();
-        }
-    }
-
-    auto get_pixel_name() -> std::string_view
-    {
-        switch (type) {
-            case 0: return "air";
-            case 1: return "sand";
-            case 2: return "coal";
-            case 3: return "water";
-            case 4: return "rock";
-            case 5: return "red_sand";
-            default: return "unknown";
-        }
+        return pixel_makers[current].second();
     }
 };
 
-float random_from_range(float min, float max)
-{
-    static std::default_random_engine gen;
-    return std::uniform_real_distribution(min, max)(gen);
-}
-
 auto circle_offset(float radius) -> glm::ivec2
 {
-    const auto r = random_from_range(0, radius);
-    const auto theta = random_from_range(0, 2 * std::numbers::pi);
+    const auto r = sand::random_from_range(0.0f, radius);
+    const auto theta = sand::random_from_range(0.0f, 2.0f * std::numbers::pi);
     return { r * std::cos(theta), r * std::sin(theta) };
 }
 
@@ -75,8 +55,8 @@ int main()
 {
     using namespace sand;
 
-    auto window = sand::window{"alchimia", 1280, 720};
-
+    auto window = sand::window{"sandfall", 1280, 720};
+    
     auto settings = sand::world_settings{
         .gravity = {0.0f, 9.81f}
     };
@@ -91,27 +71,36 @@ int main()
 
     std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
-    std::uint32_t VAO = 0;
+    auto VAO = std::uint32_t{};
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    std::uint32_t VBO = 0;
+    auto VBO = std::uint32_t{};
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    std::uint32_t EBO = 0;
+    auto EBO = std::uint32_t{};
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    auto tile = std::make_unique<sand::tile>();
+    auto editor = ::editor{};
+    auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
-    pixel_type_loop loop;
-
-    bool left_mouse_down = false; // TODO: Remove, do it in a better way
+    auto ui = sand::ui{window};
 
     window.set_callback([&](sand::event& event) {
+        auto& io = ImGui::GetIO();
+        if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
+            event.consume();
+            return;
+        }
+        if (event.is_mount_event() && io.WantCaptureMouse) {
+            event.consume();
+            return;
+        }
+
         if (auto e = event.get_if<sand::mouse_pressed_event>()) {
             switch (e->button) {
                 case 0: left_mouse_down = true; return;
@@ -122,15 +111,9 @@ int main()
                 case 0: left_mouse_down = false; return;
             }
         }
-        else if (auto e = event.get_if<sand::mouse_scrolled_event>()) {
-            if (e->y_offset > 0) {
-                ++loop.type;
-            } else if (e->y_offset < 0) {
-                --loop.type;
-            }
-        }
     });
 
+    auto tile = std::make_unique<sand::tile>();
     auto shader = sand::shader{"res\\vertex.glsl", "res\\fragment.glsl"};
     auto texture = sand::texture{sand::tile_size, sand::tile_size};
 
@@ -149,6 +132,25 @@ int main()
 
     while (window.is_running()) {
         const double dt = timer.on_update();
+        window.poll_events();
+
+        ui.begin_frame();
+
+        bool show = true;
+        ImGui::ShowDemoWindow(&show);
+
+        if (ImGui::Begin("Editor")) {
+            for (std::size_t i = 0; i != editor.pixel_makers.size(); ++i) {
+                if (ImGui::Selectable(editor.pixel_makers[i].first.c_str(), editor.current == i)) {
+                    editor.current = i;
+                }
+            }
+            ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 20);
+            if (ImGui::Button("Clear")) {
+                tile->fill(sand::pixel::air());
+            }
+        }
+        ImGui::End();
 
         accumulator += dt;
         bool updated = false;
@@ -160,19 +162,23 @@ int main()
         }
 
         if (updated) {
-            window.clear();
             texture.set_data(tile->data());
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-            window.swap_buffers();
-            window.poll_events();
-            window.set_name(fmt::format("Sandfall - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
+            window.set_name(fmt::format("Sandfall [FPS: {}]", timer.frame_rate()));
         }
+
+        window.clear();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
         if (left_mouse_down) {
-            const auto coord = circle_offset(10.0f) + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+            const auto coord = circle_offset(editor.brush_size)
+                             + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
-                tile->set(coord, loop.get_pixel());
+                tile->set(coord, editor.get_pixel());
             }
         }
+
+        ui.end_frame();
+
+        window.swap_buffers();
     }
 }
