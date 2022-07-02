@@ -26,6 +26,9 @@ public:
 	bool is_consumed() const noexcept { return d_consumed; }
 	void consume() noexcept { d_consumed = true; }
 
+	auto is_keyboard_event() const -> bool;
+	auto is_mount_event() const -> bool;
+
 	// Implementation defined name, should only be used for logging.
 	std::string type_name() const noexcept { return d_event.type().name(); }
 
@@ -108,5 +111,21 @@ struct window_got_focus_event {};
 struct window_lost_focus_event {};
 struct window_maximise_event {};
 struct window_minimise_event {};
+
+inline auto event::is_keyboard_event() const -> bool
+{
+	return is<keyboard_held_event>()
+		|| is<keyboard_typed_event>()
+		|| is<keyboard_released_event>()
+		|| is<keyboard_typed_event>();
+}
+
+inline auto event::is_mount_event() const -> bool
+{
+	return is<mouse_moved_event>()
+		|| is<mouse_pressed_event>()
+		|| is<mouse_released_event>()
+		|| is<mouse_scrolled_event>();
+}
 
 }

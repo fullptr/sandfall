@@ -78,7 +78,7 @@ int main()
     using namespace sand;
 
     auto window = sand::window{"sandfall", 1280, 720};
-
+    
     auto settings = sand::world_settings{
         .gravity = {0.0f, 9.81f}
     };
@@ -110,7 +110,19 @@ int main()
     auto loop = pixel_type_loop{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
+    auto ui = sand::ui{window};
+
     window.set_callback([&](sand::event& event) {
+        auto& io = ImGui::GetIO();
+        if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
+            event.consume();
+            return;
+        }
+        if (event.is_mount_event() && io.WantCaptureMouse) {
+            event.consume();
+            return;
+        }
+
         if (auto e = event.get_if<sand::mouse_pressed_event>()) {
             switch (e->button) {
                 case 0: left_mouse_down = true; return;
@@ -147,16 +159,19 @@ int main()
     auto accumulator = 0.0;
     auto timer = sand::timer{};
 
-    auto ui = sand::ui{window};
-
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.poll_events();
 
         ui.begin_frame();
 
-        bool show = true;
-        ImGui::ShowDemoWindow(&show);
+        //bool show = true;
+        //ImGui::ShowDemoWindow(&show);
+
+        if (ImGui::Begin("Editor")) {
+
+        }
+        ImGui::End();
 
         accumulator += dt;
         bool updated = false;
