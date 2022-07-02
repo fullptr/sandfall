@@ -23,6 +23,7 @@
 #include <utility>
 #include <memory>
 #include <chrono>
+#include <unordered_map>
 #include <random>
 #include <numbers>
 #include <string_view>
@@ -31,32 +32,21 @@ constexpr glm::vec4 BACKGROUND = { 44.0f / 256.0f, 58.0f / 256.0f, 71.0f / 256.0
 
 struct pixel_type_loop
 {
-    int type = 0;
+    using pixel_maker = sand::pixel(*)();
 
+    std::size_t current = 0;
+    std::vector<std::pair<std::string, pixel_maker>> pixel_makers = {
+        {"air", sand::pixel::air},
+        {"sand", sand::pixel::sand},
+        {"coal", sand::pixel::coal},
+        {"water", sand::pixel::water},
+        {"rock", sand::pixel::rock},
+        {"red_sand", sand::pixel::red_sand},
+    };
+    
     auto get_pixel() -> sand::pixel
     {
-        switch (type) {
-            case 0: return sand::pixel::air();
-            case 1: return sand::pixel::sand();
-            case 2: return sand::pixel::coal();
-            case 3: return sand::pixel::water();
-            case 4: return sand::pixel::rock();
-            case 5: return sand::pixel::red_sand();
-            default: return sand::pixel::air();
-        }
-    }
-
-    auto get_pixel_name() -> std::string_view
-    {
-        switch (type) {
-            case 0: return "air";
-            case 1: return "sand";
-            case 2: return "coal";
-            case 3: return "water";
-            case 4: return "rock";
-            case 5: return "red_sand";
-            default: return "unknown";
-        }
+        return pixel_makers[current].second();
     }
 };
 
@@ -133,13 +123,6 @@ int main()
                 case 0: left_mouse_down = false; return;
             }
         }
-        else if (auto e = event.get_if<sand::mouse_scrolled_event>()) {
-            if (e->y_offset > 0) {
-                ++loop.type;
-            } else if (e->y_offset < 0) {
-                --loop.type;
-            }
-        }
     });
 
     auto tile = std::make_unique<sand::tile>();
@@ -165,11 +148,19 @@ int main()
 
         ui.begin_frame();
 
-        //bool show = true;
-        //ImGui::ShowDemoWindow(&show);
+        bool show = true;
+        ImGui::ShowDemoWindow(&show);
 
         if (ImGui::Begin("Editor")) {
-
+            std::size_t i = 0;
+            for (const auto& [name, _] : loop.pixel_makers) {
+                char buf[32];
+                sprintf(buf, name.c_str());
+                if (ImGui::Selectable(buf, loop.current == i)) {
+                    loop.current = i;
+                }
+                ++i;
+            }
         }
         ImGui::End();
 
@@ -184,7 +175,7 @@ int main()
 
         if (updated) {
             texture.set_data(tile->data());
-            window.set_name(fmt::format("Sandfall - Current tool: {} [FPS: {}]", loop.get_pixel_name(), timer.frame_rate()));
+            window.set_name(fmt::format("Sandfall [FPS: {}]", timer.frame_rate()));
         }
 
         window.clear();
