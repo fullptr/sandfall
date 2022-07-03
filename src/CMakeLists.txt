@@ -12,11 +12,12 @@ find_package(imgui CONFIG REQUIRED)
 
 add_executable(sandfall
                sandfall.m.cpp
-               log.cpp
                tile.cpp
                pixel.cpp
                update_functions.cpp
-               timer.cpp
+               
+               utility/timer.cpp
+               utility/log.cpp
            
                graphics/window.cpp
                graphics/shader.cpp

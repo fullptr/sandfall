@@ -1,6 +1,8 @@
 #include "update_functions.h"
-#include "overloaded.hpp"
-#include "random.hpp"
+
+#include "utility/overloaded.hpp"
+#include "utility/random.hpp"
+#include "utility/scope_exit.hpp"
 
 #include <array>
 #include <utility>
@@ -80,6 +82,9 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
 {
     const auto original_pos = pos;
+    const auto scope = scope_exit{[&] {
+        pixels.at(pos).as<movable_solid>().is_falling = (pos != original_pos);
+    }};
 
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
@@ -121,8 +126,6 @@ void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
             }
         }
     }
-
-    pixels.at(pos).as<movable_solid>().is_falling = (pos != original_pos);
 }
 
 void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
