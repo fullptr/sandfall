@@ -79,7 +79,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 }
 
 
-void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -128,7 +128,7 @@ void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     }
 }
 
-void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     auto& data = std::get<liquid>(pixels.at(pos).data);
     auto& vel = data.velocity;
@@ -161,7 +161,7 @@ void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
     }
 }
 
-void update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     pixels.at(pos).updated_this_frame = true;
 }

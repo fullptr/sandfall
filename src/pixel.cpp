@@ -4,7 +4,7 @@
 
 namespace sand {
 
-pixel pixel::air()
+auto pixel::air() -> pixel
 {
     return {
         .data = std::monostate{},
@@ -17,7 +17,7 @@ pixel pixel::air()
     };
 }
 
-pixel pixel::sand()
+auto pixel::sand() -> pixel
 {
     return {
         .data = movable_solid{
@@ -34,7 +34,7 @@ pixel pixel::sand()
     };
 }
 
-pixel pixel::coal()
+auto pixel::coal() -> pixel
 {
     return {
         .data = movable_solid{
@@ -51,7 +51,7 @@ pixel pixel::coal()
     };
 }
 
-pixel pixel::rock()
+auto pixel::rock() -> pixel
 {
     return {
         .data = static_solid{},
@@ -64,7 +64,7 @@ pixel pixel::rock()
     };
 }
 
-pixel pixel::water()
+auto pixel::water() -> pixel
 {
     return {
         .data = liquid{},
@@ -77,7 +77,7 @@ pixel pixel::water()
     };
 }
 
-pixel pixel::red_sand()
+auto pixel::red_sand() -> pixel
 {
     return {
         .data = movable_solid{

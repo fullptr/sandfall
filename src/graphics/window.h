@@ -34,32 +34,31 @@ class window
 {
     window_data d_data;
 
-public:
-    window(const std::string&, int width, int height);
-    ~window();
-
-    void clear() const;
-    void swap_buffers();
-    void poll_events();
-
-    bool is_running() const;
-
-    glm::vec2 get_mouse_pos() const;
-
-    void set_name(const std::string& name);
-    void set_callback(const callback_t& callback);
-
-    float width() const { return (float)d_data.width; }
-    float height() const { return (float)d_data.height; }
-
-    GLFWwindow* native_handle() { return d_data.native_window; }
-
-private:
     window(const window&) = delete;
     window& operator=(const window&) = delete;
 
     window(window&&) = delete;
     window& operator=(window&&) = delete;
+
+public:
+    window(const std::string&, int width, int height);
+    ~window();
+
+    auto clear() const -> void;
+    auto swap_buffers() -> void;
+    auto poll_events() -> void;
+
+    auto is_running() const -> bool;
+
+    auto get_mouse_pos() const -> glm::vec2;
+
+    auto set_name(const std::string& name) -> void;
+    auto set_callback(const callback_t& callback) -> void;
+
+    auto width() const -> float;
+    auto height() const -> float;
+
+    auto native_handle() -> GLFWwindow*;
 };
 
 }

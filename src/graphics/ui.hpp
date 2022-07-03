@@ -9,8 +9,8 @@ public:
     ui(sand::window& window);
     ~ui();
 
-    void begin_frame();
-    void end_frame();
+    auto begin_frame() -> void;
+    auto end_frame() -> void;
 };
 
 }

@@ -19,11 +19,11 @@ class shader
 public:
     shader(const std::string& vertex_shader, const std::string& fragment_shader);
 
-    void bind() const;
-    void unbind() const;
+    auto bind() const -> void;
+    auto unbind() const -> void;
 
-    void load_mat4(const std::string& name, const glm::mat4& matrix) const;
-    void load_sampler(const std::string& name, int value) const;
+    auto load_mat4(const std::string& name, const glm::mat4& matrix) const -> void;
+    auto load_sampler(const std::string& name, int value) const -> void;
 };
 
 }

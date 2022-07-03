@@ -2,70 +2,33 @@
 #include <glm/glm.hpp>
 
 #include <any>
+#include <variant>
 #include <string>
 #include <cstdint>
 
 namespace sand {
-
-class event
-{
-    std::any d_event; // TODO: Make a variant instead
-    bool     d_consumed;
-
-public:
-	template <typename T, typename... Args>
-	explicit event(std::in_place_type_t<T>, Args&&... args)
-		: d_event(std::in_place_type<T>, std::forward<Args>(args)...)
-        , d_consumed(false)
-	{}
-
-	template <typename T> bool is() const noexcept { return get_if<T>() != nullptr; }
-	template <typename T> const T& get() const { return std::any_cast<const T&>(d_event); }
-	template <typename T> const T* get_if() const noexcept { return std::any_cast<T>(&d_event); }
-
-	bool is_consumed() const noexcept { return d_consumed; }
-	void consume() noexcept { d_consumed = true; }
-
-	auto is_keyboard_event() const -> bool;
-	auto is_mount_event() const -> bool;
-
-	// Implementation defined name, should only be used for logging.
-	std::string type_name() const noexcept { return d_event.type().name(); }
-
-	const std::type_info& type_info() const noexcept { return d_event.type(); }
-};
-
-template <typename T, typename... Args>
-event make_event(Args&&... args)
-{
-	return event(std::in_place_type<T>, std::forward<Args>(args)...);
-}
 
 // KEYBOARD EVENTS 
 struct keyboard_pressed_event {
 	int key;
 	int scancode;
 	int mods;
-	keyboard_pressed_event(int k, int s, int m) : key(k), scancode(s), mods(m) {}
 };
 
 struct keyboard_released_event {
 	int key;
 	int scancode;
 	int mods;
-	keyboard_released_event(int k, int s, int m) : key(k), scancode(s), mods(m) {}
 };
 
 struct keyboard_held_event {
 	int key;
 	int scancode;
 	int mods;
-	keyboard_held_event(int k, int s, int m) : key(k), scancode(s), mods(m) {}
 };
 
 struct keyboard_typed_event {
 	std::uint32_t key;
-	keyboard_typed_event(std::uint32_t k) : key(k) {}
 };
 
 // MOUSE EVENTS
@@ -74,8 +37,6 @@ struct mouse_pressed_event {
 	int action;
 	int mods;
 	glm::vec2 pos;
-	mouse_pressed_event(int b, int a, int m, const glm::vec2& p)
-		: button(b), action(a), mods(m), pos(p) {}
 };
 
 struct mouse_released_event {
@@ -83,27 +44,22 @@ struct mouse_released_event {
 	int action;
 	int mods;
 	glm::vec2 pos;
-	mouse_released_event(int b, int a, int m, const glm::vec2& p)
-		: button(b), action(a), mods(m), pos(p) {}
 };
 
 struct mouse_moved_event {
 	double x_pos;
 	double y_pos;
-	mouse_moved_event(double x, double y) : x_pos(x), y_pos(y) {}
 };
 
 struct mouse_scrolled_event {
 	double x_offset;
 	double y_offset;
-	mouse_scrolled_event(double x, double y) : x_offset(x), y_offset(y) {}
 };
 
 // WINDOW EVENTS
 struct window_resize_event {
 	int width;
 	int height;
-	window_resize_event(int w, int h) : width(w), height(h) {}
 };
 
 struct window_closed_event {};
@@ -111,6 +67,53 @@ struct window_got_focus_event {};
 struct window_lost_focus_event {};
 struct window_maximise_event {};
 struct window_minimise_event {};
+
+class event
+{
+	using event_variant = std::variant<
+		keyboard_pressed_event,
+		keyboard_released_event,
+		keyboard_held_event,
+		keyboard_typed_event,
+		mouse_pressed_event,
+		mouse_released_event,
+		mouse_moved_event,
+		mouse_scrolled_event,
+		window_resize_event,
+		window_closed_event,
+		window_got_focus_event,
+		window_lost_focus_event,
+		window_maximise_event,
+		window_minimise_event
+	>;
+
+    event_variant d_event;
+
+public:
+	template <typename T, typename... Args>
+	explicit event(std::in_place_type_t<T>, Args&&... args)
+		: d_event(std::in_place_type<T>, std::forward<Args>(args)...)
+	{}
+
+	template <typename T>
+	auto is() const noexcept -> bool { return std::holds_alternative<T>(d_event); }
+
+	template <typename T>
+	auto as() const -> const T& { return std::get<T>(d_event); }
+
+	template <typename Visitor>
+	auto visit(Visitor&& visitor) const { return std::visit(std::forward<Visitor>(visitor), d_event); }
+
+	auto is_keyboard_event() const -> bool;
+	auto is_mount_event() const -> bool;
+	auto is_window_event() const -> bool;
+};
+
+template <typename T, typename... Args>
+event make_event(Args&&... args)
+{
+	return event(std::in_place_type<T>, std::forward<Args>(args)...);
+}
 
 inline auto event::is_keyboard_event() const -> bool
 {
@@ -126,6 +129,16 @@ inline auto event::is_mount_event() const -> bool
 		|| is<mouse_pressed_event>()
 		|| is<mouse_released_event>()
 		|| is<mouse_scrolled_event>();
+}
+
+inline auto event::is_window_event() const -> bool
+{
+	return is<window_resize_event>()
+		|| is<window_closed_event>()
+		|| is<window_got_focus_event>()
+		|| is<window_lost_focus_event>()
+		|| is<window_maximise_event>()
+		|| is<window_minimise_event>();
 }
 
 }

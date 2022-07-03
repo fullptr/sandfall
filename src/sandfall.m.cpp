@@ -5,6 +5,7 @@
 #include "utility/timer.hpp"
 #include "utility/random.hpp"
 #include "utility/log.h"
+#include "utility/overloaded.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
@@ -52,7 +53,7 @@ auto circle_offset(float radius) -> glm::ivec2
     return { r * std::cos(theta), r * std::sin(theta) };
 }
 
-int main()
+auto main() -> int
 {
     using namespace sand;
 
@@ -94,23 +95,17 @@ int main()
     window.set_callback([&](sand::event& event) {
         auto& io = ImGui::GetIO();
         if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
-            event.consume();
             return;
         }
         if (event.is_mount_event() && io.WantCaptureMouse) {
-            event.consume();
             return;
         }
 
-        if (auto e = event.get_if<sand::mouse_pressed_event>()) {
-            switch (e->button) {
-                case 0: left_mouse_down = true; return;
-            }
+        if (event.is<sand::mouse_pressed_event>()) {
+            if (event.as<sand::mouse_pressed_event>().button == 0) { left_mouse_down = true; }
         }
-        else if (auto e = event.get_if<sand::mouse_released_event>()) {
-            switch (e->button) {
-                case 0: left_mouse_down = false; return;
-            }
+        else if (event.is<sand::mouse_released_event>()) {
+            if (event.as<sand::mouse_released_event>().button == 0) { left_mouse_down = false; }
         }
     });
 

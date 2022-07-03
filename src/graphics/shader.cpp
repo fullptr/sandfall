@@ -11,7 +11,7 @@
 namespace sand {
 namespace {
 
-std::uint32_t compile_shader(std::uint32_t type, const std::string& source)
+auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint32_t
 {
 	std::uint32_t id = glCreateShader(type);
 	const char* src = source.c_str();
@@ -32,7 +32,7 @@ std::uint32_t compile_shader(std::uint32_t type, const std::string& source)
 
 }
 
-std::string parse_shader(const std::string& filepath)
+auto parse_shader(const std::string& filepath) -> std::string
 {
 	if (!std::filesystem::exists(filepath)) {
 		log::fatal("Shader file '{}' does not exist!", filepath);
@@ -54,27 +54,27 @@ shader::shader(const std::string& vertex_shader, const std::string& fragment_sha
 	glValidateProgram(d_program);
 }
 
-std::uint32_t shader::get_location(const std::string& name) const
+auto shader::get_location(const std::string& name) const -> std::uint32_t
 {
     return glGetUniformLocation(d_program, name.c_str());
 }
 
-void shader::bind() const
+auto shader::bind() const -> void
 {
     glUseProgram(d_program);
 }
 
-void shader::unbind() const
+auto shader::unbind() const -> void
 {
     glUseProgram(0);
 }
 
-void shader::load_mat4(const std::string& name, const glm::mat4& matrix) const
+auto shader::load_mat4(const std::string& name, const glm::mat4& matrix) const -> void
 {
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-void shader::load_sampler(const std::string& name, int value) const
+auto shader::load_sampler(const std::string& name, int value) const -> void
 {
 	glProgramUniform1i(d_program, get_location(name), value);
 }
