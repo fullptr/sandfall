@@ -1,6 +1,6 @@
 #include "tile.h"
-#include "log.h"
 #include "update_functions.h"
+#include "utility/log.h"
 
 #include <glad/glad.h>
 

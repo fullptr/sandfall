@@ -1,9 +1,10 @@
-#include "log.h"
 #include "tile.h"
 #include "pixel.h"
 #include "world_settings.h"
-#include "timer.hpp"
-#include "random.hpp"
+
+#include "utility/timer.hpp"
+#include "utility/random.hpp"
+#include "utility/log.h"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
@@ -129,15 +130,15 @@ int main()
     auto frame_length = 1.0 / 60.0;
     auto accumulator = 0.0;
     auto timer = sand::timer{};
+    bool show_demo = true;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
+        
         window.poll_events();
-
         ui.begin_frame();
 
-        bool show = true;
-        ImGui::ShowDemoWindow(&show);
+        ImGui::ShowDemoWindow(&show_demo);
 
         if (ImGui::Begin("Editor")) {
             for (std::size_t i = 0; i != editor.pixel_makers.size(); ++i) {
@@ -178,7 +179,6 @@ int main()
         }
 
         ui.end_frame();
-
         window.swap_buffers();
     }
 }
