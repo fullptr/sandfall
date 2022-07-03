@@ -79,7 +79,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 }
 
 
-void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -97,9 +97,11 @@ void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
 
     // Transfer to horizontal
     else {
-        auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
+        auto& data = std::get<movable_solid>(pixels.at(pos).data);
+        auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
-            vel.x = random_from_range(0.2f, 0.4f) * vel.y * sign_flip();
+            const auto ht = data.horizontal_transfer;
+            vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
             vel.y = 0.0;
         }
         vel.x *= 0.8;
@@ -128,7 +130,7 @@ void update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     }
 }
 
-void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     auto& data = std::get<liquid>(pixels.at(pos).data);
     auto& vel = data.velocity;
@@ -161,7 +163,7 @@ void update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
     }
 }
 
-void update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt)
+auto update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     pixels.at(pos).updated_this_frame = true;
 }

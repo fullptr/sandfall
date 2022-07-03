@@ -22,14 +22,14 @@ ui::~ui()
     ImGui::DestroyContext();
 }
 
-void ui::begin_frame()
+auto ui::begin_frame() -> void
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void ui::end_frame()
+auto ui::end_frame() -> void
 {
     ImGui::EndFrame();
     ImGui::Render();

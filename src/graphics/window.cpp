@@ -220,4 +220,19 @@ void window::set_callback(const callback_t& callback)
     d_data.callback = callback;
 }
 
+auto window::width() const -> float
+{
+	return static_cast<float>(d_data.width); 
+}
+
+auto window::height() const -> float
+{
+	return static_cast<float>(d_data.height); 
+}
+
+auto window::native_handle() -> GLFWwindow*
+{
+	return d_data.native_window;
+}
+
 }
