@@ -7,7 +7,7 @@ namespace sand {
 auto pixel::air() -> pixel
 {
     return {
-        .data = std::monostate{},
+        .data = empty{},
         .colour = {
             44.0f / 256.0f,
             58.0f / 256.0f,
@@ -23,7 +23,8 @@ auto pixel::sand() -> pixel
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .inertial_resistance = 0.1f
+            .inertial_resistance = 0.1f,
+            .horizontal_transfer = 0.3f
         },
         .colour = {
             (248.0f + (rand() % 20) - 10) / 256.0f,
@@ -40,7 +41,8 @@ auto pixel::coal() -> pixel
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .inertial_resistance = 0.95f
+            .inertial_resistance = 0.95f,
+            .horizontal_transfer = 0.1f
         },
         .colour = {
             (30.0f + (rand() % 20) - 10) / 256.0f,
@@ -67,7 +69,10 @@ auto pixel::rock() -> pixel
 auto pixel::water() -> pixel
 {
     return {
-        .data = liquid{},
+        .data = liquid{
+            .velocity = {0.0, 0.0},
+            .dispersion_rate = 3
+        },
         .colour = {
             (27.0f  + (rand() % 20) - 10) / 256.0f,
             (156.0f + (rand() % 20) - 10) / 256.0f,
@@ -83,7 +88,8 @@ auto pixel::red_sand() -> pixel
         .data = movable_solid{
             .velocity = {0.0, 0.0},
             .is_falling = true,
-            .inertial_resistance = 0.1f
+            .inertial_resistance = 0.1f,
+            .horizontal_transfer = 0.3f
         },
         .colour = {
             (254.0f + (rand() % 20) - 10) / 256.0f,

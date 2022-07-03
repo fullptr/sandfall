@@ -15,7 +15,6 @@ static constexpr float         tile_size_f = static_cast<double>(tile_size);
 class tile
 {
 public:
-
     using buffer = std::array<glm::vec4, tile_size * tile_size>;
     using pixels = std::array<pixel, tile_size * tile_size>;
 

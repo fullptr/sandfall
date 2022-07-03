@@ -11,8 +11,9 @@ struct movable_solid
     glm::vec2 velocity;
     bool      is_falling;
 
-    // Static values - these define how the element behaves and should stay const
+    // Static values
     float     inertial_resistance;
+    float     horizontal_transfer;
 };
 
 struct static_solid
@@ -22,10 +23,10 @@ struct static_solid
 struct liquid
 {
     // Runtime values
-    glm::vec2 velocity        = {0.0, 0.0};
+    glm::vec2 velocity;
 
-    // Static values - these define how the element behaves and should stay const
-    int       dispersion_rate = 3;
+    // Static values
+    int       dispersion_rate;
 };
 
 struct gas
