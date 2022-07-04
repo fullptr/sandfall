@@ -61,9 +61,9 @@ struct pixel
     static auto air() -> pixel;
     static auto sand() -> pixel;
     static auto coal() -> pixel;
+    static auto dirt() -> pixel;
     static auto rock() -> pixel;
     static auto water() -> pixel;
-    static auto red_sand() -> pixel;
 };
 
 }

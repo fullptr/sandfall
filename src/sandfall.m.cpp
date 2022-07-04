@@ -30,12 +30,12 @@ struct editor
 {
     std::size_t current = 0;
     std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
-        {"air", sand::pixel::air},
-        {"sand", sand::pixel::sand},
-        {"coal", sand::pixel::coal},
-        {"water", sand::pixel::water},
-        {"rock", sand::pixel::rock},
-        {"red_sand", sand::pixel::red_sand},
+        { "air",   sand::pixel::air   },
+        { "sand",  sand::pixel::sand  },
+        { "coal",  sand::pixel::coal  },
+        { "dirt",  sand::pixel::dirt  },
+        { "water", sand::pixel::water },
+        { "rock",  sand::pixel::rock  },
     };
 
     float brush_size = 5.0f;
@@ -176,4 +176,6 @@ auto main() -> int
         ui.end_frame();
         window.swap_buffers();
     }
+    
+    return 0;
 }

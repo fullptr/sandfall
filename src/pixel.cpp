@@ -53,6 +53,24 @@ auto pixel::coal() -> pixel
     };
 }
 
+auto pixel::dirt() -> pixel
+{
+    return {
+        .data = movable_solid{
+            .velocity = {0.0, 0.0},
+            .is_falling = true,
+            .inertial_resistance = 0.4f,
+            .horizontal_transfer = 0.2f
+        },
+        .colour = {
+            (92.0f + (rand() % 20) - 10) / 256.0f,
+            (29.0f + (rand() % 20) - 10) / 256.0f,
+            (6.0f + (rand() % 20) - 10) / 256.0f,
+            1.0
+        }
+    };
+}
+
 auto pixel::rock() -> pixel
 {
     return {
@@ -81,24 +99,5 @@ auto pixel::water() -> pixel
         }
     };
 }
-
-auto pixel::red_sand() -> pixel
-{
-    return {
-        .data = movable_solid{
-            .velocity = {0.0, 0.0},
-            .is_falling = true,
-            .inertial_resistance = 0.1f,
-            .horizontal_transfer = 0.3f
-        },
-        .colour = {
-            (254.0f + (rand() % 20) - 10) / 256.0f,
-            (164.0f + (rand() % 20) - 10) / 256.0f,
-            (127.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
-    };
-}
-
 
 }
