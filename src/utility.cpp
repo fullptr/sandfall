@@ -1,6 +1,7 @@
 #include "utility.hpp"
 
 #include <random>
+#include <numbers>
 #include <iostream>
 
 namespace sand {
@@ -39,6 +40,13 @@ auto random_from_range(int min, int max) -> int
 {
     static std::default_random_engine gen;
     return std::uniform_int_distribution(min, max)(gen);
+}
+
+auto random_from_circle(float radius) -> glm::ivec2
+{
+    const auto r = random_from_range(0.0f, radius);
+    const auto x = random_from_range(0.0f, 2.0f * std::numbers::pi);
+    return { r * std::cos(x), r * std::sin(x) };
 }
 
 auto coin_flip() -> bool
