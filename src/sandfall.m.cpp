@@ -125,7 +125,7 @@ auto main() -> int
     auto frame_length = 1.0 / 60.0;
     auto accumulator = 0.0;
     auto timer = sand::timer{};
-    bool show_demo = true;
+    auto show_demo = true;
 
     while (window.is_running()) {
         const double dt = timer.on_update();

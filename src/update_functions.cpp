@@ -168,4 +168,18 @@ auto update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     pixels.at(pos).updated_this_frame = true;
 }
 
+auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+{
+    const auto& pixel = pixels.at(pos).data;
+    if (std::holds_alternative<movable_solid>(pixel)) {
+        update_sand(pixels, pos, settings, dt);
+    }
+    else if (std::holds_alternative<static_solid>(pixel)) {
+        update_rock(pixels, pos, settings, dt);
+    }
+    else if (std::holds_alternative<liquid>(pixel)) {
+        update_water(pixels, pos, settings, dt);
+    }
+}
+
 }
