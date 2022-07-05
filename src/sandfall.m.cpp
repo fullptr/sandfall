@@ -1,11 +1,7 @@
 #include "tile.h"
 #include "pixel.h"
 #include "world_settings.h"
-
-#include "utility/timer.hpp"
-#include "utility/random.hpp"
-#include "utility/log.h"
-#include "utility/overloaded.hpp"
+#include "utility.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"

@@ -1,5 +1,5 @@
 #include "window.h"
-#include "utility/log.h"
+#include "utility.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,7 +14,7 @@ window::window(const std::string& name, int width, int height)
     : d_data({name, width, height, true, true, true, nullptr})
 {
     if (GLFW_TRUE != glfwInit()) {
-		log::fatal("Failed to initialise GLFW\n");
+		print("FATAL: Failed to initialise GLFW\n");
 		std::exit(-1);
 	}
 
@@ -23,7 +23,7 @@ window::window(const std::string& name, int width, int height)
 	);
 
 	if (!d_data.native_window) {
-		log::fatal("Failed to create window\n");
+		print("FATAL: Failed to create window\n");
 		std::exit(-2);
 	}
 
@@ -34,7 +34,7 @@ window::window(const std::string& name, int width, int height)
 
 	// Initialise GLAD
 	if (0 == gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		log::fatal("Failed to initialise GLAD\n");
+		print("FATAL: Failed to initialise GLAD\n");
 		std::exit(-3);
 	}
 
@@ -43,7 +43,7 @@ window::window(const std::string& name, int width, int height)
 	int versionMinor;
 	glGetIntegerv(GL_MAJOR_VERSION, &versionMajor);
 	glGetIntegerv(GL_MINOR_VERSION, &versionMinor);
-	log::info("OpenGL version: {}.{}\n", versionMajor, versionMinor);
+	print("OpenGL version: {}.{}\n", versionMajor, versionMinor);
 
 	// Set OpenGL error callback
 	glEnable(GL_DEBUG_OUTPUT);
@@ -52,13 +52,13 @@ window::window(const std::string& name, int width, int height)
 		switch (severity) {
 			case GL_DEBUG_SEVERITY_NOTIFICATION: return;
 			case GL_DEBUG_SEVERITY_LOW: {
-				log::info("{}, {}, {}, {}, {}\n", source, type, id, length, message);
+				print("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 			case GL_DEBUG_SEVERITY_MEDIUM: {
-				log::warn("{}, {}, {}, {}, {}\n", source, type, id, length, message);
+				print("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 			case GL_DEBUG_SEVERITY_HIGH: {
-				log::error("{}, {}, {}, {}, {}\n", source, type, id, length, message);
+				print("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 			} break;
 		}
 	}, nullptr);

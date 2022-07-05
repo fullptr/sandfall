@@ -1,5 +1,5 @@
 #include "shader.h"
-#include "utility/log.h"
+#include "utility.hpp"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -22,7 +22,7 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
 
 	if (result == GL_FALSE) {
-        log::error("Could not compile shader {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT");
+        print("ERROR: Could not compile shader {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT");
 		glDeleteShader(id);
 		return 0;
 	}
@@ -35,7 +35,7 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 auto parse_shader(const std::string& filepath) -> std::string
 {
 	if (!std::filesystem::exists(filepath)) {
-		log::fatal("Shader file '{}' does not exist!", filepath);
+		print("FATAL: Shader file '{}' does not exist!", filepath);
 	}
 	std::ifstream stream(filepath);
 	std::string shader((std::istreambuf_iterator<char>(stream)),

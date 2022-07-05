@@ -1,8 +1,5 @@
 #include "update_functions.h"
-
-#include "utility/overloaded.hpp"
-#include "utility/random.hpp"
-#include "utility/scope_exit.hpp"
+#include "utility.hpp"
 
 #include <array>
 #include <utility>

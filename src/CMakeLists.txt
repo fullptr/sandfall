@@ -15,9 +15,7 @@ add_executable(sandfall
                tile.cpp
                pixel.cpp
                update_functions.cpp
-               
-               utility/timer.cpp
-               utility/log.cpp
+               utility.cpp
            
                graphics/window.cpp
                graphics/shader.cpp
