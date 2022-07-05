@@ -89,7 +89,7 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
         auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
-        vel.y += 0.2f; // gravity
+        vel += settings.gravity * (float)dt;
         vel.y = glm::max(1.0f, vel.y);
         
         pos = move_towards(pixels, pos, vel);
