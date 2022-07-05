@@ -31,6 +31,7 @@ struct editor
         { "coal",  sand::pixel::coal  },
         { "dirt",  sand::pixel::dirt  },
         { "water", sand::pixel::water },
+        { "lava",  sand::pixel::lava  },
         { "rock",  sand::pixel::rock  },
     };
 

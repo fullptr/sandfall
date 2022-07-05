@@ -84,4 +84,15 @@ auto pixel::water() -> pixel
     };
 }
 
+auto pixel::lava() -> pixel
+{
+    return {
+        .data = liquid{
+            .velocity = {0.0, 0.0},
+            .dispersion_rate = 1
+        },
+        .colour = from_hex(0xF97F51) + light_noise()
+    };
+}
+
 }
