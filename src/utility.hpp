@@ -60,4 +60,6 @@ auto print(std::string_view fmt, Args&&... args) -> void
     _print_inner(std::format(fmt, std::forward<Args>(args)...));
 }
 
+auto from_hex(int hex) -> glm::vec4;
+
 }

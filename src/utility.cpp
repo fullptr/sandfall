@@ -63,5 +63,19 @@ auto _print_inner(const std::string& msg) -> void
 {
     std::cout << msg;
 }
+
+auto from_hex(int hex) -> glm::vec4
+{
+    static constexpr auto normalise = [](int x) {
+        return static_cast<float>(x) / 256.0f;
+    };
+
+    const float blue = normalise(hex & 0xff);
+    hex /= 0x100;
+    const float green = normalise(hex & 0xff);
+    hex /= 0x100;
+    const float red = normalise(hex & 0xff);
+    return glm::vec4{red, green, blue, 1.0f};
+}
     
 }

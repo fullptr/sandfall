@@ -1,19 +1,28 @@
 #include "pixel.h"
+#include "utility.hpp"
 
 #include <cstdlib>
 
 namespace sand {
+namespace {
+
+auto light_noise() -> glm::vec4
+{
+    return {
+        random_from_range(-0.04f, 0.04f),
+        random_from_range(-0.04f, 0.04f),
+        random_from_range(-0.04f, 0.04f),
+        1.0f
+    };
+}
+
+}
 
 auto pixel::air() -> pixel
 {
     return {
         .data = empty{},
-        .colour = {
-            44.0f / 256.0f,
-            58.0f / 256.0f,
-            71.0f / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0x2C3A47)
     };
 }
 
@@ -26,12 +35,7 @@ auto pixel::sand() -> pixel
             .inertial_resistance = 0.1f,
             .horizontal_transfer = 0.3f
         },
-        .colour = {
-            (248.0f + (rand() % 20) - 10) / 256.0f,
-            (239.0f + (rand() % 20) - 10) / 256.0f,
-            (186.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0xF8EFBA) + light_noise()
     };
 }
 
@@ -44,12 +48,7 @@ auto pixel::coal() -> pixel
             .inertial_resistance = 0.95f,
             .horizontal_transfer = 0.1f
         },
-        .colour = {
-            (30.0f + (rand() % 20) - 10) / 256.0f,
-            (39.0f + (rand() % 20) - 10) / 256.0f,
-            (46.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0x1E272E) + light_noise()
     };
 }
 
@@ -62,12 +61,7 @@ auto pixel::dirt() -> pixel
             .inertial_resistance = 0.4f,
             .horizontal_transfer = 0.2f
         },
-        .colour = {
-            (92.0f + (rand() % 20) - 10) / 256.0f,
-            (29.0f + (rand() % 20) - 10) / 256.0f,
-            (6.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0x5C1D06) + light_noise()
     };
 }
 
@@ -75,12 +69,7 @@ auto pixel::rock() -> pixel
 {
     return {
         .data = static_solid{},
-        .colour = {
-            (200.0f + (rand() % 20) - 10) / 256.0f,
-            (200.0f + (rand() % 20) - 10) / 256.0f,
-            (200.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0xC8C8C8) + light_noise()
     };
 }
 
@@ -89,14 +78,9 @@ auto pixel::water() -> pixel
     return {
         .data = liquid{
             .velocity = {0.0, 0.0},
-            .dispersion_rate = 3
+            .dispersion_rate = 5
         },
-        .colour = {
-            (27.0f  + (rand() % 20) - 10) / 256.0f,
-            (156.0f + (rand() % 20) - 10) / 256.0f,
-            (252.0f + (rand() % 20) - 10) / 256.0f,
-            1.0
-        }
+        .colour = from_hex(0x1B9CFC) + light_noise()
     };
 }
 
