@@ -89,7 +89,7 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
         auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
-        vel.y += 0.2f; // gravity
+        vel += settings.gravity * (float)dt;
         vel.y = glm::max(1.0f, vel.y);
         
         pos = move_towards(pixels, pos, vel);
@@ -163,9 +163,15 @@ auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
     }
 }
 
-auto update_rock(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
-    pixels.at(pos).updated_this_frame = true;
+    const auto& pixel = pixels.at(pos).data;
+    if (std::holds_alternative<movable_solid>(pixel)) {
+        update_sand(pixels, pos, settings, dt);
+    }
+    else if (std::holds_alternative<liquid>(pixel)) {
+        update_water(pixels, pos, settings, dt);
+    }
 }
 
 }

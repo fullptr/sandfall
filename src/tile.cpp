@@ -1,11 +1,13 @@
 #include "tile.h"
 #include "update_functions.h"
 #include "utility/log.h"
+#include "utility/random.hpp"
 
 #include <glad/glad.h>
 
 #include <cassert>
 #include <algorithm>
+#include <ranges>
 
 namespace sand {
 namespace {
@@ -32,25 +34,14 @@ auto tile::valid(glm::ivec2 pos) -> bool
 auto tile::simulate(const world_settings& settings, double dt) -> void
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
-        auto& pixel = d_pixels[get_pos({x, y})];
-        if (pixel.updated_this_frame) { return; }
-
-        // TODO: Use std::visit
-        if (std::holds_alternative<movable_solid>(pixel.data)) {
-            update_sand(*this, {x, y}, settings, dt);
-        }
-        else if (std::holds_alternative<static_solid>(pixel.data)) {
-            update_rock(*this, {x, y}, settings, dt);
-        }
-        else if (std::holds_alternative<liquid>(pixel.data)) {
-            update_water(*this, {x, y}, settings, dt);
+        if (!at({x, y}).updated_this_frame) {
+            update_pixel(*this, {x, y}, settings, dt);
         }
     };
 
-
     for (std::uint32_t y = tile_size; y != 0; ) {
         --y;
-        if (rand() % 2) {
+        if (coin_flip()) {
             for (std::uint32_t x = 0; x != tile_size; ++x) {
                 inner(x, y);
             }
@@ -63,7 +54,7 @@ auto tile::simulate(const world_settings& settings, double dt) -> void
         }
     }
 
-    std::for_each(d_pixels.begin(), d_pixels.end(), [](auto& p) { p.updated_this_frame = false; });
+    std::ranges::for_each(d_pixels, [](auto& p) { p.updated_this_frame = false; });
     for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
     }
