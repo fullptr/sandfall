@@ -1,11 +1,7 @@
 #include "tile.h"
 #include "pixel.h"
 #include "world_settings.h"
-
-#include "utility/timer.hpp"
-#include "utility/random.hpp"
-#include "utility/log.h"
-#include "utility/overloaded.hpp"
+#include "utility.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
@@ -35,6 +31,7 @@ struct editor
         { "coal",  sand::pixel::coal  },
         { "dirt",  sand::pixel::dirt  },
         { "water", sand::pixel::water },
+        { "lava",  sand::pixel::lava  },
         { "rock",  sand::pixel::rock  },
     };
 
@@ -45,13 +42,6 @@ struct editor
         return pixel_makers[current].second();
     }
 };
-
-auto circle_offset(float radius) -> glm::ivec2
-{
-    const auto r = sand::random_from_range(0.0f, radius);
-    const auto theta = sand::random_from_range(0.0f, 2.0f * std::numbers::pi);
-    return { r * std::cos(theta), r * std::sin(theta) };
-}
 
 auto main() -> int
 {
@@ -166,7 +156,7 @@ auto main() -> int
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
         if (left_mouse_down) {
-            const auto coord = circle_offset(editor.brush_size)
+            const auto coord = random_from_circle(editor.brush_size)
                              + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, editor.get_pixel());

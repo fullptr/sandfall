@@ -64,6 +64,7 @@ struct pixel
     static auto dirt() -> pixel;
     static auto rock() -> pixel;
     static auto water() -> pixel;
+    static auto lava() -> pixel;
 };
 
 }
