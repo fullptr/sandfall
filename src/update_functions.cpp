@@ -243,16 +243,18 @@ auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
     auto& pixel = pixels.at(pos);
     const auto props = get_pixel_properties(pixel.type);
 
-    if (props.movement == pixel_movement::movable_solid) {
-        pos = update_movable_solid(pixels, pos, settings, dt);
-    }
-    else if (props.movement == pixel_movement::liquid) {
-        pos = update_liquid(pixels, pos, settings, dt);
-    }
-    else if (props.movement == pixel_movement::gas) {
-        pos = update_gas(pixels, pos, settings, dt);
-    } else {
-        return;
+    switch (props.movement) {
+        break; case pixel_movement::movable_solid:
+            pos = update_movable_solid(pixels, pos, settings, dt);
+
+        break; case pixel_movement::liquid:
+            pos = update_liquid(pixels, pos, settings, dt);
+
+        break; case pixel_movement::gas:
+            pos = update_gas(pixels, pos, settings, dt);
+            
+        break; default:
+            return;
     }
 
     affect_neighbours(pixels, pos);
