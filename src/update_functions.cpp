@@ -17,28 +17,30 @@ auto below(glm::ivec2 pos) -> glm::ivec2
     return pos + glm::ivec2{0, 1};
 }
 
-auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bool
+auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
-    if (!tile::valid(src) || !tile::valid(dst)) { return false; }
+    if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
-    const auto& from      = pixels.at(src);
-    const auto from_props = get_pixel_properties(from.type);
-    const auto& to        = pixels.at(dst);
-    const auto to_props   = get_pixel_properties(to.type);
+    const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
+    const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
 
-    if (from_props.movement == pixel_movement::movable_solid) {
-        return to_props.movement == pixel_movement::none
-            || to_props.movement == pixel_movement::liquid;
+    using enum pixel_movement;
+    switch (src) {
+        case movable_solid:
+            return dst == none
+                || dst == liquid
+                || dst == gas;
+
+        case liquid:
+            return dst == none;
+
+        case gas:
+            return dst == none
+                || dst == liquid;
+
+        default:
+            return false;
     }
-    else if (from_props.movement == pixel_movement::liquid) {
-        return to_props.movement == pixel_movement::none;
-    }
-    else if (from_props.movement == pixel_movement::gas) {
-        return to_props.movement == pixel_movement::none
-            || to_props.movement == pixel_movement::liquid
-            || to_props.movement == pixel_movement::movable_solid;
-    }
-    return false;
 }
 
 auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
