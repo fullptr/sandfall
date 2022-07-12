@@ -1,62 +1,47 @@
 #pragma once
 #include <glm/glm.hpp>
-
-#include <variant>
+#include <cstdint>
 
 namespace sand {
 
-struct movable_solid
+enum class pixel_movement : std::uint8_t
 {
-    // Runtime values
-    glm::vec2 velocity;
-    bool      is_falling;
-
-    // Static values
-    float     inertial_resistance;
-    float     horizontal_transfer;
-};
-
-struct static_solid
-{
-};
-
-struct liquid
-{
-    // Runtime values
-    glm::vec2 velocity;
-
-    // Static values
-    int       dispersion_rate;
-};
-
-struct gas
-{
-};
-
-using empty = std::monostate;
-
-using pixel_data = std::variant<
+    none,
+    immovable_solid,
     movable_solid,
-    static_solid,
     liquid,
     gas,
-    empty
->;
+};
+
+enum class pixel_type : std::uint8_t
+{
+    none  = 0,
+    sand  = 1,
+    dirt  = 2,
+    coal  = 3,
+    water = 4,
+    lava  = 5,
+    rock  = 6,
+};
+
+struct pixel_properties
+{
+    pixel_movement movement            = pixel_movement::none;
+    float          inertial_resistance = 0.0f;
+    float          horizontal_transfer = 0.0f;
+    int            dispersion_rate     = 0;
+};
+
+pixel_properties get_pixel_properties(pixel_type type);
 
 struct pixel
 {
-    pixel_data data;
-    glm::vec4  colour;
-    bool       updated_this_frame = false;
+    pixel_type type;
 
-    template <typename... Ts>
-    auto is() const -> bool { return (std::holds_alternative<Ts>(data) || ...); }
-
-    template <typename T>
-    auto as() -> T& { return std::get<T>(data); }
-
-    template <typename T>
-    auto as() const -> const T& { return std::get<T>(data); }
+    glm::vec4 colour;
+    glm::vec2 velocity           = {0.0, 0.0};
+    bool      is_falling         = false;
+    bool      updated_this_frame = false;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
