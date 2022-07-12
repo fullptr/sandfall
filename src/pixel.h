@@ -1,62 +1,53 @@
 #pragma once
 #include <glm/glm.hpp>
-
-#include <variant>
+#include <cstdint>
 
 namespace sand {
 
-struct movable_solid
+struct pixel;
+using affect_neighbour_func = void(*)(pixel& me, pixel& them);
+
+enum class pixel_movement : std::uint8_t
 {
-    // Runtime values
-    glm::vec2 velocity;
-    bool      is_falling;
-
-    // Static values
-    float     inertial_resistance;
-    float     horizontal_transfer;
-};
-
-struct static_solid
-{
-};
-
-struct liquid
-{
-    // Runtime values
-    glm::vec2 velocity;
-
-    // Static values
-    int       dispersion_rate;
-};
-
-struct gas
-{
-};
-
-using empty = std::monostate;
-
-using pixel_data = std::variant<
+    none,
+    immovable_solid,
     movable_solid,
-    static_solid,
     liquid,
     gas,
-    empty
->;
+};
+
+enum class pixel_type : std::uint8_t
+{
+    none,
+    sand,
+    dirt,
+    coal,
+    water,
+    lava,
+    rock,
+    steam,
+};
+
+struct pixel_properties
+{
+    pixel_movement movement            = pixel_movement::none;
+    float          inertial_resistance = 0.0f;
+    float          horizontal_transfer = 0.0f;
+    int            dispersion_rate     = 0;
+
+    affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
+};
+
+pixel_properties get_pixel_properties(pixel_type type);
 
 struct pixel
 {
-    pixel_data data;
-    glm::vec4  colour;
-    bool       updated_this_frame = false;
+    pixel_type type;
 
-    template <typename... Ts>
-    auto is() const -> bool { return (std::holds_alternative<Ts>(data) || ...); }
-
-    template <typename T>
-    auto as() -> T& { return std::get<T>(data); }
-
-    template <typename T>
-    auto as() const -> const T& { return std::get<T>(data); }
+    glm::vec4 colour;
+    glm::vec2 velocity           = {0.0, 0.0};
+    bool      is_falling         = false;
+    bool      updated_this_frame = false;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
@@ -65,6 +56,7 @@ struct pixel
     static auto rock() -> pixel;
     static auto water() -> pixel;
     static auto lava() -> pixel;
+    static auto steam() -> pixel;
 };
 
 }

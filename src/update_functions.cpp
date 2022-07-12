@@ -4,6 +4,8 @@
 #include <array>
 #include <utility>
 #include <variant>
+#include <algorithm>
+#include <random>
 
 #include <glm/glm.hpp>
 
@@ -15,20 +17,29 @@ auto below(glm::ivec2 pos) -> glm::ivec2
     return pos + glm::ivec2{0, 1};
 }
 
-auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bool
+auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
-    if (!tile::valid(src) || !tile::valid(dst)) { return false; }
+    if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
-    const auto& from = pixels.at(src);
-    const auto& to   = pixels.at(dst);
+    const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
+    const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
 
-    if (from.is<movable_solid>() && to.is<empty, liquid>()) {
-        return true;
+    using enum pixel_movement;
+
+    // If the destination is empty, we can always move there
+    if (dst == none) return true;
+
+    switch (src) {
+        case movable_solid:
+            return dst == liquid // solids can sink into liquid
+                || dst == gas;   // solids can displace gas
+
+        case gas:
+            return dst == liquid; // gas can bubble up through a liquid
+
+        default:
+            return false;
     }
-    else if (from.is<liquid>() && to.is<empty>()) {
-        return true;
-    }
-    return false;
 }
 
 auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
@@ -36,14 +47,20 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
 
-    if (pixels.valid(l) && pixels.at(l).is<movable_solid>()) {
-        auto& px = pixels.at(l).as<movable_solid>();
-        px.is_falling = random_from_range(0.0f, 1.0f) > px.inertial_resistance || px.is_falling;
+    if (pixels.valid(l)) {
+        auto& px = pixels.at(l);
+        const auto props = get_pixel_properties(px.type);
+        if (props.movement == pixel_movement::movable_solid) {
+            px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
+        }
     }
 
-    if (pixels.valid(r) && pixels.at(r).is<movable_solid>()) {
-        auto& px = pixels.at(r).as<movable_solid>();
-        px.is_falling = random_from_range(0.0f, 1.0f) > px.inertial_resistance || px.is_falling;
+    if (pixels.valid(r)) {
+        auto& px = pixels.at(r);
+        const auto props = get_pixel_properties(px.type);
+        if (props.movement == pixel_movement::movable_solid) {
+            px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
+        }
     }
 }
 
@@ -73,19 +90,72 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
     return curr_pos;
 }
 
+auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
+{
+    auto& pixel = pixels.at(pos);
+
+    const auto props = get_pixel_properties(pixel.type);
+    const auto offsets = std::array{
+        glm::ivec2{1, 0},
+        glm::ivec2{-1, 0},
+        glm::ivec2{0, 1},
+        glm::ivec2{0, -1}
+    };
+
+    for (const auto& offset : offsets) {
+        if (pixels.valid(pos + offset)) {
+            props.affect_neighbour(pixel, pixels.at(pos + offset));
+        }
+    }
+}
+
+enum class direction
+{
+    up, down
+};
+
+// Attempts to move diagonally up/down, and failing that, disperses outwards according
+// to the dispersion rate
+auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
+{
+    auto& data = pixels.at(pos);
+    const auto props = get_pixel_properties(data.type);
+
+    auto offsets = std::array{
+        glm::ivec2{-1, dir == direction::down ? 1 : -1},
+        glm::ivec2{1,  dir == direction::down ? 1 : -1},
+        glm::ivec2{-1 * props.dispersion_rate, 0},
+        glm::ivec2{props.dispersion_rate, 0}
+    };
+
+    if (coin_flip()) std::swap(offsets[0], offsets[1]);
+    if (coin_flip()) std::swap(offsets[2], offsets[3]);
+
+    for (auto offset : offsets) {
+        if (offset.y == 0) {
+            data.velocity = {0.0, 0.0};
+        }
+        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+            return new_pos;
+        }
+    }
+
+    return pos;
+}
+
 }
 
 
-auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
-        pixels.at(pos).as<movable_solid>().is_falling = (pos != original_pos);
+        pixels.at(pos).is_falling = pos != original_pos;
     }};
 
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
-        auto& vel = std::get<movable_solid>(pixels.at(pos).data).velocity;
+        auto& vel = pixels.at(pos).velocity;
         vel += settings.gravity * (float)dt;
         vel.y = glm::max(1.0f, vel.y);
         
@@ -94,30 +164,23 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
 
     // Transfer to horizontal
     else {
-        auto& data = std::get<movable_solid>(pixels.at(pos).data);
+        auto& data = pixels.at(pos);
+        const auto props = get_pixel_properties(data.type);
         auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = data.horizontal_transfer;
+            const auto ht = props.horizontal_transfer;
             vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
             vel.y = 0.0;
         }
         vel.x *= 0.8;
 
         pos = move_towards(pixels, pos, {vel.x, 0});
-        
     }
 
-    if (!pixels.at(pos).updated_this_frame && pixels.at(pos).as<movable_solid>().is_falling) {
-        auto offsets = std::array{
-            glm::ivec2{-1, 1},
-            glm::ivec2{1, 1},
-        };
+    if (!pixels.at(pos).updated_this_frame && pixels.at(pos).is_falling) {
+        auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
-        if (rand() % 2) {
-            std::swap(offsets[0], offsets[1]);
-        }
-
-        auto& data = std::get<movable_solid>(pixels.at(pos).data);
         for (auto offset : offsets) {
             pos = move_towards(pixels, pos, offset);
             if (pos != original_pos) {
@@ -125,50 +188,56 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
             }
         }
     }
+
+    return pos;
 }
 
-auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
-    auto& data = std::get<liquid>(pixels.at(pos).data);
-    auto& vel = data.velocity;
+    auto& vel = pixels.at(pos).velocity;
     vel += settings.gravity * (float)dt;
-    auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (move_towards(pixels, pos, offset) != pos) {
-        return;
+    const auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
+    if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+        return new_pos;
     }
 
-    auto offsets = std::array{
-        glm::ivec2{-1, 1},
-        glm::ivec2{1, 1},
-        glm::ivec2{-1 * data.dispersion_rate, 0},
-        glm::ivec2{data.dispersion_rate, 0}
-    };
+    return move_disperse(pixels, pos, direction::down);
+}
 
-    if (rand() % 2) {
-        std::swap(offsets[0], offsets[1]);
-        std::swap(offsets[2], offsets[3]);
+auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
+{
+    auto& vel = pixels.at(pos).velocity;
+    vel -= settings.gravity * (float)dt;
+
+    const auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
+    if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+        return new_pos;
     }
 
-    for (auto offset : offsets) {
-        if (offset.y == 0) {
-            data.velocity = {0.0, 0.0};
-        }
-        if (move_towards(pixels, pos, offset) != pos) {
-            return;
-        }
-    }
+    return move_disperse(pixels, pos, direction::up);
 }
 
 auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
-    const auto& pixel = pixels.at(pos).data;
-    if (std::holds_alternative<movable_solid>(pixel)) {
-        update_sand(pixels, pos, settings, dt);
+    auto& pixel = pixels.at(pos);
+    const auto props = get_pixel_properties(pixel.type);
+
+    switch (props.movement) {
+        break; case pixel_movement::movable_solid:
+            pos = update_movable_solid(pixels, pos, settings, dt);
+
+        break; case pixel_movement::liquid:
+            pos = update_liquid(pixels, pos, settings, dt);
+
+        break; case pixel_movement::gas:
+            pos = update_gas(pixels, pos, settings, dt);
+
+        break; default:
+            return;
     }
-    else if (std::holds_alternative<liquid>(pixel)) {
-        update_water(pixels, pos, settings, dt);
-    }
+
+    affect_neighbours(pixels, pos);
 }
 
 }
