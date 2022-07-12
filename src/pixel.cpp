@@ -63,7 +63,8 @@ pixel_properties get_pixel_properties(pixel_type type)
             };
         case pixel_type::steam:
             return {
-                .movement = pixel_movement::gas
+                .movement = pixel_movement::gas,
+                .dispersion_rate = 9
             };
         default:
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));

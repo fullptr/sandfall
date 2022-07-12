@@ -4,6 +4,8 @@
 #include <array>
 #include <utility>
 #include <variant>
+#include <algorithm>
+#include <random>
 
 #include <glm/glm.hpp>
 
@@ -185,10 +187,8 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
         glm::ivec2{props.dispersion_rate, 0}
     };
 
-    if (rand() % 2) {
-        std::swap(offsets[0], offsets[1]);
-        std::swap(offsets[2], offsets[3]);
-    }
+    if (coin_flip()) std::swap(offsets[0], offsets[1]);
+    if (coin_flip()) std::swap(offsets[2], offsets[3]);
 
     for (auto offset : offsets) {
         if (offset.y == 0) {
@@ -204,12 +204,15 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
 
 auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
+    static std::random_device rd;
+    static std::mt19937 g(rd());
+
     auto& data = pixels.at(pos);
     const auto props = get_pixel_properties(data.type);
     auto& vel = data.velocity;
-    vel += settings.gravity * (float)dt;
+    vel -= settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
-    
+
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
         return new_pos;
     }
@@ -221,10 +224,8 @@ auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, do
         glm::ivec2{props.dispersion_rate, 0}
     };
 
-    if (rand() % 2) {
-        std::swap(offsets[0], offsets[1]);
-        std::swap(offsets[2], offsets[3]);
-    }
+    if (coin_flip()) std::swap(offsets[0], offsets[1]);
+    if (coin_flip()) std::swap(offsets[2], offsets[3]);
 
     for (auto offset : offsets) {
         if (offset.y == 0) {
@@ -252,7 +253,7 @@ auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
 
         break; case pixel_movement::gas:
             pos = update_gas(pixels, pos, settings, dt);
-            
+
         break; default:
             return;
     }
