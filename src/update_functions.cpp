@@ -109,14 +109,13 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
 }
 
 
-auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
         auto& pixel = pixels.at(pos);
         if (pos != original_pos) {
             pixel.is_falling = true;
-            affect_neighbours(pixels, pos);
         } else {
             pixel.is_falling = false;
         }
@@ -163,23 +162,20 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
             }
         }
     }
+
+    return pos;
 }
 
-auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
-    const auto scope = scope_exit{[&] {
-        auto& pixel = pixels.at(pos);
-        affect_neighbours(pixels, pos);
-    }};
-
     auto& data = pixels.at(pos);
     const auto props = get_pixel_properties(data.type);
     auto& vel = data.velocity;
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
-    if (move_towards(pixels, pos, offset) != pos) {
-        return;
+    if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+        return new_pos;
     }
 
     auto offsets = std::array{
@@ -198,13 +194,15 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
         if (offset.y == 0) {
             data.velocity = {0.0, 0.0};
         }
-        if (move_towards(pixels, pos, offset) != pos) {
-            return;
+        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+            return new_pos;
         }
     }
+
+    return pos;
 }
 
-auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
     const auto props = get_pixel_properties(data.type);
@@ -212,8 +210,8 @@ auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, do
     vel += settings.gravity * (float)dt;
     auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
     
-    if (move_towards(pixels, pos, offset) != pos) {
-        return;
+    if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+        return new_pos;
     }
 
     auto offsets = std::array{
@@ -232,28 +230,32 @@ auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, do
         if (offset.y == 0) {
             data.velocity = {0.0, 0.0};
         }
-        if (move_towards(pixels, pos, offset) != pos) {
-            return;
+        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+            return new_pos;
         }
     }
+
+    return pos;
 }
 
 auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     auto& pixel = pixels.at(pos);
     const auto props = get_pixel_properties(pixel.type);
-    
-    {
-        if (props.movement == pixel_movement::movable_solid) {
-            update_movable_solid(pixels, pos, settings, dt);
-        }
-        else if (props.movement == pixel_movement::liquid) {
-            update_liquid(pixels, pos, settings, dt);
-        }
-        else if (props.movement == pixel_movement::gas) {
-            update_gas(pixels, pos, settings, dt);
-        }
+
+    if (props.movement == pixel_movement::movable_solid) {
+        pos = update_movable_solid(pixels, pos, settings, dt);
     }
+    else if (props.movement == pixel_movement::liquid) {
+        pos = update_liquid(pixels, pos, settings, dt);
+    }
+    else if (props.movement == pixel_movement::gas) {
+        pos = update_gas(pixels, pos, settings, dt);
+    } else {
+        return;
+    }
+
+    affect_neighbours(pixels, pos);
 }
 
 }
