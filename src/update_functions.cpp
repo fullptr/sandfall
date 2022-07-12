@@ -149,12 +149,7 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
-        auto& pixel = pixels.at(pos);
-        if (pos != original_pos) {
-            pixel.is_falling = true;
-        } else {
-            pixel.is_falling = false;
-        }
+        pixels.at(pos).is_falling = pos != original_pos;
     }};
 
     // Apply gravity if can move down
@@ -182,14 +177,8 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
     }
 
     if (!pixels.at(pos).updated_this_frame && pixels.at(pos).is_falling) {
-        auto offsets = std::array{
-            glm::ivec2{-1, 1},
-            glm::ivec2{1, 1},
-        };
-
-        if (rand() % 2) {
-            std::swap(offsets[0], offsets[1]);
-        }
+        auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
             pos = move_towards(pixels, pos, offset);
