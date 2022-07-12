@@ -108,6 +108,40 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
     }
 }
 
+enum class direction
+{
+    up, down
+};
+
+// Attempts to move diagonally up/down, and failing that, disperses outwards according
+// to the dispersion rate
+auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
+{
+    auto& data = pixels.at(pos);
+    const auto props = get_pixel_properties(data.type);
+
+    auto offsets = std::array{
+        glm::ivec2{-1, dir == direction::down ? 1 : -1},
+        glm::ivec2{1,  dir == direction::down ? 1 : -1},
+        glm::ivec2{-1 * props.dispersion_rate, 0},
+        glm::ivec2{props.dispersion_rate, 0}
+    };
+
+    if (coin_flip()) std::swap(offsets[0], offsets[1]);
+    if (coin_flip()) std::swap(offsets[2], offsets[3]);
+
+    for (auto offset : offsets) {
+        if (offset.y == 0) {
+            data.velocity = {0.0, 0.0};
+        }
+        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+            return new_pos;
+        }
+    }
+
+    return pos;
+}
+
 }
 
 
@@ -180,26 +214,7 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
         return new_pos;
     }
 
-    auto offsets = std::array{
-        glm::ivec2{-1, 1},
-        glm::ivec2{1, 1},
-        glm::ivec2{-1 * props.dispersion_rate, 0},
-        glm::ivec2{props.dispersion_rate, 0}
-    };
-
-    if (coin_flip()) std::swap(offsets[0], offsets[1]);
-    if (coin_flip()) std::swap(offsets[2], offsets[3]);
-
-    for (auto offset : offsets) {
-        if (offset.y == 0) {
-            data.velocity = {0.0, 0.0};
-        }
-        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
-            return new_pos;
-        }
-    }
-
-    return pos;
+    return move_disperse(pixels, pos, direction::down);
 }
 
 auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
@@ -217,26 +232,7 @@ auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, do
         return new_pos;
     }
 
-    auto offsets = std::array{
-        glm::ivec2{-1, -1},
-        glm::ivec2{1, -1},
-        glm::ivec2{-1 * props.dispersion_rate, 0},
-        glm::ivec2{props.dispersion_rate, 0}
-    };
-
-    if (coin_flip()) std::swap(offsets[0], offsets[1]);
-    if (coin_flip()) std::swap(offsets[2], offsets[3]);
-
-    for (auto offset : offsets) {
-        if (offset.y == 0) {
-            data.velocity = {0.0, 0.0};
-        }
-        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
-            return new_pos;
-        }
-    }
-
-    return pos;
+    return move_disperse(pixels, pos, direction::up);
 }
 
 auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
