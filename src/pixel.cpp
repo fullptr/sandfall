@@ -56,6 +56,10 @@ pixel_properties get_pixel_properties(pixel_type type)
             return {
                 .movement = pixel_movement::immovable_solid
             };
+        case pixel_type::steam:
+            return {
+                .movement = pixel_movement::gas
+            };
         default:
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
             return {};
@@ -118,6 +122,14 @@ auto pixel::lava() -> pixel
     return {
         .type = pixel_type::lava,
         .colour = from_hex(0xF97F51) + light_noise(),
+    };
+}
+
+auto pixel::steam() -> pixel
+{
+    return {
+        .type = pixel_type::steam,
+        .colour = from_hex(0x9AECDB) + light_noise(),
     };
 }
 

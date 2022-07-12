@@ -4,6 +4,9 @@
 
 namespace sand {
 
+struct pixel;
+using affect_neighbour_func = void(*)(pixel& me, pixel& them);
+
 enum class pixel_movement : std::uint8_t
 {
     none,
@@ -15,13 +18,14 @@ enum class pixel_movement : std::uint8_t
 
 enum class pixel_type : std::uint8_t
 {
-    none  = 0,
-    sand  = 1,
-    dirt  = 2,
-    coal  = 3,
-    water = 4,
-    lava  = 5,
-    rock  = 6,
+    none,
+    sand,
+    dirt,
+    coal,
+    water,
+    lava,
+    rock,
+    steam,
 };
 
 struct pixel_properties
@@ -30,6 +34,8 @@ struct pixel_properties
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
+
+    affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
 
 pixel_properties get_pixel_properties(pixel_type type);
@@ -50,6 +56,7 @@ struct pixel
     static auto rock() -> pixel;
     static auto water() -> pixel;
     static auto lava() -> pixel;
+    static auto steam() -> pixel;
 };
 
 }

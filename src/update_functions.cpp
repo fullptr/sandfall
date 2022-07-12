@@ -25,10 +25,16 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bo
     const auto to_props   = get_pixel_properties(to.type);
 
     if (from_props.movement == pixel_movement::movable_solid) {
-        return to_props.movement == pixel_movement::none || to_props.movement == pixel_movement::liquid;
+        return to_props.movement == pixel_movement::none
+            || to_props.movement == pixel_movement::liquid;
     }
     else if (from_props.movement == pixel_movement::liquid) {
         return to_props.movement == pixel_movement::none;
+    }
+    else if (from_props.movement == pixel_movement::gas) {
+        return to_props.movement == pixel_movement::none
+            || to_props.movement == pixel_movement::liquid
+            || to_props.movement == pixel_movement::movable_solid;
     }
     return false;
 }
@@ -81,14 +87,39 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
     return curr_pos;
 }
 
+auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
+{
+    auto& pixel = pixels.at(pos);
+
+    const auto props = get_pixel_properties(pixel.type);
+    const auto offsets = std::array{
+        glm::ivec2{1, 0},
+        glm::ivec2{-1, 0},
+        glm::ivec2{0, 1},
+        glm::ivec2{0, -1}
+    };
+
+    for (const auto& offset : offsets) {
+        if (pixels.valid(pos + offset)) {
+            props.affect_neighbour(pixel, pixels.at(pos + offset));
+        }
+    }
+}
+
 }
 
 
-auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
-        pixels.at(pos).is_falling = (pos != original_pos);
+        auto& pixel = pixels.at(pos);
+        if (pos != original_pos) {
+            pixel.is_falling = true;
+            affect_neighbours(pixels, pos);
+        } else {
+            pixel.is_falling = false;
+        }
     }};
 
     // Apply gravity if can move down
@@ -113,7 +144,6 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
         vel.x *= 0.8;
 
         pos = move_towards(pixels, pos, {vel.x, 0});
-        
     }
 
     if (!pixels.at(pos).updated_this_frame && pixels.at(pos).is_falling) {
@@ -135,7 +165,7 @@ auto update_sand(tile& pixels, glm::ivec2 pos, const world_settings& settings, d
     }
 }
 
-auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
     auto& data = pixels.at(pos);
     const auto props = get_pixel_properties(data.type);
@@ -169,15 +199,55 @@ auto update_water(tile& pixels, glm::ivec2 pos, const world_settings& settings, 
     }
 }
 
+auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+{
+    auto& data = pixels.at(pos);
+    const auto props = get_pixel_properties(data.type);
+    auto& vel = data.velocity;
+    vel += settings.gravity * (float)dt;
+    auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
+    
+    if (move_towards(pixels, pos, offset) != pos) {
+        return;
+    }
+
+    auto offsets = std::array{
+        glm::ivec2{-1, -1},
+        glm::ivec2{1, -1},
+        glm::ivec2{-1 * props.dispersion_rate, 0},
+        glm::ivec2{props.dispersion_rate, 0}
+    };
+
+    if (rand() % 2) {
+        std::swap(offsets[0], offsets[1]);
+        std::swap(offsets[2], offsets[3]);
+    }
+
+    for (auto offset : offsets) {
+        if (offset.y == 0) {
+            data.velocity = {0.0, 0.0};
+        }
+        if (move_towards(pixels, pos, offset) != pos) {
+            return;
+        }
+    }
+}
+
 auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
-    const auto& pixel = pixels.at(pos);
+    auto& pixel = pixels.at(pos);
     const auto props = get_pixel_properties(pixel.type);
-    if (props.movement == pixel_movement::movable_solid) {
-        update_sand(pixels, pos, settings, dt);
-    }
-    else if (props.movement == pixel_movement::liquid) {
-        update_water(pixels, pos, settings, dt);
+    
+    {
+        if (props.movement == pixel_movement::movable_solid) {
+            update_movable_solid(pixels, pos, settings, dt);
+        }
+        else if (props.movement == pixel_movement::liquid) {
+            update_liquid(pixels, pos, settings, dt);
+        }
+        else if (props.movement == pixel_movement::gas) {
+            update_gas(pixels, pos, settings, dt);
+        }
     }
 }
 
