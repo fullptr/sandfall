@@ -50,7 +50,12 @@ pixel_properties get_pixel_properties(pixel_type type)
         case pixel_type::lava:
             return {
                 .movement = pixel_movement::liquid,
-                .dispersion_rate = 1
+                .dispersion_rate = 1,
+                .affect_neighbour = [](pixel& me, pixel& them) {
+                    if (them.type == pixel_type::water) {
+                        them = pixel::steam();
+                    }
+                }
             };
         case pixel_type::rock:
             return {

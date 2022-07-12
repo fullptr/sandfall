@@ -167,6 +167,11 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
 
 auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
 {
+    const auto scope = scope_exit{[&] {
+        auto& pixel = pixels.at(pos);
+        affect_neighbours(pixels, pos);
+    }};
+
     auto& data = pixels.at(pos);
     const auto props = get_pixel_properties(data.type);
     auto& vel = data.velocity;
