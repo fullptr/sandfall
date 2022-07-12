@@ -19,6 +19,7 @@
 #include <array>
 #include <utility>
 #include <memory>
+#include <bitset>
 #include <random>
 #include <numbers>
 
@@ -32,6 +33,7 @@ struct editor
         { "dirt",  sand::pixel::dirt  },
         { "water", sand::pixel::water },
         { "lava",  sand::pixel::lava  },
+        { "acid",  sand::pixel::acid  },
         { "rock",  sand::pixel::rock  },
         { "steam", sand::pixel::steam },
     };

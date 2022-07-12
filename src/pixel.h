@@ -24,6 +24,7 @@ enum class pixel_type : std::uint8_t
     coal,
     water,
     lava,
+    acid,
     rock,
     steam,
 };
@@ -34,6 +35,9 @@ struct pixel_properties
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
+
+    // Corrosion
+    float          corrosion_resist    = 0.8f;
 
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
@@ -56,6 +60,7 @@ struct pixel
     static auto rock() -> pixel;
     static auto water() -> pixel;
     static auto lava() -> pixel;
+    static auto acid() -> pixel;
     static auto steam() -> pixel;
 };
 
