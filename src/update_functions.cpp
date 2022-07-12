@@ -19,10 +19,10 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src, glm::ivec2 dst) -> bo
 {
     if (!tile::valid(src) || !tile::valid(dst)) { return false; }
 
-    const auto& from = pixels.at(src);
+    const auto& from      = pixels.at(src);
     const auto from_props = get_pixel_properties(from.type);
-    const auto& to   = pixels.at(dst);
-    const auto to_props = get_pixel_properties(to.type);
+    const auto& to        = pixels.at(dst);
+    const auto to_props   = get_pixel_properties(to.type);
 
     if (from_props.movement == pixel_movement::movable_solid) {
         return to_props.movement == pixel_movement::none || to_props.movement == pixel_movement::liquid;
@@ -39,17 +39,17 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     const auto r = pos + glm::ivec2{1, 0};
 
     if (pixels.valid(l)) {
-        const auto props = get_pixel_properties(pixels.at(l).type);
+        auto& px = pixels.at(l);
+        const auto props = get_pixel_properties(px.type);
         if (props.movement == pixel_movement::movable_solid) {
-            auto& px = pixels.at(l);
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
 
     if (pixels.valid(r)) {
-        const auto props = get_pixel_properties(pixels.at(r).type);
+        auto& px = pixels.at(r);
+        const auto props = get_pixel_properties(px.type);
         if (props.movement == pixel_movement::movable_solid) {
-            auto& px = pixels.at(r);
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
