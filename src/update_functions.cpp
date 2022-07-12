@@ -204,12 +204,10 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
 
 auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
-    auto& data = pixels.at(pos);
-    const auto props = get_pixel_properties(data.type);
-    auto& vel = data.velocity;
+    auto& vel = pixels.at(pos).velocity;
     vel += settings.gravity * (float)dt;
-    auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     
+    const auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
         return new_pos;
     }
@@ -219,15 +217,10 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
 
 auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
 {
-    static std::random_device rd;
-    static std::mt19937 g(rd());
-
-    auto& data = pixels.at(pos);
-    const auto props = get_pixel_properties(data.type);
-    auto& vel = data.velocity;
+    auto& vel = pixels.at(pos).velocity;
     vel -= settings.gravity * (float)dt;
-    auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
 
+    const auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
         return new_pos;
     }
