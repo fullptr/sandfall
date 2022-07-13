@@ -27,15 +27,16 @@ struct editor
 {
     std::size_t current = 0;
     std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
-        { "air",   sand::pixel::air   },
-        { "sand",  sand::pixel::sand  },
-        { "coal",  sand::pixel::coal  },
-        { "dirt",  sand::pixel::dirt  },
-        { "water", sand::pixel::water },
-        { "lava",  sand::pixel::lava  },
-        { "acid",  sand::pixel::acid  },
-        { "rock",  sand::pixel::rock  },
-        { "steam", sand::pixel::steam },
+        { "air",      sand::pixel::air      },
+        { "sand",     sand::pixel::sand     },
+        { "coal",     sand::pixel::coal     },
+        { "dirt",     sand::pixel::dirt     },
+        { "water",    sand::pixel::water    },
+        { "lava",     sand::pixel::lava     },
+        { "acid",     sand::pixel::acid     },
+        { "rock",     sand::pixel::rock     },
+        { "titanium", sand::pixel::titanium },
+        { "steam",    sand::pixel::steam    },
     };
 
     float brush_size = 5.0f;
@@ -64,7 +65,7 @@ auto main() -> int
         0.0f, size, 0.0f, 1.0f
     };
 
-    std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
+    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
     auto VAO = std::uint32_t{};
     glGenVertexArrays(1, &VAO);

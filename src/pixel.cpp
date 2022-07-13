@@ -22,69 +22,67 @@ auto light_noise() -> glm::vec4
 pixel_properties get_pixel_properties(pixel_type type)
 {
     switch (type) {
-        case pixel_type::none:
-            return {};
-        case pixel_type::sand:
-            return {
-                .movement = pixel_movement::movable_solid,
-                .inertial_resistance = 0.1f,
-                .horizontal_transfer = 0.3f,
-                .corrosion_resist = 0.3f
-            };
-        case pixel_type::dirt:
-            return {
-                .movement = pixel_movement::movable_solid,
-                .inertial_resistance = 0.4f,
-                .horizontal_transfer = 0.2f,
-                .corrosion_resist = 0.5f
-            };
-        case pixel_type::coal:
-            return {
-                .movement = pixel_movement::movable_solid,
-                .inertial_resistance = 0.95f,
-                .horizontal_transfer = 0.1f,
-                .corrosion_resist = 0.8f
-            };
-        case pixel_type::water:
-            return {
-                .movement = pixel_movement::liquid,
-                .dispersion_rate = 5,
-                .corrosion_resist = 1.0f,
-            };
-        case pixel_type::lava:
-            return {
-                .movement = pixel_movement::liquid,
-                .dispersion_rate = 1,
-                .corrosion_resist = 1.0f,
-                .affect_neighbour = [](pixel& me, pixel& them) {
-                    if (them.type == pixel_type::water) {
-                        them = pixel::steam();
-                    }
+        case pixel_type::none: return {
+            .corrosion_resist = 1.0f
+        };
+        case pixel_type::sand: return {
+            .movement = pixel_movement::movable_solid,
+            .inertial_resistance = 0.1f,
+            .horizontal_transfer = 0.3f,
+            .corrosion_resist = 0.3f
+        };
+        case pixel_type::dirt: return {
+            .movement = pixel_movement::movable_solid,
+            .inertial_resistance = 0.4f,
+            .horizontal_transfer = 0.2f,
+            .corrosion_resist = 0.5f
+        };
+        case pixel_type::coal: return {
+            .movement = pixel_movement::movable_solid,
+            .inertial_resistance = 0.95f,
+            .horizontal_transfer = 0.1f,
+            .corrosion_resist = 0.8f
+        };
+        case pixel_type::water: return {
+            .movement = pixel_movement::liquid,
+            .dispersion_rate = 5,
+            .corrosion_resist = 1.0f,
+        };
+        case pixel_type::lava: return {
+            .movement = pixel_movement::liquid,
+            .dispersion_rate = 1,
+            .corrosion_resist = 1.0f,
+            .affect_neighbour = [](pixel& me, pixel& them) {
+                if (them.type == pixel_type::water) {
+                    them = pixel::steam();
                 }
-            };
-        case pixel_type::acid:
-            return {
-                .movement = pixel_movement::liquid,
-                .dispersion_rate = 1,
-                .corrosion_resist = 1.0f,
-                .affect_neighbour = [](pixel& me, pixel& them) {
-                    const auto props = get_pixel_properties(them.type);
-                    if (random_from_range(0.0f, 1.0f) > props.corrosion_resist) {
-                        them = pixel::air();
-                    }
+            }
+        };
+        case pixel_type::acid: return {
+            .movement = pixel_movement::liquid,
+            .dispersion_rate = 1,
+            .corrosion_resist = 1.0f,
+            .affect_neighbour = [](pixel& me, pixel& them) {
+                const auto props = get_pixel_properties(them.type);
+                if (random_from_range(0.0f, 1.0f) > props.corrosion_resist) {
+                    them = pixel::air();
+                    if (random_from_range(0.0f, 1.0f) > 0.9f) me = pixel::air();
                 }
-            };
-        case pixel_type::rock:
-            return {
-                .movement = pixel_movement::immovable_solid,
-                .corrosion_resist = 0.95f
-            };
-        case pixel_type::steam:
-            return {
-                .movement = pixel_movement::gas,
-                .dispersion_rate = 9,
-                .corrosion_resist = 0.0f
-            };
+            }
+        };
+        case pixel_type::rock: return {
+            .movement = pixel_movement::immovable_solid,
+            .corrosion_resist = 0.95f
+        };
+        case pixel_type::titanium: return {
+            .movement = pixel_movement::immovable_solid,
+            .corrosion_resist = 1.0f
+        };
+        case pixel_type::steam: return {
+            .movement = pixel_movement::gas,
+            .dispersion_rate = 9,
+            .corrosion_resist = 0.0f
+        };
         default:
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
             return {};
@@ -165,5 +163,14 @@ auto pixel::steam() -> pixel
         .colour = from_hex(0x9AECDB) + light_noise()
     };
 }
+
+auto pixel::titanium() -> pixel
+{
+    return {
+        .type = pixel_type::titanium,
+        .colour = from_hex(0xDFE4EA)
+    };
+}
+
 
 }
