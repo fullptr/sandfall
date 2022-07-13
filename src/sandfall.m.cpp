@@ -148,7 +148,6 @@ auto main() -> int
             tile->simulate(settings, frame_length);
             accumulator -= frame_length;
             updated = true;
-
         }
 
         if (updated) {
