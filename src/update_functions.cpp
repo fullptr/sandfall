@@ -85,7 +85,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
     }
 
     if (curr_pos != from) {
-        pixels.at(curr_pos).updated_this_frame = true;
+        pixels.at(curr_pos).is_updated = true;
     }
 
     return curr_pos;
@@ -178,7 +178,7 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
         pos = move_towards(pixels, pos, {vel.x, 0});
     }
 
-    if (!pixels.at(pos).updated_this_frame && pixels.at(pos).is_falling) {
+    if (!pixels.at(pos).is_updated && pixels.at(pos).is_falling) {
         auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 

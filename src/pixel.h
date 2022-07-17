@@ -48,9 +48,10 @@ struct pixel
     pixel_type type;
 
     glm::vec4 colour;
-    glm::vec2 velocity           = {0.0, 0.0};
-    bool      is_falling         = false;
-    bool      updated_this_frame = false;
+    glm::vec2 velocity   = {0.0, 0.0};
+    bool      is_falling = false;
+    bool      is_updated = false;
+    bool      is_burning = false;
 
     auto serialise(auto& archive) -> void {
         archive(
@@ -58,7 +59,8 @@ struct pixel
             colour,
             velocity,
             is_falling,
-            updated_this_frame
+            is_updated,
+            is_burning
         );
     }
 

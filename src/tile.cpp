@@ -33,7 +33,7 @@ auto tile::valid(glm::ivec2 pos) -> bool
 auto tile::simulate() -> void
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
-        if (!at({x, y}).updated_this_frame) {
+        if (!at({x, y}).is_updated) {
             update_pixel(*this, {x, y});
         }
     };
@@ -53,7 +53,7 @@ auto tile::simulate() -> void
         }
     }
 
-    std::ranges::for_each(d_pixels, [](auto& p) { p.updated_this_frame = false; });
+    std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
     for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
         d_buffer[pos] = d_pixels[pos].colour;
     }
