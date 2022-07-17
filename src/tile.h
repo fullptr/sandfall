@@ -1,10 +1,12 @@
 #pragma once
 #include "pixel.h"
+#include "serialise.hpp"
 
 #include <cstdint>
 #include <array>
 
 #include <glm/glm.hpp>
+#include <cereal/types/array.hpp>
 
 namespace sand {
 
@@ -39,6 +41,10 @@ public:
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
 
     auto data() const -> const buffer& { return d_buffer; }
+
+    auto serialise(auto& archive) -> void {
+        archive(d_buffer, d_pixels);
+    }
 };
 
 }
