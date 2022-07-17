@@ -3,13 +3,13 @@
 
 namespace cereal {
 
-template<class Archive>
+template <typename Archive>
 void serialise(Archive& archive, glm::vec2& vec)
 {
     archive(vec.x, vec.y);
 }
 
-template<class Archive>
+template <typename Archive>
 void serialise(Archive& archive, glm::vec4& vec)
 {
     archive(vec.x, vec.y, vec.z, vec.w);
