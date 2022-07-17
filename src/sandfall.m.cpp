@@ -140,13 +140,13 @@ auto main() -> int
             ImGui::Text("FPS: %d", timer.frame_rate());
 
             if (ImGui::Button("Save")) {
-                auto file = std::ofstream{"save.bin"};
+                auto file = std::ofstream{"save.bin", std::ios::binary};
                 auto archive = cereal::BinaryOutputArchive{file};
                 archive(*tile);
             }
             ImGui::SameLine();
             if (ImGui::Button("Load")) {
-                auto file = std::ifstream{"save.bin"};
+                auto file = std::ifstream{"save.bin", std::ios::binary};
                 auto archive = cereal::BinaryInputArchive{file};
                 archive(*tile);
             }
