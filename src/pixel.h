@@ -53,7 +53,7 @@ struct pixel
     bool      updated_this_frame = false;
 
     template <typename Archive>
-    auto serialize(Archive& archive) -> void {
+    auto serialise(Archive& archive) -> void {
         archive(
             type,
             colour,

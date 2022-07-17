@@ -43,7 +43,7 @@ public:
     auto data() const -> const buffer& { return d_buffer; }
 
     template <typename Archive>
-    auto serialize(Archive& archive) -> void {
+    auto serialise(Archive& archive) -> void {
         archive(d_buffer, d_pixels);
     }
 };
