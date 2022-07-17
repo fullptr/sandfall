@@ -52,6 +52,17 @@ struct pixel
     bool      is_falling         = false;
     bool      updated_this_frame = false;
 
+    template <typename Archive>
+    auto serialize(Archive& archive) -> void {
+        archive(
+            type,
+            colour,
+            velocity,
+            is_falling,
+            updated_this_frame
+        );
+    }
+
     static auto air() -> pixel;
     static auto sand() -> pixel;
     static auto coal() -> pixel;
