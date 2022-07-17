@@ -14,10 +14,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
+#include <cereal/archives/binary.hpp>
 
 #include <cstddef>
 #include <array>
 #include <utility>
+#include <fstream>
 #include <memory>
 #include <bitset>
 #include <random>
@@ -134,7 +136,20 @@ auto main() -> int
             if (ImGui::Button("Clear")) {
                 tile->fill(sand::pixel::air());
             }
+
             ImGui::Text("FPS: %d", timer.frame_rate());
+
+            if (ImGui::Button("Save")) {
+                auto file = std::ofstream{"save.bin"};
+                auto archive = cereal::BinaryOutputArchive{file};
+                archive(*tile);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Load")) {
+                auto file = std::ifstream{"save.bin"};
+                auto archive = cereal::BinaryInputArchive{file};
+                archive(*tile);
+            }
         }
         ImGui::End();
 
