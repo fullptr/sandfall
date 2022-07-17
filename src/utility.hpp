@@ -6,6 +6,8 @@
 
 namespace sand {
 
+static constexpr auto step = 1.0 / 60.0;
+
 template <typename... Ts>
 struct overloaded : Ts...
 {

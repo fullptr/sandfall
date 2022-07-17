@@ -139,6 +139,7 @@ auto main() -> int
             if (ImGui::Button("Clear")) {
                 tile->fill(sand::pixel::air());
             }
+            ImGui::Text("FPS: %d", timer.frame_rate());
         }
         ImGui::End();
 
@@ -152,7 +153,6 @@ auto main() -> int
 
         if (updated) {
             texture.set_data(tile->data());
-            window.set_name(fmt::format("Sandfall [FPS: {}]", timer.frame_rate()));
         }
 
         window.clear();

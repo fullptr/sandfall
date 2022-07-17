@@ -24,18 +24,18 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
     const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
     const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
 
-    using enum pixel_movement;
+    using pm = pixel_movement;
 
     // If the destination is empty, we can always move there
-    if (dst == none) return true;
+    if (dst == pm::none) return true;
 
     switch (src) {
-        case movable_solid:
-            return dst == liquid // solids can sink into liquid
-                || dst == gas;   // solids can displace gas
+        case pm::movable_solid:
+            return dst == pm::liquid // solids can sink into liquid
+                || dst == pm::gas;   // solids can displace gas
 
-        case gas:
-            return dst == liquid; // gas can bubble up through a liquid
+        case pm::gas:
+            return dst == pm::liquid; // gas can bubble up through a liquid
 
         default:
             return false;
