@@ -30,11 +30,11 @@ auto tile::valid(glm::ivec2 pos) -> bool
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
-auto tile::simulate(const world_settings& settings, double dt) -> void
+auto tile::simulate() -> void
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         if (!at({x, y}).updated_this_frame) {
-            update_pixel(*this, {x, y}, settings, dt);
+            update_pixel(*this, {x, y});
         }
     };
 

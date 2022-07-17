@@ -1,5 +1,6 @@
 #include "update_functions.h"
 #include "utility.hpp"
+#include "config.hpp"
 
 #include <array>
 #include <utility>
@@ -24,18 +25,18 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
     const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
     const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
 
-    using enum pixel_movement;
+    using pm = pixel_movement;
 
     // If the destination is empty, we can always move there
-    if (dst == none) return true;
+    if (dst == pm::none) return true;
 
     switch (src) {
-        case movable_solid:
-            return dst == liquid // solids can sink into liquid
-                || dst == gas;   // solids can displace gas
+        case pm::movable_solid:
+            return dst == pm::liquid // solids can sink into liquid
+                || dst == pm::gas;   // solids can displace gas
 
-        case gas:
-            return dst == liquid; // gas can bubble up through a liquid
+        case pm::gas:
+            return dst == pm::liquid; // gas can bubble up through a liquid
 
         default:
             return false;
@@ -146,7 +147,7 @@ auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 }
 
 
-auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
+auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -156,7 +157,7 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
         auto& vel = pixels.at(pos).velocity;
-        vel += settings.gravity * (float)dt;
+        vel += config::gravity * config::time_step;
         vel.y = glm::max(1.0f, vel.y);
         
         pos = move_towards(pixels, pos, vel);
@@ -192,10 +193,10 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos, const world_settings& se
     return pos;
 }
 
-auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
+auto update_liquid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
-    vel += settings.gravity * (float)dt;
+    vel += config::gravity * config::time_step;
     
     const auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
@@ -205,10 +206,10 @@ auto update_liquid(tile& pixels, glm::ivec2 pos, const world_settings& settings,
     return move_disperse(pixels, pos, direction::down);
 }
 
-auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> glm::ivec2
+auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
-    vel -= settings.gravity * (float)dt;
+    vel -= config::gravity * config::time_step;
 
     const auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
@@ -218,20 +219,20 @@ auto update_gas(tile& pixels, glm::ivec2 pos, const world_settings& settings, do
     return move_disperse(pixels, pos, direction::up);
 }
 
-auto update_pixel(tile& pixels, glm::ivec2 pos, const world_settings& settings, double dt) -> void
+auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
     auto& pixel = pixels.at(pos);
     const auto props = get_pixel_properties(pixel.type);
 
     switch (props.movement) {
         break; case pixel_movement::movable_solid:
-            pos = update_movable_solid(pixels, pos, settings, dt);
+            pos = update_movable_solid(pixels, pos);
 
         break; case pixel_movement::liquid:
-            pos = update_liquid(pixels, pos, settings, dt);
+            pos = update_liquid(pixels, pos);
 
         break; case pixel_movement::gas:
-            pos = update_gas(pixels, pos, settings, dt);
+            pos = update_gas(pixels, pos);
 
         break; default:
             return;
