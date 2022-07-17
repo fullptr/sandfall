@@ -1,6 +1,6 @@
 #include "tile.h"
 #include "pixel.h"
-#include "world_settings.h"
+#include "config.hpp"
 #include "utility.hpp"
 
 #include "graphics/window.h"
@@ -52,10 +52,6 @@ auto main() -> int
     using namespace sand;
 
     auto window = sand::window{"sandfall", 1280, 720};
-    
-    auto settings = sand::world_settings{
-        .gravity = {0.0f, 9.81f}
-    };
 
     float size = 720.0f;
     float vertices[] = {
@@ -116,7 +112,6 @@ auto main() -> int
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    auto frame_length = 1.0 / 60.0;
     auto accumulator = 0.0;
     auto timer = sand::timer{};
     auto show_demo = true;
@@ -145,9 +140,9 @@ auto main() -> int
 
         accumulator += dt;
         bool updated = false;
-        while (accumulator > frame_length) {
-            tile->simulate(settings, frame_length);
-            accumulator -= frame_length;
+        while (accumulator > config::time_step) {
+            tile->simulate();
+            accumulator -= config::time_step;
             updated = true;
         }
 

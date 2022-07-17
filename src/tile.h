@@ -1,6 +1,5 @@
 #pragma once
 #include "pixel.h"
-#include "world_settings.h"
 
 #include <cstdint>
 #include <array>
@@ -28,7 +27,7 @@ public:
     // Returns true if the given position exists and false otherwise
     static auto valid(glm::ivec2 pos) -> bool;
     
-    auto simulate(const world_settings& settings, double dt) -> void;
+    auto simulate() -> void;
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
