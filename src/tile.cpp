@@ -55,7 +55,11 @@ auto tile::simulate() -> void
 
     std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
     for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
-        d_buffer[pos] = d_pixels[pos].colour;
+        if (d_pixels[pos].is_burning) {
+            d_buffer[pos] = from_hex(0xe55039);
+        } else {
+            d_buffer[pos] = d_pixels[pos].colour;
+        }
     }
 }
 

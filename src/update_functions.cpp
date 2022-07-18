@@ -103,7 +103,16 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
-            pixel.properties().affect_neighbour(pixel, pixels.at(pos + offset));
+            auto& neighbour = pixels.at(pos + offset);
+
+            // Do pixel-type-specific logic
+            pixel.properties().affect_neighbour(pixel, neighbour);
+
+            // Do property-specific logic
+            // 1) Flammability spreads
+            if (pixel.is_burning && random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
+                neighbour.is_burning = true;
+            }
         }
     }
 }

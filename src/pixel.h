@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+
+#include <bitset>
 #include <cstdint>
 
 namespace sand {
@@ -37,6 +39,7 @@ struct pixel_properties
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
     float          corrosion_resist    = 0.8f;
+    float          flammability        = 0.0f;
 
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
@@ -47,6 +50,7 @@ struct pixel
 
     glm::vec4 colour;
     glm::vec2 velocity   = {0.0, 0.0};
+
     bool      is_falling = false;
     bool      is_updated = false;
     bool      is_burning = false;

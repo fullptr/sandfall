@@ -51,7 +51,8 @@ auto pixel::properties() const -> const pixel_properties&
                 .movement = pixel_movement::movable_solid,
                 .inertial_resistance = 0.95f,
                 .horizontal_transfer = 0.1f,
-                .corrosion_resist = 0.8f
+                .corrosion_resist = 0.8f,
+                .flammability = 0.01f
             };
             return px;
         }
@@ -71,6 +72,9 @@ auto pixel::properties() const -> const pixel_properties&
                 .affect_neighbour = [](pixel& me, pixel& them) {
                     if (them.type == pixel_type::water) {
                         them = pixel::steam();
+                    }
+                    if (random_from_range(0.0f, 1.0f) < them.properties().flammability) {
+                        them.is_burning = true;
                     }
                 }
             };
