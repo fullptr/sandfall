@@ -22,8 +22,8 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
 {
     if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
-    const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
-    const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
+    const auto& src = pixels.at(src_pos).properties().movement;
+    const auto& dst = pixels.at(dst_pos).properties().movement;
 
     using pm = pixel_movement;
 
@@ -50,15 +50,15 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
 
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
-        const auto props = get_pixel_properties(px.type);
-        if (props.movement == pixel_movement::movable_solid) {
+        const auto& props = px.properties();
+        if (px.properties().movement == pixel_movement::movable_solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
 
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
-        const auto props = get_pixel_properties(px.type);
+        const auto& props = px.properties();
         if (props.movement == pixel_movement::movable_solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
@@ -93,9 +93,6 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
 auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
-
-    const auto props = get_pixel_properties(pixel.type);
     const auto offsets = std::array{
         glm::ivec2{1, 0},
         glm::ivec2{-1, 0},
@@ -103,9 +100,10 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
         glm::ivec2{0, -1}
     };
 
+    auto& pixel = pixels.at(pos);
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
-            props.affect_neighbour(pixel, pixels.at(pos + offset));
+            pixel.properties().affect_neighbour(pixel, pixels.at(pos + offset));
         }
     }
 }
@@ -120,7 +118,7 @@ enum class direction
 auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
-    const auto props = get_pixel_properties(data.type);
+    const auto& props = data.properties();
 
     auto offsets = std::array{
         glm::ivec2{-1, dir == direction::down ? 1 : -1},
@@ -166,10 +164,9 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
     // Transfer to horizontal
     else {
         auto& data = pixels.at(pos);
-        const auto props = get_pixel_properties(data.type);
         auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = props.horizontal_transfer;
+            const auto ht = data.properties().horizontal_transfer;
             vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
             vel.y = 0.0;
         }
@@ -222,7 +219,7 @@ auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
     auto& pixel = pixels.at(pos);
-    const auto props = get_pixel_properties(pixel.type);
+    const auto& props = pixel.properties();
 
     switch (props.movement) {
         break; case pixel_movement::movable_solid:

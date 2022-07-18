@@ -41,8 +41,6 @@ struct pixel_properties
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
 
-pixel_properties get_pixel_properties(pixel_type type);
-
 struct pixel
 {
     pixel_type type;
@@ -52,6 +50,8 @@ struct pixel
     bool      is_falling = false;
     bool      is_updated = false;
     bool      is_burning = false;
+
+    auto properties() const -> const pixel_properties&;
 
     auto serialise(auto& archive) -> void {
         archive(
