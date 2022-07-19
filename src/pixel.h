@@ -42,6 +42,9 @@ struct pixel_properties
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
 
+    // Water Controls
+    bool           can_boil_water      = false;
+
     // Acid Controls
     float          corrosion_resist    = 0.8f;
     bool           is_corrosion_source = false; // Can this pixel type corrode others?
