@@ -113,10 +113,6 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
         if (pixels.valid(pos + offset)) {
             auto& neighbour = pixels.at(pos + offset);
 
-            // Do pixel-type-specific logic
-            props.affect_neighbour(pixel, neighbour);
-
-            // Do property-specific logic
             // 1) Boil water
             if (props.can_boil_water) {
                 if (neighbour.type == pixel_type::water) {
@@ -309,7 +305,7 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
         } break;
 
         default: {
-            return;
+            
         } break;
     }
 
