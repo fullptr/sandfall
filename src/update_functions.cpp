@@ -117,13 +117,24 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
             props.affect_neighbour(pixel, neighbour);
 
             // Do property-specific logic
-            // 1) Flammability spreads
+            // 1) Corrode neighbours
+            if (props.is_corrosion_source) {
+                if (random_from_range(0.0f, 1.0f) > neighbour.properties().corrosion_resist) {
+                    neighbour = pixel::air();
+                    if (random_from_range(0.0f, 1.0f) > 0.9f) {
+                        pixel = pixel::air();
+                    }
+                }
+            }
+            
+            // 2) Spread fire
             if (props.is_burn_source || pixel.is_burning) {
                 if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
                     neighbour.is_burning = true;
                 }
             }
 
+            // 3) Produce embers
             if (can_produce_embers && neighbour.type == pixel_type::none) {
                 if (random_from_range(0.0f, 1.0f) < 0.01f) {
                     neighbour = pixel::ember();

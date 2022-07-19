@@ -87,13 +87,7 @@ auto pixel::properties() const -> const pixel_properties&
                 .movement = pixel_movement::liquid,
                 .dispersion_rate = 1,
                 .corrosion_resist = 1.0f,
-                .affect_neighbour = [](pixel& me, pixel& them) {
-                    const auto& props = them.properties();
-                    if (random_from_range(0.0f, 1.0f) > props.corrosion_resist) {
-                        them = pixel::air();
-                        if (random_from_range(0.0f, 1.0f) > 0.9f) me = pixel::air();
-                    }
-                }
+                .is_corrosion_source = true
             };
             return px;
         }

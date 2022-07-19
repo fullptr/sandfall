@@ -44,6 +44,7 @@ struct pixel_properties
 
     // Acid Controls
     float          corrosion_resist    = 0.8f;
+    bool           is_corrosion_source = false; // Can this pixel type corrode others?
 
     // Fire Controls
     float          flammability        = 0.0f; // Chance that is_burning = true from neighbour
