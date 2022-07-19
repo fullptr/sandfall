@@ -16,6 +16,16 @@ auto get_pos(glm::vec2 pos) -> std::size_t
     return pos.x + tile_size * pos.y;
 }
 
+auto light_noise(glm::vec4 vec) -> glm::vec4
+{
+    return {
+        std::clamp(vec.x + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
+        std::clamp(vec.y + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
+        std::clamp(vec.z + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
+        1.0f
+    };
+}
+
 }
 
 tile::tile()
@@ -33,7 +43,7 @@ auto tile::valid(glm::ivec2 pos) -> bool
 auto tile::simulate() -> void
 {
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
-        if (!at({x, y}).updated_this_frame) {
+        if (!at({x, y}).is_updated) {
             update_pixel(*this, {x, y});
         }
     };
@@ -53,9 +63,19 @@ auto tile::simulate() -> void
         }
     }
 
-    std::ranges::for_each(d_pixels, [](auto& p) { p.updated_this_frame = false; });
+    static const auto fire_colours = std::array{
+        from_hex(0xe55039),
+        from_hex(0xf6b93b),
+        from_hex(0xfad390)
+    };
+
+    std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
     for (std::size_t pos = 0; pos != tile_size * tile_size; ++pos) {
-        d_buffer[pos] = d_pixels[pos].colour;
+        if (d_pixels[pos].is_burning) {
+            d_buffer[pos] = light_noise(random_element(fire_colours));
+        } else {
+            d_buffer[pos] = d_pixels[pos].colour;
+        }
     }
 }
 

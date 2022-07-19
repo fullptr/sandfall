@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cstddef>
 #include <string>
+#include <span>
 #include <glm/glm.hpp>
 
 namespace sand {
@@ -51,6 +52,13 @@ public:
 auto random_from_range(float min, float max) -> float;
 auto random_from_range(int min, int max) -> int;
 auto random_from_circle(float radius) -> glm::ivec2;
+
+template <typename Elements>
+auto random_element(const Elements& elements)
+{
+    return elements[random_from_range(0, std::ssize(elements))];
+}
+
 auto coin_flip() -> bool;
 auto sign_flip() -> int;
 

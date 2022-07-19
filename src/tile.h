@@ -6,7 +6,6 @@
 #include <array>
 
 #include <glm/glm.hpp>
-#include <cereal/types/array.hpp>
 
 namespace sand {
 

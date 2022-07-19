@@ -22,8 +22,8 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
 {
     if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
-    const auto src = get_pixel_properties(pixels.at(src_pos).type).movement;
-    const auto dst = get_pixel_properties(pixels.at(dst_pos).type).movement;
+    const auto& src = pixels.at(src_pos).properties().movement;
+    const auto& dst = pixels.at(dst_pos).properties().movement;
 
     using pm = pixel_movement;
 
@@ -50,15 +50,15 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
 
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
-        const auto props = get_pixel_properties(px.type);
-        if (props.movement == pixel_movement::movable_solid) {
+        const auto& props = px.properties();
+        if (px.properties().movement == pixel_movement::movable_solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
 
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
-        const auto props = get_pixel_properties(px.type);
+        const auto& props = px.properties();
         if (props.movement == pixel_movement::movable_solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
@@ -85,7 +85,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
     }
 
     if (curr_pos != from) {
-        pixels.at(curr_pos).updated_this_frame = true;
+        pixels.at(curr_pos).is_updated = true;
     }
 
     return curr_pos;
@@ -93,21 +93,70 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
 auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
-
-    const auto props = get_pixel_properties(pixel.type);
     const auto offsets = std::array{
         glm::ivec2{1, 0},
         glm::ivec2{-1, 0},
         glm::ivec2{0, 1},
-        glm::ivec2{0, -1}
+        glm::ivec2{0, -1},
+        glm::ivec2{1, 1},
+        glm::ivec2{-1, -1},
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, -1}
+    };
+
+    auto& pixel = pixels.at(pos);
+    const auto& props = pixel.properties();
+
+    const bool can_produce_embers = props.is_ember_source || pixel.is_burning;
+
+    for (const auto& offset : offsets) {
+        if (pixels.valid(pos + offset)) {
+            auto& neighbour = pixels.at(pos + offset);
+
+            // Do pixel-type-specific logic
+            props.affect_neighbour(pixel, neighbour);
+
+            // Do property-specific logic
+            // 1) Flammability spreads
+            if (props.is_burn_source || pixel.is_burning) {
+                if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
+                    neighbour.is_burning = true;
+                }
+            }
+
+            if (can_produce_embers && neighbour.type == pixel_type::none) {
+                if (random_from_range(0.0f, 1.0f) < 0.01f) {
+                    neighbour = pixel::ember();
+                }
+            }
+        }
+    }
+}
+
+auto is_surrounded(tile& pixels, glm::ivec2 pos) -> bool
+{
+    const auto offsets = std::array{
+        glm::ivec2{1, 0},
+        glm::ivec2{-1, 0},
+        glm::ivec2{0, 1},
+        glm::ivec2{0, -1},
+        glm::ivec2{1, 1},
+        glm::ivec2{-1, -1},
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, -1}
     };
 
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
-            props.affect_neighbour(pixel, pixels.at(pos + offset));
+            auto& neighbour = pixels.at(pos + offset);
+
+            if (neighbour.type == pixel_type::none) {
+                return false;
+            }
         }
     }
+
+    return true;
 }
 
 enum class direction
@@ -120,7 +169,7 @@ enum class direction
 auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
-    const auto props = get_pixel_properties(data.type);
+    const auto& props = data.properties();
 
     auto offsets = std::array{
         glm::ivec2{-1, dir == direction::down ? 1 : -1},
@@ -166,10 +215,9 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
     // Transfer to horizontal
     else {
         auto& data = pixels.at(pos);
-        const auto props = get_pixel_properties(data.type);
         auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = props.horizontal_transfer;
+            const auto ht = data.properties().horizontal_transfer;
             vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
             vel.y = 0.0;
         }
@@ -178,7 +226,7 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
         pos = move_towards(pixels, pos, {vel.x, 0});
     }
 
-    if (!pixels.at(pos).updated_this_frame && pixels.at(pos).is_falling) {
+    if (!pixels.at(pos).is_updated && pixels.at(pos).is_falling) {
         auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
@@ -221,24 +269,57 @@ auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 
 auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
-    const auto props = get_pixel_properties(pixel.type);
+    if (pixels.at(pos).type == pixel_type::none) {
+        return;
+    }
 
-    switch (props.movement) {
-        break; case pixel_movement::movable_solid:
+    switch (pixels.at(pos).properties().movement) {
+        case pixel_movement::movable_solid: {
             pos = update_movable_solid(pixels, pos);
+        } break;
 
-        break; case pixel_movement::liquid:
+        case pixel_movement::liquid: {
             pos = update_liquid(pixels, pos);
+        } break;
 
-        break; case pixel_movement::gas:
+        case pixel_movement::gas: {
             pos = update_gas(pixels, pos);
+        } break;
 
-        break; default:
+        case pixel_movement::immovable_solid: {
+            
+        } break;
+
+        default: {
             return;
+        } break;
     }
 
     affect_neighbours(pixels, pos);
+
+    // Update logic for single pixels depending on properties only
+    auto& pixel = pixels.at(pos);
+
+    // is_burning status
+    if (pixel.is_burning) {
+        const auto& props = pixel.properties();
+
+        // First, see if it can be put out
+        if (is_surrounded(pixels, pos)) {
+            if (random_from_range(0.0f, 1.0f) < props.put_out_surrounded) {
+                pixel.is_burning = false;
+            }
+        } else {
+            if (random_from_range(0.0f, 1.0f) < props.put_out) {
+                pixel.is_burning = false;
+            }
+        }
+
+        // Second, see if it gets destroyed
+        if (random_from_range(0.0f, 1.0f) < props.burn_out_chance) {
+            pixel = pixel::air();
+        }
+    }
 }
 
 }
