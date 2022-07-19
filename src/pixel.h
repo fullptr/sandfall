@@ -30,15 +30,19 @@ enum class pixel_type : std::uint8_t
     rock,
     titanium,
     steam,
-    fuse
+    fuse,
+    ember
 };
 
 struct pixel_properties
 {
+    // Movement Controls
     pixel_movement movement            = pixel_movement::none;
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
+
+    // Acid Controls
     float          corrosion_resist    = 0.8f;
 
     // Fire Controls
@@ -46,7 +50,10 @@ struct pixel_properties
     float          put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
     float          put_out             = 0.0f; // Chance that is_burning = false otherwise
     float          burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
+    bool           is_burn_source      = false; // Can this pixel cause others to burn?
+    bool           is_ember_source     = false; // Does this pixel produce embers?
 
+    // Called on each of the pixels neighers (TODO: Remove, rely only on property specific logic)
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
 
@@ -85,6 +92,7 @@ struct pixel
     static auto steam() -> pixel;
     static auto titanium() -> pixel;
     static auto fuse() -> pixel;
+    static auto ember() -> pixel;
 };
 
 }

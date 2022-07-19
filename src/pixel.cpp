@@ -72,14 +72,13 @@ auto pixel::properties() const -> const pixel_properties&
                 .movement = pixel_movement::liquid,
                 .dispersion_rate = 1,
                 .corrosion_resist = 1.0f,
+                .is_burn_source = true,
+                .is_ember_source = true,
                 .affect_neighbour = [](pixel& me, pixel& them) {
                     if (them.type == pixel_type::water) {
                         them = pixel::steam();
                     }
-                    if (random_from_range(0.0f, 1.0f) < them.properties().flammability) {
-                        them.is_burning = true;
-                    }
-                }
+                },
             };
             return px;
         }
@@ -128,6 +127,17 @@ auto pixel::properties() const -> const pixel_properties&
                 .put_out_surrounded = 0.0f,
                 .put_out = 0.0f,
                 .burn_out_chance = 0.1f
+            };
+            return px;
+        }
+        case pixel_type::ember: {
+            static constexpr auto px = pixel_properties{
+                .movement = pixel_movement::gas,
+                .corrosion_resist = 0.1f,
+                .flammability = 1.0f,
+                .put_out_surrounded = 0.0f,
+                .put_out = 0.0f,
+                .burn_out_chance = 0.2f
             };
             return px;
         }
@@ -202,7 +212,7 @@ auto pixel::acid() -> pixel
 {
     return {
         .type = pixel_type::acid,
-        .colour = from_hex(0x2ed573) + light_noise()
+        .colour = from_hex(0x2ED573) + light_noise()
     };
 }
 
@@ -226,8 +236,16 @@ auto pixel::fuse() -> pixel
 {
     return {
         .type = pixel_type::fuse,
-        .colour = from_hex(0x45aaf2) + light_noise(),
-        .is_falling = false
+        .colour = from_hex(0x45AAF2) + light_noise()
+    };
+}
+
+auto pixel::ember() -> pixel
+{
+    return {
+        .type = pixel_type::ember,
+        .colour = from_hex(0xFFFFFF) + light_noise(),
+        .is_burning = true
     };
 }
 

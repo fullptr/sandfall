@@ -105,17 +105,29 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
     };
 
     auto& pixel = pixels.at(pos);
+    const auto& props = pixel.properties();
+
+    const bool can_produce_embers = props.is_ember_source || pixel.is_burning;
+
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
             auto& neighbour = pixels.at(pos + offset);
 
             // Do pixel-type-specific logic
-            pixel.properties().affect_neighbour(pixel, neighbour);
+            props.affect_neighbour(pixel, neighbour);
 
             // Do property-specific logic
             // 1) Flammability spreads
-            if (pixel.is_burning && random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
-                neighbour.is_burning = true;
+            if (props.is_burn_source || pixel.is_burning) {
+                if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
+                    neighbour.is_burning = true;
+                }
+            }
+
+            if (can_produce_embers && neighbour.type == pixel_type::none) {
+                if (random_from_range(0.0f, 1.0f) < 0.01f) {
+                    neighbour = pixel::ember();
+                }
             }
         }
     }
