@@ -97,7 +97,11 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
         glm::ivec2{1, 0},
         glm::ivec2{-1, 0},
         glm::ivec2{0, 1},
-        glm::ivec2{0, -1}
+        glm::ivec2{0, -1},
+        glm::ivec2{1, 1},
+        glm::ivec2{-1, -1},
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, -1}
     };
 
     auto& pixel = pixels.at(pos);
@@ -115,6 +119,32 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
             }
         }
     }
+}
+
+auto is_surrounded(tile& pixels, glm::ivec2 pos) -> bool
+{
+    const auto offsets = std::array{
+        glm::ivec2{1, 0},
+        glm::ivec2{-1, 0},
+        glm::ivec2{0, 1},
+        glm::ivec2{0, -1},
+        glm::ivec2{1, 1},
+        glm::ivec2{-1, -1},
+        glm::ivec2{-1, 1},
+        glm::ivec2{1, -1}
+    };
+
+    for (const auto& offset : offsets) {
+        if (pixels.valid(pos + offset)) {
+            auto& neighbour = pixels.at(pos + offset);
+
+            if (neighbour.type == pixel_type::none) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 enum class direction
@@ -227,24 +257,45 @@ auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
 
 auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
-    const auto& props = pixel.properties();
+    if (pixels.at(pos).type == pixel_type::none) {
+        return;
+    }
 
-    switch (props.movement) {
-        break; case pixel_movement::movable_solid:
+    switch (pixels.at(pos).properties().movement) {
+        case pixel_movement::movable_solid: {
             pos = update_movable_solid(pixels, pos);
+        } break;
 
-        break; case pixel_movement::liquid:
+        case pixel_movement::liquid: {
             pos = update_liquid(pixels, pos);
+        } break;
 
-        break; case pixel_movement::gas:
+        case pixel_movement::gas: {
             pos = update_gas(pixels, pos);
+        } break;
 
-        break; default:
+        case pixel_movement::immovable_solid: {
+            
+        } break;
+
+        default: {
             return;
+        } break;
     }
 
     affect_neighbours(pixels, pos);
+
+    // Update logic for single pixels depending on properties only
+    auto& pixel = pixels.at(pos);
+
+    // 1) If a pixel is smothered, it has a change to go out. TODO: Make threshold configurable?
+    if (pixel.is_burning) {
+        if (is_surrounded(pixels, pos)) {
+            if (random_from_range(0.0f, 1.0f) < 0.15f) pixel.is_burning = false;
+        } else {
+            if (random_from_range(0.0f, 1.0f) < 0.02f) pixel.is_burning = false;
+        }
+    }
 }
 
 }
