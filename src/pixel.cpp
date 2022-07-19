@@ -120,6 +120,17 @@ auto pixel::properties() const -> const pixel_properties&
             };
             return px;
         }
+        case pixel_type::fuse: {
+            static constexpr auto px = pixel_properties{
+                .movement = pixel_movement::immovable_solid,
+                .corrosion_resist = 0.1f,
+                .flammability = 0.25f,
+                .put_out_surrounded = 0.0f,
+                .put_out = 0.0f,
+                .burn_out_chance = 0.1f
+            };
+            return px;
+        }
         default: {
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
             static constexpr auto px = pixel_properties{};
@@ -208,6 +219,15 @@ auto pixel::titanium() -> pixel
     return {
         .type = pixel_type::titanium,
         .colour = from_hex(0xDFE4EA)
+    };
+}
+
+auto pixel::fuse() -> pixel
+{
+    return {
+        .type = pixel_type::fuse,
+        .colour = from_hex(0x45aaf2) + light_noise(),
+        .is_falling = false
     };
 }
 

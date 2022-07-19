@@ -30,6 +30,7 @@ enum class pixel_type : std::uint8_t
     rock,
     titanium,
     steam,
+    fuse
 };
 
 struct pixel_properties
@@ -83,6 +84,7 @@ struct pixel
     static auto acid() -> pixel;
     static auto steam() -> pixel;
     static auto titanium() -> pixel;
+    static auto fuse() -> pixel;
 };
 
 }

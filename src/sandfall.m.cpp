@@ -39,6 +39,7 @@ struct editor
         { "rock",     sand::pixel::rock     },
         { "titanium", sand::pixel::titanium },
         { "steam",    sand::pixel::steam    },
+        { "fuse",     sand::pixel::fuse     },
     };
 
     float brush_size = 5.0f;
