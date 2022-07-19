@@ -39,7 +39,11 @@ struct pixel_properties
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
     float          corrosion_resist    = 0.8f;
-    float          flammability        = 0.0f;
+
+    // Fire Controls
+    float          flammability        = 0.0f; // Chance that is_burning = true from neighbour
+    float          put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
+    float          put_out             = 0.0f; // Chance that is_burning = false otherwise
 
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };

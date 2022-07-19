@@ -52,7 +52,9 @@ auto pixel::properties() const -> const pixel_properties&
                 .inertial_resistance = 0.95f,
                 .horizontal_transfer = 0.1f,
                 .corrosion_resist = 0.8f,
-                .flammability = 0.02f
+                .flammability = 0.02f,
+                .put_out_surrounded = 0.15f,
+                .put_out = 0.02f
             };
             return px;
         }
