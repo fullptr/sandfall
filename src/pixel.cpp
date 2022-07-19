@@ -54,7 +54,8 @@ auto pixel::properties() const -> const pixel_properties&
                 .corrosion_resist = 0.8f,
                 .flammability = 0.02f,
                 .put_out_surrounded = 0.15f,
-                .put_out = 0.02f
+                .put_out = 0.02f,
+                .burn_out_chance = 0.005f
             };
             return px;
         }

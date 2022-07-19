@@ -44,6 +44,7 @@ struct pixel_properties
     float          flammability        = 0.0f; // Chance that is_burning = true from neighbour
     float          put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
     float          put_out             = 0.0f; // Chance that is_burning = false otherwise
+    float          burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
 
     affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };

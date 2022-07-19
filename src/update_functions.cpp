@@ -288,13 +288,24 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
     // Update logic for single pixels depending on properties only
     auto& pixel = pixels.at(pos);
 
-    // 1) If a pixel is smothered, it has a change to go out.
+    // is_burning status
     if (pixel.is_burning) {
         const auto& props = pixel.properties();
+
+        // First, see if it can be put out
         if (is_surrounded(pixels, pos)) {
-            if (random_from_range(0.0f, 1.0f) < props.put_out_surrounded) pixel.is_burning = false;
+            if (random_from_range(0.0f, 1.0f) < props.put_out_surrounded) {
+                pixel.is_burning = false;
+            }
         } else {
-            if (random_from_range(0.0f, 1.0f) < props.put_out) pixel.is_burning = false;
+            if (random_from_range(0.0f, 1.0f) < props.put_out) {
+                pixel.is_burning = false;
+            }
+        }
+
+        // Second, see if it gets destroyed
+        if (random_from_range(0.0f, 1.0f) < props.burn_out_chance) {
+            pixel = pixel::air();
         }
     }
 }
