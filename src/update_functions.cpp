@@ -31,11 +31,11 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
     using pm = pixel_movement;
     switch (src) {
         case pm::solid:
-            return dst == pm::liquid // solids can sink into liquid
-                || dst == pm::gas;   // solids can displace gas
+            return dst == pm::liquid
+                || dst == pm::gas;
 
-        case pm::gas:
-            return dst == pm::liquid; // gas can bubble up through a liquid
+        case pm::liquid:
+            return dst == pm::gas;
 
         default:
             return false;
