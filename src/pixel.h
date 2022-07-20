@@ -9,8 +9,7 @@ namespace sand {
 enum class pixel_movement : std::uint8_t
 {
     none,
-    immovable_solid,
-    movable_solid,
+    solid,
     liquid,
     gas,
 };

@@ -22,16 +22,15 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
 {
     if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
+    // If the destination is empty, we can always move there
+    if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
+
     const auto& src = pixels.at(src_pos).properties().movement;
     const auto& dst = pixels.at(dst_pos).properties().movement;
 
     using pm = pixel_movement;
-
-    // If the destination is empty, we can always move there
-    if (dst == pm::none) return true;
-
     switch (src) {
-        case pm::movable_solid:
+        case pm::solid:
             return dst == pm::liquid // solids can sink into liquid
                 || dst == pm::gas;   // solids can displace gas
 
@@ -51,7 +50,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
         const auto& props = px.properties();
-        if (px.properties().movement == pixel_movement::movable_solid) {
+        if (px.properties().movement == pixel_movement::solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
@@ -59,7 +58,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
         const auto& props = px.properties();
-        if (props.movement == pixel_movement::movable_solid) {
+        if (props.movement == pixel_movement::solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
@@ -288,7 +287,7 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
     }
 
     switch (pixels.at(pos).properties().movement) {
-        case pixel_movement::movable_solid: {
+        case pixel_movement::solid: {
             pos = update_movable_solid(pixels, pos);
         } break;
 
@@ -300,12 +299,8 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
             pos = update_gas(pixels, pos);
         } break;
 
-        case pixel_movement::immovable_solid: {
-            
-        } break;
-
         default: {
-            
+
         } break;
     }
 
