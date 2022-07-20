@@ -22,21 +22,20 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
 {
     if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
 
+    // If the destination is empty, we can always move there
+    if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
+
     const auto& src = pixels.at(src_pos).properties().movement;
     const auto& dst = pixels.at(dst_pos).properties().movement;
 
     using pm = pixel_movement;
-
-    // If the destination is empty, we can always move there
-    if (dst == pm::none) return true;
-
     switch (src) {
-        case pm::movable_solid:
-            return dst == pm::liquid // solids can sink into liquid
-                || dst == pm::gas;   // solids can displace gas
+        case pm::solid:
+            return dst == pm::liquid
+                || dst == pm::gas;
 
-        case pm::gas:
-            return dst == pm::liquid; // gas can bubble up through a liquid
+        case pm::liquid:
+            return dst == pm::gas;
 
         default:
             return false;
@@ -51,7 +50,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
         const auto& props = px.properties();
-        if (px.properties().movement == pixel_movement::movable_solid) {
+        if (px.properties().movement == pixel_movement::solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
@@ -59,7 +58,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
         const auto& props = px.properties();
-        if (props.movement == pixel_movement::movable_solid) {
+        if (props.movement == pixel_movement::solid) {
             px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance || px.is_falling;
         }
     }
@@ -113,17 +112,31 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
         if (pixels.valid(pos + offset)) {
             auto& neighbour = pixels.at(pos + offset);
 
-            // Do pixel-type-specific logic
-            props.affect_neighbour(pixel, neighbour);
+            // 1) Boil water
+            if (props.can_boil_water) {
+                if (neighbour.type == pixel_type::water) {
+                    neighbour = pixel::steam();
+                }
+            }
 
-            // Do property-specific logic
-            // 1) Flammability spreads
+            // 2) Corrode neighbours
+            if (props.is_corrosion_source) {
+                if (random_from_range(0.0f, 1.0f) > neighbour.properties().corrosion_resist) {
+                    neighbour = pixel::air();
+                    if (random_from_range(0.0f, 1.0f) > 0.9f) {
+                        pixel = pixel::air();
+                    }
+                }
+            }
+            
+            // 3) Spread fire
             if (props.is_burn_source || pixel.is_burning) {
                 if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
                     neighbour.is_burning = true;
                 }
             }
 
+            // 4) Produce embers
             if (can_produce_embers && neighbour.type == pixel_type::none) {
                 if (random_from_range(0.0f, 1.0f) < 0.01f) {
                     neighbour = pixel::ember();
@@ -274,7 +287,7 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
     }
 
     switch (pixels.at(pos).properties().movement) {
-        case pixel_movement::movable_solid: {
+        case pixel_movement::solid: {
             pos = update_movable_solid(pixels, pos);
         } break;
 
@@ -286,12 +299,8 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
             pos = update_gas(pixels, pos);
         } break;
 
-        case pixel_movement::immovable_solid: {
-            
-        } break;
-
         default: {
-            return;
+
         } break;
     }
 

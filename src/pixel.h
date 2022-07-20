@@ -6,14 +6,10 @@
 
 namespace sand {
 
-struct pixel;
-using affect_neighbour_func = void(*)(pixel& me, pixel& them);
-
 enum class pixel_movement : std::uint8_t
 {
     none,
-    immovable_solid,
-    movable_solid,
+    solid,
     liquid,
     gas,
 };
@@ -42,8 +38,12 @@ struct pixel_properties
     float          horizontal_transfer = 0.0f;
     int            dispersion_rate     = 0;
 
+    // Water Controls
+    bool           can_boil_water      = false;
+
     // Acid Controls
     float          corrosion_resist    = 0.8f;
+    bool           is_corrosion_source = false; // Can this pixel type corrode others?
 
     // Fire Controls
     float          flammability        = 0.0f; // Chance that is_burning = true from neighbour
@@ -52,9 +52,6 @@ struct pixel_properties
     float          burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
     bool           is_burn_source      = false; // Can this pixel cause others to burn?
     bool           is_ember_source     = false; // Does this pixel produce embers?
-
-    // Called on each of the pixels neighers (TODO: Remove, rely only on property specific logic)
-    affect_neighbour_func affect_neighbour = [](pixel& me, pixel& them) {};
 };
 
 struct pixel
