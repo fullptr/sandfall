@@ -27,7 +27,8 @@ enum class pixel_type : std::uint8_t
     titanium,
     steam,
     fuse,
-    ember
+    ember,
+    oil
 };
 
 struct pixel_properties
@@ -36,7 +37,7 @@ struct pixel_properties
     pixel_movement movement            = pixel_movement::none;
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;
-    int            dispersion_rate     = 0;
+    int            dispersion_rate     = 1;
 
     // Water Controls
     bool           can_boil_water      = false;
@@ -90,6 +91,7 @@ struct pixel
     static auto titanium() -> pixel;
     static auto fuse() -> pixel;
     static auto ember() -> pixel;
+    static auto oil() -> pixel;
 };
 
 }

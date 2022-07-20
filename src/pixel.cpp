@@ -131,6 +131,18 @@ auto pixel::properties() const -> const pixel_properties&
             };
             return px;
         }
+        case pixel_type::oil: {
+            static constexpr auto px = pixel_properties{
+                .movement = pixel_movement::liquid,
+                .dispersion_rate = 2,
+                .corrosion_resist = 0.1f,
+                .flammability = 0.05f,
+                .put_out_surrounded = 0.3f,
+                .put_out = 0.02f,
+                .burn_out_chance = 0.005f
+            };
+            return px;
+        }
         default: {
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
             static constexpr auto px = pixel_properties{};
@@ -236,6 +248,14 @@ auto pixel::ember() -> pixel
         .type = pixel_type::ember,
         .colour = from_hex(0xFFFFFF) + light_noise(),
         .is_burning = true
+    };
+}
+
+auto pixel::oil() -> pixel
+{
+    return {
+        .type = pixel_type::oil,
+        .colour = from_hex(0x650C30) + light_noise()
     };
 }
 
