@@ -28,7 +28,9 @@ enum class pixel_type : std::uint8_t
     steam,
     fuse,
     ember,
-    oil
+    oil,
+    gunpowder,
+    methane
 };
 
 struct pixel_properties
@@ -92,6 +94,8 @@ struct pixel
     static auto fuse() -> pixel;
     static auto ember() -> pixel;
     static auto oil() -> pixel;
+    static auto gunpowder() -> pixel;
+    static auto methane() -> pixel;
 };
 
 }

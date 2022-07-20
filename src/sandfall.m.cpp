@@ -29,19 +29,21 @@ struct editor
 {
     std::size_t current = 0;
     std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
-        { "air",      sand::pixel::air      },
-        { "sand",     sand::pixel::sand     },
-        { "coal",     sand::pixel::coal     },
-        { "dirt",     sand::pixel::dirt     },
-        { "water",    sand::pixel::water    },
-        { "lava",     sand::pixel::lava     },
-        { "acid",     sand::pixel::acid     },
-        { "rock",     sand::pixel::rock     },
-        { "titanium", sand::pixel::titanium },
-        { "steam",    sand::pixel::steam    },
-        { "fuse",     sand::pixel::fuse     },
-        { "ember",    sand::pixel::ember    },
-        { "oil",      sand::pixel::oil      },
+        { "air",       sand::pixel::air       },
+        { "sand",      sand::pixel::sand      },
+        { "coal",      sand::pixel::coal      },
+        { "dirt",      sand::pixel::dirt      },
+        { "water",     sand::pixel::water     },
+        { "lava",      sand::pixel::lava      },
+        { "acid",      sand::pixel::acid      },
+        { "rock",      sand::pixel::rock      },
+        { "titanium",  sand::pixel::titanium  },
+        { "steam",     sand::pixel::steam     },
+        { "fuse",      sand::pixel::fuse      },
+        { "ember",     sand::pixel::ember     },
+        { "oil",       sand::pixel::oil       },
+        { "gunpowder", sand::pixel::gunpowder },
+        { "methane",   sand::pixel::methane   },
     };
 
     float brush_size = 5.0f;
