@@ -143,6 +143,7 @@ auto main() -> int
             }
 
             ImGui::Text("FPS: %d", timer.frame_rate());
+            ImGui::Text("Awake chunks: %d", tile->num_awake_chunks());
 
             if (ImGui::Button("Save")) {
                 auto file = std::ofstream{"save.bin", std::ios::binary};
@@ -154,6 +155,7 @@ auto main() -> int
                 auto file = std::ifstream{"save.bin", std::ios::binary};
                 auto archive = cereal::BinaryInputArchive{file};
                 archive(*tile);
+                tile->wake_all_chunks();
             }
         }
         ImGui::End();

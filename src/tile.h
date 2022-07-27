@@ -25,8 +25,8 @@ static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
 
 struct chunk
 {
-    bool should_step      = false;
-    bool should_step_next = false;
+    bool should_step      = true;
+    bool should_step_next = true;
 };
 
 class tile
@@ -62,6 +62,8 @@ public:
 
     // Coord of a pixel, not a chunk. If on a boundary, will wake adjacent chunk
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
+    auto wake_all_chunks() -> void;
+    auto num_awake_chunks() const -> std::size_t;
 
     auto data() const -> const buffer& { return d_buffer; }
 

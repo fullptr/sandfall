@@ -143,6 +143,50 @@ auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / static_cast<int>(chunk_size);
     d_chunks[get_chunk_pos(chunk)].should_step_next = true;
+
+    // Wake right
+    if (pixel.x != tile_size - 1 && pixel.x + 1 % chunk_size == 0)
+    {
+        const auto neighbour = chunk + glm::ivec2{1, 0};
+        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+    }
+
+    // Wake left
+    if (pixel.x != 0 && pixel.x - 1 % chunk_size == 0)
+    {
+        const auto neighbour = chunk - glm::ivec2{1, 0};
+        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+    }
+
+    // Wake down
+    if (pixel.y != tile_size - 1 && pixel.y + 1 % chunk_size == 0)
+    {
+        const auto neighbour = chunk + glm::ivec2{0, 1};
+        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+    }
+
+    // Wake up
+    if (pixel.y != 0 && pixel.y - 1 % chunk_size == 0)
+    {
+        const auto neighbour = chunk - glm::ivec2{0, 1};
+        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+    }
+}
+
+auto tile::wake_all_chunks() -> void
+{
+    for (auto& chunk : d_chunks) {
+        chunk.should_step_next = true;
+    }
+}
+
+auto tile::num_awake_chunks() const -> std::size_t
+{
+    auto count = std::size_t{0};
+    for (const auto& chunk : d_chunks) {
+        count += static_cast<std::size_t>(chunk.should_step);
+    }
+    return count;
 }
 
 }
