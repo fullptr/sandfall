@@ -126,7 +126,36 @@ auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 
 auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
-    d_to_update.emplace(pixel / 16);
+    const auto chunk = pixel / static_cast<int>(chunk_size);
+    d_to_update.emplace(chunk);
+
+    // Wake right
+    if (pixel.x != tile_size - 1 && pixel.x + 1 % chunk_size == 0)
+    {
+        const auto right = chunk + glm::ivec2{1, 0};
+        d_to_update.emplace(right);
+    }
+
+    // Wake left
+    if (pixel.x != 0 && pixel.x - 1 % chunk_size == 0)
+    {
+        const auto left = chunk - glm::ivec2{1, 0};
+        d_to_update.emplace(left);
+    }
+
+    // Wake down
+    if (pixel.y != tile_size - 1 && pixel.y + 1 % chunk_size == 0)
+    {
+        const auto down = chunk + glm::ivec2{0, 1};
+        d_to_update.emplace(down);
+    }
+
+    // Wake up
+    if (pixel.y != 0 && pixel.y - 1 % chunk_size == 0)
+    {
+        const auto up = chunk - glm::ivec2{0, 1};
+        d_to_update.emplace(up);
+    }
 }
 
 }
