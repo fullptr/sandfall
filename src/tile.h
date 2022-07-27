@@ -19,19 +19,28 @@ static constexpr float         tile_size_f = static_cast<float>(tile_size);
 static constexpr std::uint32_t chunk_size   = 16;
 static constexpr float         chunk_size_f = static_cast<float>(chunk_size);
 
+static_assert(tile_size % chunk_size == 0);
+
+static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
+
+struct chunk
+{
+    bool should_step      = false;
+    bool should_step_next = false;
+};
+
 class tile
 {
 public:
     using buffer = std::array<glm::vec4, tile_size * tile_size>;
     using pixels = std::array<pixel, tile_size * tile_size>;
+    using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
-    buffer        d_buffer;
-    pixels        d_pixels;
+    buffer d_buffer;
+    pixels d_pixels;
 
-    // Simulate Data Structures (stored here so we dont need to allocate each time)
-    std::unordered_set<glm::ivec2> d_to_update;
-    std::unordered_set<glm::ivec2> d_updated;
+    chunks d_chunks;
     auto simulate_chunk(glm::ivec2 chunk) -> void;
 
 public:

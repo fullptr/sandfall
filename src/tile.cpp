@@ -16,6 +16,11 @@ auto get_pos(glm::vec2 pos) -> std::size_t
     return pos.x + tile_size * pos.y;
 }
 
+auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
+{
+    return chunk.x + num_chunks * chunk.y;
+}
+
 auto light_noise(glm::vec4 vec) -> glm::vec4
 {
     return {
@@ -42,10 +47,6 @@ auto tile::valid(glm::ivec2 pos) -> bool
 
 auto tile::simulate_chunk(glm::ivec2 chunk) -> void
 {
-    if (d_updated.contains(chunk)) {
-        return;
-    }
-
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         if (!at({x, y}).is_updated) {
             update_pixel(*this, {x, y});
@@ -66,16 +67,32 @@ auto tile::simulate_chunk(glm::ivec2 chunk) -> void
             }
         }
     }
-
-    d_updated.emplace(chunk);
 }
 
 auto tile::simulate() -> void
 {
-    while (!d_to_update.empty()) {
-        const auto next = *d_to_update.begin();
-        d_to_update.erase(d_to_update.begin());
-        simulate_chunk(next);
+    for (auto& chunk : d_chunks) {
+        chunk.should_step = chunk.should_step_next;
+        chunk.should_step_next = false;
+    }
+    
+    for (std::uint32_t y = num_chunks; y != 0; ) {
+        --y;
+        if (coin_flip()) {
+            for (std::uint32_t x = 0; x != num_chunks; ++x) {
+                if (d_chunks[get_chunk_pos(glm::ivec2{x, y})].should_step) {
+                    simulate_chunk({x, y});
+                }
+            }
+        }
+        else {
+            for (std::uint32_t x = num_chunks; x != 0; ) {
+                --x;
+                if (d_chunks[get_chunk_pos(glm::ivec2{x, y})].should_step) {
+                    simulate_chunk({x, y});
+                }
+            }
+        }
     }
 
     static const auto fire_colours = std::array{
@@ -92,8 +109,6 @@ auto tile::simulate() -> void
             d_buffer[pos] = d_pixels[pos].colour;
         }
     }
-
-    d_updated.clear();
 }
 
 auto tile::set(glm::ivec2 pos, const pixel& pixel) -> void
@@ -127,35 +142,7 @@ auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / static_cast<int>(chunk_size);
-    d_to_update.emplace(chunk);
-
-    // Wake right
-    if (pixel.x != tile_size - 1 && pixel.x + 1 % chunk_size == 0)
-    {
-        const auto right = chunk + glm::ivec2{1, 0};
-        d_to_update.emplace(right);
-    }
-
-    // Wake left
-    if (pixel.x != 0 && pixel.x - 1 % chunk_size == 0)
-    {
-        const auto left = chunk - glm::ivec2{1, 0};
-        d_to_update.emplace(left);
-    }
-
-    // Wake down
-    if (pixel.y != tile_size - 1 && pixel.y + 1 % chunk_size == 0)
-    {
-        const auto down = chunk + glm::ivec2{0, 1};
-        d_to_update.emplace(down);
-    }
-
-    // Wake up
-    if (pixel.y != 0 && pixel.y - 1 % chunk_size == 0)
-    {
-        const auto up = chunk - glm::ivec2{0, 1};
-        d_to_update.emplace(up);
-    }
+    d_chunks[get_chunk_pos(chunk)].should_step_next = true;
 }
 
 }
