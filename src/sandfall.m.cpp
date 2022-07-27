@@ -53,6 +53,7 @@ struct editor
         return pixel_makers[current].second();
     }
 };
+
 auto main() -> int
 {
     using namespace sand;
