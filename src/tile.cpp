@@ -40,27 +40,42 @@ auto tile::valid(glm::ivec2 pos) -> bool
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
-auto tile::simulate() -> void
+auto tile::simulate_chunk(glm::ivec2 chunk) -> void
 {
+    if (d_updated.contains(chunk)) {
+        return;
+    }
+
     const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
         if (!at({x, y}).is_updated) {
             update_pixel(*this, {x, y});
         }
     };
 
-    for (std::uint32_t y = tile_size; y != 0; ) {
+    for (std::uint32_t y = chunk_size * (chunk.y + 1); y != chunk_size * chunk.y; ) {
         --y;
         if (coin_flip()) {
-            for (std::uint32_t x = 0; x != tile_size; ++x) {
+            for (std::uint32_t x = chunk_size * chunk.x; x != chunk_size * (chunk.x + 1); ++x) {
                 inner(x, y);
             }
         }
         else {
-            for (std::uint32_t x = tile_size; x != 0; ) {
+            for (std::uint32_t x = chunk_size * (chunk.x + 1); x != chunk_size * chunk.x; ) {
                 --x;
                 inner(x, y);
             }
         }
+    }
+
+    d_updated.emplace(chunk);
+}
+
+auto tile::simulate() -> void
+{
+    while (!d_to_update.empty()) {
+        const auto next = *d_to_update.begin();
+        d_to_update.erase(d_to_update.begin());
+        simulate_chunk(next);
     }
 
     static const auto fire_colours = std::array{
@@ -77,11 +92,14 @@ auto tile::simulate() -> void
             d_buffer[pos] = d_pixels[pos].colour;
         }
     }
+
+    d_updated.clear();
 }
 
 auto tile::set(glm::ivec2 pos, const pixel& pixel) -> void
 {
     assert(valid(pos));
+    wake_chunk_with_pixel(pos);
     d_pixels[get_pos(pos)] = pixel;
 }
 
@@ -104,6 +122,11 @@ auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 {
     std::swap(at(lhs), at(rhs));
     return rhs;
+}
+
+auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
+{
+    d_to_update.emplace(pixel / 16);
 }
 
 }

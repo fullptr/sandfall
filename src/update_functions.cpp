@@ -87,6 +87,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
         pixels.at(curr_pos).is_updated = true;
     }
 
+    pixels.wake_chunk_with_pixel(curr_pos);
     return curr_pos;
 }
 

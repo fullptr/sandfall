@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <string>
 #include <span>
+#include <format>
 #include <glm/glm.hpp>
 
 namespace sand {
