@@ -45,30 +45,6 @@ auto tile::valid(glm::ivec2 pos) -> bool
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
-auto tile::simulate_chunk(glm::ivec2 chunk) -> void
-{
-    const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
-        if (!at({x, y}).is_updated) {
-            update_pixel(*this, {x, y});
-        }
-    };
-
-    for (std::uint32_t y = chunk_size * (chunk.y + 1); y != chunk_size * chunk.y; ) {
-        --y;
-        if (coin_flip()) {
-            for (std::uint32_t x = chunk_size * chunk.x; x != chunk_size * (chunk.x + 1); ++x) {
-                inner(x, y);
-            }
-        }
-        else {
-            for (std::uint32_t x = chunk_size * (chunk.x + 1); x != chunk_size * chunk.x; ) {
-                --x;
-                inner(x, y);
-            }
-        }
-    }
-}
-
 auto tile::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
@@ -76,24 +52,21 @@ auto tile::simulate() -> void
         chunk.should_step_next = false;
     }
     
-    const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
-        const auto pos = glm::ivec2{x, y};
+    const auto inner = [&] (glm::ivec2 pos) {
         if (is_chunk_awake(pos) && !at(pos).is_updated) {
             update_pixel(*this, pos);
         }
     };
 
-    for (std::uint32_t y = tile_size; y != 0; ) {
-        --y;
+    for (std::uint32_t y = tile_size; y != 0; --y) {
         if (coin_flip()) {
             for (std::uint32_t x = 0; x != tile_size; ++x) {
-                inner(x, y);
+                inner({x, y - 1});
             }
         }
         else {
-            for (std::uint32_t x = tile_size; x != 0; ) {
-                --x;
-                inner(x, y);
+            for (std::uint32_t x = tile_size; x != 0; --x) {
+                inner({x - 1, y - 1});
             }
         }
     }

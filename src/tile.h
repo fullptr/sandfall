@@ -10,15 +10,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 
-
 namespace sand {
 
 static constexpr std::uint32_t tile_size   = 256;
-static constexpr float         tile_size_f = static_cast<float>(tile_size);
-
 static constexpr std::uint32_t chunk_size   = 16;
-static constexpr float         chunk_size_f = static_cast<float>(chunk_size);
-
 static_assert(tile_size % chunk_size == 0);
 
 static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
@@ -39,9 +34,7 @@ public:
 private:
     buffer d_buffer;
     pixels d_pixels;
-
     chunks d_chunks;
-    auto simulate_chunk(glm::ivec2 chunk) -> void;
 
 public:
     tile();
@@ -60,7 +53,7 @@ public:
     // Returns the rhs
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
 
-    // Coord of a pixel, not a chunk. If on a boundary, will wake adjacent chunk
+    // Chunk API
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
     auto wake_all_chunks() -> void;
     auto num_awake_chunks() const -> std::size_t;

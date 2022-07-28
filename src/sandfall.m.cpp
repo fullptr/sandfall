@@ -177,7 +177,7 @@ auto main() -> int
         
         if (left_mouse_down) {
             const auto coord = random_from_circle(editor.brush_size)
-                             + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+                             + glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, editor.get_pixel());
             }
