@@ -12,8 +12,8 @@
 
 namespace sand {
 
-static constexpr std::uint32_t tile_size   = 256;
-static constexpr std::uint32_t chunk_size   = 16;
+static constexpr std::uint32_t tile_size  = 256;
+static constexpr std::uint32_t chunk_size = 16;
 static_assert(tile_size % chunk_size == 0);
 
 static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
