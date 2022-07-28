@@ -76,21 +76,24 @@ auto tile::simulate() -> void
         chunk.should_step_next = false;
     }
     
-    for (std::uint32_t y = num_chunks; y != 0; ) {
+    const auto inner = [&] (std::uint32_t x, std::uint32_t y) {
+        const auto pos = glm::ivec2{x, y};
+        if (is_chunk_awake(pos) && !at(pos).is_updated) {
+            update_pixel(*this, pos);
+        }
+    };
+
+    for (std::uint32_t y = tile_size; y != 0; ) {
         --y;
         if (coin_flip()) {
-            for (std::uint32_t x = 0; x != num_chunks; ++x) {
-                if (d_chunks[get_chunk_pos(glm::ivec2{x, y})].should_step) {
-                    simulate_chunk({x, y});
-                }
+            for (std::uint32_t x = 0; x != tile_size; ++x) {
+                inner(x, y);
             }
         }
         else {
-            for (std::uint32_t x = num_chunks; x != 0; ) {
+            for (std::uint32_t x = tile_size; x != 0; ) {
                 --x;
-                if (d_chunks[get_chunk_pos(glm::ivec2{x, y})].should_step) {
-                    simulate_chunk({x, y});
-                }
+                inner(x, y);
             }
         }
     }
@@ -187,6 +190,12 @@ auto tile::num_awake_chunks() const -> std::size_t
         count += static_cast<std::size_t>(chunk.should_step);
     }
     return count;
+}
+
+auto tile::is_chunk_awake(glm::ivec2 pixel) const -> bool
+{
+    const auto chunk = pixel / static_cast<int>(chunk_size);
+    return d_chunks[get_chunk_pos(chunk)].should_step;
 }
 
 }

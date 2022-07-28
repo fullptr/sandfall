@@ -86,7 +86,6 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
     if (curr_pos != from) {
         pixels.at(curr_pos).is_updated = true;
-        pixels.wake_chunk_with_pixel(curr_pos);
     }
 
     return curr_pos;
@@ -119,7 +118,6 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
             if (props.can_boil_water) {
                 if (neighbour.type == pixel_type::water) {
                     neighbour = pixel::steam();
-                    pixels.wake_chunk_with_pixel(neigh_pos);
                 }
             }
 
@@ -290,6 +288,14 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.at(pos).type == pixel_type::none) {
         return;
+    }
+
+    // If a pixel is burning or falling, wake the chunk next frame
+    {
+        const auto& pixel = pixels.at(pos);
+        if (pixel.is_burning || pixel.is_falling) {
+            pixels.wake_chunk_with_pixel(pos);
+        }
     }
 
     switch (pixels.at(pos).properties().movement) {

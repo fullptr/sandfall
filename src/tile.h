@@ -64,6 +64,7 @@ public:
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
     auto wake_all_chunks() -> void;
     auto num_awake_chunks() const -> std::size_t;
+    auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto data() const -> const buffer& { return d_buffer; }
 
