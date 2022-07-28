@@ -74,6 +74,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
     for (int i = 0; i != steps; ++i) {
         const auto next_pos = a + (b - a) * (i + 1)/steps;
+        pixels.wake_chunk_with_pixel(next_pos);
 
         if (!can_pixel_move_to(pixels, curr_pos, next_pos)) {
             break;
@@ -110,7 +111,8 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
 
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
-            auto& neighbour = pixels.at(pos + offset);
+            const auto neigh_pos = pos + offset;
+            auto& neighbour = pixels.at(neigh_pos);
 
             // 1) Boil water
             if (props.can_boil_water) {
@@ -133,6 +135,7 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
             if (props.is_burn_source || pixel.is_burning) {
                 if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
                     neighbour.is_burning = true;
+                    pixels.wake_chunk_with_pixel(neigh_pos);
                 }
             }
 
@@ -140,6 +143,7 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
             if (can_produce_embers && neighbour.type == pixel_type::none) {
                 if (random_from_range(0.0f, 1.0f) < 0.01f) {
                     neighbour = pixel::ember();
+                    pixels.wake_chunk_with_pixel(neigh_pos);
                 }
             }
         }
@@ -284,6 +288,14 @@ auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.at(pos).type == pixel_type::none) {
         return;
+    }
+
+    // If a pixel is burning or falling, wake the chunk next frame
+    {
+        const auto& pixel = pixels.at(pos);
+        if (pixel.is_burning || pixel.is_falling) {
+            pixels.wake_chunk_with_pixel(pos);
+        }
     }
 
     switch (pixels.at(pos).properties().movement) {

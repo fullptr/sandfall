@@ -53,6 +53,7 @@ struct editor
         return pixel_makers[current].second();
     }
 };
+
 auto main() -> int
 {
     using namespace sand;
@@ -142,6 +143,7 @@ auto main() -> int
             }
 
             ImGui::Text("FPS: %d", timer.frame_rate());
+            ImGui::Text("Awake chunks: %d", tile->num_awake_chunks());
 
             if (ImGui::Button("Save")) {
                 auto file = std::ofstream{"save.bin", std::ios::binary};
@@ -153,6 +155,7 @@ auto main() -> int
                 auto file = std::ifstream{"save.bin", std::ios::binary};
                 auto archive = cereal::BinaryInputArchive{file};
                 archive(*tile);
+                tile->wake_all_chunks();
             }
         }
         ImGui::End();
@@ -174,7 +177,7 @@ auto main() -> int
         
         if (left_mouse_down) {
             const auto coord = random_from_circle(editor.brush_size)
-                             + glm::ivec2((sand::tile_size_f / size) * window.get_mouse_pos());
+                             + glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
             if (tile->valid(coord)) {
                 tile->set(coord, editor.get_pixel());
             }

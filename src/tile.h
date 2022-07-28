@@ -3,24 +3,38 @@
 #include "serialise.hpp"
 
 #include <cstdint>
+#include <unordered_set>
 #include <array>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 
 namespace sand {
 
-static constexpr std::uint32_t tile_size = 256;
-static constexpr float         tile_size_f = static_cast<double>(tile_size);
+static constexpr std::uint32_t tile_size  = 256;
+static constexpr std::uint32_t chunk_size = 16;
+static_assert(tile_size % chunk_size == 0);
+
+static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
+
+struct chunk
+{
+    bool should_step      = true;
+    bool should_step_next = true;
+};
 
 class tile
 {
 public:
     using buffer = std::array<glm::vec4, tile_size * tile_size>;
     using pixels = std::array<pixel, tile_size * tile_size>;
+    using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
-    buffer        d_buffer;
-    pixels        d_pixels;
+    buffer d_buffer;
+    pixels d_pixels;
+    chunks d_chunks;
 
 public:
     tile();
@@ -38,6 +52,12 @@ public:
 
     // Returns the rhs
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
+
+    // Chunk API
+    auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
+    auto wake_all_chunks() -> void;
+    auto num_awake_chunks() const -> std::size_t;
+    auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto data() const -> const buffer& { return d_buffer; }
 
