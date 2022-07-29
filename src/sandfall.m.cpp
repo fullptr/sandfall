@@ -47,6 +47,10 @@ struct editor
     };
 
     float brush_size = 5.0f;
+
+    std::size_t brush_type = 0;
+        // 0 == circular spray
+        // 1 == square
     
     auto get_pixel() -> sand::pixel
     {
@@ -157,6 +161,13 @@ auto main() -> int
                 archive(*tile);
                 tile->wake_all_chunks();
             }
+            if (ImGui::RadioButton("Spray", editor.brush_type == 0)) {
+                editor.brush_type = 0;
+            }
+            if (ImGui::RadioButton("Square", editor.brush_type == 1)) {
+                editor.brush_type = 1;
+            }
+            ImGui::Text("Brush: %d", editor.brush_type);
         }
         ImGui::End();
 
@@ -175,11 +186,24 @@ auto main() -> int
         window.clear();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         
+        
         if (left_mouse_down) {
-            const auto coord = random_from_circle(editor.brush_size)
-                             + glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
-            if (tile->valid(coord)) {
-                tile->set(coord, editor.get_pixel());
+            const auto mouse = glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
+            if (editor.brush_type == 0) {
+                const auto coord = mouse + random_from_circle(editor.brush_size);
+                if (tile->valid(coord)) {
+                    tile->set(coord, editor.get_pixel());
+                }
+            }
+            if (editor.brush_type == 1) {
+                const auto half_extent = (int)(editor.brush_size / 2);
+                for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
+                    for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
+                        if (tile->valid({x, y})) {
+                            tile->set({x, y}, editor.get_pixel());
+                        }
+                    }
+                }
             }
         }
 
