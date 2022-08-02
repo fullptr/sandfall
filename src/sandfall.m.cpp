@@ -48,7 +48,7 @@ struct editor
 
     float brush_size = 5.0f;
 
-    std::size_t brush_type = 0;
+    std::size_t brush_type = 1;
         // 0 == circular spray
         // 1 == square
     
@@ -141,7 +141,7 @@ auto main() -> int
                     editor.current = i;
                 }
             }
-            ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 20);
+            ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 50);
             if (ImGui::Button("Clear")) {
                 tile->fill(sand::pixel::air());
             }
