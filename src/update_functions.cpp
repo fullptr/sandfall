@@ -48,6 +48,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     const auto r = pos + glm::ivec2{1, 0};
 
     if (pixels.valid(l)) {
+        pixels.wake_chunk_with_pixel(l);
         auto& px = pixels.at(l);
         const auto& props = px.properties();
         if (px.properties().movement == pixel_movement::solid) {
@@ -56,6 +57,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     }
 
     if (pixels.valid(r)) {
+        pixels.wake_chunk_with_pixel(r);
         auto& px = pixels.at(r);
         const auto& props = px.properties();
         if (props.movement == pixel_movement::solid) {
@@ -74,7 +76,6 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
 
     for (int i = 0; i != steps; ++i) {
         const auto next_pos = a + (b - a) * (i + 1)/steps;
-        pixels.wake_chunk_with_pixel(next_pos);
 
         if (!can_pixel_move_to(pixels, curr_pos, next_pos)) {
             break;
