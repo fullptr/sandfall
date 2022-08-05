@@ -61,7 +61,8 @@ public:
 
     auto data() const -> const buffer& { return d_buffer; }
 
-    auto serialise(auto& archive) -> void {
+    auto serialise(auto& archive) -> void
+    {
         archive(d_buffer, d_pixels);
     }
 };
