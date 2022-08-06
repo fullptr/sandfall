@@ -17,6 +17,7 @@ add_executable(sandfall
                pixel.cpp
                update_functions.cpp
                utility.cpp
+               editor.cpp
            
                graphics/window.cpp
                graphics/shader.cpp

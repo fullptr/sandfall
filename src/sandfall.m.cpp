@@ -2,6 +2,7 @@
 #include "pixel.h"
 #include "config.hpp"
 #include "utility.hpp"
+#include "editor.hpp"
 
 #include "graphics/window.h"
 #include "graphics/shader.h"
@@ -14,7 +15,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
-#include <cereal/archives/binary.hpp>
 
 #include <cstddef>
 #include <array>
@@ -24,41 +24,6 @@
 #include <bitset>
 #include <random>
 #include <numbers>
-
-struct editor
-{
-    std::size_t current = 0;
-    std::vector<std::pair<std::string, sand::pixel(*)()>> pixel_makers = {
-        { "air",       sand::pixel::air       },
-        { "sand",      sand::pixel::sand      },
-        { "coal",      sand::pixel::coal      },
-        { "dirt",      sand::pixel::dirt      },
-        { "water",     sand::pixel::water     },
-        { "lava",      sand::pixel::lava      },
-        { "acid",      sand::pixel::acid      },
-        { "rock",      sand::pixel::rock      },
-        { "titanium",  sand::pixel::titanium  },
-        { "steam",     sand::pixel::steam     },
-        { "fuse",      sand::pixel::fuse      },
-        { "ember",     sand::pixel::ember     },
-        { "oil",       sand::pixel::oil       },
-        { "gunpowder", sand::pixel::gunpowder },
-        { "methane",   sand::pixel::methane   },
-    };
-
-    float brush_size = 5.0f;
-
-    std::size_t brush_type = 1;
-        // 0 == circular spray
-        // 1 == square
-
-    bool show_chunks = false;
-    
-    auto get_pixel() -> sand::pixel
-    {
-        return pixel_makers[current].second();
-    }
-};
 
 auto main() -> int
 {
@@ -90,7 +55,7 @@ auto main() -> int
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    auto editor = ::editor{};
+    auto editor = sand::editor{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
     auto ui = sand::ui{window};
@@ -133,47 +98,11 @@ auto main() -> int
         const double dt = timer.on_update();
         
         window.poll_events();
+        window.clear();
+
         ui.begin_frame();
-
-        ImGui::ShowDemoWindow(&show_demo);
-
-        if (ImGui::Begin("Editor")) {
-            for (std::size_t i = 0; i != editor.pixel_makers.size(); ++i) {
-                if (ImGui::Selectable(editor.pixel_makers[i].first.c_str(), editor.current == i)) {
-                    editor.current = i;
-                }
-            }
-            ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 50);
-            if (ImGui::Button("Clear")) {
-                tile->fill(sand::pixel::air());
-            }
-
-
-            ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", tile->num_awake_chunks());
-            ImGui::Checkbox("Show chunks", &editor.show_chunks);
-
-            if (ImGui::Button("Save")) {
-                auto file = std::ofstream{"save.bin", std::ios::binary};
-                auto archive = cereal::BinaryOutputArchive{file};
-                archive(*tile);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Load")) {
-                auto file = std::ifstream{"save.bin", std::ios::binary};
-                auto archive = cereal::BinaryInputArchive{file};
-                archive(*tile);
-                tile->wake_all_chunks();
-            }
-            if (ImGui::RadioButton("Spray", editor.brush_type == 0)) {
-                editor.brush_type = 0;
-            }
-            if (ImGui::RadioButton("Square", editor.brush_type == 1)) {
-                editor.brush_type = 1;
-            }
-            ImGui::Text("Brush: %d", editor.brush_type);
-        }
-        ImGui::End();
+        display_ui(editor, *tile, timer);
+        ui.end_frame();
 
         accumulator += dt;
         bool updated = false;
@@ -187,9 +116,7 @@ auto main() -> int
             texture.set_data(tile->data());
         }
 
-        window.clear();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-        
         
         if (left_mouse_down) {
             const auto mouse = glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
@@ -211,7 +138,6 @@ auto main() -> int
             }
         }
 
-        ui.end_frame();
         window.swap_buffers();
     }
     
