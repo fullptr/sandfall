@@ -42,7 +42,7 @@ public:
     // Returns true if the given position exists and false otherwise
     static auto valid(glm::ivec2 pos) -> bool;
     
-    auto simulate() -> void;
+    auto simulate(bool show_chunks) -> void;
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
