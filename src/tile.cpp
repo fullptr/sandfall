@@ -35,9 +35,7 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 tile::tile()
 {
-    const auto default_pixel = pixel::air();
-    d_pixels.fill(default_pixel);
-    d_buffer.fill(default_pixel.colour);
+    d_pixels.fill(pixel::air());
 }
 
 auto tile::valid(glm::ivec2 pos) -> bool
