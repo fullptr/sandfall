@@ -69,7 +69,7 @@ public:
 
     auto serialise(auto& archive) -> void
     {
-        archive(d_buffer, d_pixels);
+        archive(d_pixels);
     }
 };
 
