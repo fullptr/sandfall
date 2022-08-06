@@ -1,6 +1,8 @@
 #include "renderer.hpp"
 #include "utility.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/glm.hpp>
 #include <glad/glad.h>
 
 namespace sand {
@@ -23,10 +25,50 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer()
-    : d_texture{sand::tile_size, sand::tile_size}
+renderer::renderer(float screen_width, float screen_height)
+    : d_vao{0}
+    , d_vbo{0}
+    , d_ebo{0}
+    , d_texture{sand::tile_size, sand::tile_size}
     , d_texture_data{std::make_unique<texture_data>()}
-{}
+    , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
+{
+    // TODO: Remove, this is only temporary
+    float size = 720.0f;
+    float vertices[] = {
+        0.0f, 0.0f, 0.0f, 0.0f,
+        size, 0.0f, 1.0f, 0.0f,
+        size, size, 1.0f, 1.0f,
+        0.0f, size, 0.0f, 1.0f
+    };
+
+    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
+
+    glGenVertexArrays(1, &d_vao);
+    glBindVertexArray(d_vao);
+
+    glGenBuffers(1, &d_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, d_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &d_ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
+    d_shader.bind();
+    d_shader.load_sampler("u_texture", 0);
+    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, screen_width, screen_height, 0.0f));
+}
+
+renderer::~renderer()
+{
+    glDeleteBuffers(1, &d_ebo);
+    glDeleteBuffers(1, &d_vbo);
+    glDeleteVertexArrays(1, &d_vao);
+}
 
 auto renderer::update(const tile& tile, bool show_chunks) -> void
 {

@@ -32,30 +32,6 @@ auto main() -> int
 
     auto window = sand::window{"sandfall", 1280, 720};
 
-    float size = 720.0f;
-    float vertices[] = {
-        0.0f, 0.0f, 0.0f, 0.0f,
-        size, 0.0f, 1.0f, 0.0f,
-        size, size, 1.0f, 1.0f,
-        0.0f, size, 0.0f, 1.0f
-    };
-
-    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
-
-    auto VAO = std::uint32_t{};
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    auto VBO = std::uint32_t{};
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    auto EBO = std::uint32_t{};
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
     auto editor = sand::editor{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
@@ -79,17 +55,7 @@ auto main() -> int
     });
 
     auto tile = std::make_unique<sand::tile>();
-    auto shader = sand::shader{"res\\vertex.glsl", "res\\fragment.glsl"};
-    auto renderer = sand::renderer{};
-
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    shader.bind();
-    shader.load_sampler("u_texture", 0);
-    shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, window.width(), window.height(), 0.0f));
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    auto renderer = sand::renderer{window.width(), window.height()};
 
     auto accumulator = 0.0;
     auto timer = sand::timer{};
@@ -120,7 +86,9 @@ auto main() -> int
         renderer.draw();
         
         if (left_mouse_down) {
-            const auto mouse = glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
+            const auto mouse = glm::ivec2(
+                ((float)sand::tile_size / window.height()) * window.get_mouse_pos()
+            );
             if (editor.brush_type == 0) {
                 const auto coord = mouse + random_from_circle(editor.brush_size);
                 if (tile->valid(coord)) {
