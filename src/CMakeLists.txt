@@ -19,6 +19,7 @@ add_executable(sandfall
                utility.cpp
                editor.cpp
            
+               graphics/renderer.cpp
                graphics/window.cpp
                graphics/shader.cpp
                graphics/texture.cpp

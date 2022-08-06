@@ -4,6 +4,7 @@
 #include "utility.hpp"
 #include "editor.hpp"
 
+#include "graphics/renderer.hpp"
 #include "graphics/window.h"
 #include "graphics/shader.h"
 #include "graphics/texture.hpp"
@@ -24,49 +25,6 @@
 #include <bitset>
 #include <random>
 #include <numbers>
-
-using texture_data = std::array<glm::vec4, sand::tile_size * sand::tile_size>;
-
-auto get_pos(glm::vec2 pos) -> std::size_t
-{
-    return pos.x + sand::tile_size * pos.y;
-}
-
-auto light_noise(glm::vec4 vec) -> glm::vec4
-{
-    return {
-        std::clamp(vec.x + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.y + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.z + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        1.0f
-    };
-}
-
-auto update_texture_data(texture_data& data, sand::tile& tile, bool show_chunks) -> void
-{
-    static const auto fire_colours = std::array{
-        sand::from_hex(0xe55039),
-        sand::from_hex(0xf6b93b),
-        sand::from_hex(0xfad390)
-    };
-
-    for (std::size_t x = 0; x != sand::tile_size; ++x) {
-        for (std::size_t y = 0; y != sand::tile_size; ++y) {
-            const auto pos = get_pos({x, y});
-            if (tile.at({x, y}).is_burning) {
-                data[pos] = light_noise(sand::random_element(fire_colours));
-            } else {
-                data[pos] = tile.at({x, y}).colour;
-            }
-
-            if (show_chunks && tile.is_chunk_awake({x, y})) {
-                data[pos].x += 0.05;
-                data[pos].y += 0.05;
-                data[pos].z += 0.05;
-            }
-        }
-    }
-}
 
 auto main() -> int
 {
@@ -122,8 +80,7 @@ auto main() -> int
 
     auto tile = std::make_unique<sand::tile>();
     auto shader = sand::shader{"res\\vertex.glsl", "res\\fragment.glsl"};
-    auto texture = sand::texture{sand::tile_size, sand::tile_size};
-    auto data = std::make_unique<texture_data>();
+    auto renderer = sand::renderer{};
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -157,11 +114,10 @@ auto main() -> int
         }
 
         if (updated) {
-            update_texture_data(*data, *tile, editor.show_chunks);
-            texture.set_data(*data);
+            renderer.update(*tile, editor.show_chunks);
         }
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        renderer.draw();
         
         if (left_mouse_down) {
             const auto mouse = glm::ivec2(((float)sand::tile_size / size) * window.get_mouse_pos());
