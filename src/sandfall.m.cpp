@@ -51,6 +51,8 @@ struct editor
     std::size_t brush_type = 1;
         // 0 == circular spray
         // 1 == square
+
+    bool show_chunks = false;
     
     auto get_pixel() -> sand::pixel
     {
@@ -146,8 +148,10 @@ auto main() -> int
                 tile->fill(sand::pixel::air());
             }
 
+
             ImGui::Text("FPS: %d", timer.frame_rate());
             ImGui::Text("Awake chunks: %d", tile->num_awake_chunks());
+            ImGui::Checkbox("Show chunks", &editor.show_chunks);
 
             if (ImGui::Button("Save")) {
                 auto file = std::ofstream{"save.bin", std::ios::binary};
@@ -174,7 +178,7 @@ auto main() -> int
         accumulator += dt;
         bool updated = false;
         while (accumulator > config::time_step) {
-            tile->simulate();
+            tile->simulate(editor.show_chunks);
             accumulator -= config::time_step;
             updated = true;
         }
