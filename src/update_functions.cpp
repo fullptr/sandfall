@@ -20,7 +20,7 @@ auto below(glm::ivec2 pos) -> glm::ivec2
 
 auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
-    if (!tile::valid(src_pos) || !tile::valid(dst_pos)) { return false; }
+    if (!pixels.valid(src_pos) || !pixels.valid(dst_pos)) { return false; }
 
     // If the destination is empty, we can always move there
     if (pixels.at(dst_pos).type == pixel_type::none) { return true; }

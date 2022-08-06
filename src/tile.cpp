@@ -21,16 +21,6 @@ auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
     return chunk.x + num_chunks * chunk.y;
 }
 
-auto light_noise(glm::vec4 vec) -> glm::vec4
-{
-    return {
-        std::clamp(vec.x + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.y + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.z + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        1.0f
-    };
-}
-
 }
 
 tile::tile()
@@ -38,7 +28,7 @@ tile::tile()
     d_pixels.fill(pixel::air());
 }
 
-auto tile::valid(glm::ivec2 pos) -> bool
+auto tile::valid(glm::ivec2 pos) const -> bool
 {
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
@@ -68,12 +58,6 @@ auto tile::simulate() -> void
             }
         }
     }
-
-    static const auto fire_colours = std::array{
-        from_hex(0xe55039),
-        from_hex(0xf6b93b),
-        from_hex(0xfad390)
-    };
 
     std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
 }

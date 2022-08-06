@@ -38,7 +38,7 @@ public:
     tile();
 
     // Returns true if the given position exists and false otherwise
-    static auto valid(glm::ivec2 pos) -> bool;
+    auto valid(glm::ivec2 pos) const -> bool;
     
     auto simulate() -> void;
 
