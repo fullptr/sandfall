@@ -45,7 +45,7 @@ auto tile::valid(glm::ivec2 pos) -> bool
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
-auto tile::simulate(bool show_chunks) -> void
+auto tile::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step = chunk.should_step_next;
@@ -78,22 +78,6 @@ auto tile::simulate(bool show_chunks) -> void
     };
 
     std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
-    for (std::size_t x = 0; x != tile_size; ++x) {
-        for (std::size_t y = 0; y != tile_size; ++y) {
-            const auto pos = get_pos({x, y});
-            if (d_pixels[pos].is_burning) {
-                d_buffer[pos] = light_noise(random_element(fire_colours));
-            } else {
-                d_buffer[pos] = d_pixels[pos].colour;
-            }
-
-            if (show_chunks && is_chunk_awake({x, y})) {
-                d_buffer[pos].x += 0.05;
-                d_buffer[pos].y += 0.05;
-                d_buffer[pos].z += 0.05;
-            }
-        }
-    }
 }
 
 auto tile::set(glm::ivec2 pos, const pixel& pixel) -> void

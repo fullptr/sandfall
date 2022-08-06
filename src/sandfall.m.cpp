@@ -151,7 +151,7 @@ auto main() -> int
         accumulator += dt;
         bool updated = false;
         while (accumulator > config::time_step) {
-            tile->simulate(editor.show_chunks);
+            tile->simulate();
             accumulator -= config::time_step;
             updated = true;
         }

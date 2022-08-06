@@ -48,7 +48,7 @@ public:
     // show_chunks is a bad arg here, because simulate should have nothing
     // to do with how the world is rendered, the rendering will be moved
     // out of this class eventually
-    auto simulate(bool show_chunks) -> void;
+    auto simulate() -> void;
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
