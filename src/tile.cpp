@@ -21,31 +21,19 @@ auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
     return chunk.x + num_chunks * chunk.y;
 }
 
-auto light_noise(glm::vec4 vec) -> glm::vec4
-{
-    return {
-        std::clamp(vec.x + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.y + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.z + random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        1.0f
-    };
-}
-
 }
 
 tile::tile()
 {
-    const auto default_pixel = pixel::air();
-    d_pixels.fill(default_pixel);
-    d_buffer.fill(default_pixel.colour);
+    d_pixels.fill(pixel::air());
 }
 
-auto tile::valid(glm::ivec2 pos) -> bool
+auto tile::valid(glm::ivec2 pos) const -> bool
 {
     return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
 }
 
-auto tile::simulate(bool show_chunks) -> void
+auto tile::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step = chunk.should_step_next;
@@ -71,29 +59,7 @@ auto tile::simulate(bool show_chunks) -> void
         }
     }
 
-    static const auto fire_colours = std::array{
-        from_hex(0xe55039),
-        from_hex(0xf6b93b),
-        from_hex(0xfad390)
-    };
-
     std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
-    for (std::size_t x = 0; x != tile_size; ++x) {
-        for (std::size_t y = 0; y != tile_size; ++y) {
-            const auto pos = get_pos({x, y});
-            if (d_pixels[pos].is_burning) {
-                d_buffer[pos] = light_noise(random_element(fire_colours));
-            } else {
-                d_buffer[pos] = d_pixels[pos].colour;
-            }
-
-            if (show_chunks && is_chunk_awake({x, y})) {
-                d_buffer[pos].x += 0.05;
-                d_buffer[pos].y += 0.05;
-                d_buffer[pos].z += 0.05;
-            }
-        }
-    }
 }
 
 auto tile::set(glm::ivec2 pos, const pixel& pixel) -> void

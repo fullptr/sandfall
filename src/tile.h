@@ -27,15 +27,10 @@ struct chunk
 class tile
 {
 public:
-    using buffer = std::array<glm::vec4, tile_size * tile_size>;
     using pixels = std::array<pixel, tile_size * tile_size>;
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
-    // TODO: Remove this from the class, this class should have
-    // nothing to do with rendering
-    buffer d_buffer;
-
     pixels d_pixels;
     chunks d_chunks;
 
@@ -43,12 +38,9 @@ public:
     tile();
 
     // Returns true if the given position exists and false otherwise
-    static auto valid(glm::ivec2 pos) -> bool;
+    auto valid(glm::ivec2 pos) const -> bool;
     
-    // show_chunks is a bad arg here, because simulate should have nothing
-    // to do with how the world is rendered, the rendering will be moved
-    // out of this class eventually
-    auto simulate(bool show_chunks) -> void;
+    auto simulate() -> void;
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
@@ -65,11 +57,9 @@ public:
     auto num_awake_chunks() const -> std::size_t;
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
-    auto data() const -> const buffer& { return d_buffer; }
-
     auto serialise(auto& archive) -> void
     {
-        archive(d_buffer, d_pixels);
+        archive(d_pixels);
     }
 };
 
