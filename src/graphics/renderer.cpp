@@ -29,11 +29,11 @@ renderer::renderer(float screen_width, float screen_height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{sand::tile_size, sand::tile_size}
+    , d_texture{1280, 720}
     , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
-    d_texture_data.resize(sand::tile_size * sand::tile_size);
+    d_texture_data.resize(1280 * 720);
 
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
@@ -74,6 +74,7 @@ auto renderer::update(const tile& tile, bool show_chunks) -> void
 {
     d_shader.load_int("u_width", 1280);
     d_shader.load_int("u_height", 720);
+    print("width = {}, height = {}\n", d_texture.width(), d_texture.height());
 
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
