@@ -29,11 +29,11 @@ renderer::renderer(std::uint32_t screen_width, std::uint32_t screen_height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{screen_width, screen_height}
+    , d_texture{500, 500}
     , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
-    d_texture_data.resize(screen_width * screen_height);
+    d_texture_data.resize(500 * 500);
 
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
@@ -70,10 +70,10 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::update(const tile& tile, bool show_chunks) -> void
+auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t screen_width, std::uint32_t screen_height) -> void
 {
-    d_shader.load_int("u_width", d_texture.width());
-    d_shader.load_int("u_height", d_texture.height());
+    d_shader.load_int("u_width", screen_width);
+    d_shader.load_int("u_height", screen_height);
 
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
