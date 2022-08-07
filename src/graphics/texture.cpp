@@ -7,18 +7,9 @@
 namespace sand {
 
 texture::texture(std::uint32_t width, std::uint32_t height)
-    : d_width(width)
-    , d_height(height)
+    : d_texture{0}
 {
-    glGenTextures(1, &d_texture);
-    bind();
-
-    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    resize(width, height);
 }
 
 texture::~texture()
@@ -44,12 +35,16 @@ auto texture::resize(std::uint32_t width, std::uint32_t height) -> void
         glDeleteTextures(1, &d_texture);
     }
 
-    glGenTextures(1, &d_texture);
     d_width = width;
     d_height = height;
 
+    glGenTextures(1, &d_texture);
     bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
 }
 
 }
