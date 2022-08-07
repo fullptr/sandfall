@@ -60,7 +60,7 @@ renderer::renderer(std::uint32_t screen_width, std::uint32_t screen_height)
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
-    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, (float)screen_width, (float)screen_height, 0.0f));
+    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, 1.0f, 1.0f, 0.0f));
 }
 
 renderer::~renderer()
@@ -72,9 +72,6 @@ renderer::~renderer()
 
 auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t screen_width, std::uint32_t screen_height) -> void
 {
-    d_shader.load_int("u_width", screen_width);
-    d_shader.load_int("u_height", screen_height);
-
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
         sand::from_hex(0xf6b93b),
