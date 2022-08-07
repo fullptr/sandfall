@@ -48,10 +48,6 @@ auto main() -> int
         window.poll_events();
         window.clear();
 
-        ui.begin_frame();
-        display_ui(editor, *tile, timer);
-        ui.end_frame();
-
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
@@ -60,11 +56,16 @@ auto main() -> int
             updated = true;
         }
 
+        // Draw the world
         if (updated) {
             renderer.update(*tile, editor.show_chunks);
         }
-
         renderer.draw();
+
+        // Next, draw the editor UI
+        ui.begin_frame();
+        display_ui(editor, *tile, timer);
+        ui.end_frame();
         
         if (left_mouse_down) {
             const auto mouse = glm::ivec2(

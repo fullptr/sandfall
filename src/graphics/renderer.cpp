@@ -72,9 +72,9 @@ renderer::~renderer()
 
 auto renderer::update(const tile& tile, bool show_chunks) -> void
 {
-    d_shader.load_int("u_width", 720);
+    d_shader.load_int("u_width", 1280);
     d_shader.load_int("u_height", 720);
-    
+
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
         sand::from_hex(0xf6b93b),
