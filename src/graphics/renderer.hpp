@@ -26,7 +26,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(float screen_width, float screen_height);
+    renderer(std::uint32_t screen_width, std::uint32_t screen_height);
     ~renderer();
 
     auto update(const tile& tile, bool show_chunks) -> void;

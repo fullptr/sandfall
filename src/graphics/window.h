@@ -55,8 +55,8 @@ public:
     auto set_name(const std::string& name) -> void;
     auto set_callback(const callback_t& callback) -> void;
 
-    auto width() const -> float;
-    auto height() const -> float;
+    auto width() const -> std::uint32_t;
+    auto height() const -> std::uint32_t;
 
     auto native_handle() -> GLFWwindow*;
 };

@@ -25,15 +25,15 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(float screen_width, float screen_height)
+renderer::renderer(std::uint32_t screen_width, std::uint32_t screen_height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{1280, 720}
+    , d_texture{screen_width, screen_height}
     , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
-    d_texture_data.resize(1280 * 720);
+    d_texture_data.resize(screen_width * screen_height);
 
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
@@ -60,7 +60,7 @@ renderer::renderer(float screen_width, float screen_height)
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
-    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, screen_width, screen_height, 0.0f));
+    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, (float)screen_width, (float)screen_height, 0.0f));
 }
 
 renderer::~renderer()
@@ -72,9 +72,8 @@ renderer::~renderer()
 
 auto renderer::update(const tile& tile, bool show_chunks) -> void
 {
-    d_shader.load_int("u_width", 1280);
-    d_shader.load_int("u_height", 720);
-    print("width = {}, height = {}\n", d_texture.width(), d_texture.height());
+    d_shader.load_int("u_width", d_texture.width());
+    d_shader.load_int("u_height", d_texture.height());
 
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
@@ -112,6 +111,7 @@ auto renderer::draw() const -> void
 auto renderer::resize(std::uint32_t width, std::uint32_t height) -> void
 {
     d_texture.resize(width, height);
+    d_texture_data.resize(width * height);
 }
 
 }
