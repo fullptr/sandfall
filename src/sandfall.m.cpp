@@ -13,6 +13,15 @@
 
 #include <memory>
 
+auto pixel_at_mouse(const sand::window& w, std::uint32_t width, std::uint32_t height) -> glm::ivec2
+{
+    const auto mouse = w.get_mouse_pos();
+    return {
+        (mouse.x / w.width()) * width,
+        (mouse.y / w.height()) * height
+    };
+}
+
 auto main() -> int
 {
     auto window = sand::window{"sandfall", 1280, 720};
@@ -56,9 +65,12 @@ auto main() -> int
             updated = true;
         }
 
+        const auto camera_width = window.width() / 3;
+        const auto camera_height = window.height() / 3;
+
         // Draw the world
         if (updated) {
-            renderer.update(*tile, editor.show_chunks, window.width() / 5, window.height() / 5);
+            renderer.update(*tile, editor.show_chunks, camera_width, camera_height);
         }
         renderer.draw();
 
@@ -68,9 +80,7 @@ auto main() -> int
         ui.end_frame();
         
         if (left_mouse_down) {
-            const auto mouse = glm::ivec2(
-                ((float)sand::tile_size / window.height()) * window.get_mouse_pos()
-            );
+            const auto mouse = pixel_at_mouse(window, camera_width, camera_height);
             if (editor.brush_type == 0) {
                 const auto coord = mouse + sand::random_from_circle(editor.brush_size);
                 if (tile->valid(coord)) {
