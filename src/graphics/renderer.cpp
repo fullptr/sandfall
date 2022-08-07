@@ -70,13 +70,17 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t screen_width, std::uint32_t screen_height) -> void
+auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t width, std::uint32_t height) -> void
 {
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
         sand::from_hex(0xf6b93b),
         sand::from_hex(0xfad390)
     };
+
+    if (d_texture.width() != width || d_texture.height() != height) {
+        resize(width, height);
+    }
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {

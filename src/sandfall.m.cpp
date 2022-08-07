@@ -58,7 +58,7 @@ auto main() -> int
 
         // Draw the world
         if (updated) {
-            renderer.update(*tile, editor.show_chunks, window.width(), window.height());
+            renderer.update(*tile, editor.show_chunks, window.width() / 5, window.height() / 5);
         }
         renderer.draw();
 

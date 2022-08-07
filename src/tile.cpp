@@ -108,28 +108,32 @@ auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     if (pixel.x != tile_size - 1 && (pixel.x + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
-        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+        if (valid(neighbour))
+            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
     }
 
     // Wake left
     if (pixel.x != 0 && (pixel.x - 1) % chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{1, 0};
-        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+        if (valid(neighbour))
+            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
     }
 
     // Wake down
     if (pixel.y != tile_size - 1 && (pixel.y + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
-        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+        if (valid(neighbour))
+            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
     }
 
     // Wake up
     if (pixel.y != 0 && (pixel.y - 1) % chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{0, 1};
-        d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+        if (valid(neighbour))
+            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
     }
 }
 
