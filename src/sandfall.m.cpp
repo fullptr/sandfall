@@ -6,32 +6,18 @@
 
 #include "graphics/renderer.hpp"
 #include "graphics/window.h"
-#include "graphics/shader.h"
-#include "graphics/texture.hpp"
 #include "graphics/ui.hpp"
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <fmt/format.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 
-#include <cstddef>
-#include <array>
-#include <utility>
-#include <fstream>
 #include <memory>
-#include <bitset>
-#include <random>
-#include <numbers>
 
 auto main() -> int
 {
     using namespace sand;
 
     auto window = sand::window{"sandfall", 1280, 720};
-
     auto editor = sand::editor{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
 
