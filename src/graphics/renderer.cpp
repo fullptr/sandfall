@@ -81,9 +81,13 @@ auto renderer::update(const tile& tile, bool show_chunks) -> void
         sand::from_hex(0xfad390)
     };
 
-    for (std::size_t x = 0; x != sand::tile_size; ++x) {
-        for (std::size_t y = 0; y != sand::tile_size; ++y) {
-            const auto pos = get_pos({x, y});
+    for (std::size_t x = 0; x != d_texture.width(); ++x) {
+        for (std::size_t y = 0; y != d_texture.height(); ++y) {
+            const auto pos = x + d_texture.width() * y;
+            if (!tile.valid({x, y})) {
+                d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
+                continue;
+            }
             if (tile.at({x, y}).is_burning) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             } else {
