@@ -1,4 +1,5 @@
 #include "tile.h"
+#include "pixel.h"
 #include "update_functions.h"
 #include "utility.hpp"
 
@@ -10,6 +11,8 @@
 
 namespace sand {
 namespace {
+
+static const auto default_pixel = pixel::air();
 
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
@@ -76,11 +79,15 @@ auto tile::fill(const pixel& p) -> void
 
 auto tile::at(glm::ivec2 pos) const -> const pixel&
 {
+    if (!valid(pos)) {
+        return default_pixel;
+    }
     return d_pixels[get_pos(pos)];
 }
 
 auto tile::at(glm::ivec2 pos) -> pixel&
 {
+    assert(valid(pos));
     return d_pixels[get_pos(pos)];
 }
 

@@ -79,4 +79,9 @@ auto shader::load_sampler(const std::string& name, int value) const -> void
 	glProgramUniform1i(d_program, get_location(name), value);
 }
 
+auto shader::load_int(const std::string& name, int value) const -> void
+{
+	glProgramUniform1i(d_program, get_location(name), value);
+}
+
 }

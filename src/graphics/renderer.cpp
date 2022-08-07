@@ -35,13 +35,11 @@ renderer::renderer(float screen_width, float screen_height)
 {
     d_texture_data.resize(sand::tile_size * sand::tile_size);
 
-    // TODO: Remove, this is only temporary
-    float size = 720.0f;
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
-        size, 0.0f, 1.0f, 0.0f,
-        size, size, 1.0f, 1.0f,
-        0.0f, size, 0.0f, 1.0f
+        1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f, 1.0f
     };
 
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
@@ -74,6 +72,9 @@ renderer::~renderer()
 
 auto renderer::update(const tile& tile, bool show_chunks) -> void
 {
+    d_shader.load_int("u_width", 720);
+    d_shader.load_int("u_height", 720);
+    
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
         sand::from_hex(0xf6b93b),
