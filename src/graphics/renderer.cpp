@@ -30,9 +30,11 @@ renderer::renderer(float screen_width, float screen_height)
     , d_vbo{0}
     , d_ebo{0}
     , d_texture{sand::tile_size, sand::tile_size}
-    , d_texture_data{std::make_unique<texture_data>()}
+    , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
+    d_texture_data.resize(sand::tile_size * sand::tile_size);
+
     // TODO: Remove, this is only temporary
     float size = 720.0f;
     float vertices[] = {
@@ -82,23 +84,28 @@ auto renderer::update(const tile& tile, bool show_chunks) -> void
         for (std::size_t y = 0; y != sand::tile_size; ++y) {
             const auto pos = get_pos({x, y});
             if (tile.at({x, y}).is_burning) {
-                (*d_texture_data)[pos] = light_noise(sand::random_element(fire_colours));
+                d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             } else {
-                (*d_texture_data)[pos] = tile.at({x, y}).colour;
+                d_texture_data[pos] = tile.at({x, y}).colour;
             }
 
             if (show_chunks && tile.is_chunk_awake({x, y})) {
-                (*d_texture_data)[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
+                d_texture_data[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
             }
         }
     }
 
-    d_texture.set_data(*d_texture_data);
+    d_texture.set_data(d_texture_data);
 }
 
 auto renderer::draw() const -> void
 {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+}
+
+auto renderer::resize(std::uint32_t width, std::uint32_t height) -> void
+{
+    d_texture.resize(width, height);
 }
 
 }

@@ -13,16 +13,12 @@ namespace sand {
 // Responsible for rendering the world to the screen.
 class renderer
 {
-public:
-    using texture_data = std::array<glm::vec4, sand::tile_size * sand::tile_size>;
-
-private:
     std::uint32_t d_vao;
     std::uint32_t d_vbo;
     std::uint32_t d_ebo;
 
-    texture                       d_texture;
-    std::unique_ptr<texture_data> d_texture_data;
+    texture                d_texture;
+    std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
 
@@ -35,6 +31,8 @@ public:
 
     auto update(const tile& tile, bool show_chunks) -> void;
     auto draw() const -> void;
+
+    auto resize(std::uint32_t width, std::uint32_t height) -> void;
 };
 
 }

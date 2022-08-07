@@ -15,13 +15,8 @@
 
 auto main() -> int
 {
-    using namespace sand;
-
     auto window = sand::window{"sandfall", 1280, 720};
-    auto editor = sand::editor{};
     auto left_mouse_down = false; // TODO: Remove, do it in a better way
-
-    auto ui = sand::ui{window};
 
     window.set_callback([&](sand::event& event) {
         auto& io = ImGui::GetIO();
@@ -42,10 +37,10 @@ auto main() -> int
 
     auto tile = std::make_unique<sand::tile>();
     auto renderer = sand::renderer{window.width(), window.height()};
-
+    auto editor = sand::editor{};
+    auto ui = sand::ui{window};
     auto accumulator = 0.0;
     auto timer = sand::timer{};
-    auto show_demo = true;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -59,9 +54,9 @@ auto main() -> int
 
         accumulator += dt;
         bool updated = false;
-        while (accumulator > config::time_step) {
+        while (accumulator > sand::config::time_step) {
             tile->simulate();
-            accumulator -= config::time_step;
+            accumulator -= sand::config::time_step;
             updated = true;
         }
 
@@ -76,7 +71,7 @@ auto main() -> int
                 ((float)sand::tile_size / window.height()) * window.get_mouse_pos()
             );
             if (editor.brush_type == 0) {
-                const auto coord = mouse + random_from_circle(editor.brush_size);
+                const auto coord = mouse + sand::random_from_circle(editor.brush_size);
                 if (tile->valid(coord)) {
                     tile->set(coord, editor.get_pixel());
                 }

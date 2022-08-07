@@ -38,4 +38,18 @@ auto texture::bind() const -> void
     glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
+auto texture::resize(std::uint32_t width, std::uint32_t height) -> void
+{
+    if (d_texture) {
+        glDeleteTextures(1, &d_texture);
+    }
+
+    glGenTextures(1, &d_texture);
+    d_width = width;
+    d_height = height;
+
+    bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, nullptr);
+}
+
 }
