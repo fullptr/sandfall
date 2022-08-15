@@ -70,7 +70,14 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t width, std::uint32_t height) -> void
+auto renderer::update(
+    const tile& tile,
+    bool show_chunks,
+    glm::ivec2 top_left,
+    std::uint32_t width,
+    std::uint32_t height
+)
+    -> void
 {
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
@@ -84,18 +91,20 @@ auto renderer::update(const tile& tile, bool show_chunks, std::uint32_t width, s
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
+            const auto screen_coord = glm::ivec2{x, y};
+            const auto world_coord = top_left + screen_coord;
             const auto pos = x + d_texture.width() * y;
-            if (!tile.valid({x, y})) {
+            if (!tile.valid(world_coord)) {
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
-            if (tile.at({x, y}).is_burning) {
+            if (tile.at(world_coord).is_burning) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             } else {
-                d_texture_data[pos] = tile.at({x, y}).colour;
+                d_texture_data[pos] = tile.at(world_coord).colour;
             }
 
-            if (show_chunks && tile.is_chunk_awake({x, y})) {
+            if (show_chunks && tile.is_chunk_awake(world_coord)) {
                 d_texture_data[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
             }
         }

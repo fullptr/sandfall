@@ -39,6 +39,8 @@ struct editor
 
     bool show_chunks = false;
     bool show_demo = true;
+    int zoom = 256;
+    glm::ivec2 top_left = {0, 0};
     
     auto get_pixel() -> sand::pixel
     {

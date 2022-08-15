@@ -45,6 +45,8 @@ auto display_ui(editor& editor, tile& tile, const timer& timer) -> void
             editor.brush_type = 1;
         }
         ImGui::Text("Brush: %d", editor.brush_type);
+        ImGui::SliderInt2("Top Left:", &editor.top_left.x, -100, 100);
+        ImGui::SliderInt("Scale:", &editor.zoom, 100, 1000);
     }
     ImGui::End();
 }

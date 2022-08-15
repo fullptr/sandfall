@@ -29,7 +29,14 @@ public:
     renderer(std::uint32_t screen_width, std::uint32_t screen_height);
     ~renderer();
 
-    auto update(const tile& tile, bool show_chunks, std::uint32_t screen_width, std::uint32_t screen_height) -> void;
+    auto update(
+        const tile& tile,
+        bool show_chunks,
+        glm::ivec2 top_left,
+        std::uint32_t screen_width,
+        std::uint32_t screen_height
+    ) -> void;
+
     auto draw() const -> void;
 
     auto resize(std::uint32_t width, std::uint32_t height) -> void;

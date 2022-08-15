@@ -65,12 +65,12 @@ auto main() -> int
             updated = true;
         }
 
-        const auto camera_width = window.width() / 3;
-        const auto camera_height = window.height() / 3;
+        const auto camera_width = editor.zoom * (static_cast<float>(window.width()) / window.height());
+        const auto camera_height = editor.zoom;
 
         // Draw the world
         if (updated) {
-            renderer.update(*tile, editor.show_chunks, camera_width, camera_height);
+            renderer.update(*tile, editor.show_chunks, editor.top_left, camera_width, camera_height);
         }
         renderer.draw();
 
@@ -91,8 +91,9 @@ auto main() -> int
                 const auto half_extent = (int)(editor.brush_size / 2);
                 for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
                     for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
-                        if (tile->valid({x, y})) {
-                            tile->set({x, y}, editor.get_pixel());
+                        const auto world_coords = editor.top_left + glm::ivec2{x, y};
+                        if (tile->valid(world_coords)) {
+                            tile->set(world_coords, editor.get_pixel());
                         }
                     }
                 }
