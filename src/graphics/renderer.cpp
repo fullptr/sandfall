@@ -70,14 +70,7 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::update(
-    const tile& tile,
-    bool show_chunks,
-    glm::ivec2 top_left,
-    std::uint32_t width,
-    std::uint32_t height
-)
-    -> void
+auto renderer::update(const tile& tile, bool show_chunks, const camera& camera) -> void
 {
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
@@ -85,14 +78,14 @@ auto renderer::update(
         sand::from_hex(0xfad390)
     };
 
-    if (d_texture.width() != width || d_texture.height() != height) {
-        resize(width, height);
+    if (d_texture.width() != camera.width || d_texture.height() != camera.height) {
+        resize(camera.width, camera.height);
     }
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
             const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = top_left + screen_coord;
+            const auto world_coord = camera.top_left + screen_coord;
             const auto pos = x + d_texture.width() * y;
             if (!tile.valid(world_coord)) {
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};

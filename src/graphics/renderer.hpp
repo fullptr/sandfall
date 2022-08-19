@@ -2,6 +2,7 @@
 #include "graphics/texture.hpp"
 #include "graphics/shader.h"
 #include "tile.h"
+#include "camera.hpp"
 
 #include <glm/glm.hpp>
 
@@ -29,13 +30,7 @@ public:
     renderer(std::uint32_t screen_width, std::uint32_t screen_height);
     ~renderer();
 
-    auto update(
-        const tile& tile,
-        bool show_chunks,
-        glm::ivec2 top_left,
-        std::uint32_t screen_width,
-        std::uint32_t screen_height
-    ) -> void;
+    auto update(const tile& tile, bool show_chunks, const camera& camera) -> void;
 
     auto draw() const -> void;
 

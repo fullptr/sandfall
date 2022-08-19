@@ -7,7 +7,13 @@
 
 namespace sand {
 
-auto display_ui(editor& editor, tile& tile, const timer& timer) -> void
+auto display_ui(
+    editor& editor,
+    tile& tile,
+    camera& camera,
+    const timer& timer,
+    const window& window
+) -> void
 {
     ImGui::ShowDemoWindow(&editor.show_demo);
 
@@ -45,8 +51,11 @@ auto display_ui(editor& editor, tile& tile, const timer& timer) -> void
             editor.brush_type = 1;
         }
         ImGui::Text("Brush: %d", editor.brush_type);
-        ImGui::SliderInt2("Top Left:", &editor.top_left.x, -100, 100);
-        ImGui::SliderInt("Scale:", &editor.zoom, 100, 1000);
+        ImGui::DragInt2("Top Left:", &camera.top_left.x);
+        if (ImGui::DragInt("Scale:", &editor.zoom, 1.0f)) {
+            camera.width = editor.zoom * (static_cast<float>(window.width()) / window.height());
+            camera.height = editor.zoom;
+        }
     }
     ImGui::End();
 }
