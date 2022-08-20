@@ -27,11 +27,12 @@ auto main() -> int
     auto editor = sand::editor{};
     auto mouse = std::array<bool, 5>{}; // TODO: Think of a better way
 
-    auto camera = sand::camera{};
-    camera.top_left = {0, 0};
-    camera.screen_width = window.width();
-    camera.screen_height = window.height();
-    camera.zoom = 256;
+    auto camera = sand::camera{
+        .top_left = {0, 0},
+        .screen_width = static_cast<int>(window.width()),
+        .screen_height = static_cast<int>(window.height()),
+        .zoom = 256
+    };
 
     window.set_callback([&](sand::event& event) {
         auto& io = ImGui::GetIO();
