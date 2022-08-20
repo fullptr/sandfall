@@ -25,7 +25,9 @@ struct window_data
     bool running;
     bool focused;
 
-    GLFWwindow* native_window;
+    glm::vec2 mouse_pos = {0.0, 0.0};
+
+    GLFWwindow* native_window = nullptr;
 
     callback_t callback = [](event&) {};
 };
