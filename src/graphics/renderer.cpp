@@ -88,7 +88,7 @@ auto renderer::update(const tile& tile, bool show_chunks, const camera& camera) 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
             const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = camera.top_left + screen_coord;
+            const auto world_coord = glm::ivec2{camera.top_left} + screen_coord;
             const auto pos = x + d_texture.width() * y;
             if (!tile.valid(world_coord)) {
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};

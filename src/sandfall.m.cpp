@@ -18,7 +18,7 @@ auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 {
     const auto mouse = w.get_mouse_pos();
     const auto scale = (float)c.zoom / w.height();
-    return glm::ivec2{mouse * scale} + c.top_left;
+    return glm::ivec2{mouse * scale + c.top_left};
 }
 
 auto main() -> int
@@ -29,8 +29,8 @@ auto main() -> int
 
     auto camera = sand::camera{
         .top_left = {0, 0},
-        .screen_width = static_cast<int>(window.width()),
-        .screen_height = static_cast<int>(window.height()),
+        .screen_width = static_cast<float>(window.width()),
+        .screen_height = static_cast<float>(window.height()),
         .zoom = 256
     };
 

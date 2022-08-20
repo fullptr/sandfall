@@ -51,7 +51,7 @@ auto display_ui(
             editor.brush_type = 1;
         }
         ImGui::Text("Brush: %d", editor.brush_type);
-        ImGui::DragInt2("Top Left:", &camera.top_left.x);
+        ImGui::DragFloat2("Top Left:", &camera.top_left.x);
         ImGui::DragInt("Scale:", &camera.zoom, 1.0f);
     }
     ImGui::End();

@@ -5,10 +5,10 @@ namespace sand {
 
 struct camera
 {
-    glm::ivec2 top_left;
-    int        screen_width;
-    int        screen_height;
-    int        zoom;
+    glm::vec2 top_left;
+    float     screen_width;
+    float     screen_height;
+    int       zoom;
 };
 
 }
