@@ -17,10 +17,8 @@
 auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 {
     const auto mouse = w.get_mouse_pos();
-    return {
-        (mouse.x / w.width()) * c.width,
-        (mouse.y / w.height()) * c.height
-    };
+    const auto scale = (float)c.zoom / w.height();
+    return glm::ivec2{mouse * scale} + c.top_left;
 }
 
 auto main() -> int
@@ -31,8 +29,9 @@ auto main() -> int
 
     auto camera = sand::camera{};
     camera.top_left = {0, 0};
-    camera.width = editor.zoom * (static_cast<float>(window.width()) / window.height());
-    camera.height = editor.zoom;
+    camera.screen_width = window.width();
+    camera.screen_height = window.height();
+    camera.zoom = 256;
 
     window.set_callback([&](sand::event& event) {
         auto& io = ImGui::GetIO();
@@ -51,11 +50,11 @@ auto main() -> int
         }
         if (mouse[1] && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
-            camera.top_left += glm::ivec2{e.x_offset / editor.zoom, e.y_offset / editor.zoom};
+            camera.top_left -= glm::ivec2{e.x_offset, e.y_offset};
         }
         if (event.is<sand::window_resize_event>()) {
-            camera.width = editor.zoom * (static_cast<float>(window.width()) / window.height());
-            camera.height = editor.zoom;
+            camera.screen_width = window.width();
+            camera.screen_height = window.height();
         }
     });
 
@@ -102,9 +101,8 @@ auto main() -> int
                 const auto half_extent = (int)(editor.brush_size / 2);
                 for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
                     for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
-                        const auto world_coords = camera.top_left + glm::ivec2{x, y};
-                        if (tile->valid(world_coords)) {
-                            tile->set(world_coords, editor.get_pixel());
+                        if (tile->valid({x, y})) {
+                            tile->set({x, y}, editor.get_pixel());
                         }
                     }
                 }

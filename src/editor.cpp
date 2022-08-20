@@ -52,10 +52,7 @@ auto display_ui(
         }
         ImGui::Text("Brush: %d", editor.brush_type);
         ImGui::DragInt2("Top Left:", &camera.top_left.x);
-        if (ImGui::DragInt("Scale:", &editor.zoom, 1.0f)) {
-            camera.width = editor.zoom * (static_cast<float>(window.width()) / window.height());
-            camera.height = editor.zoom;
-        }
+        ImGui::DragInt("Scale:", &camera.zoom, 1.0f);
     }
     ImGui::End();
 }

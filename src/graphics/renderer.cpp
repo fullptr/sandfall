@@ -78,8 +78,11 @@ auto renderer::update(const tile& tile, bool show_chunks, const camera& camera) 
         sand::from_hex(0xfad390)
     };
 
-    if (d_texture.width() != camera.width || d_texture.height() != camera.height) {
-        resize(camera.width, camera.height);
+    const auto camera_width = camera.zoom * (static_cast<float>(camera.screen_width) / camera.screen_height);
+    const auto camera_height = camera.zoom;
+
+    if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
+        resize(camera_width, camera_height);
     }
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {

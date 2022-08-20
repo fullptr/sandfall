@@ -6,8 +6,9 @@ namespace sand {
 struct camera
 {
     glm::ivec2 top_left;
-    int        width;
-    int        height;
+    int        screen_width;
+    int        screen_height;
+    int        zoom;
 };
 
 }
