@@ -51,7 +51,8 @@ auto main() -> int
         }
         if (mouse[1] && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
-            camera.top_left -= glm::ivec2{e.x_offset, e.y_offset};
+            const auto scale = (float)camera.zoom / window.height();
+            camera.top_left -= glm::vec2{e.x_offset * scale, e.y_offset * scale};
         }
         if (event.is<sand::window_resize_event>()) {
             camera.screen_width = window.width();
