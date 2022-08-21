@@ -11,23 +11,25 @@
 namespace sand {
 
 window::window(const std::string& name, int width, int height)
-    : d_data({name, width, height, true, true, true, nullptr})
+    : d_data({name, width, height, true, true, true})
 {
     if (GLFW_TRUE != glfwInit()) {
 		print("FATAL: Failed to initialise GLFW\n");
 		std::exit(-1);
 	}
 
-	d_data.native_window = glfwCreateWindow(
-		width, height, name.c_str(), nullptr, nullptr
-	);
+	auto native_window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 
-	if (!d_data.native_window) {
+	if (!native_window) {
 		print("FATAL: Failed to create window\n");
 		std::exit(-2);
 	}
 
-	auto native_window = d_data.native_window;
+	double x = 0, y = 0;
+	glfwGetCursorPos(native_window, &x, &y);
+	d_data.mouse_pos = {x, y};
+
+	d_data.native_window = native_window;
 
 	glfwMakeContextCurrent(native_window);
     glfwSetWindowUserPointer(native_window, &d_data);
@@ -131,7 +133,10 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		window_data* data = (window_data*)glfwGetWindowUserPointer(window);
 		if (!data->focused) return;
-		auto event = make_event<mouse_moved_event>(x_pos, y_pos);
+		auto event = make_event<mouse_moved_event>(
+			x_pos, y_pos, x_pos - data->mouse_pos.x, y_pos - data->mouse_pos.y
+		);
+		data->mouse_pos = {x_pos, y_pos};
 		data->callback(event);
 	});
 
@@ -205,9 +210,7 @@ bool window::is_running() const
 
 glm::vec2 window::get_mouse_pos() const
 {
-    double x, y;
-    glfwGetCursorPos(d_data.native_window, &x, &y);
-    return {x, y};
+    return d_data.mouse_pos;
 }
 
 void window::set_name(const std::string& name)
@@ -220,14 +223,14 @@ void window::set_callback(const callback_t& callback)
     d_data.callback = callback;
 }
 
-auto window::width() const -> float
+auto window::width() const -> std::uint32_t
 {
-	return static_cast<float>(d_data.width); 
+	return d_data.width; 
 }
 
-auto window::height() const -> float
+auto window::height() const -> std::uint32_t
 {
-	return static_cast<float>(d_data.height); 
+	return d_data.height; 
 }
 
 auto window::native_handle() -> GLFWwindow*

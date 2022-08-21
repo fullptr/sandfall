@@ -2,6 +2,7 @@
 #include "graphics/texture.hpp"
 #include "graphics/shader.h"
 #include "tile.h"
+#include "camera.hpp"
 
 #include <glm/glm.hpp>
 
@@ -13,16 +14,12 @@ namespace sand {
 // Responsible for rendering the world to the screen.
 class renderer
 {
-public:
-    using texture_data = std::array<glm::vec4, sand::tile_size * sand::tile_size>;
-
-private:
     std::uint32_t d_vao;
     std::uint32_t d_vbo;
     std::uint32_t d_ebo;
 
-    texture                       d_texture;
-    std::unique_ptr<texture_data> d_texture_data;
+    texture                d_texture;
+    std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
 
@@ -30,11 +27,14 @@ private:
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(float screen_width, float screen_height);
+    renderer(std::uint32_t screen_width, std::uint32_t screen_height);
     ~renderer();
 
-    auto update(const tile& tile, bool show_chunks) -> void;
+    auto update(const tile& tile, bool show_chunks, const camera& camera) -> void;
+
     auto draw() const -> void;
+
+    auto resize(std::uint32_t width, std::uint32_t height) -> void;
 };
 
 }

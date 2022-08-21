@@ -23,6 +23,7 @@ public:
     auto unbind() const -> void;
 
     auto load_mat4(const std::string& name, const glm::mat4& matrix) const -> void;
+    auto load_int(const std::string& name, int value) const -> void;
     auto load_sampler(const std::string& name, int value) const -> void;
 };
 

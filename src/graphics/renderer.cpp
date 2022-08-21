@@ -25,21 +25,21 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(float screen_width, float screen_height)
+renderer::renderer(std::uint32_t screen_width, std::uint32_t screen_height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{sand::tile_size, sand::tile_size}
-    , d_texture_data{std::make_unique<texture_data>()}
+    , d_texture{500, 500}
+    , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
-    // TODO: Remove, this is only temporary
-    float size = 720.0f;
+    d_texture_data.resize(500 * 500);
+
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
-        size, 0.0f, 1.0f, 0.0f,
-        size, size, 1.0f, 1.0f,
-        0.0f, size, 0.0f, 1.0f
+        1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f, 1.0f
     };
 
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
@@ -60,7 +60,7 @@ renderer::renderer(float screen_width, float screen_height)
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
-    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, screen_width, screen_height, 0.0f));
+    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, 1.0f, 1.0f, 0.0f));
 }
 
 renderer::~renderer()
@@ -70,7 +70,7 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::update(const tile& tile, bool show_chunks) -> void
+auto renderer::update(const tile& tile, bool show_chunks, const camera& camera) -> void
 {
     static const auto fire_colours = std::array{
         sand::from_hex(0xe55039),
@@ -78,27 +78,46 @@ auto renderer::update(const tile& tile, bool show_chunks) -> void
         sand::from_hex(0xfad390)
     };
 
-    for (std::size_t x = 0; x != sand::tile_size; ++x) {
-        for (std::size_t y = 0; y != sand::tile_size; ++y) {
-            const auto pos = get_pos({x, y});
-            if (tile.at({x, y}).is_burning) {
-                (*d_texture_data)[pos] = light_noise(sand::random_element(fire_colours));
+    const auto camera_width = camera.zoom * (camera.screen_width / camera.screen_height);
+    const auto camera_height = camera.zoom;
+
+    if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
+        resize(camera_width, camera_height);
+    }
+
+    for (std::size_t x = 0; x != d_texture.width(); ++x) {
+        for (std::size_t y = 0; y != d_texture.height(); ++y) {
+            const auto screen_coord = glm::ivec2{x, y};
+            const auto world_coord = glm::ivec2{camera.top_left} + screen_coord;
+            const auto pos = x + d_texture.width() * y;
+            if (!tile.valid(world_coord)) {
+                d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
+                continue;
+            }
+            if (tile.at(world_coord).is_burning) {
+                d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             } else {
-                (*d_texture_data)[pos] = tile.at({x, y}).colour;
+                d_texture_data[pos] = tile.at(world_coord).colour;
             }
 
-            if (show_chunks && tile.is_chunk_awake({x, y})) {
-                (*d_texture_data)[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
+            if (show_chunks && tile.is_chunk_awake(world_coord)) {
+                d_texture_data[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
             }
         }
     }
 
-    d_texture.set_data(*d_texture_data);
+    d_texture.set_data(d_texture_data);
 }
 
 auto renderer::draw() const -> void
 {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+}
+
+auto renderer::resize(std::uint32_t width, std::uint32_t height) -> void
+{
+    d_texture.resize(width, height);
+    d_texture_data.resize(width * height);
 }
 
 }

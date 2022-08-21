@@ -2,6 +2,7 @@
 #include "pixel.h"
 #include "tile.h"
 #include "utility.hpp"
+#include "graphics/window.h"
 
 #include <cstdint>
 #include <vector>
@@ -39,6 +40,7 @@ struct editor
 
     bool show_chunks = false;
     bool show_demo = true;
+    int zoom = 256;
     
     auto get_pixel() -> sand::pixel
     {
@@ -46,6 +48,11 @@ struct editor
     }
 };
 
-auto display_ui(editor& editor, tile& tile, const timer& timer) -> void;
+auto display_ui(
+    editor& editor,
+    tile& tile,
+    const timer& timer,
+    const window& window
+) -> void;
 
 }

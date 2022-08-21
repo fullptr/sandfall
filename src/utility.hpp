@@ -57,7 +57,7 @@ auto random_from_circle(float radius) -> glm::ivec2;
 template <typename Elements>
 auto random_element(const Elements& elements)
 {
-    return elements[random_from_range(0, std::ssize(elements))];
+    return elements[random_from_range(0, std::ssize(elements) - 1)];
 }
 
 auto coin_flip() -> bool;

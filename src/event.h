@@ -49,6 +49,9 @@ struct mouse_released_event {
 struct mouse_moved_event {
 	double x_pos;
 	double y_pos;
+
+	double x_offset;
+	double y_offset;
 };
 
 struct mouse_scrolled_event {

@@ -7,7 +7,12 @@
 
 namespace sand {
 
-auto display_ui(editor& editor, tile& tile, const timer& timer) -> void
+auto display_ui(
+    editor& editor,
+    tile& tile,
+    const timer& timer,
+    const window& window
+) -> void
 {
     ImGui::ShowDemoWindow(&editor.show_demo);
 

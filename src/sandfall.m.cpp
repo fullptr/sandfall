@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "utility.hpp"
 #include "editor.hpp"
+#include "camera.hpp"
 
 #include "graphics/renderer.hpp"
 #include "graphics/window.h"
@@ -13,15 +14,25 @@
 
 #include <memory>
 
+auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
+{
+    const auto mouse = w.get_mouse_pos();
+    const auto scale = (float)c.zoom / w.height();
+    return glm::ivec2{mouse * scale + c.top_left};
+}
+
 auto main() -> int
 {
-    using namespace sand;
-
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
-    auto left_mouse_down = false; // TODO: Remove, do it in a better way
+    auto mouse = std::array<bool, 5>{}; // TODO: Think of a better way
 
-    auto ui = sand::ui{window};
+    auto camera = sand::camera{
+        .top_left = {0, 0},
+        .screen_width = static_cast<float>(window.width()),
+        .screen_height = static_cast<float>(window.height()),
+        .zoom = 256
+    };
 
     window.set_callback([&](sand::event& event) {
         auto& io = ImGui::GetIO();
@@ -33,19 +44,31 @@ auto main() -> int
         }
 
         if (event.is<sand::mouse_pressed_event>()) {
-            if (event.as<sand::mouse_pressed_event>().button == 0) { left_mouse_down = true; }
+            mouse[event.as<sand::mouse_pressed_event>().button] = true;
         }
         else if (event.is<sand::mouse_released_event>()) {
-            if (event.as<sand::mouse_released_event>().button == 0) { left_mouse_down = false; }
+            mouse[event.as<sand::mouse_released_event>().button] = false;
+        }
+        else if (mouse[1] && event.is<sand::mouse_moved_event>()) {
+            const auto& e = event.as<sand::mouse_moved_event>();
+            const auto scale = (float)camera.zoom / window.height();
+            camera.top_left -= glm::vec2{e.x_offset * scale, e.y_offset * scale};
+        }
+        else if (event.is<sand::window_resize_event>()) {
+            camera.screen_width = window.width();
+            camera.screen_height = window.height();
+        }
+        else if (event.is<sand::mouse_scrolled_event>()) {
+            const auto& e = event.as<sand::mouse_scrolled_event>();
+            camera.zoom -= 5 * e.y_offset;
         }
     });
 
     auto tile = std::make_unique<sand::tile>();
     auto renderer = sand::renderer{window.width(), window.height()};
-
+    auto ui = sand::ui{window};
     auto accumulator = 0.0;
     auto timer = sand::timer{};
-    auto show_demo = true;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -53,30 +76,29 @@ auto main() -> int
         window.poll_events();
         window.clear();
 
-        ui.begin_frame();
-        display_ui(editor, *tile, timer);
-        ui.end_frame();
-
         accumulator += dt;
         bool updated = false;
-        while (accumulator > config::time_step) {
+        while (accumulator > sand::config::time_step) {
             tile->simulate();
-            accumulator -= config::time_step;
+            accumulator -= sand::config::time_step;
             updated = true;
         }
 
+        // Draw the world
         if (updated) {
-            renderer.update(*tile, editor.show_chunks);
+            renderer.update(*tile, editor.show_chunks, camera);
         }
-
         renderer.draw();
+
+        // Next, draw the editor UI
+        ui.begin_frame();
+        display_ui(editor, *tile, timer, window);
+        ui.end_frame();
         
-        if (left_mouse_down) {
-            const auto mouse = glm::ivec2(
-                ((float)sand::tile_size / window.height()) * window.get_mouse_pos()
-            );
+        if (mouse[0]) {
+            const auto mouse = pixel_at_mouse(window, camera);
             if (editor.brush_type == 0) {
-                const auto coord = mouse + random_from_circle(editor.brush_size);
+                const auto coord = mouse + sand::random_from_circle(editor.brush_size);
                 if (tile->valid(coord)) {
                     tile->set(coord, editor.get_pixel());
                 }
