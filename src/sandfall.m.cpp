@@ -49,14 +49,18 @@ auto main() -> int
         else if (event.is<sand::mouse_released_event>()) {
             mouse[event.as<sand::mouse_released_event>().button] = false;
         }
-        if (mouse[1] && event.is<sand::mouse_moved_event>()) {
+        else if (mouse[1] && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
             const auto scale = (float)camera.zoom / window.height();
             camera.top_left -= glm::vec2{e.x_offset * scale, e.y_offset * scale};
         }
-        if (event.is<sand::window_resize_event>()) {
+        else if (event.is<sand::window_resize_event>()) {
             camera.screen_width = window.width();
             camera.screen_height = window.height();
+        }
+        else if (event.is<sand::mouse_scrolled_event>()) {
+            const auto& e = event.as<sand::mouse_scrolled_event>();
+            camera.zoom -= 5 * e.y_offset;
         }
     });
 
@@ -88,7 +92,7 @@ auto main() -> int
 
         // Next, draw the editor UI
         ui.begin_frame();
-        display_ui(editor, *tile, camera, timer, window);
+        display_ui(editor, *tile, timer, window);
         ui.end_frame();
         
         if (mouse[0]) {

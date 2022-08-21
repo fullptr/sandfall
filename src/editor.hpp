@@ -2,7 +2,6 @@
 #include "pixel.h"
 #include "tile.h"
 #include "utility.hpp"
-#include "camera.hpp"
 #include "graphics/window.h"
 
 #include <cstdint>
@@ -51,8 +50,7 @@ struct editor
 
 auto display_ui(
     editor& editor,
-    tile& tile, 
-    camera& camera,
+    tile& tile,
     const timer& timer,
     const window& window
 ) -> void;
