@@ -60,7 +60,11 @@ auto main() -> int
         }
         else if (event.is<sand::mouse_scrolled_event>()) {
             const auto& e = event.as<sand::mouse_scrolled_event>();
+            const auto old_centre = pixel_at_mouse(window, camera);
             camera.zoom -= 5 * e.y_offset;
+            camera.zoom = std::clamp(camera.zoom, 50, 500);
+            const auto new_centre = pixel_at_mouse(window, camera);
+            camera.top_left -= new_centre - old_centre;
         }
     });
 
