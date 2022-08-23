@@ -12,11 +12,11 @@
 
 namespace sand {
 
-static constexpr std::uint32_t tile_size  = 256;
+static constexpr std::uint32_t world_size  = 256;
 static constexpr std::uint32_t chunk_size = 16;
-static_assert(tile_size % chunk_size == 0);
+static_assert(world_size % chunk_size == 0);
 
-static constexpr std::uint32_t num_chunks = tile_size / chunk_size;
+static constexpr std::uint32_t num_chunks = world_size / chunk_size;
 
 struct chunk
 {
@@ -24,10 +24,10 @@ struct chunk
     bool should_step_next = true;
 };
 
-class tile
+class world
 {
 public:
-    using pixels = std::array<pixel, tile_size * tile_size>;
+    using pixels = std::array<pixel, world_size * world_size>;
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
@@ -35,7 +35,7 @@ private:
     chunks d_chunks;
 
 public:
-    tile();
+    world();
 
     // Returns true if the given position exists and false otherwise
     auto valid(glm::ivec2 pos) const -> bool;

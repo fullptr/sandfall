@@ -12,28 +12,28 @@ find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 
 add_executable(sandfall
-               sandfall.m.cpp
-               tile.cpp
-               pixel.cpp
-               update_functions.cpp
-               utility.cpp
-               editor.cpp
-           
-               graphics/renderer.cpp
-               graphics/window.cpp
-               graphics/shader.cpp
-               graphics/texture.cpp
-               graphics/ui.cpp
+    sandfall.m.cpp
+    world.cpp
+    pixel.cpp
+    update_functions.cpp
+    utility.cpp
+    editor.cpp
+
+    graphics/renderer.cpp
+    graphics/window.cpp
+    graphics/shader.cpp
+    graphics/texture.cpp
+    graphics/ui.cpp
 )
 
 target_include_directories(sandfall PUBLIC .)
 
 target_link_libraries(sandfall PUBLIC
-                      vendor
-                      glfw
-                      glad::glad
-                      glm
-                      fmt::fmt
-                      imgui::imgui
-                      cereal
+    vendor
+    glfw
+    glad::glad
+    glm
+    fmt::fmt
+    imgui::imgui
+    cereal
 )

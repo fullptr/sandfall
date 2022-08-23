@@ -1,10 +1,10 @@
 #pragma once
-#include "tile.h"
+#include "world.hpp"
 
 #include <glm/glm.hpp>
 
 namespace sand {
 
-auto update_pixel(tile& pixels, glm::ivec2 pos) -> void;
+auto update_pixel(world& pixels, glm::ivec2 pos) -> void;
     
 }

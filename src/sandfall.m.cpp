@@ -1,4 +1,4 @@
-#include "tile.h"
+#include "world.hpp"
 #include "pixel.h"
 #include "config.hpp"
 #include "utility.hpp"
@@ -68,7 +68,7 @@ auto main() -> int
         }
     });
 
-    auto tile = std::make_unique<sand::tile>();
+    auto world = std::make_unique<sand::world>();
     auto renderer = sand::renderer{window.width(), window.height()};
     auto ui = sand::ui{window};
     auto accumulator = 0.0;
@@ -83,36 +83,36 @@ auto main() -> int
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
-            tile->simulate();
+            world->simulate();
             accumulator -= sand::config::time_step;
             updated = true;
         }
 
         // Draw the world
         if (updated) {
-            renderer.update(*tile, editor.show_chunks, camera);
+            renderer.update(*world, editor.show_chunks, camera);
         }
         renderer.draw();
 
         // Next, draw the editor UI
         ui.begin_frame();
-        display_ui(editor, *tile, timer, window);
+        display_ui(editor, *world, timer, window);
         ui.end_frame();
         
         if (mouse[0]) {
             const auto mouse = pixel_at_mouse(window, camera);
             if (editor.brush_type == 0) {
                 const auto coord = mouse + sand::random_from_circle(editor.brush_size);
-                if (tile->valid(coord)) {
-                    tile->set(coord, editor.get_pixel());
+                if (world->valid(coord)) {
+                    world->set(coord, editor.get_pixel());
                 }
             }
             if (editor.brush_type == 1) {
                 const auto half_extent = (int)(editor.brush_size / 2);
                 for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
                     for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
-                        if (tile->valid({x, y})) {
-                            tile->set({x, y}, editor.get_pixel());
+                        if (world->valid({x, y})) {
+                            world->set({x, y}, editor.get_pixel());
                         }
                     }
                 }

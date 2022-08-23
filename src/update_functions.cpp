@@ -18,7 +18,7 @@ auto below(glm::ivec2 pos) -> glm::ivec2
     return pos + glm::ivec2{0, 1};
 }
 
-auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
+auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
     if (!pixels.valid(src_pos) || !pixels.valid(dst_pos)) { return false; }
 
@@ -42,7 +42,7 @@ auto can_pixel_move_to(const tile& pixels, glm::ivec2 src_pos, glm::ivec2 dst_po
     }
 }
 
-auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
+auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
@@ -68,7 +68,7 @@ auto set_adjacent_free_falling(tile& pixels, glm::ivec2 pos) -> void
     }
 }
 
-auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
+auto move_towards(world& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
 {
     glm::ivec2 curr_pos = from;
 
@@ -95,7 +95,7 @@ auto move_towards(tile& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec
     return curr_pos;
 }
 
-auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
+auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 {
     const auto offsets = std::array{
         glm::ivec2{1, 0},
@@ -154,7 +154,7 @@ auto affect_neighbours(tile& pixels, glm::ivec2 pos) -> void
     }
 }
 
-auto is_surrounded(tile& pixels, glm::ivec2 pos) -> bool
+auto is_surrounded(world& pixels, glm::ivec2 pos) -> bool
 {
     const auto offsets = std::array{
         glm::ivec2{1, 0},
@@ -187,7 +187,7 @@ enum class direction
 
 // Attempts to move diagonally up/down, and failing that, disperses outwards according
 // to the dispersion rate
-auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
+auto move_disperse(world& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
     const auto& props = data.properties();
@@ -217,7 +217,7 @@ auto move_disperse(tile& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 }
 
 
-auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -262,7 +262,7 @@ auto update_movable_solid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
     return pos;
 }
 
-auto update_liquid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
     vel += config::gravity * config::time_step;
@@ -275,7 +275,7 @@ auto update_liquid(tile& pixels, glm::ivec2 pos) -> glm::ivec2
     return move_disperse(pixels, pos, direction::down);
 }
 
-auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_gas(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
     vel -= config::gravity * config::time_step;
@@ -288,7 +288,7 @@ auto update_gas(tile& pixels, glm::ivec2 pos) -> glm::ivec2
     return move_disperse(pixels, pos, direction::up);
 }
 
-auto update_pixel(tile& pixels, glm::ivec2 pos) -> void
+auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.at(pos).type == pixel_type::none) {
         return;

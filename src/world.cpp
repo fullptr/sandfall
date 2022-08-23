@@ -1,9 +1,7 @@
-#include "tile.h"
+#include "world.hpp"
 #include "pixel.h"
 #include "update_functions.h"
 #include "utility.hpp"
-
-#include <glad/glad.h>
 
 #include <cassert>
 #include <algorithm>
@@ -16,7 +14,7 @@ static const auto default_pixel = pixel::air();
 
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
-    return pos.x + tile_size * pos.y;
+    return pos.x + world_size * pos.y;
 }
 
 auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
@@ -26,17 +24,17 @@ auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
 
 }
 
-tile::tile()
+world::world()
 {
     d_pixels.fill(pixel::air());
 }
 
-auto tile::valid(glm::ivec2 pos) const -> bool
+auto world::valid(glm::ivec2 pos) const -> bool
 {
-    return 0 <= pos.x && pos.x < tile_size && 0 <= pos.y && pos.y < tile_size;
+    return 0 <= pos.x && pos.x < world_size && 0 <= pos.y && pos.y < world_size;
 }
 
-auto tile::simulate() -> void
+auto world::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step = chunk.should_step_next;
@@ -49,14 +47,14 @@ auto tile::simulate() -> void
         }
     };
 
-    for (std::uint32_t y = tile_size; y != 0; --y) {
+    for (std::uint32_t y = world_size; y != 0; --y) {
         if (coin_flip()) {
-            for (std::uint32_t x = 0; x != tile_size; ++x) {
+            for (std::uint32_t x = 0; x != world_size; ++x) {
                 inner({x, y - 1});
             }
         }
         else {
-            for (std::uint32_t x = tile_size; x != 0; --x) {
+            for (std::uint32_t x = world_size; x != 0; --x) {
                 inner({x - 1, y - 1});
             }
         }
@@ -65,19 +63,19 @@ auto tile::simulate() -> void
     std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
 }
 
-auto tile::set(glm::ivec2 pos, const pixel& pixel) -> void
+auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
 {
     assert(valid(pos));
     wake_chunk_with_pixel(pos);
     d_pixels[get_pos(pos)] = pixel;
 }
 
-auto tile::fill(const pixel& p) -> void
+auto world::fill(const pixel& p) -> void
 {
     d_pixels.fill(p);
 }
 
-auto tile::at(glm::ivec2 pos) const -> const pixel&
+auto world::at(glm::ivec2 pos) const -> const pixel&
 {
     if (!valid(pos)) {
         return default_pixel;
@@ -85,13 +83,13 @@ auto tile::at(glm::ivec2 pos) const -> const pixel&
     return d_pixels[get_pos(pos)];
 }
 
-auto tile::at(glm::ivec2 pos) -> pixel&
+auto world::at(glm::ivec2 pos) -> pixel&
 {
     assert(valid(pos));
     return d_pixels[get_pos(pos)];
 }
 
-auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
+auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 {
     wake_chunk_with_pixel(lhs);
     wake_chunk_with_pixel(rhs);
@@ -99,13 +97,13 @@ auto tile::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
     return rhs;
 }
 
-auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
+auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / static_cast<int>(chunk_size);
     d_chunks[get_chunk_pos(chunk)].should_step_next = true;
 
     // Wake right
-    if (pixel.x != tile_size - 1 && (pixel.x + 1) % chunk_size == 0)
+    if (pixel.x != world_size - 1 && (pixel.x + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
         if (valid(neighbour))
@@ -121,7 +119,7 @@ auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     }
 
     // Wake down
-    if (pixel.y != tile_size - 1 && (pixel.y + 1) % chunk_size == 0)
+    if (pixel.y != world_size - 1 && (pixel.y + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
         if (valid(neighbour))
@@ -137,14 +135,14 @@ auto tile::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     }
 }
 
-auto tile::wake_all_chunks() -> void
+auto world::wake_all_chunks() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step_next = true;
     }
 }
 
-auto tile::num_awake_chunks() const -> std::size_t
+auto world::num_awake_chunks() const -> std::size_t
 {
     auto count = std::size_t{0};
     for (const auto& chunk : d_chunks) {
@@ -153,7 +151,7 @@ auto tile::num_awake_chunks() const -> std::size_t
     return count;
 }
 
-auto tile::is_chunk_awake(glm::ivec2 pixel) const -> bool
+auto world::is_chunk_awake(glm::ivec2 pixel) const -> bool
 {
     const auto chunk = pixel / static_cast<int>(chunk_size);
     return d_chunks[get_chunk_pos(chunk)].should_step;

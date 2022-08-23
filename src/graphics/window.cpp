@@ -39,7 +39,6 @@ window::window(const std::string& name, int width, int height)
 		print("FATAL: Failed to initialise GLAD\n");
 		std::exit(-3);
 	}
-
     
 	int versionMajor;
 	int versionMinor;
