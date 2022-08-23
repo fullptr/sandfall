@@ -25,7 +25,7 @@ auto main() -> int
 {
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
-    auto mouse = std::array<bool, 5>{}; // TODO: Think of a better way
+    auto mouse  = std::array<bool, 5>{}; // TODO: Think of a better way
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -68,11 +68,11 @@ auto main() -> int
         }
     });
 
-    auto world = std::make_unique<sand::world>();
-    auto renderer = sand::renderer{window.width(), window.height()};
-    auto ui = sand::ui{window};
+    auto world       = std::make_unique<sand::world>();
+    auto renderer    = sand::renderer{};
+    auto ui          = sand::ui{window};
     auto accumulator = 0.0;
-    auto timer = sand::timer{};
+    auto timer       = sand::timer{};
 
     while (window.is_running()) {
         const double dt = timer.on_update();

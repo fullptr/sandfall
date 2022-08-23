@@ -12,6 +12,9 @@ texture::texture(std::uint32_t width, std::uint32_t height)
     resize(width, height);
 }
 
+texture::texture()
+{}
+
 texture::~texture()
 {
     glDeleteTextures(1, &d_texture);

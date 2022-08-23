@@ -27,7 +27,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(std::uint32_t screen_width, std::uint32_t screen_height);
+    renderer();
     ~renderer();
 
     auto update(const world& world, bool show_chunks, const camera& camera) -> void;

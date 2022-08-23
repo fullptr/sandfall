@@ -25,17 +25,15 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(std::uint32_t screen_width, std::uint32_t screen_height)
+renderer::renderer()
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{500, 500}
+    , d_texture{}
     , d_texture_data{}
     , d_shader{"res\\vertex.glsl", "res\\fragment.glsl"}
 {
-    d_texture_data.resize(500 * 500);
-
-    float vertices[] = {
+    const float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 1.0f, 0.0f,
         1.0f, 1.0f, 1.0f, 1.0f,
