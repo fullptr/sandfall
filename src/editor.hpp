@@ -1,6 +1,6 @@
 #pragma once
-#include "pixel.h"
-#include "tile.h"
+#include "pixel.hpp"
+#include "world.hpp"
 #include "utility.hpp"
 #include "graphics/window.h"
 
@@ -50,7 +50,7 @@ struct editor
 
 auto display_ui(
     editor& editor,
-    tile& tile,
+    world& world,
     const timer& timer,
     const window& window
 ) -> void;

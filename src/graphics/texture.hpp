@@ -16,6 +16,7 @@ class texture
     texture& operator=(const texture&) = delete;
 
 public:
+    texture();
     texture(std::uint32_t width, std::uint32_t height);
     ~texture();
 

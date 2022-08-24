@@ -9,7 +9,7 @@ namespace sand {
 
 auto display_ui(
     editor& editor,
-    tile& tile,
+    world& world,
     const timer& timer,
     const window& window
 ) -> void
@@ -24,24 +24,24 @@ auto display_ui(
         }
         ImGui::SliderFloat("Brush size", &editor.brush_size, 0, 50);
         if (ImGui::Button("Clear")) {
-            tile.fill(sand::pixel::air());
+            world.fill(sand::pixel::air());
         }
 
         ImGui::Text("FPS: %d", timer.frame_rate());
-        ImGui::Text("Awake chunks: %d", tile.num_awake_chunks());
+        ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
         ImGui::Checkbox("Show chunks", &editor.show_chunks);
 
         if (ImGui::Button("Save")) {
             auto file = std::ofstream{"save.bin", std::ios::binary};
             auto archive = cereal::BinaryOutputArchive{file};
-            archive(tile);
+            archive(world);
         }
         ImGui::SameLine();
         if (ImGui::Button("Load")) {
             auto file = std::ifstream{"save.bin", std::ios::binary};
             auto archive = cereal::BinaryInputArchive{file};
-            archive(tile);
-            tile.wake_all_chunks();
+            archive(world);
+            world.wake_all_chunks();
         }
         if (ImGui::RadioButton("Spray", editor.brush_type == 0)) {
             editor.brush_type = 0;

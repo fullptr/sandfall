@@ -1,7 +1,7 @@
 #pragma once
 #include "graphics/texture.hpp"
 #include "graphics/shader.h"
-#include "tile.h"
+#include "world.hpp"
 #include "camera.hpp"
 
 #include <glm/glm.hpp>
@@ -27,10 +27,10 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(std::uint32_t screen_width, std::uint32_t screen_height);
+    renderer();
     ~renderer();
 
-    auto update(const tile& tile, bool show_chunks, const camera& camera) -> void;
+    auto update(const world& world, bool show_chunks, const camera& camera) -> void;
 
     auto draw() const -> void;
 
