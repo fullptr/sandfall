@@ -2,7 +2,7 @@
 #include "pixel.hpp"
 #include "world.hpp"
 #include "utility.hpp"
-#include "graphics/window.h"
+#include "graphics/window.hpp"
 
 #include <cstdint>
 #include <vector>
