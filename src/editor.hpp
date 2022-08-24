@@ -1,5 +1,5 @@
 #pragma once
-#include "pixel.h"
+#include "pixel.hpp"
 #include "world.hpp"
 #include "utility.hpp"
 #include "graphics/window.h"

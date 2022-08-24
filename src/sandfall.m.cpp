@@ -1,5 +1,5 @@
 #include "world.hpp"
-#include "pixel.h"
+#include "pixel.hpp"
 #include "config.hpp"
 #include "utility.hpp"
 #include "editor.hpp"

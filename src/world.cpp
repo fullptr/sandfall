@@ -1,6 +1,6 @@
 #include "world.hpp"
-#include "pixel.h"
-#include "update_functions.h"
+#include "pixel.hpp"
+#include "update_functions.hpp"
 #include "utility.hpp"
 
 #include <cassert>

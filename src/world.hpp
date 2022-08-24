@@ -1,5 +1,5 @@
 #pragma once
-#include "pixel.h"
+#include "pixel.hpp"
 #include "serialise.hpp"
 
 #include <cstdint>

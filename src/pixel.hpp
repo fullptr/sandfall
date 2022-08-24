@@ -64,9 +64,9 @@ struct pixel
     glm::vec4 colour;
     glm::vec2 velocity   = {0.0, 0.0};
 
-    bool      is_falling = false;
-    bool      is_updated = false;
-    bool      is_burning = false;
+    bool is_falling = false;
+    bool is_updated = false;
+    bool is_burning = false;
 
     auto properties() const -> const pixel_properties&;
 

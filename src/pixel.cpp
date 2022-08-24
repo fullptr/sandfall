@@ -1,4 +1,4 @@
-#include "pixel.h"
+#include "pixel.hpp"
 #include "utility.hpp"
 
 #include <cstdlib>

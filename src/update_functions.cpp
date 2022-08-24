@@ -1,4 +1,4 @@
-#include "update_functions.h"
+#include "update_functions.hpp"
 #include "utility.hpp"
 #include "config.hpp"
 

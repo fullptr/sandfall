@@ -1,4 +1,4 @@
-#include "window.h"
+#include "window.hpp"
 #include "utility.hpp"
 
 #include <glad/glad.h>
