@@ -6,7 +6,7 @@
 #include "camera.hpp"
 
 #include "graphics/renderer.hpp"
-#include "graphics/window.h"
+#include "graphics/window.hpp"
 #include "graphics/ui.hpp"
 
 #include <glm/glm.hpp>
