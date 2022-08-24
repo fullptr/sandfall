@@ -34,7 +34,7 @@ auto main() -> int
         .zoom = 256
     };
 
-    window.set_callback([&](sand::event& event) {
+    window.set_callback([&](const sand::event& event) {
         auto& io = ImGui::GetIO();
         if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
             return;
