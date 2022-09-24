@@ -32,18 +32,21 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 
 }
 
-auto parse_shader(const std::string& filepath) -> std::string
+auto parse_shader(const std::filesystem::path& file) -> std::string
 {
-	if (!std::filesystem::exists(filepath)) {
-		print("FATAL: Shader file '{}' does not exist!", filepath);
+	if (!std::filesystem::exists(file)) {
+		print("FATAL: Shader file '{}' does not exist!\n", file.string());
+		std::terminate();
 	}
-	std::ifstream stream(filepath);
+	std::ifstream stream(file);
 	std::string shader((std::istreambuf_iterator<char>(stream)),
 		                std::istreambuf_iterator<char>());
 	return shader;
 }
 
-shader::shader(const std::string& vertex_shader, const std::string& fragment_shader)
+shader::shader(const std::filesystem::path& vertex_shader,
+               const std::filesystem::path& fragment_shader
+)
     : d_program(glCreateProgram())
     , d_vertex_shader(compile_shader(GL_VERTEX_SHADER, parse_shader(vertex_shader)))
     , d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, parse_shader(fragment_shader)))
