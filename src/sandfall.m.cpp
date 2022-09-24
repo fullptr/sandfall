@@ -71,7 +71,7 @@ auto main() -> int
     });
 
     auto world       = std::make_unique<sand::world>();
-    auto renderer    = sand::renderer{exe_path / "res"};
+    auto renderer    = sand::renderer{};
     auto ui          = sand::ui{window};
     auto accumulator = 0.0;
     auto timer       = sand::timer{};

@@ -8,6 +8,36 @@
 namespace sand {
 namespace {
 
+constexpr auto vertex_shader = R"SHADER(
+#version 410 core
+layout (location = 0) in vec4 position_uv;
+
+uniform mat4 u_proj_matrix;
+
+out vec2 pass_uv;
+
+void main()
+{
+    vec2 position = position_uv.xy;
+    pass_uv = position_uv.zw;
+    gl_Position = u_proj_matrix * vec4(position, 0, 1);
+}
+)SHADER";
+
+constexpr auto fragment_shader = R"SHADER(
+#version 410 core
+layout (location = 0) out vec4 out_colour;
+
+in vec2 pass_uv;
+
+uniform sampler2D u_texture;
+
+void main()
+{
+    out_colour = texture(u_texture, pass_uv);
+}
+)SHADER";
+
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
     return pos.x + sand::world_size * pos.y;
@@ -25,13 +55,13 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(const std::filesystem::path& res_dir)
+renderer::renderer()
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
     , d_texture{}
     , d_texture_data{}
-    , d_shader{res_dir / "vertex.glsl", res_dir / "fragment.glsl"}
+    , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
 {
     const float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,

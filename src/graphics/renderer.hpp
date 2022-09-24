@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <array>
-#include <filesystem>
 
 namespace sand {
 
@@ -28,7 +27,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(const std::filesystem::path& resource_directory);
+    renderer();
     ~renderer();
 
     auto update(const world& world, bool show_chunks, const camera& camera) -> void;
