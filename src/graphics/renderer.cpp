@@ -25,16 +25,13 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(const std::filesystem::path& resource_directory)
+renderer::renderer(const std::filesystem::path& res_dir)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
     , d_texture{}
     , d_texture_data{}
-    , d_shader{
-        resource_directory / "vertex.glsl",
-        resource_directory / "fragment.glsl"
-    }
+    , d_shader{res_dir / "vertex.glsl", res_dir / "fragment.glsl"}
 {
     const float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,

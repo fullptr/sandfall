@@ -7,7 +7,6 @@ set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS}")
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 
@@ -33,7 +32,6 @@ target_link_libraries(sandfall PUBLIC
     glfw
     glad::glad
     glm
-    fmt::fmt
     imgui::imgui
     cereal
 )
