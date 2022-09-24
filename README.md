@@ -1,2 +1,2 @@
 # sandfall
-A pixel simulation engine
+A pixel simulation engine, currently Windows only

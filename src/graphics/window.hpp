@@ -41,7 +41,7 @@ class window
     window& operator=(window&&) = delete;
 
 public:
-    window(const std::string&, int width, int height);
+    window(const std::string& name, int width, int height);
     ~window();
 
     auto clear() const -> void;

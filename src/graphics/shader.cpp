@@ -32,23 +32,32 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 
 }
 
-auto parse_shader(const std::string& filepath) -> std::string
+auto parse_shader(const std::filesystem::path& file) -> std::string
 {
-	if (!std::filesystem::exists(filepath)) {
-		print("FATAL: Shader file '{}' does not exist!", filepath);
+	if (!std::filesystem::exists(file)) {
+		print("FATAL: Shader file '{}' does not exist!\n", file.string());
+		std::terminate();
 	}
-	std::ifstream stream(filepath);
+	std::ifstream stream(file);
 	std::string shader((std::istreambuf_iterator<char>(stream)),
 		                std::istreambuf_iterator<char>());
 	return shader;
 }
 
-shader::shader(const std::string& vertex_shader, const std::string& fragment_shader)
-    : d_program(glCreateProgram())
-    , d_vertex_shader(compile_shader(GL_VERTEX_SHADER, parse_shader(vertex_shader)))
-    , d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, parse_shader(fragment_shader)))
+shader::shader(const std::filesystem::path& vertex_shader,
+               const std::filesystem::path& fragment_shader
+)
+    : shader(parse_shader(vertex_shader), parse_shader(fragment_shader))
 {
-    glAttachShader(d_program, d_vertex_shader);
+}
+
+shader::shader(const std::string& vertex_shader_source,
+		       const std::string& fragment_shader_source)
+	: d_program(glCreateProgram())
+	, d_vertex_shader(compile_shader(GL_VERTEX_SHADER, vertex_shader_source))
+	, d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, fragment_shader_source))
+{
+	glAttachShader(d_program, d_vertex_shader);
 	glAttachShader(d_program, d_fragment_shader);
 	glLinkProgram(d_program);
 	glValidateProgram(d_program);

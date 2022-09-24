@@ -23,6 +23,8 @@ auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 
 auto main() -> int
 {
+    auto exe_path = sand::get_executable_filepath().parent_path();
+    sand::print("Executable directory: {}\n", exe_path.string());
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
     auto mouse  = std::array<bool, 5>{}; // TODO: Think of a better way

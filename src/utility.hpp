@@ -4,6 +4,7 @@
 #include <string>
 #include <span>
 #include <format>
+#include <filesystem>
 #include <glm/glm.hpp>
 
 namespace sand {
@@ -72,5 +73,7 @@ auto print(std::string_view fmt, Args&&... args) -> void
 }
 
 auto from_hex(int hex) -> glm::vec4;
+
+auto get_executable_filepath() -> std::filesystem::path;
 
 }

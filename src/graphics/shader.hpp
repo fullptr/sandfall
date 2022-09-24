@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <filesystem>
 
 namespace sand {
 
@@ -17,7 +18,11 @@ class shader
     std::uint32_t get_location(const std::string& name) const;
 
 public:
-    shader(const std::string& vertex_shader, const std::string& fragment_shader);
+    shader(const std::filesystem::path& vertex_shader,
+           const std::filesystem::path& fragment_shader);
+
+    shader(const std::string& vertex_shader_source,
+           const std::string& fragment_shader_source);
 
     auto bind() const -> void;
     auto unbind() const -> void;

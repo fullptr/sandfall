@@ -1,8 +1,11 @@
 #include "utility.hpp"
 
+#include <array>
 #include <random>
 #include <numbers>
 #include <iostream>
+
+#include <Windows.h>
 
 namespace sand {
 
@@ -76,6 +79,19 @@ auto from_hex(int hex) -> glm::vec4
     hex /= 0x100;
     const float red = normalise(hex & 0xff);
     return glm::vec4{red, green, blue, 1.0f};
+}
+
+auto get_executable_filepath() -> std::filesystem::path
+{
+    auto buffer = std::vector<char>{};
+    buffer.resize(16);
+    while (true) {
+        const auto rc = GetModuleFileNameA(nullptr, buffer.data(), buffer.size());
+        if (rc < buffer.size()) {
+            return std::filesystem::path{buffer.data()};
+        }
+        buffer.resize(2 * buffer.size());
+    }
 }
     
 }
