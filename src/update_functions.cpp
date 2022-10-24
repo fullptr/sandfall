@@ -52,8 +52,8 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
         const auto& props = px.properties();
         if (px.properties().movement == pixel_movement::solid) {
             pixels.wake_chunk_with_pixel(l);
-            px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
-                            px.is_falling;
+            px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
+                                   px.flags[is_falling];
         }
     }
 
@@ -62,8 +62,8 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
         const auto& props = px.properties();
         if (props.movement == pixel_movement::solid) {
             pixels.wake_chunk_with_pixel(r);
-            px.is_falling = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
-                            px.is_falling;
+            px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
+                                   px.flags[is_falling];
         }
     }
 }
@@ -88,7 +88,7 @@ auto move_towards(world& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ive
     }
 
     if (curr_pos != from) {
-        pixels.at(curr_pos).is_updated = true;
+        pixels.at(curr_pos).flags[is_updated] = true;
         pixels.wake_chunk_with_pixel(curr_pos);
     }
 
@@ -111,7 +111,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     const auto& props = pixel.properties();
 
-    const bool can_produce_embers = props.is_ember_source || pixel.is_burning;
+    const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
 
     for (const auto& offset : offsets) {
         if (pixels.valid(pos + offset)) {
@@ -136,9 +136,9 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
             }
             
             // 3) Spread fire
-            if (props.is_burn_source || pixel.is_burning) {
+            if (props.is_burn_source || pixel.flags[is_burning]) {
                 if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
-                    neighbour.is_burning = true;
+                    neighbour.flags[is_burning] = true;
                     pixels.wake_chunk_with_pixel(neigh_pos);
                 }
             }
@@ -221,7 +221,7 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
-        pixels.at(pos).is_falling = pos != original_pos;
+        pixels.at(pos).flags[is_falling] = pos != original_pos;
     }};
 
     // Apply gravity if can move down
@@ -247,7 +247,7 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         pos = move_towards(pixels, pos, {vel.x, 0});
     }
 
-    if (!pixels.at(pos).is_updated && pixels.at(pos).is_falling) {
+    if (!pixels.at(pos).flags[is_updated] && pixels.at(pos).flags[is_falling]) {
         auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
@@ -297,7 +297,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     // If a pixel is burning or falling, wake the chunk next frame
     {
         const auto& pixel = pixels.at(pos);
-        if (pixel.is_burning || pixel.is_falling) {
+        if (pixel.flags[is_burning] || pixel.flags[is_falling]) {
             pixels.wake_chunk_with_pixel(pos);
         }
     }
@@ -326,17 +326,17 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
 
     // is_burning status
-    if (pixel.is_burning) {
+    if (pixel.flags[is_burning]) {
         const auto& props = pixel.properties();
 
         // First, see if it can be put out
         if (is_surrounded(pixels, pos)) {
             if (random_from_range(0.0f, 1.0f) < props.put_out_surrounded) {
-                pixel.is_burning = false;
+                pixel.flags[is_burning] = false;
             }
         } else {
             if (random_from_range(0.0f, 1.0f) < props.put_out) {
-                pixel.is_burning = false;
+                pixel.flags[is_burning] = false;
             }
         }
 

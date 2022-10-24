@@ -13,6 +13,17 @@
 #include <imgui/imgui.h>
 
 #include <memory>
+#include <bitset>
+
+struct new_pixel
+{
+    sand::pixel_type type;
+
+    glm::vec4 colour;
+    glm::vec2 velocity;
+
+    std::bitset<32> bits;
+};
 
 auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 {
@@ -28,6 +39,10 @@ auto main() -> int
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
     auto mouse  = std::array<bool, 5>{}; // TODO: Think of a better way
+
+    sand::print("Current pixel size: {}\n", sizeof(sand::pixel));
+    sand::print("New pixel size: {}\n", sizeof(new_pixel));
+    sand::print("Sizeof ptr: {}\n", sizeof(int*));
 
     auto camera = sand::camera{
         .top_left = {0, 0},

@@ -6,6 +6,13 @@
 
 namespace sand {
 
+enum flags : std::size_t
+{
+    is_updated,
+    is_falling,
+    is_burning
+};
+
 enum class pixel_movement : std::uint8_t
 {
     none,
@@ -62,23 +69,14 @@ struct pixel
     pixel_type type;
 
     glm::vec4 colour;
-    glm::vec2 velocity   = {0.0, 0.0};
+    glm::vec2 velocity = {0.0, 0.0};
 
-    bool is_falling = false;
-    bool is_updated = false;
-    bool is_burning = false;
+    std::bitset<64> flags;
 
     auto properties() const -> const pixel_properties&;
 
     auto serialise(auto& archive) -> void {
-        archive(
-            type,
-            colour,
-            velocity,
-            is_falling,
-            is_updated,
-            is_burning
-        );
+        archive(type, colour, velocity, flags);
     }
 
     static auto air() -> pixel;

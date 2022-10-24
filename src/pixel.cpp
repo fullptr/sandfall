@@ -186,29 +186,32 @@ auto pixel::air() -> pixel
 
 auto pixel::sand() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::sand,
-        .colour = from_hex(0xF8EFBA) + light_noise(),
-        .is_falling = true
+        .colour = from_hex(0xF8EFBA) + light_noise()
     };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 auto pixel::coal() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::coal,
-        .colour = from_hex(0x1E272E) + light_noise(),
-        .is_falling = true
+        .colour = from_hex(0x1E272E) + light_noise()
     };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 auto pixel::dirt() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::dirt,
-        .colour = from_hex(0x5C1D06) + light_noise(),
-        .is_falling = true
+        .colour = from_hex(0x5C1D06) + light_noise()
     };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 auto pixel::rock() -> pixel
@@ -269,11 +272,12 @@ auto pixel::fuse() -> pixel
 
 auto pixel::ember() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::ember,
-        .colour = from_hex(0xFFFFFF) + light_noise(),
-        .is_burning = true
+        .colour = from_hex(0xFFFFFF) + light_noise()
     };
+    p.flags[is_burning] = true;
+    return p;
 }
 
 auto pixel::oil() -> pixel

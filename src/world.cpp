@@ -42,7 +42,7 @@ auto world::simulate() -> void
     }
     
     const auto inner = [&] (glm::ivec2 pos) {
-        if (is_chunk_awake(pos) && !at(pos).is_updated) {
+        if (is_chunk_awake(pos) && !at(pos).flags[is_updated]) {
             update_pixel(*this, pos);
         }
     };
@@ -60,7 +60,7 @@ auto world::simulate() -> void
         }
     }
 
-    std::ranges::for_each(d_pixels, [](auto& p) { p.is_updated = false; });
+    std::ranges::for_each(d_pixels, [](auto& p) { p.flags[is_updated] = false; });
 }
 
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
