@@ -122,7 +122,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
-            if (world.at(world_coord).is_burning) {
+            if (world.at(world_coord).flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             } else {
                 d_texture_data[pos] = world.at(world_coord).colour;
