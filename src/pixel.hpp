@@ -6,7 +6,7 @@
 
 namespace sand {
 
-enum flags : std::size_t
+enum pixel_flags : std::size_t
 {
     is_updated,
     is_falling,
@@ -66,18 +66,10 @@ struct pixel_properties
 
 struct pixel
 {
-    pixel_type type;
-
-    glm::vec4 colour;
-    glm::vec2 velocity = {0.0, 0.0};
-
+    pixel_type      type;
+    glm::vec4       colour;
+    glm::vec2       velocity;
     std::bitset<64> flags;
-
-    auto properties() const -> const pixel_properties&;
-
-    auto serialise(auto& archive) -> void {
-        archive(type, colour, velocity, flags);
-    }
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
@@ -95,5 +87,11 @@ struct pixel
     static auto gunpowder() -> pixel;
     static auto methane() -> pixel;
 };
+
+auto properties(const pixel& px) -> const pixel_properties&;
+
+auto serialise(auto& archive, pixel& px) -> void {
+    archive(px.type, px.colour, px.velocity, px.flags);
+}
 
 }

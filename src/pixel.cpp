@@ -19,9 +19,9 @@ auto light_noise() -> glm::vec4
 
 }
 
-auto pixel::properties() const -> const pixel_properties&
+auto properties(const pixel& pix) -> const pixel_properties&
 {
-    switch (type) {
+    switch (pix.type) {
         case pixel_type::none: {
             static constexpr auto px = pixel_properties{
                 .corrosion_resist = 1.0f
@@ -169,7 +169,7 @@ auto pixel::properties() const -> const pixel_properties&
             return px;
         }
         default: {
-            print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
+            print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
             static constexpr auto px = pixel_properties{};
             return px;
         }

@@ -25,8 +25,8 @@ auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_p
     // If the destination is empty, we can always move there
     if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
 
-    const auto& src = pixels.at(src_pos).properties().movement;
-    const auto& dst = pixels.at(dst_pos).properties().movement;
+    const auto& src = properties(pixels.at(src_pos)).movement;
+    const auto& dst = properties(pixels.at(dst_pos)).movement;
 
     using pm = pixel_movement;
     switch (src) {
@@ -49,8 +49,8 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
 
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
-        const auto& props = px.properties();
-        if (px.properties().movement == pixel_movement::solid) {
+        const auto& props = properties(px);
+        if (props.movement == pixel_movement::solid) {
             pixels.wake_chunk_with_pixel(l);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -59,7 +59,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
 
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
-        const auto& props = px.properties();
+        const auto& props = properties(px);
         if (props.movement == pixel_movement::solid) {
             pixels.wake_chunk_with_pixel(r);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
@@ -109,7 +109,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     };
 
     auto& pixel = pixels.at(pos);
-    const auto& props = pixel.properties();
+    const auto& props = properties(pixel);
 
     const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
 
@@ -127,7 +127,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 
             // 2) Corrode neighbours
             if (props.is_corrosion_source) {
-                if (random_from_range(0.0f, 1.0f) > neighbour.properties().corrosion_resist) {
+                if (random_from_range(0.0f, 1.0f) > properties(neighbour).corrosion_resist) {
                     neighbour = pixel::air();
                     if (random_from_range(0.0f, 1.0f) > 0.9f) {
                         pixel = pixel::air();
@@ -137,7 +137,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
             
             // 3) Spread fire
             if (props.is_burn_source || pixel.flags[is_burning]) {
-                if (random_from_range(0.0f, 1.0f) < neighbour.properties().flammability) {
+                if (random_from_range(0.0f, 1.0f) < properties(neighbour).flammability) {
                     neighbour.flags[is_burning] = true;
                     pixels.wake_chunk_with_pixel(neigh_pos);
                 }
@@ -190,7 +190,7 @@ enum class direction
 auto move_disperse(world& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
-    const auto& props = data.properties();
+    const auto& props = properties(data);
 
     auto offsets = std::array{
         glm::ivec2{-1, dir == direction::down ? 1 : -1},
@@ -238,7 +238,7 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         auto& data = pixels.at(pos);
         auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = data.properties().horizontal_transfer;
+            const auto ht = properties(data).horizontal_transfer;
             vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
             vel.y = 0.0;
         }
@@ -302,7 +302,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         }
     }
 
-    switch (pixels.at(pos).properties().movement) {
+    switch (properties(pixels.at(pos)).movement) {
         case pixel_movement::solid: {
             pos = update_movable_solid(pixels, pos);
         } break;
@@ -327,7 +327,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 
     // is_burning status
     if (pixel.flags[is_burning]) {
-        const auto& props = pixel.properties();
+        const auto& props = properties(pixel);
 
         // First, see if it can be put out
         if (is_surrounded(pixels, pos)) {
