@@ -68,31 +68,34 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     }
 }
 
-auto move_towards(world& pixels, glm::ivec2 from, glm::ivec2 offset) -> glm::ivec2
+// Moves towards the given offset, updating pos to the new postion and returning
+// true if the position has changed
+auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
 {
-    glm::ivec2 curr_pos = from;
+    glm::ivec2 start_pos = pos;
 
-    const auto a = from;
-    const auto b = from + offset;
+    const auto a = pos;
+    const auto b = pos + offset;
     const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
 
     for (int i = 0; i != steps; ++i) {
         const auto next_pos = a + (b - a) * (i + 1)/steps;
 
-        if (!can_pixel_move_to(pixels, curr_pos, next_pos)) {
+        if (!can_pixel_move_to(pixels, pos, next_pos)) {
             break;
         }
 
-        curr_pos = pixels.swap(curr_pos, next_pos);
-        set_adjacent_free_falling(pixels, curr_pos);
+        pos = pixels.swap(pos, next_pos);
+        set_adjacent_free_falling(pixels, pos);
     }
 
-    if (curr_pos != from) {
-        pixels.at(curr_pos).flags[is_updated] = true;
-        pixels.wake_chunk_with_pixel(curr_pos);
+    if (start_pos != pos) {
+        pixels.at(pos).flags[is_updated] = true;
+        pixels.wake_chunk_with_pixel(pos);
+        return true;
     }
 
-    return curr_pos;
+    return false;
 }
 
 auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
@@ -197,17 +200,21 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         pixels.at(pos).flags[is_falling] = pos != original_pos;
     }};
 
+    const auto& props = properties(pixels.at(pos));
+
     // Apply gravity if can move down
     if (can_pixel_move_to(pixels, pos, below(pos))) {
         auto& vel = pixels.at(pos).velocity;
         vel += config::gravity * config::time_step;
         vel.y = glm::max(1.0f, vel.y);
         
-        pos = move_towards(pixels, pos, vel);
+        if (move_offset(pixels, pos, vel)) {
+            return pos;
+        }
     }
 
     // Transfer to horizontal
-    else {
+    if (props.horizontal_transfer) {
         auto& data = pixels.at(pos);
         auto& vel = data.velocity;
         if (vel.y > 5.0 && vel.x == 0.0) {
@@ -217,17 +224,18 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         }
         vel.x *= 0.8;
 
-        pos = move_towards(pixels, pos, {vel.x, 0});
+        if (move_offset(pixels, pos, {vel.x, 0})) {
+            return pos;
+        }
     }
 
-    if (!pixels.at(pos).flags[is_updated] && pixels.at(pos).flags[is_falling]) {
+    if (pixels.at(pos).flags[is_falling]) {
         auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            pos = move_towards(pixels, pos, offset);
-            if (pos != original_pos) {
-                break;
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
             }
         }
     }
@@ -236,52 +244,40 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 }
 
 auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
-{
+{ 
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
     const auto gravity_factor = props.gravity_factor;
 
     data.velocity += gravity_factor * config::gravity * config::time_step;
-    if (const auto new_pos = move_towards(pixels, pos, data.velocity); new_pos != pos) {
-        return new_pos;
+    if (move_offset(pixels, pos, data.velocity)) {
+        return pos;
     }
-
-    const auto dir = sign(gravity_factor);
 
     // Attempts to move diagonally up/down
     {
-        auto offsets = std::array{
-            glm::ivec2{-1, dir},
-            glm::ivec2{1,  dir},
-        };
-
+        const auto dir = sign(gravity_factor);
+        auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1,  dir}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            if (offset.y == 0) {
-                data.velocity.y = 0.0f;
-            }
-            if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
-                return new_pos;
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
             }
         }
     }
 
     // Attempts to disperse outwards according to the dispersion rate
-    {
-        auto offsets = std::array{
-            glm::ivec2{-1 * props.dispersion_rate, 0},
-            glm::ivec2{props.dispersion_rate, 0}
-        };
+    if (props.dispersion_rate) {
+        data.velocity.y = 0.0f;
 
+        const auto dr = props.dispersion_rate;
+        auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            if (offset.y == 0) {
-                data.velocity.y = 0.0f;
-            }
-            if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
-                return new_pos;
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
             }
         }
     }
