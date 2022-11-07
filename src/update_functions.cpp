@@ -269,7 +269,7 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
-    vel += config::gravity * config::time_step;
+    vel += properties(pixels.at(pos)).gravity_factor * config::gravity * config::time_step;
     
     const auto offset = glm::ivec2{0, glm::max(1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
@@ -282,7 +282,7 @@ auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 auto update_gas(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& vel = pixels.at(pos).velocity;
-    vel -= config::gravity * config::time_step;
+    vel += properties(pixels.at(pos)).gravity_factor * config::gravity * config::time_step;
 
     const auto offset = glm::ivec2{0, glm::min(-1, (int)vel.y)};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
