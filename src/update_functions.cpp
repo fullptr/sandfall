@@ -272,7 +272,7 @@ auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
     auto& vel = pixels.at(pos).velocity;
     vel += properties(pixels.at(pos)).gravity_factor * config::gravity * config::time_step;
     
-    const auto offset = glm::ivec2{0, glm::min((int)gravity_factor, (int)vel.y)};
+    auto offset = glm::ivec2{0, vel.y};
     if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
         return new_pos;
     }
