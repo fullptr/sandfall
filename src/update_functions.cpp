@@ -235,40 +235,54 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
     return pos;
 }
 
-auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
     const auto gravity_factor = props.gravity_factor;
 
     data.velocity += gravity_factor * config::gravity * config::time_step;
-    
-    auto offset = glm::ivec2{0, data.velocity.y};
-    if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+    if (const auto new_pos = move_towards(pixels, pos, data.velocity); new_pos != pos) {
         return new_pos;
     }
 
-    // Attempts to move diagonally up/down, and failing that, disperses outwards according
-    // to the dispersion rate
-
     const auto dir = sign(gravity_factor);
 
-    auto offsets = std::array{
-        glm::ivec2{-1, dir},
-        glm::ivec2{1,  dir},
-        glm::ivec2{-1 * props.dispersion_rate, 0},
-        glm::ivec2{props.dispersion_rate, 0}
-    };
+    // Attempts to move diagonally up/down
+    {
+        auto offsets = std::array{
+            glm::ivec2{-1, dir},
+            glm::ivec2{1,  dir},
+        };
 
-    if (coin_flip()) std::swap(offsets[0], offsets[1]);
-    if (coin_flip()) std::swap(offsets[2], offsets[3]);
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
-    for (auto offset : offsets) {
-        if (offset.y == 0) {
-            data.velocity = {0.0, 0.0};
+        for (auto offset : offsets) {
+            if (offset.y == 0) {
+                data.velocity.y = 0.0f;
+            }
+            if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+                return new_pos;
+            }
         }
-        if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
-            return new_pos;
+    }
+
+    // Attempts to disperse outwards according to the dispersion rate
+    {
+        auto offsets = std::array{
+            glm::ivec2{-1 * props.dispersion_rate, 0},
+            glm::ivec2{props.dispersion_rate, 0}
+        };
+
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
+
+        for (auto offset : offsets) {
+            if (offset.y == 0) {
+                data.velocity.y = 0.0f;
+            }
+            if (const auto new_pos = move_towards(pixels, pos, offset); new_pos != pos) {
+                return new_pos;
+            }
         }
     }
 
@@ -295,11 +309,11 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         } break;
 
         case pixel_movement::liquid: {
-            pos = update_liquid(pixels, pos);
+            pos = update_fluidlike(pixels, pos);
         } break;
 
         case pixel_movement::gas: {
-            pos = update_liquid(pixels, pos);
+            pos = update_fluidlike(pixels, pos);
         } break;
 
         default: {
