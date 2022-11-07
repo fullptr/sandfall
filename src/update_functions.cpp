@@ -180,21 +180,25 @@ auto is_surrounded(world& pixels, glm::ivec2 pos) -> bool
     return true;
 }
 
-enum class direction
+auto sign(float f) -> int
 {
-    up, down
-};
+    if (f < 0.0f) return -1;
+    if (f > 0.0f) return 1;
+    return 0;
+}
 
 // Attempts to move diagonally up/down, and failing that, disperses outwards according
 // to the dispersion rate
-auto move_disperse(world& pixels, glm::ivec2 pos, direction dir) -> glm::ivec2
+auto move_disperse(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
 
+    const auto dir = sign(props.gravity_factor);
+
     auto offsets = std::array{
-        glm::ivec2{-1, dir == direction::down ? 1 : -1},
-        glm::ivec2{1,  dir == direction::down ? 1 : -1},
+        glm::ivec2{-1, dir},
+        glm::ivec2{1,  dir},
         glm::ivec2{-1 * props.dispersion_rate, 0},
         glm::ivec2{props.dispersion_rate, 0}
     };
@@ -272,7 +276,7 @@ auto update_liquid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         return new_pos;
     }
 
-    return move_disperse(pixels, pos, direction::down);
+    return move_disperse(pixels, pos);
 }
 
 auto update_gas(world& pixels, glm::ivec2 pos) -> glm::ivec2
@@ -285,7 +289,7 @@ auto update_gas(world& pixels, glm::ivec2 pos) -> glm::ivec2
         return new_pos;
     }
 
-    return move_disperse(pixels, pos, direction::up);
+    return move_disperse(pixels, pos);
 }
 
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
