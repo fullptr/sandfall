@@ -88,7 +88,6 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
     }
 
     if (start_pos != pos) {
-        pixels.at(pos).flags[is_updated] = true;
         pixels.at(pos).flags[is_falling] = true;
         pixels.wake_chunk_with_pixel(pos);
         return true;
@@ -115,9 +114,6 @@ auto sign(float f) -> int
     if (f > 0.0f) return 1;
     return 0;
 }
-
-}
-
 
 inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
@@ -247,6 +243,7 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     }
 }
 
+}
 
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
@@ -258,6 +255,8 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     update_pixel_attributes(pixels, pos);
 
     affect_neighbours(pixels, pos);
+
+    pixels.at(pos).flags[is_updated] = true;
 }
 
 }
