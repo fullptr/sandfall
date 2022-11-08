@@ -12,11 +12,11 @@
 
 namespace sand {
 
-static constexpr std::uint32_t world_size  = 256;
+static constexpr std::uint32_t num_pixels  = 256;
 static constexpr std::uint32_t chunk_size = 16;
-static_assert(world_size % chunk_size == 0);
+static_assert(num_pixels % chunk_size == 0);
 
-static constexpr std::uint32_t num_chunks = world_size / chunk_size;
+static constexpr std::uint32_t num_chunks = num_pixels / chunk_size;
 
 struct chunk
 {
@@ -27,7 +27,7 @@ struct chunk
 class world
 {
 public:
-    using pixels = std::array<pixel, world_size * world_size>;
+    using pixels = std::array<pixel, num_pixels * num_pixels>;
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
