@@ -120,6 +120,10 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
 
+    const auto scope = scope_exit{[&, start_pos = pos] {
+        pixels.at(pos).flags[is_falling] = pos != start_pos;
+    }};
+
     // Apply gravity
     if (props.gravity_factor) {
         const auto gravity_factor = props.gravity_factor;
@@ -128,7 +132,7 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 
     // If we have resistance to moving and we are not, then we are not moving
-    if (props.inertial_resistance > 0.0f && !pixels.at(pos).flags[is_falling]) {
+    if (props.inertial_resistance && !pixels.at(pos).flags[is_falling]) {
         return;
     }
 
