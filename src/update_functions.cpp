@@ -57,7 +57,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
         const auto& props = properties(px);
-        if (props.is_movable && props.phase == pixel_phase::solid) {
+        if (props.gravity_factor != 0.0f && props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(l);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -67,7 +67,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
         const auto& props = properties(px);
-        if (props.is_movable && props.phase == pixel_phase::solid) {
+        if (props.gravity_factor != 0.0f && props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(r);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -177,10 +177,6 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
-    if (!properties(pixels.at(pos)).is_movable) {
-        return;
-    }
-
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
         if (properties(pixels.at(pos)).phase == pixel_phase::solid) {
@@ -224,8 +220,6 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
             vel.y = 0.0;
         }
         vel.x *= 0.8;
-
-        if (move_offset(pixels, pos, {vel.x, 0})) return;
     }
 
     // Attempts to disperse outwards according to the dispersion rate

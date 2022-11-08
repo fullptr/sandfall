@@ -43,7 +43,6 @@ struct pixel_properties
 {
     // Movement Controls
     pixel_phase phase               = pixel_phase::solid;
-    bool        is_movable          = false;
     bool        can_move_diagonally = false;
     float       gravity_factor      = 0.0f;
     float       inertial_resistance = 0.0f;
