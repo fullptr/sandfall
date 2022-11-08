@@ -50,7 +50,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
         const auto& props = properties(px);
-        if (props.is_movable) {
+        if (props.is_movable && props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(l);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -60,7 +60,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
         const auto& props = properties(px);
-        if (props.is_movable) {
+        if (props.is_movable && props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(r);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -197,8 +197,14 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
-        pixels.at(pos).flags[is_falling] = pos != original_pos;
+        if (properties(pixels.at(pos)).phase == pixel_phase::solid) {
+            pixels.at(pos).flags[is_falling] = pos != original_pos;
+        }
     }};
+
+    if (properties(pixels.at(pos)).phase == pixel_phase::solid && !pixels.at(pos).flags[is_falling]) {
+        return pos;
+    }
 
     // Apply gravity
     auto& data = pixels.at(pos);
