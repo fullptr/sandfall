@@ -89,6 +89,7 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
 
     if (start_pos != pos) {
         pixels.at(pos).flags[is_updated] = true;
+        pixels.at(pos).flags[is_falling] = true;
         pixels.wake_chunk_with_pixel(pos);
         return true;
     }
@@ -168,12 +169,6 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
-    const auto scope = scope_exit{[&, start_pos = pos] {
-        if (properties(pixels.at(pos)).phase == pixel_phase::solid) {
-            pixels.at(pos).flags[is_falling] = pos != start_pos;
-        }
-    }};
-
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
 
