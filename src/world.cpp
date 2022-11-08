@@ -37,8 +37,7 @@ auto world::valid(glm::ivec2 pos) const -> bool
 auto world::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
-        chunk.should_step = chunk.should_step_next;
-        chunk.should_step_next = false;
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
     
     const auto inner = [&](glm::ivec2 pos) {
