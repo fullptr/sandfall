@@ -268,81 +268,6 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
     return pos;
 }
 
-auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
-{ 
-    const auto original_pos = pos;
-    const auto scope = scope_exit{[&] {
-        pixels.at(pos).flags[is_falling] = pos != original_pos;
-    }};
-
-    // Apply gravity
-    auto& data = pixels.at(pos);
-    const auto& props = properties(data);
-    const auto gravity_factor = props.gravity_factor;
-
-    data.velocity += gravity_factor * config::gravity * config::time_step;
-    if (move_offset(pixels, pos, data.velocity)) {
-        return pos;
-    }
-
-    // Attempts to move diagonally up/down
-    {
-        const auto dir = sign(gravity_factor);
-        auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1,  dir}};
-        if (coin_flip()) std::swap(offsets[0], offsets[1]);
-
-        for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
-        }
-    }
-
-    // Transfer to horizontal
-    if (props.horizontal_transfer) {
-        auto& data = pixels.at(pos);
-        auto& vel = data.velocity;
-        if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = properties(data).horizontal_transfer;
-            vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
-            vel.y = 0.0;
-        }
-        vel.x *= 0.8;
-
-        if (move_offset(pixels, pos, {vel.x, 0})) {
-            return pos;
-        }
-    }
-
-    // Attempts to disperse outwards according to the dispersion rate
-    if (props.dispersion_rate) {
-        data.velocity.y = 0.0f;
-
-        const auto dr = props.dispersion_rate;
-        auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
-        if (coin_flip()) std::swap(offsets[0], offsets[1]);
-
-        for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
-        }
-    }
-
-    if (pixels.at(pos).flags[is_falling]) {
-        auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
-        if (coin_flip()) std::swap(offsets[0], offsets[1]);
-
-        for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
-        }
-    }
-
-    return pos;
-}
-
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.at(pos).type == pixel_type::none) {
@@ -357,22 +282,8 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         }
     }
 
-    switch (properties(pixels.at(pos)).movement) {
-        case pixel_movement::solid: {
-            pos = update_movable_solid(pixels, pos);
-        } break;
-
-        case pixel_movement::liquid: {
-            pos = update_fluidlike(pixels, pos);
-        } break;
-
-        case pixel_movement::gas: {
-            pos = update_fluidlike(pixels, pos);
-        } break;
-
-        default: {
-
-        } break;
+    if (properties(pixels.at(pos)).movement != pixel_movement::none) {
+        pos = update_movable_solid(pixels, pos);
     }
 
     affect_neighbours(pixels, pos);
