@@ -59,7 +59,9 @@ auto world::simulate() -> void
         }
     }
 
-    std::ranges::for_each(d_pixels, [](auto& p) { p.flags[is_updated] = false; });
+    for (auto& pixel : d_pixels) {
+        pixel.flags[is_updated] = false;
+    }
 }
 
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
