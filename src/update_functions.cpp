@@ -239,6 +239,21 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         }
     }
 
+    // Attempts to disperse outwards according to the dispersion rate
+    if (props.dispersion_rate) {
+        data.velocity.y = 0.0f;
+
+        const auto dr = props.dispersion_rate;
+        auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
+
+        for (auto offset : offsets) {
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
+            }
+        }
+    }
+
     if (pixels.at(pos).flags[is_falling]) {
         auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
@@ -305,6 +320,17 @@ auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
 
         const auto dr = props.dispersion_rate;
         auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
+
+        for (auto offset : offsets) {
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
+            }
+        }
+    }
+
+    if (pixels.at(pos).flags[is_falling]) {
+        auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {

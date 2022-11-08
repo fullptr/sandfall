@@ -47,7 +47,7 @@ struct pixel_properties
     float          gravity_factor      = 0.0f;
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;
-    int            dispersion_rate     = 1;
+    int            dispersion_rate     = 0;
 
     // Water Controls
     bool           can_boil_water      = false;
