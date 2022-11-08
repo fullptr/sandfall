@@ -200,16 +200,26 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
         pixels.at(pos).flags[is_falling] = pos != original_pos;
     }};
 
-    const auto& props = properties(pixels.at(pos));
+    // Apply gravity
+    auto& data = pixels.at(pos);
+    const auto& props = properties(data);
+    const auto gravity_factor = props.gravity_factor;
 
-    // Apply gravity if can move down
-    if (can_pixel_move_to(pixels, pos, below(pos))) {
-        auto& vel = pixels.at(pos).velocity;
-        vel += config::gravity * config::time_step;
-        vel.y = glm::max(1.0f, vel.y);
-        
-        if (move_offset(pixels, pos, vel)) {
-            return pos;
+    data.velocity += gravity_factor * config::gravity * config::time_step;
+    if (move_offset(pixels, pos, data.velocity)) {
+        return pos;
+    }
+
+    // Attempts to move diagonally up/down
+    {
+        const auto dir = sign(gravity_factor);
+        auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1,  dir}};
+        if (coin_flip()) std::swap(offsets[0], offsets[1]);
+
+        for (auto offset : offsets) {
+            if (move_offset(pixels, pos, offset)) {
+                return pos;
+            }
         }
     }
 
@@ -245,6 +255,12 @@ auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
 
 auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
 { 
+    const auto original_pos = pos;
+    const auto scope = scope_exit{[&] {
+        pixels.at(pos).flags[is_falling] = pos != original_pos;
+    }};
+
+    // Apply gravity
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
     const auto gravity_factor = props.gravity_factor;
