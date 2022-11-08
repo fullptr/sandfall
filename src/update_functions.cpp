@@ -283,6 +283,22 @@ auto update_fluidlike(world& pixels, glm::ivec2 pos) -> glm::ivec2
         }
     }
 
+    // Transfer to horizontal
+    if (props.horizontal_transfer) {
+        auto& data = pixels.at(pos);
+        auto& vel = data.velocity;
+        if (vel.y > 5.0 && vel.x == 0.0) {
+            const auto ht = properties(data).horizontal_transfer;
+            vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
+            vel.y = 0.0;
+        }
+        vel.x *= 0.8;
+
+        if (move_offset(pixels, pos, {vel.x, 0})) {
+            return pos;
+        }
+    }
+
     // Attempts to disperse outwards according to the dispersion rate
     if (props.dispersion_rate) {
         data.velocity.y = 0.0f;
