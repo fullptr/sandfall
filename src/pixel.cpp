@@ -159,7 +159,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .is_movable = true,
                 .gravity_factor = 1.0f,
-                .inertial_resistance = 0.05f,
+                .inertial_resistance = 0.1f,
                 .horizontal_transfer = 0.4f,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
@@ -305,10 +305,12 @@ auto pixel::oil() -> pixel
 
 auto pixel::gunpowder() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::gunpowder,
         .colour = from_hex(0x485460) + light_noise()
     };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 auto pixel::methane() -> pixel
