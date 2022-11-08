@@ -30,7 +30,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::sand: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .is_movable = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
@@ -41,7 +40,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::dirt: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .is_movable = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.4f,
@@ -52,7 +50,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::coal: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .is_movable = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.95f,
@@ -101,14 +98,12 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::rock: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .corrosion_resist = 0.95f
             };
             return px;
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .corrosion_resist = 1.0f
             };
             return px;
@@ -125,7 +120,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::fuse: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,
@@ -163,7 +157,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::gunpowder: {
             static constexpr auto px = pixel_properties{
-                .phase = pixel_phase::solid,
                 .is_movable = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.05f,
