@@ -97,54 +97,6 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
-{
-    auto& pixel = pixels.at(pos);
-    const auto& props = properties(pixel);
-
-    const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
-
-    for (const auto& offset : neighbour_offsets) {
-        if (pixels.valid(pos + offset)) {
-            const auto neigh_pos = pos + offset;
-            auto& neighbour = pixels.at(neigh_pos);
-
-            // 1) Boil water
-            if (props.can_boil_water) {
-                if (neighbour.type == pixel_type::water) {
-                    neighbour = pixel::steam();
-                }
-            }
-
-            // 2) Corrode neighbours
-            if (props.is_corrosion_source) {
-                if (random_unit() > properties(neighbour).corrosion_resist) {
-                    neighbour = pixel::air();
-                    if (random_unit() > 0.9f) {
-                        pixel = pixel::air();
-                    }
-                }
-            }
-            
-            // 3) Spread fire
-            if (props.is_burn_source || pixel.flags[is_burning]) {
-                if (random_unit() < properties(neighbour).flammability) {
-                    neighbour.flags[is_burning] = true;
-                    pixels.wake_chunk_with_pixel(neigh_pos);
-                }
-            }
-
-            // 4) Produce embers
-            if (can_produce_embers && neighbour.type == pixel_type::none) {
-                if (random_unit() < 0.01f) {
-                    neighbour = pixel::ember();
-                    pixels.wake_chunk_with_pixel(neigh_pos);
-                }
-            }
-        }
-    }
-}
-
 auto is_surrounded(const world& pixels, glm::ivec2 pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
@@ -247,6 +199,54 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
         }
     }
 }
+
+inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
+{
+    auto& pixel = pixels.at(pos);
+    const auto& props = properties(pixel);
+
+    for (const auto& offset : neighbour_offsets) {
+        if (pixels.valid(pos + offset)) {
+            const auto neigh_pos = pos + offset;
+            auto& neighbour = pixels.at(neigh_pos);
+
+            // 1) Boil water
+            if (props.can_boil_water) {
+                if (neighbour.type == pixel_type::water) {
+                    neighbour = pixel::steam();
+                }
+            }
+
+            // 2) Corrode neighbours
+            if (props.is_corrosion_source) {
+                if (random_unit() > properties(neighbour).corrosion_resist) {
+                    neighbour = pixel::air();
+                    if (random_unit() > 0.9f) {
+                        pixel = pixel::air();
+                    }
+                }
+            }
+            
+            // 3) Spread fire
+            if (props.is_burn_source || pixel.flags[is_burning]) {
+                if (random_unit() < properties(neighbour).flammability) {
+                    neighbour.flags[is_burning] = true;
+                    pixels.wake_chunk_with_pixel(neigh_pos);
+                }
+            }
+
+            // 4) Produce embers
+            const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
+            if (can_produce_embers && neighbour.type == pixel_type::none) {
+                if (random_unit() < 0.01f) {
+                    neighbour = pixel::ember();
+                    pixels.wake_chunk_with_pixel(neigh_pos);
+                }
+            }
+        }
+    }
+}
+
 
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
