@@ -7,6 +7,7 @@
 #include <variant>
 #include <algorithm>
 #include <random>
+#include <ranges>
 
 #include <glm/glm.hpp>
 
@@ -23,11 +24,6 @@ static constexpr auto neighbour_offsets = std::array{
     glm::ivec2{-1, 1},
     glm::ivec2{1, -1}
 };
-
-auto below(glm::ivec2 pos) -> glm::ivec2
-{
-    return pos + glm::ivec2{0, 1};
-}
 
 auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
@@ -158,7 +154,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 }
 
 auto is_surrounded(const world& pixels, glm::ivec2 pos) -> bool
-{
+{ 
     for (const auto& offset : neighbour_offsets) {
         if (pixels.valid(pos + offset)) {
             if (pixels.at(pos + offset).type == pixel_type::none) {
@@ -179,8 +175,12 @@ auto sign(float f) -> int
 }
 
 
-auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
+inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
+    if (!properties(pixels.at(pos)).is_movable) {
+        return;
+    }
+
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
         if (properties(pixels.at(pos)).phase == pixel_phase::solid) {
@@ -240,7 +240,7 @@ auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 
     if (pixels.at(pos).flags[is_falling]) {
-        auto offsets = std::array{ glm::ivec2{-1, 1}, glm::ivec2{1, 1}, };
+        auto offsets = std::array{glm::ivec2{-1, 1}, glm::ivec2{1, 1}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
@@ -250,9 +250,10 @@ auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 }
 
 // Update logic for single pixels depending on properties only
-auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
+inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 {
     auto& pixel = pixels.at(pos);
+    const auto& props = properties(pixel);
 
     // If a pixel is burning or falling, wake the chunk next frame
     if (pixel.flags[is_burning] || pixel.flags[is_falling]) {
@@ -261,17 +262,11 @@ auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 
     // is_burning status
     if (pixel.flags[is_burning]) {
-        const auto& props = properties(pixel);
 
         // First, see if it can be put out
-        if (is_surrounded(pixels, pos)) {
-            if (random_from_range(0.0f, 1.0f) < props.put_out_surrounded) {
-                pixel.flags[is_burning] = false;
-            }
-        } else {
-            if (random_from_range(0.0f, 1.0f) < props.put_out) {
-                pixel.flags[is_burning] = false;
-            }
+        const auto put_out = is_surrounded(pixels, pos) ? props.put_out_surrounded : props.put_out;
+        if (random_from_range(0.0f, 1.0f) < put_out) {
+            pixel.flags[is_burning] = false;
         }
 
         // Second, see if it gets destroyed
@@ -287,13 +282,10 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         return;
     }
 
-    if (properties(pixels.at(pos)).is_movable) {
-        update_pixel_position(pixels, pos);
-    }
+    update_pixel_position(pixels, pos);
+    update_pixel_attributes(pixels, pos);
 
     affect_neighbours(pixels, pos);
-
-    update_pixel_attributes(pixels, pos);
 }
 
 }
