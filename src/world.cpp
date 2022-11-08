@@ -42,7 +42,7 @@ auto world::simulate() -> void
     }
     
     const auto inner = [&](glm::ivec2 pos) {
-        if (is_chunk_awake(pos) && !at(pos).flags[is_updated]) {
+        if (is_chunk_awake(pos)) {
             update_pixel(*this, pos);
         }
     };

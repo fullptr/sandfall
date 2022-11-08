@@ -247,7 +247,7 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
-    if (pixels.at(pos).type == pixel_type::none) {
+    if (pixels.at(pos).type == pixel_type::none || pixels.at(pos).flags[is_updated]) {
         return;
     }
 
