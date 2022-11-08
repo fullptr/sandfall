@@ -25,10 +25,10 @@ auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_p
     // If the destination is empty, we can always move there
     if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
 
-    const auto& src = properties(pixels.at(src_pos)).movement;
-    const auto& dst = properties(pixels.at(dst_pos)).movement;
+    const auto& src = properties(pixels.at(src_pos)).phase;
+    const auto& dst = properties(pixels.at(dst_pos)).phase;
 
-    using pm = pixel_movement;
+    using pm = pixel_phase;
     switch (src) {
         case pm::solid:
             return dst == pm::liquid
@@ -50,7 +50,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(l)) {
         auto& px = pixels.at(l);
         const auto& props = properties(px);
-        if (props.movement == pixel_movement::solid) {
+        if (props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(l);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
@@ -60,7 +60,7 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     if (pixels.valid(r)) {
         auto& px = pixels.at(r);
         const auto& props = properties(px);
-        if (props.movement == pixel_movement::solid) {
+        if (props.phase == pixel_phase::solid) {
             pixels.wake_chunk_with_pixel(r);
             px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
                                    px.flags[is_falling];
