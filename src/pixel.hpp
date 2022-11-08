@@ -10,7 +10,7 @@ enum pixel_flags : std::size_t
 {
     is_updated,
     is_falling,
-    is_burning
+    is_burning,
 };
 
 enum class pixel_phase : std::uint8_t
@@ -36,7 +36,7 @@ enum class pixel_type : std::uint8_t
     ember,
     oil,
     gunpowder,
-    methane
+    methane,
 };
 
 struct pixel_properties

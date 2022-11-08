@@ -13,6 +13,17 @@
 namespace sand {
 namespace {
 
+static constexpr auto neighbour_offsets = std::array{
+    glm::ivec2{1, 0},
+    glm::ivec2{-1, 0},
+    glm::ivec2{0, 1},
+    glm::ivec2{0, -1},
+    glm::ivec2{1, 1},
+    glm::ivec2{-1, -1},
+    glm::ivec2{-1, 1},
+    glm::ivec2{1, -1}
+};
+
 auto below(glm::ivec2 pos) -> glm::ivec2
 {
     return pos + glm::ivec2{0, 1};
@@ -25,8 +36,8 @@ auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_p
     // If the destination is empty, we can always move there
     if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
 
-    const auto& src = properties(pixels.at(src_pos)).phase;
-    const auto& dst = properties(pixels.at(dst_pos)).phase;
+    const auto src = properties(pixels.at(src_pos)).phase;
+    const auto dst = properties(pixels.at(dst_pos)).phase;
 
     using pm = pixel_phase;
     switch (src) {
@@ -100,23 +111,12 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
 
 auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 {
-    const auto offsets = std::array{
-        glm::ivec2{1, 0},
-        glm::ivec2{-1, 0},
-        glm::ivec2{0, 1},
-        glm::ivec2{0, -1},
-        glm::ivec2{1, 1},
-        glm::ivec2{-1, -1},
-        glm::ivec2{-1, 1},
-        glm::ivec2{1, -1}
-    };
-
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
     const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
 
-    for (const auto& offset : offsets) {
+    for (const auto& offset : neighbour_offsets) {
         if (pixels.valid(pos + offset)) {
             const auto neigh_pos = pos + offset;
             auto& neighbour = pixels.at(neigh_pos);
@@ -157,29 +157,15 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     }
 }
 
-auto is_surrounded(world& pixels, glm::ivec2 pos) -> bool
+auto is_surrounded(const world& pixels, glm::ivec2 pos) -> bool
 {
-    const auto offsets = std::array{
-        glm::ivec2{1, 0},
-        glm::ivec2{-1, 0},
-        glm::ivec2{0, 1},
-        glm::ivec2{0, -1},
-        glm::ivec2{1, 1},
-        glm::ivec2{-1, -1},
-        glm::ivec2{-1, 1},
-        glm::ivec2{1, -1}
-    };
-
-    for (const auto& offset : offsets) {
+    for (const auto& offset : neighbour_offsets) {
         if (pixels.valid(pos + offset)) {
-            auto& neighbour = pixels.at(pos + offset);
-
-            if (neighbour.type == pixel_type::none) {
+            if (pixels.at(pos + offset).type == pixel_type::none) {
                 return false;
             }
         }
     }
-
     return true;
 }
 
@@ -193,7 +179,7 @@ auto sign(float f) -> int
 }
 
 
-auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -202,18 +188,17 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
         }
     }};
 
-    if (properties(pixels.at(pos)).phase == pixel_phase::solid && !pixels.at(pos).flags[is_falling]) {
-        return pos;
-    }
-
     // Apply gravity
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
     const auto gravity_factor = props.gravity_factor;
 
     data.velocity += gravity_factor * config::gravity * config::time_step;
-    if (move_offset(pixels, pos, data.velocity)) {
-        return pos;
+    if (move_offset(pixels, pos, data.velocity)) return;
+
+    // If we have resistance to moving and we are not, then we are not moving
+    if (props.inertial_resistance > 0.0f && !pixels.at(pos).flags[is_falling]) {
+        return;
     }
 
     // Attempts to move diagonally up/down
@@ -223,9 +208,7 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
+            if (move_offset(pixels, pos, offset)) return;
         }
     }
 
@@ -240,9 +223,7 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
         }
         vel.x *= 0.8;
 
-        if (move_offset(pixels, pos, {vel.x, 0})) {
-            return pos;
-        }
+        if (move_offset(pixels, pos, {vel.x, 0})) return;
     }
 
     // Attempts to disperse outwards according to the dispersion rate
@@ -254,9 +235,7 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
+            if (move_offset(pixels, pos, offset)) return;
         }
     }
 
@@ -265,37 +244,20 @@ auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) {
-                return pos;
-            }
+            if (move_offset(pixels, pos, offset)) return;
         }
     }
-
-    return pos;
 }
 
-auto update_pixel(world& pixels, glm::ivec2 pos) -> void
+// Update logic for single pixels depending on properties only
+auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 {
-    if (pixels.at(pos).type == pixel_type::none) {
-        return;
-    }
+    auto& pixel = pixels.at(pos);
 
     // If a pixel is burning or falling, wake the chunk next frame
-    {
-        const auto& pixel = pixels.at(pos);
-        if (pixel.flags[is_burning] || pixel.flags[is_falling]) {
-            pixels.wake_chunk_with_pixel(pos);
-        }
+    if (pixel.flags[is_burning] || pixel.flags[is_falling]) {
+        pixels.wake_chunk_with_pixel(pos);
     }
-
-    if (properties(pixels.at(pos)).is_movable) {
-        pos = update_position(pixels, pos);
-    }
-
-    affect_neighbours(pixels, pos);
-
-    // Update logic for single pixels depending on properties only
-    auto& pixel = pixels.at(pos);
 
     // is_burning status
     if (pixel.flags[is_burning]) {
@@ -317,6 +279,21 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
             pixel = pixel::air();
         }
     }
+}
+
+auto update_pixel(world& pixels, glm::ivec2 pos) -> void
+{
+    if (pixels.at(pos).type == pixel_type::none) {
+        return;
+    }
+
+    if (properties(pixels.at(pos)).is_movable) {
+        update_pixel_position(pixels, pos);
+    }
+
+    affect_neighbours(pixels, pos);
+
+    update_pixel_attributes(pixels, pos);
 }
 
 }
