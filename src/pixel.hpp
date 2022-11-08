@@ -15,7 +15,6 @@ enum pixel_flags : std::size_t
 
 enum class pixel_movement : std::uint8_t
 {
-    none,
     solid,
     liquid,
     gas,
@@ -43,7 +42,7 @@ enum class pixel_type : std::uint8_t
 struct pixel_properties
 {
     // Movement Controls
-    pixel_movement movement            = pixel_movement::none;
+    pixel_movement movement            = pixel_movement::solid;
     bool           is_movable          = false;
     float          gravity_factor      = 0.0f;
     float          inertial_resistance = 0.0f;

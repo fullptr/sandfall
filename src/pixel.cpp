@@ -101,14 +101,14 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::rock: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
+                .movement = pixel_movement::solid,
                 .corrosion_resist = 0.95f
             };
             return px;
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
+                .movement = pixel_movement::solid,
                 .corrosion_resist = 1.0f
             };
             return px;
@@ -125,7 +125,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::fuse: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
+                .movement = pixel_movement::solid,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,
