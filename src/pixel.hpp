@@ -44,6 +44,7 @@ struct pixel_properties
 {
     // Movement Controls
     pixel_movement movement            = pixel_movement::none;
+    bool           is_movable          = false;
     float          gravity_factor      = 0.0f;
     float          inertial_resistance = 0.0f;
     float          horizontal_transfer = 0.0f;

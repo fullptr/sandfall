@@ -193,7 +193,7 @@ auto sign(float f) -> int
 }
 
 
-auto update_movable_solid(world& pixels, glm::ivec2 pos) -> glm::ivec2
+auto update_position(world& pixels, glm::ivec2 pos) -> glm::ivec2
 {
     const auto original_pos = pos;
     const auto scope = scope_exit{[&] {
@@ -282,8 +282,8 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         }
     }
 
-    if (properties(pixels.at(pos)).movement != pixel_movement::none) {
-        pos = update_movable_solid(pixels, pos);
+    if (properties(pixels.at(pos)).is_movable) {
+        pos = update_position(pixels, pos);
     }
 
     affect_neighbours(pixels, pos);
