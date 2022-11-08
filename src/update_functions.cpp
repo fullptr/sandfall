@@ -54,23 +54,14 @@ auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
 
-    if (pixels.valid(l)) {
-        auto& px = pixels.at(l);
-        const auto& props = properties(px);
-        if (props.gravity_factor != 0.0f && props.phase == pixel_phase::solid) {
-            pixels.wake_chunk_with_pixel(l);
-            px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
-                                   px.flags[is_falling];
-        }
-    }
-
-    if (pixels.valid(r)) {
-        auto& px = pixels.at(r);
-        const auto& props = properties(px);
-        if (props.gravity_factor != 0.0f && props.phase == pixel_phase::solid) {
-            pixels.wake_chunk_with_pixel(r);
-            px.flags[is_falling] = random_from_range(0.0f, 1.0f) > props.inertial_resistance ||
-                                   px.flags[is_falling];
+    for (const auto x : {l, r}) {
+        if (pixels.valid(x)) {
+            auto& px = pixels.at(x);
+            const auto& props = properties(px);
+            if (props.gravity_factor != 0.0f) {
+                pixels.wake_chunk_with_pixel(l);
+                if (random_unit() > props.inertial_resistance) px.flags[is_falling] = true;
+            }
         }
     }
 }
@@ -126,9 +117,9 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 
             // 2) Corrode neighbours
             if (props.is_corrosion_source) {
-                if (random_from_range(0.0f, 1.0f) > properties(neighbour).corrosion_resist) {
+                if (random_unit() > properties(neighbour).corrosion_resist) {
                     neighbour = pixel::air();
-                    if (random_from_range(0.0f, 1.0f) > 0.9f) {
+                    if (random_unit() > 0.9f) {
                         pixel = pixel::air();
                     }
                 }
@@ -136,7 +127,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
             
             // 3) Spread fire
             if (props.is_burn_source || pixel.flags[is_burning]) {
-                if (random_from_range(0.0f, 1.0f) < properties(neighbour).flammability) {
+                if (random_unit() < properties(neighbour).flammability) {
                     neighbour.flags[is_burning] = true;
                     pixels.wake_chunk_with_pixel(neigh_pos);
                 }
@@ -144,7 +135,7 @@ auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
 
             // 4) Produce embers
             if (can_produce_embers && neighbour.type == pixel_type::none) {
-                if (random_from_range(0.0f, 1.0f) < 0.01f) {
+                if (random_unit() < 0.01f) {
                     neighbour = pixel::ember();
                     pixels.wake_chunk_with_pixel(neigh_pos);
                 }
@@ -177,10 +168,9 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
-    const auto original_pos = pos;
-    const auto scope = scope_exit{[&] {
+    const auto scope = scope_exit{[&, start_pos = pos] {
         if (properties(pixels.at(pos)).phase == pixel_phase::solid) {
-            pixels.at(pos).flags[is_falling] = pos != original_pos;
+            pixels.at(pos).flags[is_falling] = pos != start_pos;
         }
     }};
 
@@ -202,7 +192,7 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     // Attempts to move diagonally up/down
     if (props.can_move_diagonally) {
         const auto dir = sign(props.gravity_factor);
-        auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1,  dir}};
+        auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1, dir}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 
         for (auto offset : offsets) {
@@ -234,15 +224,6 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
             if (move_offset(pixels, pos, offset)) return;
         }
     }
-
-    if (pixels.at(pos).flags[is_falling]) {
-        auto offsets = std::array{glm::ivec2{-1, 1}, glm::ivec2{1, 1}};
-        if (coin_flip()) std::swap(offsets[0], offsets[1]);
-
-        for (auto offset : offsets) {
-            if (move_offset(pixels, pos, offset)) return;
-        }
-    }
 }
 
 // Update logic for single pixels depending on properties only
@@ -252,7 +233,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     const auto& props = properties(pixel);
 
     // If a pixel is burning or falling, wake the chunk next frame
-    if (pixel.flags[is_burning] || pixel.flags[is_falling]) {
+    if (pixel.flags[is_burning]) {
         pixels.wake_chunk_with_pixel(pos);
     }
 
@@ -261,12 +242,12 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 
         // First, see if it can be put out
         const auto put_out = is_surrounded(pixels, pos) ? props.put_out_surrounded : props.put_out;
-        if (random_from_range(0.0f, 1.0f) < put_out) {
+        if (random_unit() < put_out) {
             pixel.flags[is_burning] = false;
         }
 
         // Second, see if it gets destroyed
-        if (random_from_range(0.0f, 1.0f) < props.burn_out_chance) {
+        if (random_unit() < props.burn_out_chance) {
             pixel = pixel::air();
         }
     }
