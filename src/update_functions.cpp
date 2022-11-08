@@ -188,13 +188,15 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
         }
     }};
 
-    // Apply gravity
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
-    const auto gravity_factor = props.gravity_factor;
 
-    data.velocity += gravity_factor * config::gravity * config::time_step;
-    if (move_offset(pixels, pos, data.velocity)) return;
+    // Apply gravity
+    if (props.gravity_factor) {
+        const auto gravity_factor = props.gravity_factor;
+        data.velocity += gravity_factor * config::gravity * config::time_step;
+        if (move_offset(pixels, pos, data.velocity)) return;
+    }
 
     // If we have resistance to moving and we are not, then we are not moving
     if (props.inertial_resistance > 0.0f && !pixels.at(pos).flags[is_falling]) {
@@ -202,8 +204,8 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 
     // Attempts to move diagonally up/down
-    {
-        const auto dir = sign(gravity_factor);
+    if (props.can_move_diagonally) {
+        const auto dir = sign(props.gravity_factor);
         auto offsets = std::array{glm::ivec2{-1, dir}, glm::ivec2{1,  dir}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
 

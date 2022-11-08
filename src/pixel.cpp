@@ -31,6 +31,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
         case pixel_type::sand: {
             static constexpr auto px = pixel_properties{
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
                 .horizontal_transfer = 0.3f,
@@ -41,6 +42,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
         case pixel_type::dirt: {
             static constexpr auto px = pixel_properties{
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.4f,
                 .horizontal_transfer = 0.2f,
@@ -51,6 +53,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
         case pixel_type::coal: {
             static constexpr auto px = pixel_properties{
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.95f,
                 .horizontal_transfer = 0.1f,
@@ -66,6 +69,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::liquid,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .dispersion_rate = 5,
                 .corrosion_resist = 1.0f,
@@ -76,6 +80,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::liquid,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .dispersion_rate = 1,
                 .can_boil_water = true,
@@ -89,6 +94,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::liquid,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .dispersion_rate = 1,
                 .corrosion_resist = 1.0f,
@@ -112,6 +118,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::gas,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
                 .dispersion_rate = 9,
                 .corrosion_resist = 0.0f
@@ -132,6 +139,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::gas,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
                 .corrosion_resist = 0.1f,
                 .flammability = 1.0f,
@@ -145,6 +153,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::liquid,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .dispersion_rate = 2,
                 .corrosion_resist = 0.1f,
@@ -158,6 +167,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
         case pixel_type::gunpowder: {
             static constexpr auto px = pixel_properties{
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
                 .horizontal_transfer = 0.4f,
@@ -173,6 +183,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .phase = pixel_phase::gas,
                 .is_movable = true,
+                .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
                 .dispersion_rate = 4,
                 .corrosion_resist = 0.0f,
