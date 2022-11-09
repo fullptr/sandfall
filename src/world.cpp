@@ -1,6 +1,6 @@
 #include "world.hpp"
 #include "pixel.hpp"
-#include "update_functions.hpp"
+#include "update.hpp"
 #include "utility.hpp"
 
 #include <cassert>
@@ -14,7 +14,7 @@ static const auto default_pixel = pixel::air();
 
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
-    return pos.x + world_size * pos.y;
+    return pos.x + num_pixels * pos.y;
 }
 
 auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
@@ -31,36 +31,37 @@ world::world()
 
 auto world::valid(glm::ivec2 pos) const -> bool
 {
-    return 0 <= pos.x && pos.x < world_size && 0 <= pos.y && pos.y < world_size;
+    return 0 <= pos.x && pos.x < num_pixels && 0 <= pos.y && pos.y < num_pixels;
 }
 
 auto world::simulate() -> void
 {
     for (auto& chunk : d_chunks) {
-        chunk.should_step = chunk.should_step_next;
-        chunk.should_step_next = false;
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
     
-    const auto inner = [&] (glm::ivec2 pos) {
-        if (is_chunk_awake(pos) && !at(pos).flags[is_updated]) {
+    const auto inner = [&](glm::ivec2 pos) {
+        if (is_chunk_awake(pos)) {
             update_pixel(*this, pos);
         }
     };
 
-    for (std::uint32_t y = world_size; y != 0; --y) {
+    for (std::uint32_t y = num_pixels; y != 0; --y) {
         if (coin_flip()) {
-            for (std::uint32_t x = 0; x != world_size; ++x) {
+            for (std::uint32_t x = 0; x != num_pixels; ++x) {
                 inner({x, y - 1});
             }
         }
         else {
-            for (std::uint32_t x = world_size; x != 0; --x) {
+            for (std::uint32_t x = num_pixels; x != 0; --x) {
                 inner({x - 1, y - 1});
             }
         }
     }
 
-    std::ranges::for_each(d_pixels, [](auto& p) { p.flags[is_updated] = false; });
+    for (auto& pixel : d_pixels) {
+        pixel.flags[is_updated] = false;
+    }
 }
 
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
@@ -103,7 +104,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     d_chunks[get_chunk_pos(chunk)].should_step_next = true;
 
     // Wake right
-    if (pixel.x != world_size - 1 && (pixel.x + 1) % chunk_size == 0)
+    if (pixel.x != num_pixels - 1 && (pixel.x + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
         if (valid(neighbour))
@@ -119,7 +120,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     }
 
     // Wake down
-    if (pixel.y != world_size - 1 && (pixel.y + 1) % chunk_size == 0)
+    if (pixel.y != num_pixels - 1 && (pixel.y + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
         if (valid(neighbour))

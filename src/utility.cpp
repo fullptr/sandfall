@@ -62,6 +62,11 @@ auto sign_flip() -> int
     return coin_flip() ? 1 : -1;
 }
 
+auto random_unit() -> float
+{
+    return random_from_range(0.0f, 1.0f);
+}
+
 auto _print_inner(const std::string& msg) -> void
 {
     std::cout << msg;

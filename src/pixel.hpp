@@ -10,12 +10,11 @@ enum pixel_flags : std::size_t
 {
     is_updated,
     is_falling,
-    is_burning
+    is_burning,
 };
 
-enum class pixel_movement : std::uint8_t
+enum class pixel_phase : std::uint8_t
 {
-    none,
     solid,
     liquid,
     gas,
@@ -37,31 +36,33 @@ enum class pixel_type : std::uint8_t
     ember,
     oil,
     gunpowder,
-    methane
+    methane,
 };
 
 struct pixel_properties
 {
     // Movement Controls
-    pixel_movement movement            = pixel_movement::none;
-    float          inertial_resistance = 0.0f;
-    float          horizontal_transfer = 0.0f;
-    int            dispersion_rate     = 1;
+    pixel_phase phase               = pixel_phase::solid;
+    bool        can_move_diagonally = false;
+    float       gravity_factor      = 0.0f;
+    float       inertial_resistance = 0.0f;
+    float       horizontal_transfer = 0.0f;
+    int         dispersion_rate     = 0;
 
     // Water Controls
-    bool           can_boil_water      = false;
+    bool        can_boil_water      = false;
 
     // Acid Controls
-    float          corrosion_resist    = 0.8f;
-    bool           is_corrosion_source = false; // Can this pixel type corrode others?
+    float       corrosion_resist    = 0.8f;
+    bool        is_corrosion_source = false; // Can this pixel type corrode others?
 
     // Fire Controls
-    float          flammability        = 0.0f; // Chance that is_burning = true from neighbour
-    float          put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
-    float          put_out             = 0.0f; // Chance that is_burning = false otherwise
-    float          burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
-    bool           is_burn_source      = false; // Can this pixel cause others to burn?
-    bool           is_ember_source     = false; // Does this pixel produce embers?
+    float       flammability        = 0.0f; // Chance that is_burning = true from neighbour
+    float       put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
+    float       put_out             = 0.0f; // Chance that is_burning = false otherwise
+    float       burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
+    bool        is_burn_source      = false; // Can this pixel cause others to burn?
+    bool        is_ember_source     = false; // Does this pixel produce embers?
 };
 
 struct pixel

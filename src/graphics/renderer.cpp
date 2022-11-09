@@ -40,7 +40,7 @@ void main()
 
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
-    return pos.x + sand::world_size * pos.y;
+    return pos.x + sand::num_pixels * pos.y;
 }
 
 auto light_noise(glm::vec4 vec) -> glm::vec4

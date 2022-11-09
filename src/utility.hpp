@@ -63,6 +63,7 @@ auto random_element(const Elements& elements)
 
 auto coin_flip() -> bool;
 auto sign_flip() -> int;
+auto random_unit() -> float; // Same as random_from_range(0.0f, 1.0f)
 
 auto _print_inner(const std::string& msg) -> void;
 

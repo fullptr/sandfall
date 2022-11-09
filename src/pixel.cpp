@@ -30,7 +30,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::sand: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::solid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
                 .horizontal_transfer = 0.3f,
                 .corrosion_resist = 0.3f
@@ -39,7 +40,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::dirt: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::solid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .inertial_resistance = 0.4f,
                 .horizontal_transfer = 0.2f,
                 .corrosion_resist = 0.5f
@@ -48,7 +50,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::coal: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::solid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .inertial_resistance = 0.95f,
                 .horizontal_transfer = 0.1f,
                 .corrosion_resist = 0.8f,
@@ -61,7 +64,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::water: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::liquid,
+                .phase = pixel_phase::liquid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .dispersion_rate = 5,
                 .corrosion_resist = 1.0f,
             };
@@ -69,7 +74,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::lava: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::liquid,
+                .phase = pixel_phase::liquid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .dispersion_rate = 1,
                 .can_boil_water = true,
                 .corrosion_resist = 1.0f,
@@ -80,7 +87,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::acid: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::liquid,
+                .phase = pixel_phase::liquid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .dispersion_rate = 1,
                 .corrosion_resist = 1.0f,
                 .is_corrosion_source = true
@@ -89,21 +98,21 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::rock: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
                 .corrosion_resist = 0.95f
             };
             return px;
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
                 .corrosion_resist = 1.0f
             };
             return px;
         }
         case pixel_type::steam: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::gas,
+                .phase = pixel_phase::gas,
+                .can_move_diagonally = true,
+                .gravity_factor = -1.0f,
                 .dispersion_rate = 9,
                 .corrosion_resist = 0.0f
             };
@@ -111,7 +120,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::fuse: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::none,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,
@@ -122,7 +130,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::ember: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::gas,
+                .phase = pixel_phase::gas,
+                .can_move_diagonally = true,
+                .gravity_factor = -1.0f,
                 .corrosion_resist = 0.1f,
                 .flammability = 1.0f,
                 .put_out_surrounded = 0.0f,
@@ -133,7 +143,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::oil: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::liquid,
+                .phase = pixel_phase::liquid,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
                 .dispersion_rate = 2,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.05f,
@@ -145,8 +157,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::gunpowder: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::solid,
-                .inertial_resistance = 0.05f,
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
+                .inertial_resistance = 0.1f,
                 .horizontal_transfer = 0.4f,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
@@ -158,7 +171,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::methane: {
             static constexpr auto px = pixel_properties{
-                .movement = pixel_movement::gas,
+                .phase = pixel_phase::gas,
+                .can_move_diagonally = true,
+                .gravity_factor = -1.0f,
                 .dispersion_rate = 4,
                 .corrosion_resist = 0.0f,
                 .flammability = 0.25f,
@@ -290,10 +305,12 @@ auto pixel::oil() -> pixel
 
 auto pixel::gunpowder() -> pixel
 {
-    return {
+    auto p = pixel{
         .type = pixel_type::gunpowder,
         .colour = from_hex(0x485460) + light_noise()
     };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 auto pixel::methane() -> pixel

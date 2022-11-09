@@ -14,7 +14,7 @@ add_executable(sandfall
     sandfall.m.cpp
     world.cpp
     pixel.cpp
-    update_functions.cpp
+    update.cpp
     utility.cpp
     editor.cpp
 
