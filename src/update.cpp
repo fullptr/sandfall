@@ -120,7 +120,8 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
 
-    const auto scope = scope_exit{[&, start_pos = pos] {
+    // Pixels that don't move have their is_falling flag set to false at the end
+    const auto after_position_update = scope_exit{[&, start_pos = pos] {
         pixels.at(pos).flags[is_falling] = pos != start_pos;
     }};
 
@@ -179,7 +180,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
-    // If a pixel is burning or falling, wake the chunk next frame
+    // If a pixel is burning, keep the chunk awake
     if (pixel.flags[is_burning]) {
         pixels.wake_chunk_with_pixel(pos);
     }
@@ -210,14 +211,14 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
             const auto neigh_pos = pos + offset;
             auto& neighbour = pixels.at(neigh_pos);
 
-            // 1) Boil water
+            // Boil water
             if (props.can_boil_water) {
                 if (neighbour.type == pixel_type::water) {
                     neighbour = pixel::steam();
                 }
             }
 
-            // 2) Corrode neighbours
+            // Corrode neighbours
             if (props.is_corrosion_source) {
                 if (random_unit() > properties(neighbour).corrosion_resist) {
                     neighbour = pixel::air();
@@ -227,7 +228,7 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
                 }
             }
             
-            // 3) Spread fire
+            // Spread fire
             if (props.is_burn_source || pixel.flags[is_burning]) {
                 if (random_unit() < properties(neighbour).flammability) {
                     neighbour.flags[is_burning] = true;
@@ -235,7 +236,7 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
                 }
             }
 
-            // 4) Produce embers
+            // Produce embers
             const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
             if (can_produce_embers && neighbour.type == pixel_type::none) {
                 if (random_unit() < 0.01f) {
