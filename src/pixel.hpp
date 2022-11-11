@@ -46,7 +46,6 @@ struct pixel_properties
     bool        can_move_diagonally = false;
     float       gravity_factor      = 0.0f;
     float       inertial_resistance = 0.0f;
-    float       horizontal_transfer = 0.0f;
     int         dispersion_rate     = 0;
 
     // Water Controls
