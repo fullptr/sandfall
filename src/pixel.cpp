@@ -33,7 +33,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
-                .horizontal_transfer = 0.3f,
                 .corrosion_resist = 0.3f
             };
             return px;
@@ -43,7 +42,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.4f,
-                .horizontal_transfer = 0.2f,
                 .corrosion_resist = 0.5f
             };
             return px;
@@ -53,7 +51,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.95f,
-                .horizontal_transfer = 0.1f,
                 .corrosion_resist = 0.8f,
                 .flammability = 0.02f,
                 .put_out_surrounded = 0.15f,
@@ -160,7 +157,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
-                .horizontal_transfer = 0.4f,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,

@@ -119,9 +119,10 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
+    const auto start_pos = pos;
 
     // Pixels that don't move have their is_falling flag set to false at the end
-    const auto after_position_update = scope_exit{[&, start_pos = pos] {
+    const auto after_position_update = scope_exit{[&] {
         pixels.at(pos).flags[is_falling] = pos != start_pos;
     }};
 
@@ -146,18 +147,6 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
         for (auto offset : offsets) {
             if (move_offset(pixels, pos, offset)) return;
         }
-    }
-
-    // Transfer to horizontal
-    if (props.horizontal_transfer) {
-        auto& data = pixels.at(pos);
-        auto& vel = data.velocity;
-        if (vel.y > 5.0 && vel.x == 0.0) {
-            const auto ht = properties(data).horizontal_transfer;
-            vel.x = random_from_range(std::max(0.0f, ht - 0.1f), std::min(1.0f, ht + 0.1f)) * vel.y * sign_flip();
-            vel.y = 0.0;
-        }
-        vel.x *= 0.8;
     }
 
     // Attempts to disperse outwards according to the dispersion rate
