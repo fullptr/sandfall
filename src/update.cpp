@@ -253,4 +253,45 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     pixels.at(pos).flags[is_updated] = true;
 }
 
+auto explosion_ray(
+    world& pixels,
+    std::unordered_set<glm::ivec2>& checked,
+    glm::ivec2 pos,
+    glm::ivec2 end
+)
+    -> void
+{
+    const auto a = pos;
+    const auto b = end;
+    const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+
+    for (int i = 0; i < steps; ++i) {
+        const auto curr = a + (b - a) * (i + 1)/steps;
+        if (checked.contains(curr)) {
+            continue;
+        }
+        if (!pixels.valid(curr)) {
+            return;
+        }
+
+        if (pixels.at(curr).type == pixel_type::titanium) {
+            return;
+        } else {
+            pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+            checked.emplace(curr);
+        }
+    }
+}
+
+auto apply_explosion(world& pixels, glm::ivec2 pos, int radius, float strenth) -> void
+{
+    std::unordered_set<glm::ivec2> checked;
+    for (int x = -radius; x < radius; ++x) {
+        for (int y = -radius; y < radius; ++y) {
+            const auto end = pos + glm::ivec2{x, y};
+            explosion_ray(pixels, checked, pos, end);
+        }
+    }
+}
+
 }
