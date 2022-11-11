@@ -266,7 +266,7 @@ auto explosion_ray(
     const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
 
     for (int i = 0; i < steps; ++i) {
-        const auto curr = a + (b - a) * (i + 1)/steps;
+        const auto curr = a + (b - a) * i/steps;
         if (checked.contains(curr)) {
             continue;
         }
