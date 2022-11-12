@@ -10,73 +10,60 @@ namespace sand {
 
 auto explosion_ray(
     world& pixels,
-    std::unordered_set<glm::ivec2>& checked,
-    glm::vec2 pos,
-    glm::vec2 dir,
+    glm::vec2 start,
+    glm::vec2 end,
     const explosion& info
 )
     -> void
 {
-    const auto a = pos;
-    const auto b = a + (info.max_radius + 3 * info.scorch) * dir;
-    const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
-    const auto step = (b - a) / steps;
-    auto curr = a;
+    // Calculate a step length small enough to hit every pixel on the path.
+    const auto steps = glm::max(glm::abs(start.x - end.x), glm::abs(start.y - end.y));
+    const auto step = (end - start) / steps;
+
+    auto curr = start;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
-    auto scorch_limit = std::optional<float>{};
-
-    while (true) {
-        const auto curr_radius = glm::length(curr - pos);
+    while (glm::length(curr - start) < blast_limit) {
         if (!pixels.valid(curr)) return;
-
-        if (scorch_limit.has_value()) {
-            if (curr_radius >= *scorch_limit) {
-                return;
-            }
-            if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
-                pixels.at(curr).colour *= 0.8f;
-            }
-        } else if (!checked.contains(curr)) {
-            if (pixels.at(curr).type == pixel_type::titanium || curr_radius >= blast_limit) {
-                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
-                pixels.at(curr).colour *= 0.8f;
-            } else {
-                pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
-                checked.emplace(curr);
-            }
+        if (pixels.at(curr).type == pixel_type::titanium) {
+            break;
+        }
+        pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+        curr += step;
+    }
+    
+    const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
+    while (glm::length(curr - start) < scorch_limit) {
+        if (!pixels.valid(curr)) return;
+        if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
+            pixels.at(curr).colour *= 0.8f;
         }
         curr += step;
     }
 }
 
-auto apply_explosion(world& pixels, glm::ivec2 pos, const explosion& info) -> void
+auto apply_explosion(world& pixels, glm::vec2 pos, const explosion& info) -> void
 {
-    std::unordered_set<glm::ivec2> checked;
     const auto boundary = info.max_radius + 3 * info.scorch;
 
     for (int x = -boundary; x <= boundary; ++x) {
         const auto y = boundary;
-        const auto dir = glm::normalize(glm::vec2{x, y});
-        explosion_ray(pixels, checked, pos, dir, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
     }
 
     for (int y = -boundary; y <= boundary; ++y) {
         const auto x = boundary;
-        const auto dir = glm::normalize(glm::vec2{x, y});
-        explosion_ray(pixels, checked, pos, dir, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
     }
 
     for (int x = -boundary; x <= boundary; ++x) {
         const auto y = -boundary;
-        const auto dir = glm::normalize(glm::vec2{x, y});
-        explosion_ray(pixels, checked, pos, dir, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
     }
 
     for (int y = -boundary; y <= boundary; ++y) {
         const auto x = -boundary;
-        const auto dir = glm::normalize(glm::vec2{x, y});
-        explosion_ray(pixels, checked, pos, dir, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
     }
 }
 

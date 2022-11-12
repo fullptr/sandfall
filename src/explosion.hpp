@@ -16,6 +16,6 @@ struct explosion
     float scorch;
 };
 
-auto apply_explosion(world& pixels, glm::ivec2 pos, const explosion& info) -> void;
+auto apply_explosion(world& pixels, glm::vec2 pos, const explosion& info) -> void;
 
 }
