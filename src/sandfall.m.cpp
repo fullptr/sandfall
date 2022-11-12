@@ -127,7 +127,7 @@ auto main() -> int
             break; case 2:
                 if (mouse_clicked[0]) {
                     sand::apply_explosion(*world, mouse, sand::explosion{
-                        .min_radius = 40.0f, .max_radius = 45.0f, .scorch_radius = 10.0f
+                        .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
                 }
         }

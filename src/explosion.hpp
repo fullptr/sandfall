@@ -11,8 +11,9 @@ struct explosion
     float min_radius;
     float max_radius;
 
-    // Extra offset to apply at the end of destruction to try and darken the surroundings
-    float scorch_radius;
+    // Explosions scorch the area around the destroyed pixels. This is the standard deviation in
+    // pixels used for the normal distribution to select the scorch radius
+    float scorch;
 };
 
 auto apply_explosion(world& pixels, glm::ivec2 pos, const explosion& info) -> void;

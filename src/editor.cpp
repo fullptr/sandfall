@@ -4,6 +4,7 @@
 #include <imgui.h>
 
 #include <fstream>
+#include <format>
 
 namespace sand {
 
@@ -31,17 +32,24 @@ auto display_ui(
         ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
         ImGui::Checkbox("Show chunks", &editor.show_chunks);
 
-        if (ImGui::Button("Save")) {
-            auto file = std::ofstream{"save0.bin", std::ios::binary};
-            auto archive = cereal::BinaryOutputArchive{file};
-            archive(world);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Load")) {
-            auto file = std::ifstream{"save0.bin", std::ios::binary};
-            auto archive = cereal::BinaryInputArchive{file};
-            archive(world);
-            world.wake_all_chunks();
+        for (int i = 0; i != 5; ++i) {
+            ImGui::PushID(i);
+            const auto filename = std::format("save{}.bin", i);
+            if (ImGui::Button("Save")) {
+                auto file = std::ofstream{filename, std::ios::binary};
+                auto archive = cereal::BinaryOutputArchive{file};
+                archive(world);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Load")) {
+                auto file = std::ifstream{filename, std::ios::binary};
+                auto archive = cereal::BinaryInputArchive{file};
+                archive(world);
+                world.wake_all_chunks();
+            }
+            ImGui::SameLine();
+            ImGui::Text("Save %d", i);
+            ImGui::PopID();
         }
         if (ImGui::RadioButton("Spray", editor.brush_type == 0)) {
             editor.brush_type = 0;

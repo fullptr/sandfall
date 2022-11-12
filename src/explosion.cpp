@@ -18,7 +18,7 @@ auto explosion_ray(
     -> void
 {
     const auto a = pos;
-    const auto b = a + glm::ivec2{(info.max_radius + info.scorch_radius) * dir};
+    const auto b = a + glm::ivec2{(info.max_radius + 3 * info.scorch) * dir};
     const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
@@ -52,12 +52,12 @@ auto explosion_ray(
                 return;
             }
             if (pixels.at(curr + offset).type == pixel_type::titanium) {
-                scorch_limit = curr_radius + random_from_range(0.0f, info.scorch_radius);
+                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
                 pixels.at(curr + offset).colour *= 0.8f;
                 break;
             }
             if (curr_radius >= blast_limit) {
-                scorch_limit = curr_radius + random_from_range(0.0f, info.scorch_radius);
+                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
                 break;
             }
             if (scorch_limit.has_value()) {
@@ -79,7 +79,7 @@ auto explosion_ray(
 auto apply_explosion(world& pixels, glm::ivec2 pos, const explosion& info) -> void
 {
     std::unordered_set<glm::ivec2> checked;
-    const auto boundary = info.max_radius + info.scorch_radius;
+    const auto boundary = info.max_radius + info.scorch;
 
     for (int x = -boundary; x <= boundary; ++x) {
         const auto y = boundary;
