@@ -17,14 +17,13 @@ auto explosion_ray(
     -> void
 {
     // Calculate a step length small enough to hit every pixel on the path.
-    const auto steps = glm::max(glm::abs(start.x - end.x), glm::abs(start.y - end.y));
-    const auto step = (end - start) / steps;
+    const auto line = end - start;
+    const auto step = line / glm::max(glm::abs(line.x), glm::abs(line.y));
 
     auto curr = start;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
-    while (glm::length(curr - start) < blast_limit) {
-        if (!pixels.valid(curr)) return;
+    while (pixels.valid(curr) && glm::length(curr - start) < blast_limit) {
         if (pixels.at(curr).type == pixel_type::titanium) {
             break;
         }
@@ -33,8 +32,7 @@ auto explosion_ray(
     }
     
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
-    while (glm::length(curr - start) < scorch_limit) {
-        if (!pixels.valid(curr)) return;
+    while (pixels.valid(curr) && glm::length(curr - start) < scorch_limit) {
         if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
             pixels.at(curr).colour *= 0.8f;
         }
