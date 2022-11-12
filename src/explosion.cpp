@@ -23,7 +23,7 @@ auto explosion_ray(
     auto curr = start;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
-    while (pixels.valid(curr) && glm::length(curr - start) < blast_limit) {
+    while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
         if (pixels.at(curr).type == pixel_type::titanium) {
             break;
         }
@@ -32,7 +32,7 @@ auto explosion_ray(
     }
     
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
-    while (pixels.valid(curr) && glm::length(curr - start) < scorch_limit) {
+    while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
             pixels.at(curr).colour *= 0.8f;
         }
@@ -44,24 +44,11 @@ auto apply_explosion(world& pixels, glm::vec2 pos, const explosion& info) -> voi
 {
     const auto boundary = info.max_radius + 3 * info.scorch;
 
-    for (int x = -boundary; x <= boundary; ++x) {
-        const auto y = boundary;
-        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
-    }
-
-    for (int y = -boundary; y <= boundary; ++y) {
-        const auto x = boundary;
-        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
-    }
-
-    for (int x = -boundary; x <= boundary; ++x) {
-        const auto y = -boundary;
-        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
-    }
-
-    for (int y = -boundary; y <= boundary; ++y) {
-        const auto x = -boundary;
-        explosion_ray(pixels, pos, pos + glm::vec2{x, y}, info);
+    for (int i = -boundary; i != boundary + 1; ++i) {
+        explosion_ray(pixels, pos, pos + glm::vec2{i, boundary}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{i, -boundary}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{boundary, i}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{-boundary, i}, info);
     }
 }
 
