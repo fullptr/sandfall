@@ -4,7 +4,7 @@
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"
-#include "update.hpp"
+#include "explosion.hpp"
 
 #include "graphics/renderer.hpp"
 #include "graphics/window.hpp"
@@ -126,7 +126,9 @@ auto main() -> int
                 }
             break; case 2:
                 if (mouse_clicked[0]) {
-                    sand::apply_explosion(*world, mouse, 40, 1);
+                    sand::apply_explosion(*world, mouse, sand::explosion{
+                        .min_radius = 40.0f, .max_radius = 45.0f, .scorch_radius = 5.0f
+                    });
                 }
         }
 

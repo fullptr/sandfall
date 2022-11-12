@@ -6,7 +6,5 @@
 namespace sand {
 
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void;
-
-auto apply_explosion(world& pixels, glm::ivec2 pos, float radius, float strenth) -> void;
     
 }
