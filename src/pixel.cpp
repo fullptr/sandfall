@@ -24,6 +24,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
     switch (pix.type) {
         case pixel_type::none: {
             static constexpr auto px = pixel_properties{
+                .phase = pixel_phase::gas,
                 .corrosion_resist = 1.0f
             };
             return px;

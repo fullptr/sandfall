@@ -257,13 +257,16 @@ auto explosion_ray(
     world& pixels,
     std::unordered_set<glm::ivec2>& checked,
     glm::ivec2 pos,
-    glm::ivec2 end
+    glm::ivec2 end,
+    glm::ivec2 darken_end
 )
     -> void
 {
     const auto a = pos;
-    const auto b = end;
+    const auto b = darken_end;
     const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+
+    bool darkening = false;
 
     for (int i = 0; i < steps; ++i) {
         const auto curr = a + (b - a) * i/steps;
@@ -271,15 +274,26 @@ auto explosion_ray(
             continue;
         }
 
-        const auto offsets = {glm::ivec2{0, 0}, glm::ivec2{0, 1}, glm::ivec2{1, 0}, glm::ivec2{1, 1}};
-        for (const auto offset : offsets) {
+        using i2 = glm::ivec2;
+        for (const auto offset : {i2{0, 0}, i2{0, 1}, i2{1, 0}, i2{1, 1}}) {
             if (!pixels.valid(curr + offset)) {
                 return;
             }
             if (pixels.at(curr + offset).type == pixel_type::titanium) {
-                return;
+                darkening = true;
             }
-            pixels.set(curr + offset, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+
+            if (glm::length2(glm::vec2{curr + offset - pos}) > glm::length2(glm::vec2{end - pos})) {
+                darkening = true;
+            }
+
+            if (darkening) {
+                if (properties(pixels.at(curr + offset)).phase == pixel_phase::solid) {
+                    pixels.at(curr + offset).colour *= 0.8f;
+                }
+            } else {
+                pixels.set(curr + offset, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+            }
         }
         checked.emplace(curr);
     }
@@ -293,29 +307,37 @@ auto apply_explosion(world& pixels, glm::ivec2 pos, float radius, float strenth)
     for (int x = -radius; x <= radius; ++x) {
         const auto y = radius;
         const auto ray_radius = radius + random_from_range(0.0f, falloff_radius);
-        const auto offset = glm::normalize(glm::vec2{x, y}) * ray_radius;
-        explosion_ray(pixels, checked, pos, pos + glm::ivec2{offset});
+        const auto offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * ray_radius};
+        const auto dark_radius = radius + random_from_range(0.0f, falloff_radius + 5);
+        const auto dark_offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * dark_radius};
+        explosion_ray(pixels, checked, pos, pos + offset, pos + dark_offset);
     }
 
     for (int y = -radius; y <= radius; ++y) {
         const auto x = radius;
         const auto ray_radius = radius + random_from_range(0.0f, falloff_radius);
-        const auto offset = glm::normalize(glm::vec2{x, y}) * ray_radius;
-        explosion_ray(pixels, checked, pos, pos + glm::ivec2{offset});
+        const auto offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * ray_radius};
+        const auto dark_radius = radius + random_from_range(0.0f, falloff_radius + 5);
+        const auto dark_offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * dark_radius};
+        explosion_ray(pixels, checked, pos, pos + offset, pos + dark_offset);
     }
 
     for (int x = -radius; x <= radius; ++x) {
         const auto y = -radius;
         const auto ray_radius = radius + random_from_range(0.0f, falloff_radius);
-        const auto offset = glm::normalize(glm::vec2{x, y}) * ray_radius;
-        explosion_ray(pixels, checked, pos, pos + glm::ivec2{offset});
+        const auto offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * ray_radius};
+        const auto dark_radius = radius + random_from_range(0.0f, falloff_radius + 5);
+        const auto dark_offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * dark_radius};
+        explosion_ray(pixels, checked, pos, pos + offset, pos + dark_offset);
     }
 
     for (int y = -radius; y <= radius; ++y) {
         const auto x = -radius;
         const auto ray_radius = radius + random_from_range(0.0f, falloff_radius);
-        const auto offset = glm::normalize(glm::vec2{x, y}) * ray_radius;
-        explosion_ray(pixels, checked, pos, pos + glm::ivec2{offset});
+        const auto offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * ray_radius};
+        const auto dark_radius = radius + random_from_range(0.0f, falloff_radius + 5);
+        const auto dark_offset = glm::ivec2{glm::normalize(glm::vec2{x, y}) * dark_radius};
+        explosion_ray(pixels, checked, pos, pos + offset, pos + dark_offset);
     }
 }
 
