@@ -7,14 +7,9 @@
 #include <unordered_set>
 
 namespace sand {
+namespace {
 
-auto explosion_ray(
-    world& pixels,
-    glm::vec2 start,
-    glm::vec2 end,
-    const explosion& info
-)
-    -> void
+auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
 {
     // Calculate a step length small enough to hit every pixel on the path.
     const auto line = end - start;
@@ -40,15 +35,16 @@ auto explosion_ray(
     }
 }
 
+}
+
 auto apply_explosion(world& pixels, glm::vec2 pos, const explosion& info) -> void
 {
-    const auto boundary = info.max_radius + 3 * info.scorch;
-
-    for (int i = -boundary; i != boundary + 1; ++i) {
-        explosion_ray(pixels, pos, pos + glm::vec2{i, boundary}, info);
-        explosion_ray(pixels, pos, pos + glm::vec2{i, -boundary}, info);
-        explosion_ray(pixels, pos, pos + glm::vec2{boundary, i}, info);
-        explosion_ray(pixels, pos, pos + glm::vec2{-boundary, i}, info);
+    const auto a = info.max_radius + 3 * info.scorch;
+    for (int b = -a; b != a + 1; ++b) {
+        explosion_ray(pixels, pos, pos + glm::vec2{b, a}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{b, -a}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{a, b}, info);
+        explosion_ray(pixels, pos, pos + glm::vec2{-a, b}, info);
     }
 }
 
