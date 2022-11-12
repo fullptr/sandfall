@@ -31,7 +31,6 @@ auto explosion_ray(
         if (!pixels.valid(curr)) {
             return;
         }
-
         if (scorch_limit.has_value()) {
             if (curr_radius >= *scorch_limit) {
                 return;
@@ -41,45 +40,34 @@ auto explosion_ray(
             }
             continue;
         }
-
         if (checked.contains(curr)) {
             continue;
         }
-
-        using i2 = glm::ivec2;
-        for (const auto offset : {i2{0, 0}, i2{0, 1}, i2{1, 0}, i2{1, 1}}) {
-            if (!pixels.valid(curr + offset)) {
+        if (pixels.at(curr).type == pixel_type::titanium) {
+            scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
+            pixels.at(curr).colour *= 0.8f;
+        }
+        else if (curr_radius >= blast_limit) {
+            scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
+        }
+        else if (scorch_limit.has_value()) {
+            if (curr_radius >= *scorch_limit) {
                 return;
             }
-            if (pixels.at(curr + offset).type == pixel_type::titanium) {
-                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
-                pixels.at(curr + offset).colour *= 0.8f;
-                break;
+            if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
+                pixels.at(curr).colour *= 0.8f;
             }
-            if (curr_radius >= blast_limit) {
-                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
-                break;
-            }
-            if (scorch_limit.has_value()) {
-                if (curr_radius >= *scorch_limit) {
-                    return;
-                }
-                if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
-                    pixels.at(curr).colour *= 0.8f;
-                }
-                break;
-            }
-
-            pixels.set(curr + offset, random_unit() < 0.05f ? pixel::ember() : pixel::air());
-            checked.emplace(curr);
         }
+
+        pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+        checked.emplace(curr);
     }
 }
 
 auto apply_explosion(world& pixels, glm::ivec2 pos, const explosion& info) -> void
 {
     std::unordered_set<glm::ivec2> checked;
-    const auto boundary = info.max_radius + info.scorch;
+    const auto boundary = info.max_radius + 3 * info.scorch;
 
     for (int x = -boundary; x <= boundary; ++x) {
         const auto y = boundary;
