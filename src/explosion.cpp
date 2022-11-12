@@ -11,22 +11,23 @@ namespace sand {
 auto explosion_ray(
     world& pixels,
     std::unordered_set<glm::ivec2>& checked,
-    glm::ivec2 pos,
+    glm::vec2 pos,
     glm::vec2 dir,
     const explosion& info
 )
     -> void
 {
     const auto a = pos;
-    const auto b = a + glm::ivec2{(info.max_radius + 3 * info.scorch) * dir};
+    const auto b = a + (info.max_radius + 3 * info.scorch) * dir;
     const auto steps = glm::max(glm::abs(a.x - b.x), glm::abs(a.y - b.y));
+    const auto step = (b - a) / steps;
+    auto curr = a;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
     auto scorch_limit = std::optional<float>{};
 
-    for (int i = 0; i < steps; ++i) {
-        const auto curr = a + (b - a) * i/steps;
-        const auto curr_radius = glm::length(glm::vec2{curr} - glm::vec2{pos});
+    while (true) {
+        const auto curr_radius = glm::length(curr - pos);
         if (!pixels.valid(curr)) return;
 
         if (scorch_limit.has_value()) {
@@ -45,7 +46,7 @@ auto explosion_ray(
                 checked.emplace(curr);
             }
         }
-
+        curr += step;
     }
 }
 
