@@ -27,10 +27,8 @@ auto explosion_ray(
     for (int i = 0; i < steps; ++i) {
         const auto curr = a + (b - a) * i/steps;
         const auto curr_radius = glm::length(glm::vec2{curr} - glm::vec2{pos});
+        if (!pixels.valid(curr)) return;
 
-        if (!pixels.valid(curr)) {
-            return;
-        }
         if (scorch_limit.has_value()) {
             if (curr_radius >= *scorch_limit) {
                 return;
@@ -38,29 +36,16 @@ auto explosion_ray(
             if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
                 pixels.at(curr).colour *= 0.8f;
             }
-            continue;
-        }
-        if (checked.contains(curr)) {
-            continue;
-        }
-        if (pixels.at(curr).type == pixel_type::titanium) {
-            scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
-            pixels.at(curr).colour *= 0.8f;
-        }
-        else if (curr_radius >= blast_limit) {
-            scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
-        }
-        else if (scorch_limit.has_value()) {
-            if (curr_radius >= *scorch_limit) {
-                return;
-            }
-            if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
+        } else if (!checked.contains(curr)) {
+            if (pixels.at(curr).type == pixel_type::titanium || curr_radius >= blast_limit) {
+                scorch_limit = curr_radius + std::abs(random_normal(0.0f, info.scorch));
                 pixels.at(curr).colour *= 0.8f;
+            } else {
+                pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+                checked.emplace(curr);
             }
         }
 
-        pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
-        checked.emplace(curr);
     }
 }
 
