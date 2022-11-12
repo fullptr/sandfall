@@ -32,13 +32,13 @@ auto display_ui(
         ImGui::Checkbox("Show chunks", &editor.show_chunks);
 
         if (ImGui::Button("Save")) {
-            auto file = std::ofstream{"save.bin", std::ios::binary};
+            auto file = std::ofstream{"save0.bin", std::ios::binary};
             auto archive = cereal::BinaryOutputArchive{file};
             archive(world);
         }
         ImGui::SameLine();
         if (ImGui::Button("Load")) {
-            auto file = std::ifstream{"save.bin", std::ios::binary};
+            auto file = std::ifstream{"save0.bin", std::ios::binary};
             auto archive = cereal::BinaryInputArchive{file};
             archive(world);
             world.wake_all_chunks();
