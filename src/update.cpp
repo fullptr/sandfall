@@ -10,6 +10,7 @@
 #include <ranges>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace sand {
 namespace {
@@ -123,7 +124,8 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 
     // Pixels that don't move have their is_falling flag set to false at the end
     const auto after_position_update = scope_exit{[&] {
-        pixels.at(pos).flags[is_falling] = pos != start_pos;
+        const auto falling = pos != start_pos;
+        pixels.at(pos).flags[is_falling] = falling;
     }};
 
     // Apply gravity
@@ -147,6 +149,7 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
         for (auto offset : offsets) {
             if (move_offset(pixels, pos, offset)) return;
         }
+        data.velocity.y = 0.0f;
     }
 
     // Attempts to disperse outwards according to the dispersion rate
@@ -283,13 +286,16 @@ auto explosion_ray(
     }
 }
 
-auto apply_explosion(world& pixels, glm::ivec2 pos, int radius, float strenth) -> void
+auto apply_explosion(world& pixels, glm::ivec2 pos, float radius, float strenth) -> void
 {
     std::unordered_set<glm::ivec2> checked;
     for (int x = -radius; x < radius; ++x) {
         for (int y = -radius; y < radius; ++y) {
-            const auto end = pos + glm::ivec2{x, y};
-            explosion_ray(pixels, checked, pos, end);
+            auto offset = glm::vec2{x, y};
+            if (glm::length2(offset) > radius * radius) {
+                offset *= radius/glm::length(offset);
+            }
+            explosion_ray(pixels, checked, pos, pos + glm::ivec2{offset});
         }
     }
 }
