@@ -45,6 +45,12 @@ auto random_from_range(int min, int max) -> int
     return std::uniform_int_distribution(min, max)(gen);
 }
 
+auto random_normal(float centre, float sd) -> float
+{
+    static std::default_random_engine gen;
+    return std::normal_distribution(centre, sd)(gen);
+}
+
 auto random_from_circle(float radius) -> glm::ivec2
 {
     const auto r = random_from_range(0.0f, radius);

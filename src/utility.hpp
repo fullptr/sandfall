@@ -55,6 +55,8 @@ auto random_from_range(float min, float max) -> float;
 auto random_from_range(int min, int max) -> int;
 auto random_from_circle(float radius) -> glm::ivec2;
 
+auto random_normal(float centre, float sd) -> float;
+
 template <typename Elements>
 auto random_element(const Elements& elements)
 {

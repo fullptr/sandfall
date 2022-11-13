@@ -10,6 +10,7 @@
 #include <ranges>
 
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace sand {
 namespace {
@@ -119,10 +120,9 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
-    const auto start_pos = pos;
 
     // Pixels that don't move have their is_falling flag set to false at the end
-    const auto after_position_update = scope_exit{[&] {
+    const auto after_position_update = scope_exit{[&, start_pos = pos] {
         pixels.at(pos).flags[is_falling] = pos != start_pos;
     }};
 

@@ -4,6 +4,7 @@
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"
+#include "explosion.hpp"
 
 #include "graphics/renderer.hpp"
 #include "graphics/window.hpp"
@@ -27,7 +28,8 @@ auto main() -> int
     sand::print("Executable directory: {}\n", exe_path.string());
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
-    auto mouse  = std::array<bool, 5>{}; // TODO: Think of a better way
+    auto mouse_down = std::array<bool, 5>{}; // TODO: Think of a better way
+    auto mouse_clicked = std::array<bool, 5>{};
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -46,12 +48,13 @@ auto main() -> int
         }
 
         if (event.is<sand::mouse_pressed_event>()) {
-            mouse[event.as<sand::mouse_pressed_event>().button] = true;
+            mouse_down[event.as<sand::mouse_pressed_event>().button] = true;
+            mouse_clicked[event.as<sand::mouse_pressed_event>().button] = true;
         }
         else if (event.is<sand::mouse_released_event>()) {
-            mouse[event.as<sand::mouse_released_event>().button] = false;
+            mouse_down[event.as<sand::mouse_released_event>().button] = false;
         }
-        else if (mouse[1] && event.is<sand::mouse_moved_event>()) {
+        else if (mouse_down[1] && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
             const auto scale = (float)camera.zoom / window.height();
             camera.top_left -= glm::vec2{e.x_offset * scale, e.y_offset * scale};
@@ -101,26 +104,35 @@ auto main() -> int
         display_ui(editor, *world, timer, window);
         ui.end_frame();
         
-        if (mouse[0]) {
-            const auto mouse = pixel_at_mouse(window, camera);
-            if (editor.brush_type == 0) {
-                const auto coord = mouse + sand::random_from_circle(editor.brush_size);
-                if (world->valid(coord)) {
-                    world->set(coord, editor.get_pixel());
+        const auto mouse = pixel_at_mouse(window, camera);
+        switch (editor.brush_type) {
+            break; case 0:
+                if (mouse_down[0]) {
+                    const auto coord = mouse + sand::random_from_circle(editor.brush_size);
+                    if (world->valid(coord)) {
+                        world->set(coord, editor.get_pixel());
+                    }
                 }
-            }
-            if (editor.brush_type == 1) {
-                const auto half_extent = (int)(editor.brush_size / 2);
-                for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
-                    for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
-                        if (world->valid({x, y})) {
-                            world->set({x, y}, editor.get_pixel());
+            break; case 1:
+                if (mouse_down[0]) {
+                    const auto half_extent = (int)(editor.brush_size / 2);
+                    for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
+                        for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
+                            if (world->valid({x, y})) {
+                                world->set({x, y}, editor.get_pixel());
+                            }
                         }
                     }
                 }
-            }
+            break; case 2:
+                if (mouse_clicked[0]) {
+                    sand::apply_explosion(*world, mouse, sand::explosion{
+                        .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
+                    });
+                }
         }
 
+        mouse_clicked.fill(false); // Reset clicked values
         window.swap_buffers();
     }
     
