@@ -30,6 +30,12 @@ auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosio
     while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
             pixels.at(curr).colour *= 0.8f;
+
+            // Try to catch light to the scorched pixel
+            if (random_unit() < properties(pixels.at(curr)).flammability) {
+                pixels.at(curr).flags[is_burning] = true;
+                pixels.wake_chunk_with_pixel(curr);
+            }
         }
         curr += step;
     }

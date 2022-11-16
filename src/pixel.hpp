@@ -60,6 +60,7 @@ struct pixel_properties
     float       put_out_surrounded  = 0.0f; // Chance that is_burning = false if surrounded
     float       put_out             = 0.0f; // Chance that is_burning = false otherwise
     float       burn_out_chance     = 0.0f; // Chance that the pixel gets destroyed
+    float       explosion_chance    = 0.0f; // Change that it explodes when destroyed
     bool        is_burn_source      = false; // Can this pixel cause others to burn?
     bool        is_ember_source     = false; // Does this pixel produce embers?
 };

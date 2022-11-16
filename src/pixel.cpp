@@ -162,7 +162,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,
                 .put_out = 0.0f,
-                .burn_out_chance = 0.1f
+                .burn_out_chance = 0.1f,
+                .explosion_chance = 0.001f
             };
             return px;
         }
