@@ -26,16 +26,19 @@ auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosio
         curr += step;
     }
     
+    // Try to catch light to the first scorched pixel
+    if (pixels.valid(curr)) {
+        auto& pixel = pixels.at(curr);
+        if (random_unit() < properties(pixel).flammability) {
+            pixel.flags[is_burning] = true;
+            pixels.wake_chunk_with_pixel(curr);
+        }
+    }
+
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
     while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
             pixels.at(curr).colour *= 0.8f;
-
-            // Try to catch light to the scorched pixel
-            if (random_unit() < properties(pixels.at(curr)).flammability) {
-                pixels.at(curr).flags[is_burning] = true;
-                pixels.wake_chunk_with_pixel(curr);
-            }
         }
         curr += step;
     }
