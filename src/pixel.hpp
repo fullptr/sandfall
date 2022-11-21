@@ -11,11 +11,6 @@ enum pixel_flags : std::size_t
     is_updated, // 0
     is_falling, // 1
     is_burning, // 2
-
-    is_powered_from_above, // 3
-    is_powered_from_below, // 4
-    is_powered_from_left,  // 5
-    is_powered_from_right, // 6
 };
 
 enum class pixel_phase : std::uint8_t
@@ -81,6 +76,7 @@ struct pixel
     glm::vec4       colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
+    float           power = 0.0f;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;

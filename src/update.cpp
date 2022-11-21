@@ -308,51 +308,19 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     // Electricity
     auto& pixel = pixels.at(pos);
 
-    // Check to see if we should stop being powered
-    if (pixel.flags[is_powered_from_above] && !is_powered(pixels.at(pos + UP))) {
-        pixel.flags[is_powered_from_above] = false;
-        pixels.wake_chunk_with_pixel(pos);
-    }
-    if (pixel.flags[is_powered_from_below] && !is_powered(pixels.at(pos + DOWN))) {
-        pixel.flags[is_powered_from_below] = false;
-        pixels.wake_chunk_with_pixel(pos);
-    }
-    if (pixel.flags[is_powered_from_left] && !is_powered(pixels.at(pos + LEFT))) {
-        pixel.flags[is_powered_from_left] = false;
-        pixels.wake_chunk_with_pixel(pos);
-    }
-    if (pixel.flags[is_powered_from_right] && !is_powered(pixels.at(pos + RIGHT))) {
-        pixel.flags[is_powered_from_right] = false;
+    auto& power = pixel.power;
+    if (properties(pixel).conductivity > 0) {
+        for (const auto& offset : adjacent_offsets) {
+            if (!pixels.valid(pos + offset)) continue;
+            const auto neigh_pos = pos + offset;
+            const auto neigh_power = pixels.at(neigh_pos).power;
+            power = std::max(power, neigh_power);   
+        }
+        power *= 0.9f;
         pixels.wake_chunk_with_pixel(pos);
     }
 
-    // If still on, try to spread
-    if (is_powered(pixel)) {
-        if (pixels.valid(pos + UP) && !is_powered(pixels.at(pos + UP))) {
-            if (random_unit() < properties(pixels.at(pos + UP)).conductivity) {
-                pixels.at(pos + UP).flags[is_powered_from_below] = true;
-                pixels.wake_chunk_with_pixel(pos + UP);
-            }
-        }
-        else if (pixels.valid(pos + DOWN) && !is_powered(pixels.at(pos + DOWN))) {
-            if (random_unit() < properties(pixels.at(pos + DOWN)).conductivity) {
-                pixels.at(pos + DOWN).flags[is_powered_from_above] = true;
-                pixels.wake_chunk_with_pixel(pos + DOWN);
-            }
-        }
-        else if (pixels.valid(pos + LEFT) && !is_powered(pixels.at(pos + LEFT))) {
-            if (random_unit() < properties(pixels.at(pos + LEFT)).conductivity) {
-                pixels.at(pos + LEFT).flags[is_powered_from_right] = true;
-                pixels.wake_chunk_with_pixel(pos + LEFT);
-            }
-        }
-        else if (pixels.valid(pos + RIGHT) && !is_powered(pixels.at(pos + RIGHT))) {
-            if (random_unit() < properties(pixels.at(pos + RIGHT)).conductivity) {
-                pixels.at(pos + RIGHT).flags[is_powered_from_left] = true;
-                pixels.wake_chunk_with_pixel(pos + RIGHT);
-            }
-        }
-    }
+    if (properties(pixel).is_power_source) power = 1.0f;
 
     pixels.at(pos).flags[is_updated] = true;
 }
