@@ -335,5 +335,13 @@ auto pixel::battery() -> pixel
     };
 }
 
+auto is_powered(const pixel& px) -> bool
+{
+    return px.flags[is_powered_from_above]
+        || px.flags[is_powered_from_below]
+        || px.flags[is_powered_from_left]
+        || px.flags[is_powered_from_right]
+        || properties(px).is_power_source;
+}
 
 }

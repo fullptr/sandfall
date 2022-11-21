@@ -100,6 +100,8 @@ struct pixel
     static auto battery() -> pixel;
 };
 
+auto is_powered(const pixel& px) -> bool;
+
 auto properties(const pixel& px) -> const pixel_properties&;
 
 auto serialise(auto& archive, pixel& px) -> void {

@@ -27,6 +27,13 @@ static constexpr auto neighbour_offsets = std::array{
     glm::ivec2{1, -1}
 };
 
+static constexpr auto adjacent_offsets = std::array{
+    glm::ivec2{1, 0},
+    glm::ivec2{-1, 0},
+    glm::ivec2{0, 1},
+    glm::ivec2{0, -1}
+};
+
 auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
     if (!pixels.valid(src_pos) || !pixels.valid(dst_pos)) { return false; }
@@ -178,24 +185,39 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     // is_burning status
     if (pixel.flags[is_burning]) {
 
-        // First, see if it can be put out
+        // See if it can be put out
         const auto put_out = is_surrounded(pixels, pos) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
             pixel.flags[is_burning] = false;
         }
 
-        // Second, see if it gets destroyed
+        // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
             pixel = pixel::air();
         }
 
-        // Lastly, see if it explodes
+        // See if it explodes
         if (random_unit() < props.explosion_chance) {
             apply_explosion(pixels, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
+
     }
+
+    // See if it can lose power
+    //if (pixel.flags[is_powered_from_above] && !is_powered(pixels.above(pos))) {
+    //    pixel.flags[is_powered_from_above] = false;
+    //}
+    //if (pixel.flags[is_powered_from_below] && !is_powered(pixels.below(pos))) {
+    //    pixel.flags[is_powered_from_below] = false;
+    //}
+    //if (pixel.flags[is_powered_from_left] && !is_powered(pixels.left(pos))) {
+    //    pixel.flags[is_powered_from_left] = false;
+    //}
+    //if (pixel.flags[is_powered_from_right] && !is_powered(pixels.right(pos))) {
+    //    pixel.flags[is_powered_from_right] = false;
+    //}
 }
 
 inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
@@ -203,46 +225,71 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
+    // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
-        if (pixels.valid(pos + offset)) {
-            const auto neigh_pos = pos + offset;
-            auto& neighbour = pixels.at(neigh_pos);
+        if (!pixels.valid(pos + offset)) continue;             
+        const auto neigh_pos = pos + offset;
+        auto& neighbour = pixels.at(neigh_pos);
 
-            // Boil water
-            if (props.can_boil_water) {
-                if (neighbour.type == pixel_type::water) {
-                    neighbour = pixel::steam();
-                }
+        // Boil water
+        if (props.can_boil_water) {
+            if (neighbour.type == pixel_type::water) {
+                neighbour = pixel::steam();
             }
+        }
 
-            // Corrode neighbours
-            if (props.is_corrosion_source) {
-                if (random_unit() > properties(neighbour).corrosion_resist) {
-                    neighbour = pixel::air();
-                    if (random_unit() > 0.9f) {
-                        pixel = pixel::air();
-                    }
-                }
-            }
-            
-            // Spread fire
-            if (props.is_burn_source || pixel.flags[is_burning]) {
-                if (random_unit() < properties(neighbour).flammability) {
-                    neighbour.flags[is_burning] = true;
-                    pixels.wake_chunk_with_pixel(neigh_pos);
-                }
-            }
-
-            // Produce embers
-            const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
-            if (can_produce_embers && neighbour.type == pixel_type::none) {
-                if (random_unit() < 0.01f) {
-                    neighbour = pixel::ember();
-                    pixels.wake_chunk_with_pixel(neigh_pos);
+        // Corrode neighbours
+        if (props.is_corrosion_source) {
+            if (random_unit() > properties(neighbour).corrosion_resist) {
+                neighbour = pixel::air();
+                if (random_unit() > 0.9f) {
+                    pixel = pixel::air();
                 }
             }
         }
+        
+        // Spread fire
+        if (props.is_burn_source || pixel.flags[is_burning]) {
+            if (random_unit() < properties(neighbour).flammability) {
+                neighbour.flags[is_burning] = true;
+                pixels.wake_chunk_with_pixel(neigh_pos);
+            }
+        }
+
+        // Produce embers
+        const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
+        if (can_produce_embers && neighbour.type == pixel_type::none) {
+            if (random_unit() < 0.01f) {
+                pixels.set(neigh_pos, pixel::ember());
+            }
+        }
     }
+
+    // Affect only adjacent neighbours
+    //for (const auto& offset : adjacent_offsets) {
+    //    if (!pixels.valid(pos + offset)) continue;
+    //    const auto neigh_pos = pos + offset;
+    //    auto& neighbour = pixels.at(neigh_pos);
+    //
+    //    // Spread electricity
+    //    if (is_powered(pixel) && !is_powered(neighbour)) {
+    //        if (random_unit() < properties(neighbour).conductivity) {
+    //            if (offset.x > 1) { // Neighbour to the right
+    //                neighbour.flags[is_powered_from_left] = true;
+    //            }
+    //            else if (offset.x < 1) { // Neighbour to the left
+    //                neighbour.flags[is_powered_from_right] = true;
+    //            }
+    //            else if (offset.y > 1) { // Neighbour below
+    //                neighbour.flags[is_powered_from_above] = true;
+    //            }
+    //            else if (offset.y < 1) { // Neighbour above
+    //                neighbour.flags[is_powered_from_below] = true;
+    //            }
+    //            pixels.wake_chunk_with_pixel(neigh_pos);
+    //        }
+    //    }
+    //}
 }
 
 }
@@ -257,6 +304,55 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     update_pixel_attributes(pixels, pos);
 
     affect_neighbours(pixels, pos);
+
+    // Electricity
+    auto& pixel = pixels.at(pos);
+
+    // Check to see if we should stop being powered
+    if (pixel.flags[is_powered_from_above] && !is_powered(pixels.at(pos + UP))) {
+        pixel.flags[is_powered_from_above] = false;
+        pixels.wake_chunk_with_pixel(pos);
+    }
+    if (pixel.flags[is_powered_from_below] && !is_powered(pixels.at(pos + DOWN))) {
+        pixel.flags[is_powered_from_below] = false;
+        pixels.wake_chunk_with_pixel(pos);
+    }
+    if (pixel.flags[is_powered_from_left] && !is_powered(pixels.at(pos + LEFT))) {
+        pixel.flags[is_powered_from_left] = false;
+        pixels.wake_chunk_with_pixel(pos);
+    }
+    if (pixel.flags[is_powered_from_right] && !is_powered(pixels.at(pos + RIGHT))) {
+        pixel.flags[is_powered_from_right] = false;
+        pixels.wake_chunk_with_pixel(pos);
+    }
+
+    // If still on, try to spread
+    if (is_powered(pixel)) {
+        if (pixels.valid(pos + UP) && !is_powered(pixels.at(pos + UP))) {
+            if (random_unit() < properties(pixels.at(pos + UP)).conductivity) {
+                pixels.at(pos + UP).flags[is_powered_from_below] = true;
+                pixels.wake_chunk_with_pixel(pos + UP);
+            }
+        }
+        else if (pixels.valid(pos + DOWN) && !is_powered(pixels.at(pos + DOWN))) {
+            if (random_unit() < properties(pixels.at(pos + DOWN)).conductivity) {
+                pixels.at(pos + DOWN).flags[is_powered_from_above] = true;
+                pixels.wake_chunk_with_pixel(pos + DOWN);
+            }
+        }
+        else if (pixels.valid(pos + LEFT) && !is_powered(pixels.at(pos + LEFT))) {
+            if (random_unit() < properties(pixels.at(pos + LEFT)).conductivity) {
+                pixels.at(pos + LEFT).flags[is_powered_from_right] = true;
+                pixels.wake_chunk_with_pixel(pos + LEFT);
+            }
+        }
+        else if (pixels.valid(pos + RIGHT) && !is_powered(pixels.at(pos + RIGHT))) {
+            if (random_unit() < properties(pixels.at(pos + RIGHT)).conductivity) {
+                pixels.at(pos + RIGHT).flags[is_powered_from_left] = true;
+                pixels.wake_chunk_with_pixel(pos + RIGHT);
+            }
+        }
+    }
 
     pixels.at(pos).flags[is_updated] = true;
 }
