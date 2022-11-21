@@ -53,6 +53,15 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
     };
 }
 
+auto is_powered(const pixel& px) -> bool
+{
+    return px.flags[is_powered_from_above]
+        || px.flags[is_powered_from_below]
+        || px.flags[is_powered_from_left]
+        || px.flags[is_powered_from_right]
+        || properties(px).is_power_source;
+}
+
 }
 
 renderer::renderer()
@@ -106,6 +115,11 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xfad390)
     };
 
+    static const auto electricity_colours = std::array{
+        sand::from_hex(0xf6e58d),
+        sand::from_hex(0xf9ca24)
+    };
+
     const auto camera_width = camera.zoom * (camera.screen_width / camera.screen_height);
     const auto camera_height = camera.zoom;
 
@@ -124,7 +138,11 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
             }
             if (world.at(world_coord).flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
-            } else {
+            }
+            else if (is_powered(world.at(world_coord))) {
+                d_texture_data[pos] = sand::random_element(electricity_colours);
+            }
+            else {
                 d_texture_data[pos] = world.at(world_coord).colour;
             }
 

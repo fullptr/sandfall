@@ -42,6 +42,7 @@ enum class pixel_type : std::uint8_t
     oil,
     gunpowder,
     methane,
+    battery,
 };
 
 struct pixel_properties
@@ -96,6 +97,7 @@ struct pixel
     static auto oil() -> pixel;
     static auto gunpowder() -> pixel;
     static auto methane() -> pixel;
+    static auto battery() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;

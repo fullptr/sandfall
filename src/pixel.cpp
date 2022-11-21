@@ -102,7 +102,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
-                .corrosion_resist = 1.0f
+                .corrosion_resist = 1.0f,
+                .conductivity = 1.0f
             };
             return px;
         }
@@ -178,6 +179,13 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out_surrounded = 0.0f,
                 .put_out = 0.0f,
                 .burn_out_chance = 0.1f
+            };
+            return px;
+        }
+        case pixel_type::battery: {
+            static constexpr auto px = pixel_properties{
+                .corrosion_resist = 1.0f,
+                .is_power_source = true
             };
             return px;
         }
@@ -287,7 +295,7 @@ auto pixel::ember() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::ember,
-        .colour = from_hex(0xFFFFFF) + light_noise()
+        .colour = from_hex(0xFFFFFF)
     };
     p.flags[is_burning] = true;
     return p;
@@ -316,6 +324,14 @@ auto pixel::methane() -> pixel
     return {
         .type = pixel_type::methane,
         .colour = from_hex(0xCED6E0) + light_noise()
+    };
+}
+
+auto pixel::battery() -> pixel
+{
+    return {
+        .type = pixel_type::battery,
+        .colour = from_hex(0xFFFFFF)
     };
 }
 

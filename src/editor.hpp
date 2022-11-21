@@ -30,6 +30,7 @@ struct editor
         { "oil",       sand::pixel::oil       },
         { "gunpowder", sand::pixel::gunpowder },
         { "methane",   sand::pixel::methane   },
+        { "battery",   sand::pixel::battery   },
     };
 
     float brush_size = 5.0f;
