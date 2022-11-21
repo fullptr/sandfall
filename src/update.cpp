@@ -284,7 +284,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
         power = std::max(power - 2, 0);
     }
 
-    if (properties(pixel).is_power_source) power = 100;
+    if (properties(pixel).is_power_source) power = 200;
 
     pixels.at(pos).flags[is_updated] = true;
 }
