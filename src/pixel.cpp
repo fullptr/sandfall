@@ -337,7 +337,7 @@ auto pixel::battery() -> pixel
 
 auto is_powered(const pixel& px) -> bool
 {
-    return px.power > 0.01f;
+    return px.power > 0;
 }
 
 }

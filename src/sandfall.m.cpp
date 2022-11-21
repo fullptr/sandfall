@@ -101,7 +101,7 @@ auto main() -> int
 
         // Next, draw the editor UI
         ui.begin_frame();
-        display_ui(editor, *world, timer, window);
+        display_ui(editor, *world, timer, window, pixel_at_mouse(window, camera));
         ui.end_frame();
         
         const auto mouse = pixel_at_mouse(window, camera);

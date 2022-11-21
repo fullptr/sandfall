@@ -76,7 +76,7 @@ struct pixel
     glm::vec4       colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
-    float           power = 0.0f;
+    std::int16_t    power = 0;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;

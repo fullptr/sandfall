@@ -54,7 +54,8 @@ auto display_ui(
     editor& editor,
     world& world,
     const timer& timer,
-    const window& window
+    const window& window,
+    glm::ivec2 mouse
 ) -> void;
 
 }

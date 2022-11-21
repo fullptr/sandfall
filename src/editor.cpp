@@ -12,7 +12,8 @@ auto display_ui(
     editor& editor,
     world& world,
     const timer& timer,
-    const window& window
+    const window& window,
+    glm::ivec2 mouse
 ) -> void
 {
     ImGui::ShowDemoWindow(&editor.show_demo);
@@ -61,6 +62,10 @@ auto display_ui(
             editor.brush_type = 2;
         }
         ImGui::Text("Brush: %d", editor.brush_type);
+
+        if (world.valid(mouse)) {
+            ImGui::Text("Power at mouse: %d", world.at(mouse).power);
+        }
     }
     ImGui::End();
 }
