@@ -96,14 +96,15 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::rock: {
             static constexpr auto px = pixel_properties{
-                .corrosion_resist = 0.95f
+                .corrosion_resist = 0.95f,
+                .conductivity = 0.1f
             };
             return px;
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
                 .corrosion_resist = 1.0f,
-                .conductivity = 1.0f
+                .conductivity = 0.8f
             };
             return px;
         }

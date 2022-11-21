@@ -269,14 +269,19 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
 
     auto& power = pixel.power;
-    if (properties(pixel).conductivity > 0) {
+    if (random_unit() < properties(pixel).conductivity) {
         for (const auto& offset : adjacent_offsets) {
             if (!pixels.valid(pos + offset)) continue;
             const auto neigh_power = pixels.at(pos + offset).power;
             power = std::max(power, neigh_power);
         }
-        power = std::max(power - 1, 0);
+    }
+    if (power > 0) {
         pixels.wake_chunk_with_pixel(pos);
+    }
+    
+    if (random_unit() < properties(pixel).conductivity) {
+        power = std::max(power - 2, 0);
     }
 
     if (properties(pixel).is_power_source) power = 100;
