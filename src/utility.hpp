@@ -9,6 +9,9 @@
 
 namespace sand {
 
+using i32 = std::int32_t;
+using u32 = std::uint32_t;
+
 static constexpr auto step = 1.0 / 60.0;
 
 template <typename... Ts>
