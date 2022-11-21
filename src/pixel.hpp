@@ -8,9 +8,14 @@ namespace sand {
 
 enum pixel_flags : std::size_t
 {
-    is_updated,
-    is_falling,
-    is_burning,
+    is_updated, // 0
+    is_falling, // 1
+    is_burning, // 2
+
+    is_powered_from_above, // 3
+    is_powered_from_below, // 4
+    is_powered_from_left,  // 5
+    is_powered_from_right, // 6
 };
 
 enum class pixel_phase : std::uint8_t
@@ -63,6 +68,10 @@ struct pixel_properties
     float       explosion_chance    = 0.0f; // Change that it explodes when destroyed
     bool        is_burn_source      = false; // Can this pixel cause others to burn?
     bool        is_ember_source     = false; // Does this pixel produce embers?
+
+    // Electricity Controls
+    bool        is_power_source     = false;
+    float       conductivity        = 0.0f; // Chance that is_powered_X = true from neighbour
 };
 
 struct pixel
