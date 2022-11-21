@@ -46,15 +46,31 @@ auto world::simulate() -> void
         }
     };
 
-    for (std::uint32_t y = num_pixels; y != 0; --y) {
-        if (coin_flip()) {
-            for (std::uint32_t x = 0; x != num_pixels; ++x) {
-                inner({x, y - 1});
+    if (coin_flip()) {
+        for (std::uint32_t y = num_pixels; y != 0; --y) {
+            if (coin_flip()) {
+                for (std::uint32_t x = 0; x != num_pixels; ++x) {
+                    inner({x, y - 1});
+                }
+            }
+            else {
+                for (std::uint32_t x = num_pixels; x != 0; --x) {
+                    inner({x - 1, y - 1});
+                }
             }
         }
-        else {
-            for (std::uint32_t x = num_pixels; x != 0; --x) {
-                inner({x - 1, y - 1});
+    }
+    else {
+        for (std::uint32_t y = 0; y != num_pixels; ++y) {
+            if (coin_flip()) {
+                for (std::uint32_t x = 0; x != num_pixels; ++x) {
+                    inner({x, y});
+                }
+            }
+            else {
+                for (std::uint32_t x = num_pixels; x != 0; --x) {
+                    inner({x - 1, y});
+                }
             }
         }
     }

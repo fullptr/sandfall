@@ -204,20 +204,6 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
         }
 
     }
-
-    // See if it can lose power
-    //if (pixel.flags[is_powered_from_above] && !is_powered(pixels.above(pos))) {
-    //    pixel.flags[is_powered_from_above] = false;
-    //}
-    //if (pixel.flags[is_powered_from_below] && !is_powered(pixels.below(pos))) {
-    //    pixel.flags[is_powered_from_below] = false;
-    //}
-    //if (pixel.flags[is_powered_from_left] && !is_powered(pixels.left(pos))) {
-    //    pixel.flags[is_powered_from_left] = false;
-    //}
-    //if (pixel.flags[is_powered_from_right] && !is_powered(pixels.right(pos))) {
-    //    pixel.flags[is_powered_from_right] = false;
-    //}
 }
 
 inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
@@ -264,32 +250,6 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
             }
         }
     }
-
-    // Affect only adjacent neighbours
-    //for (const auto& offset : adjacent_offsets) {
-    //    if (!pixels.valid(pos + offset)) continue;
-    //    const auto neigh_pos = pos + offset;
-    //    auto& neighbour = pixels.at(neigh_pos);
-    //
-    //    // Spread electricity
-    //    if (is_powered(pixel) && !is_powered(neighbour)) {
-    //        if (random_unit() < properties(neighbour).conductivity) {
-    //            if (offset.x > 1) { // Neighbour to the right
-    //                neighbour.flags[is_powered_from_left] = true;
-    //            }
-    //            else if (offset.x < 1) { // Neighbour to the left
-    //                neighbour.flags[is_powered_from_right] = true;
-    //            }
-    //            else if (offset.y > 1) { // Neighbour below
-    //                neighbour.flags[is_powered_from_above] = true;
-    //            }
-    //            else if (offset.y < 1) { // Neighbour above
-    //                neighbour.flags[is_powered_from_below] = true;
-    //            }
-    //            pixels.wake_chunk_with_pixel(neigh_pos);
-    //        }
-    //    }
-    //}
 }
 
 }
@@ -314,7 +274,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
             if (!pixels.valid(pos + offset)) continue;
             const auto neigh_pos = pos + offset;
             const auto neigh_power = pixels.at(neigh_pos).power;
-            power = std::max(power, neigh_power);   
+            power = std::max(power, neigh_power);
         }
         power *= 0.9f;
         pixels.wake_chunk_with_pixel(pos);
