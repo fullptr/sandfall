@@ -1,6 +1,7 @@
 #include "update.hpp"
 #include "utility.hpp"
 #include "config.hpp"
+#include "explosion.hpp"
 
 #include <array>
 #include <utility>
@@ -186,6 +187,13 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
         // Second, see if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
             pixel = pixel::air();
+        }
+
+        // Lastly, see if it explodes
+        if (random_unit() < props.explosion_chance) {
+            apply_explosion(pixels, pos, sand::explosion{
+                .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
+            });
         }
     }
 }
