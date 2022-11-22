@@ -279,7 +279,11 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
             for (const auto& offset : adjacent_offsets) {
                 if (!pixels.valid(pos + offset)) continue;
                 auto& neighbour = pixels.at(pos + offset);
-                if (neighbour.power > 0 && neighbour.power != 4) {
+
+                // We exclude the max value so newly powered pixels cannot power us this frame.
+                const auto neighbour_on = neighbour.power > 0 && neighbour.power != 4;
+
+                if (properties(neighbour).is_power_source || neighbour_on) {
                     pixel.power = 4;
                     break;
                 }
@@ -290,8 +294,6 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     if (pixel.power != 0) {
         pixels.wake_chunk_with_pixel(pos);
     }
-
-    if (properties(pixel).is_power_source) pixel.power = 5;
 
     pixels.at(pos).flags[is_updated] = true;
 }

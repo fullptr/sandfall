@@ -331,7 +331,7 @@ auto pixel::battery() -> pixel
 {
     return {
         .type = pixel_type::battery,
-        .colour = from_hex(0xFFFFFF)
+        .colour = from_hex(0x38ADA9)
     };
 }
 
