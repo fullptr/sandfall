@@ -179,9 +179,14 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
         return false;
     }
 
+    // Batteries cannot directly power diode_out
+    if (dst.type == pixel_type::diode_out && src.type == pixel_type::battery) {
+        return false;
+    }
+
     // dst can get powered if src is either a power source or powered. Excludes the
     // maximum power level so electricity can only flow one block per tick.
-    return properties(src).is_power_source
+    return (properties(src).is_power_source && src.power > 2)
         || is_powered(src) && src.power != properties(src).power_max_level;
 }
 
@@ -237,6 +242,39 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 
     if (pixel.power > 0) {
         pixels.wake_chunk_with_pixel(pos);
+    }
+
+    // Check to see if battery pixels should switch on or off, powered diode_out turns off
+    // batteries
+    if (pixel.type == pixel_type::battery) {
+        pixel.power = std::min(pixel.power + 1, 5);
+        for (const auto& offset : adjacent_offsets) {
+            if (!pixels.valid(pos + offset)) continue;
+            auto& neighbour = pixels.at(pos + offset);
+
+            if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
+                pixel = pixel::battery_off();
+                pixel.power = 0;
+                pixels.wake_chunk_with_pixel(pos);
+            }
+        }
+    }
+    else if (pixel.type == pixel_type::battery_off) {
+        bool turn_on = true;
+        for (const auto& offset : adjacent_offsets) {
+            if (!pixels.valid(pos + offset)) continue;
+            auto& neighbour = pixels.at(pos + offset);
+
+            if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
+                turn_on = false;
+                break;
+            }
+        }
+        if (turn_on) {
+            pixel = pixel::battery();
+            pixel.power = 0;
+            pixels.wake_chunk_with_pixel(pos);
+        }
     }
 }
 

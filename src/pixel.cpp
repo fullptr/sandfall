@@ -189,7 +189,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
-                .is_power_source = true
+                .is_power_source = true,
+                .power_max_level = 100,
+                .power_min_level = 99
             };
             return px;
         }
@@ -206,14 +208,20 @@ auto properties(const pixel& pix) -> const pixel_properties&
             return px;
         }
         case pixel_type::diode_in:
-        case pixel_type::diode_out:
-        case pixel_type::gate: {
+        case pixel_type::diode_out: {
             static constexpr auto px = pixel_properties{
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
                 .is_conductor = true,
                 .power_max_level = 25,
                 .power_min_level = 20
+            };
+            return px;
+        }
+        case pixel_type::battery_off: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .corrosion_resist = 1.0f
             };
             return px;
         }
@@ -389,10 +397,10 @@ auto pixel::diode_out() -> pixel
     };
 }
 
-auto pixel::gate() -> pixel
+auto pixel::battery_off() -> pixel
 {
     return {
-        .type = pixel_type::gate,
+        .type = pixel_type::battery_off,
         .colour = from_hex(0x5F27CD)
     };
 }
