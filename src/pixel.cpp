@@ -395,4 +395,9 @@ auto is_powered(const pixel& px) -> bool
     return px.power > properties(px).power_min_level;
 }
 
+auto is_active_power_source(const pixel& px) -> bool
+{
+    return properties(px).is_power_source && px.power == 4;
+}
+
 }

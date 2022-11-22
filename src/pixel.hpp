@@ -117,5 +117,6 @@ auto serialise(auto& archive, pixel& px) -> void {
 }
 
 auto is_powered(const pixel& px) -> bool;
+auto is_active_power_source(const pixel& px) -> bool;
 
 }

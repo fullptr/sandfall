@@ -186,8 +186,8 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
 
     // dst can get powered if src is either a power source or powered. Excludes the
     // maximum power level so electricity can only flow one block per tick.
-    return (properties(src).is_power_source && src.power > 2)
-        || is_powered(src) && src.power != properties(src).power_max_level;
+    return is_active_power_source(src)
+        || (is_powered(src) && src.power != properties(src).power_max_level);
 }
 
 // Update logic for single pixels depending on properties only
