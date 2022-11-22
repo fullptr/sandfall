@@ -72,6 +72,8 @@ struct pixel_properties
     // Electricity Controls
     bool        is_power_source     = false;
     bool        is_conductor        = false;
+    int         power_level         = 0; // Power level set when the pixel turns on
+    int         activation_level    = 0; // Under this level, the pixel is no longer powered
 
 };
 
@@ -107,5 +109,7 @@ auto properties(const pixel& px) -> const pixel_properties&;
 auto serialise(auto& archive, pixel& px) -> void {
     archive(px.type, px.colour, px.velocity, px.flags);
 }
+
+auto is_powered(const pixel& px) -> bool;
 
 }

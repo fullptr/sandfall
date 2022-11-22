@@ -103,7 +103,9 @@ auto properties(const pixel& pix) -> const pixel_properties&
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
                 .corrosion_resist = 1.0f,
-                .is_conductor = true
+                .is_conductor = true,
+                .power_level = 25,
+                .activation_level = 20
             };
             return px;
         }
@@ -197,6 +199,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .inertial_resistance = 0.05f,
                 .corrosion_resist = 1.0f,
                 .is_conductor = true,
+                .power_level = 18,
+                .activation_level = 15
             };
             return px;
         }
@@ -354,6 +358,11 @@ auto pixel::solder() -> pixel
     };
     p.flags[is_falling] = true;
     return p;
+}
+
+auto is_powered(const pixel& px) -> bool
+{
+    return px.power > properties(px).activation_level;
 }
 
 }

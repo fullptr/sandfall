@@ -128,14 +128,15 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
-            if (world.at(world_coord).flags[is_burning]) {
+            const auto& pixel = world.at(world_coord);
+            if (pixel.flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             }
-            else if (world.at(world_coord).power > 15) {
+            else if (pixel.power > properties(pixel).activation_level) {
                 d_texture_data[pos] = sand::random_element(electricity_colours);
             }
             else {
-                d_texture_data[pos] = world.at(world_coord).colour;
+                d_texture_data[pos] = pixel.colour;
             }
 
             if (show_chunks && world.is_chunk_awake(world_coord)) {
