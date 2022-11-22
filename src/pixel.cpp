@@ -189,7 +189,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
-                .is_power_source = true,
+                .is_power_source = true
             };
             return px;
         }
@@ -206,7 +206,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
             return px;
         }
         case pixel_type::diode_in:
-        case pixel_type::diode_out: {
+        case pixel_type::diode_out:
+        case pixel_type::gate: {
             static constexpr auto px = pixel_properties{
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
@@ -385,6 +386,14 @@ auto pixel::diode_out() -> pixel
     return {
         .type = pixel_type::diode_out,
         .colour = from_hex(0xBE2EDD)
+    };
+}
+
+auto pixel::gate() -> pixel
+{
+    return {
+        .type = pixel_type::gate,
+        .colour = from_hex(0x5F27CD)
     };
 }
 
