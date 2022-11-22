@@ -403,7 +403,7 @@ auto pixel::spark() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::spark,
-        .colour = from_hex(0xFFFFFF)
+        .colour = from_hex(0xE1B12C)
     };
     p.power = 4;
     return p;
