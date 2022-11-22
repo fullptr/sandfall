@@ -268,23 +268,30 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     // Electricity
     auto& pixel = pixels.at(pos);
 
-    auto& power = pixel.power;
-    if (random_unit() < properties(pixel).conductivity) {
-        for (const auto& offset : adjacent_offsets) {
-            if (!pixels.valid(pos + offset)) continue;
-            const auto neigh_power = pixels.at(pos + offset).power;
-            power = std::max(power, neigh_power);
+    if (properties(pixel).is_conductor) {
+        if (pixel.power > 0) {
+            --pixel.power;
+            if (pixel.power == 0) pixel.power = -4;
+        }
+        else if (pixel.power < 0) {
+            ++pixel.power;
+        } else {
+            for (const auto& offset : adjacent_offsets) {
+                if (!pixels.valid(pos + offset)) continue;
+                auto& neighbour = pixels.at(pos + offset);
+                if (neighbour.power > 0 && neighbour.power != 4) {
+                    pixel.power = 4;
+                    break;
+                }
+            }
         }
     }
-    if (power > 0) {
+
+    if (pixel.power != 0) {
         pixels.wake_chunk_with_pixel(pos);
     }
-    
-    if (random_unit() < properties(pixel).conductivity) {
-        power = std::max(power - 2, 0);
-    }
 
-    if (properties(pixel).is_power_source) power = 200;
+    if (properties(pixel).is_power_source) pixel.power = 5;
 
     pixels.at(pos).flags[is_updated] = true;
 }

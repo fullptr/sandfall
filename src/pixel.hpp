@@ -67,7 +67,8 @@ struct pixel_properties
 
     // Electricity Controls
     bool        is_power_source     = false;
-    float       conductivity        = 0.0f; // Chance that is_powered_X = true from neighbour
+    bool        is_conductor        = false;
+
 };
 
 struct pixel
@@ -76,7 +77,7 @@ struct pixel
     glm::vec4       colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
-    std::int16_t    power = 0;
+    std::int8_t     power = 0;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
