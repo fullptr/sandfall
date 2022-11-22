@@ -214,10 +214,10 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 auto& neighbour = pixels.at(pos + offset);
 
                 // We exclude the max value so newly powered pixels cannot power us this frame.
-                const auto neighbour_on = is_powered(neighbour) && neighbour.power != props.power_level;
+                const auto neighbour_on = is_powered(neighbour) && neighbour.power != props.power_max_level;
 
                 if (properties(neighbour).is_power_source || neighbour_on) {
-                    pixel.power = props.power_level;
+                    pixel.power = props.power_max_level;
                     break;
                 }
             }

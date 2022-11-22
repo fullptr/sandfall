@@ -72,9 +72,8 @@ struct pixel_properties
     // Electricity Controls
     bool        is_power_source     = false;
     bool        is_conductor        = false;
-    int         power_level         = 0; // Power level set when the pixel turns on
-    int         activation_level    = 0; // Under this level, the pixel is no longer powered
-
+    int         power_max_level     = 0; // Power level set when the pixel turns on
+    int         power_min_level     = 0; // Under this level, the pixel is no longer powered
 };
 
 struct pixel

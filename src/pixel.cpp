@@ -104,8 +104,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .corrosion_resist = 1.0f,
                 .is_conductor = true,
-                .power_level = 25,
-                .activation_level = 20
+                .power_max_level = 25,
+                .power_min_level = 20
             };
             return px;
         }
@@ -199,8 +199,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .inertial_resistance = 0.05f,
                 .corrosion_resist = 1.0f,
                 .is_conductor = true,
-                .power_level = 18,
-                .activation_level = 15
+                .power_max_level = 24,
+                .power_min_level = 6
             };
             return px;
         }
@@ -362,7 +362,7 @@ auto pixel::solder() -> pixel
 
 auto is_powered(const pixel& px) -> bool
 {
-    return px.power > properties(px).activation_level;
+    return px.power > properties(px).power_min_level;
 }
 
 }
