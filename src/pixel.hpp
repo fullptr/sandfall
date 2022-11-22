@@ -85,6 +85,9 @@ struct pixel
     glm::vec4       colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
+
+    // For conductors, this is the current power level
+    // For power sources, it is a value between in [0, 5), with 5 being active
     std::int8_t     power = 0;
 
     static auto air() -> pixel;
