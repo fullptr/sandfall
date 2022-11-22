@@ -174,11 +174,15 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 // Determines if the source pixel should power the destination pixel
 auto should_get_powered(const pixel& dst, const pixel& src) -> bool
 {
-    const auto& src_props = properties(src);
+    // Prevents current from flowing from diode_out to diode_in
+    if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
+        return false;
+    }
 
-    const auto src_on = is_powered(src) && src.power != src_props.power_max_level;
-
-    return src_props.is_power_source || src_on;
+    // dst can get powered if src is either a power source or powered. Excludes the
+    // maximum power level so electricity can only flow one block per tick.
+    return properties(src).is_power_source
+        || is_powered(src) && src.power != properties(src).power_max_level;
 }
 
 // Update logic for single pixels depending on properties only
