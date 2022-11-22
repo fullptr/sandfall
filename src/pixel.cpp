@@ -134,6 +134,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .phase = pixel_phase::gas,
                 .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
+                .always_awake = true,
                 .corrosion_resist = 0.1f,
                 .flammability = 1.0f,
                 .put_out_surrounded = 0.0f,
@@ -201,6 +202,17 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .is_conductor = true,
                 .power_max_level = 24,
                 .power_min_level = 6
+            };
+            return px;
+        }
+        case pixel_type::diode_in:
+        case pixel_type::diode_out: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .corrosion_resist = 1.0f,
+                .is_conductor = true,
+                .power_max_level = 25,
+                .power_min_level = 20
             };
             return px;
         }
@@ -346,7 +358,7 @@ auto pixel::battery() -> pixel
 {
     return {
         .type = pixel_type::battery,
-        .colour = from_hex(0x38ADA9)
+        .colour = from_hex(0xF0932B)
     };
 }
 
@@ -358,6 +370,22 @@ auto pixel::solder() -> pixel
     };
     p.flags[is_falling] = true;
     return p;
+}
+
+auto pixel::diode_in() -> pixel
+{
+    return {
+        .type = pixel_type::diode_in,
+        .colour = from_hex(0x22A6B3)
+    };
+}
+
+auto pixel::diode_out() -> pixel
+{
+    return {
+        .type = pixel_type::diode_out,
+        .colour = from_hex(0xBE2EDD)
+    };
 }
 
 auto is_powered(const pixel& px) -> bool

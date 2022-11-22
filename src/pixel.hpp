@@ -38,7 +38,9 @@ enum class pixel_type : std::uint8_t
     gunpowder,
     methane,
     battery,
-    solder
+    solder,
+    diode_in,
+    diode_out,
 };
 
 struct pixel_properties
@@ -101,6 +103,8 @@ struct pixel
     static auto methane() -> pixel;
     static auto battery() -> pixel;
     static auto solder() -> pixel;
+    static auto diode_in() -> pixel;
+    static auto diode_out() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;
