@@ -171,6 +171,16 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 }
 
+// Determines if the source pixel should power the destination pixel
+auto should_get_powered(const pixel& dst, const pixel& src) -> bool
+{
+    const auto& src_props = properties(src);
+
+    const auto src_on = is_powered(src) && src.power != src_props.power_max_level;
+
+    return src_props.is_power_source || src_on;
+}
+
 // Update logic for single pixels depending on properties only
 inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 {
@@ -213,10 +223,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 if (!pixels.valid(pos + offset)) continue;
                 auto& neighbour = pixels.at(pos + offset);
 
-                // We exclude the max value so newly powered pixels cannot power us this frame.
-                const auto neighbour_on = is_powered(neighbour) && neighbour.power != props.power_max_level;
-
-                if (properties(neighbour).is_power_source || neighbour_on) {
+                if (should_get_powered(pixel, neighbour)) {
                     pixel.power = props.power_max_level;
                     break;
                 }
