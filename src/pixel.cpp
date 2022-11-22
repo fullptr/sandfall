@@ -184,8 +184,19 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::battery: {
             static constexpr auto px = pixel_properties{
+                .always_awake = true,
                 .corrosion_resist = 1.0f,
-                .is_power_source = true
+                .is_power_source = true,
+            };
+            return px;
+        }
+        case pixel_type::solder: {
+            static constexpr auto px = pixel_properties{
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
+                .inertial_resistance = 0.05f,
+                .corrosion_resist = 1.0f,
+                .is_conductor = true,
             };
             return px;
         }
@@ -335,9 +346,14 @@ auto pixel::battery() -> pixel
     };
 }
 
-auto is_powered(const pixel& px) -> bool
+auto pixel::solder() -> pixel
 {
-    return px.power > 0;
+    auto p = pixel{
+        .type = pixel_type::solder,
+        .colour = from_hex(0xB2BEC3)
+    };
+    p.flags[is_falling] = true;
+    return p;
 }
 
 }

@@ -177,8 +177,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
-    // If a pixel is burning, keep the chunk awake
-    if (pixel.flags[is_burning]) {
+    if (pixel.flags[is_burning] || props.always_awake) {
         pixels.wake_chunk_with_pixel(pos);
     }
 

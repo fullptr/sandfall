@@ -38,6 +38,7 @@ enum class pixel_type : std::uint8_t
     gunpowder,
     methane,
     battery,
+    solder
 };
 
 struct pixel_properties
@@ -48,6 +49,9 @@ struct pixel_properties
     float       gravity_factor      = 0.0f;
     float       inertial_resistance = 0.0f;
     int         dispersion_rate     = 0;
+
+    // Simulator Specifics
+    bool        always_awake        = false; // If enabled, then the chunk never sleeps
 
     // Water Controls
     bool        can_boil_water      = false;
@@ -95,9 +99,8 @@ struct pixel
     static auto gunpowder() -> pixel;
     static auto methane() -> pixel;
     static auto battery() -> pixel;
+    static auto solder() -> pixel;
 };
-
-auto is_powered(const pixel& px) -> bool;
 
 auto properties(const pixel& px) -> const pixel_properties&;
 
