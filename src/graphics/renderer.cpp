@@ -131,7 +131,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
             if (world.at(world_coord).flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             }
-            else if (world.at(world_coord).power > 0) {
+            else if (world.at(world_coord).power > 15) {
                 d_texture_data[pos] = sand::random_element(electricity_colours);
             }
             else {
