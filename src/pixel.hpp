@@ -118,7 +118,7 @@ struct pixel
 auto properties(const pixel& px) -> const pixel_properties&;
 
 auto serialise(auto& archive, pixel& px) -> void {
-    archive(px.type, px.colour, px.velocity, px.flags);
+    archive(px.type, px.colour, px.velocity, px.flags, px.power);
 }
 
 auto is_powered(const pixel& px) -> bool;
