@@ -41,7 +41,8 @@ struct editor
     std::size_t brush_type = 1;
         // 0 == circular spray
         // 1 == square
-        // 2 == explosion
+        // 2 == fine
+        // 3 == explosion
         
     bool show_chunks = false;
     bool show_demo = true;

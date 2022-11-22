@@ -116,7 +116,7 @@ auto main() -> int
             break; case 1:
                 if (mouse_down[0]) {
                     const auto half_extent = (int)(editor.brush_size / 2);
-                    for (int x = mouse.x - half_extent; x != mouse.x + half_extent; ++x) {
+                    for (int x = mouse.x - half_extent; x != mouse.x + half_extent + 1; ++x) {
                         for (int y = mouse.y - half_extent; y != mouse.y + half_extent; ++y) {
                             if (world->valid({x, y})) {
                                 world->set({x, y}, editor.get_pixel());
@@ -125,6 +125,12 @@ auto main() -> int
                     }
                 }
             break; case 2:
+                if (mouse_down[0]) {
+                    if (world->valid(mouse)) {
+                        world->set(mouse, editor.get_pixel());
+                    }
+                }
+            break; case 3:
                 if (mouse_clicked[0]) {
                     sand::apply_explosion(*world, mouse, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
