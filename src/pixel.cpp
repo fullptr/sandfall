@@ -218,6 +218,15 @@ auto properties(const pixel& pix) -> const pixel_properties&
             };
             return px;
         }
+        case pixel_type::spark: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .spontaneous_destroy = 0.3f,
+                .corrosion_resist = 0.1f,
+                .is_power_source = true
+            };
+            return px;
+        }
         default: {
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
             static constexpr auto px = pixel_properties{};
@@ -388,6 +397,16 @@ auto pixel::diode_out() -> pixel
         .type = pixel_type::diode_out,
         .colour = from_hex(0xBE2EDD)
     };
+}
+
+auto pixel::spark() -> pixel
+{
+    auto p = pixel{
+        .type = pixel_type::spark,
+        .colour = from_hex(0xFFFFFF)
+    };
+    p.power = 4;
+    return p;
 }
 
 auto is_powered(const pixel& px) -> bool

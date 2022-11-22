@@ -257,6 +257,10 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
             }
         }
     }
+
+    if (random_unit() < props.spontaneous_destroy) {
+        pixels.set(pos, pixel::air());
+    }
 }
 
 inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void

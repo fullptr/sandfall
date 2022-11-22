@@ -132,7 +132,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
             if (pixel.flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             }
-            else if (pixel.type == pixel_type::battery) {
+            else if (properties(pixel).is_power_source) {
                 d_texture_data[pos] = ((float)pixel.power / 4) * pixel.colour;
             }
             else if (pixel.power > properties(pixel).power_min_level) {

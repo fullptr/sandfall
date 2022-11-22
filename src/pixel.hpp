@@ -41,6 +41,7 @@ enum class pixel_type : std::uint8_t
     solder,
     diode_in,
     diode_out,
+    spark,
 };
 
 struct pixel_properties
@@ -54,6 +55,9 @@ struct pixel_properties
 
     // Simulator Specifics
     bool        always_awake        = false; // If enabled, then the chunk never sleeps
+
+    // Misc
+    float       spontaneous_destroy = 0.0f; // Chance the pixel randomly dies
 
     // Water Controls
     bool        can_boil_water      = false;
@@ -108,6 +112,7 @@ struct pixel
     static auto solder() -> pixel;
     static auto diode_in() -> pixel;
     static auto diode_out() -> pixel;
+    static auto spark() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;
