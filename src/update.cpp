@@ -203,6 +203,36 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
         }
 
     }
+
+    // Electricity
+    static constexpr auto power_time = 3;
+    static constexpr auto cooldown_time = -15;
+    if (props.is_conductor) {
+        if (pixel.power > 0) {
+            --pixel.power;
+            if (pixel.power == 0) pixel.power = cooldown_time;
+        }
+        else if (pixel.power < 0) {
+            ++pixel.power;
+        } else {
+            for (const auto& offset : adjacent_offsets) {
+                if (!pixels.valid(pos + offset)) continue;
+                auto& neighbour = pixels.at(pos + offset);
+
+                // We exclude the max value so newly powered pixels cannot power us this frame.
+                const auto neighbour_on = neighbour.power > 0 && neighbour.power != power_time;
+
+                if (properties(neighbour).is_power_source || neighbour_on) {
+                    pixel.power = power_time;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (pixel.power != 0) {
+        pixels.wake_chunk_with_pixel(pos);
+    }
 }
 
 inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
@@ -263,36 +293,6 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     update_pixel_attributes(pixels, pos);
 
     affect_neighbours(pixels, pos);
-
-    // Electricity
-    auto& pixel = pixels.at(pos);
-
-    if (properties(pixel).is_conductor) {
-        if (pixel.power > 0) {
-            --pixel.power;
-            if (pixel.power == 0) pixel.power = -4;
-        }
-        else if (pixel.power < 0) {
-            ++pixel.power;
-        } else {
-            for (const auto& offset : adjacent_offsets) {
-                if (!pixels.valid(pos + offset)) continue;
-                auto& neighbour = pixels.at(pos + offset);
-
-                // We exclude the max value so newly powered pixels cannot power us this frame.
-                const auto neighbour_on = neighbour.power > 0 && neighbour.power != 4;
-
-                if (properties(neighbour).is_power_source || neighbour_on) {
-                    pixel.power = 4;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (pixel.power != 0) {
-        pixels.wake_chunk_with_pixel(pos);
-    }
 
     pixels.at(pos).flags[is_updated] = true;
 }
