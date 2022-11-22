@@ -247,33 +247,14 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     // Check to see if battery pixels should switch on or off, powered diode_out turns off
     // batteries
     if (pixel.type == pixel_type::battery) {
-        pixel.power = std::min(pixel.power + 1, 5);
+        pixel.power = std::min(pixel.power + 1, 4);
         for (const auto& offset : adjacent_offsets) {
             if (!pixels.valid(pos + offset)) continue;
             auto& neighbour = pixels.at(pos + offset);
 
             if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
-                pixel = pixel::battery_off();
                 pixel.power = 0;
-                pixels.wake_chunk_with_pixel(pos);
             }
-        }
-    }
-    else if (pixel.type == pixel_type::battery_off) {
-        bool turn_on = true;
-        for (const auto& offset : adjacent_offsets) {
-            if (!pixels.valid(pos + offset)) continue;
-            auto& neighbour = pixels.at(pos + offset);
-
-            if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
-                turn_on = false;
-                break;
-            }
-        }
-        if (turn_on) {
-            pixel = pixel::battery();
-            pixel.power = 0;
-            pixels.wake_chunk_with_pixel(pos);
         }
     }
 }

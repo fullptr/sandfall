@@ -41,7 +41,6 @@ enum class pixel_type : std::uint8_t
     solder,
     diode_in,
     diode_out,
-    battery_off,
 };
 
 struct pixel_properties
@@ -109,7 +108,6 @@ struct pixel
     static auto solder() -> pixel;
     static auto diode_in() -> pixel;
     static auto diode_out() -> pixel;
-    static auto battery_off() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;

@@ -218,13 +218,6 @@ auto properties(const pixel& pix) -> const pixel_properties&
             };
             return px;
         }
-        case pixel_type::battery_off: {
-            static constexpr auto px = pixel_properties{
-                .always_awake = true,
-                .corrosion_resist = 1.0f
-            };
-            return px;
-        }
         default: {
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
             static constexpr auto px = pixel_properties{};
@@ -394,14 +387,6 @@ auto pixel::diode_out() -> pixel
     return {
         .type = pixel_type::diode_out,
         .colour = from_hex(0xBE2EDD)
-    };
-}
-
-auto pixel::battery_off() -> pixel
-{
-    return {
-        .type = pixel_type::battery_off,
-        .colour = from_hex(0x5F27CD)
     };
 }
 
