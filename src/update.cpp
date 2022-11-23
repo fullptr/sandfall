@@ -179,8 +179,8 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
         return false;
     }
 
-    // Batteries cannot directly power diode_out
-    if (dst.type == pixel_type::diode_out && src.type == pixel_type::battery) {
+    // diode_out can *only* be powered by diode_in
+    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in) {
         return false;
     }
 
