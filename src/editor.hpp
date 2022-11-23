@@ -34,7 +34,8 @@ struct editor
         { "solder",      sand::pixel::solder      },
         { "diode_in",    sand::pixel::diode_in    },
         { "diode_out",   sand::pixel::diode_out   },
-        { "spark",       sand::pixel::spark       }
+        { "spark",       sand::pixel::spark       },
+        { "c4",          sand::pixel::c4          }
     };
 
     float brush_size = 5.0f;

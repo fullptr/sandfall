@@ -42,6 +42,7 @@ enum class pixel_type : std::uint8_t
     diode_in,
     diode_out,
     spark,
+    c4,
 };
 
 struct pixel_properties
@@ -74,6 +75,7 @@ struct pixel_properties
     float       explosion_chance    = 0.0f; // Change that it explodes when destroyed
     bool        is_burn_source      = false; // Can this pixel cause others to burn?
     bool        is_ember_source     = false; // Does this pixel produce embers?
+    bool        explodes_on_power   = false; // Does this pixel explode when powered?
 
     // Electricity Controls
     bool        is_power_source     = false;
@@ -113,6 +115,7 @@ struct pixel
     static auto diode_in() -> pixel;
     static auto diode_out() -> pixel;
     static auto spark() -> pixel;
+    static auto c4() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;

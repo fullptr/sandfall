@@ -238,6 +238,12 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 }
             }
         }
+
+        if (pixel.power > 0 && props.explodes_on_power) {
+            apply_explosion(pixels, pos, sand::explosion{
+                .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
+            });
+        }
     }
 
     if (pixel.power > 0) {

@@ -227,6 +227,16 @@ auto properties(const pixel& pix) -> const pixel_properties&
             };
             return px;
         }
+        case pixel_type::c4: {
+            static constexpr auto px = pixel_properties{
+                .corrosion_resist = 0.95f,
+                .explodes_on_power = true,
+                .is_conductor = true,
+                .power_max_level = 10,
+                .power_min_level = 5
+            };
+            return px;
+        }
         default: {
             print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
             static constexpr auto px = pixel_properties{};
@@ -407,6 +417,14 @@ auto pixel::spark() -> pixel
     };
     p.power = 4;
     return p;
+}
+
+auto pixel::c4() -> pixel
+{
+    return {
+        .type = pixel_type::c4,
+        .colour = from_hex(0xB8E994)
+    };
 }
 
 auto is_powered(const pixel& px) -> bool
