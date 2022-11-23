@@ -129,14 +129,19 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
                 continue;
             }
             const auto& pixel = world.at(world_coord);
+            const auto& props = properties(pixel);
+
             if (pixel.flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             }
-            else if (properties(pixel).power_type == pixel_power_type::source) {
+            else if (props.power_type == pixel_power_type::source) {
                 d_texture_data[pos] = ((float)pixel.power / 4) * pixel.colour;
             }
-            else if (pixel.power > properties(pixel).power_min_level) {
-                d_texture_data[pos] = sand::random_element(electricity_colours);
+            else if (props.power_type == pixel_power_type::conductor) {
+                const auto a = pixel.colour;
+                const auto b = sand::random_element(electricity_colours);
+                const auto t = (float)pixel.power / props.power_max_level;
+                d_texture_data[pos] = sand::lerp(a, b, t);
             }
             else {
                 d_texture_data[pos] = pixel.colour;

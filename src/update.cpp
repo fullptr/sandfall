@@ -179,15 +179,17 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
         return false;
     }
 
-    // diode_out can *only* be powered by diode_in
-    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in) {
+    // diode_out can *only* be powered by diode_in and itself
+    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in
+                                          && src.type != pixel_type::diode_out) {
         return false;
     }
 
     // dst can get powered if src is either a power source or powered. Excludes the
     // maximum power level so electricity can only flow one block per tick.
+    const auto& props = properties(src);
     return is_active_power_source(src)
-        || (properties(src).power_min_level < src.power && src.power < properties(src).power_max_level);
+        || (props.power_min_level < src.power && src.power < props.power_max_level);
 }
 
 // Update logic for single pixels depending on properties only

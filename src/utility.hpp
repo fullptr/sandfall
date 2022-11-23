@@ -82,4 +82,10 @@ auto from_hex(int hex) -> glm::vec4;
 
 auto get_executable_filepath() -> std::filesystem::path;
 
+template <typename T>
+auto lerp(const T& a, const T& b, float t) -> T
+{
+    return t * b + (1 - t) * a;
+};
+
 }
