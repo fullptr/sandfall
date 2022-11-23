@@ -135,7 +135,10 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
             }
             else if (props.power_type == pixel_power_type::source) {
-                d_texture_data[pos] = ((float)pixel.power / 4) * pixel.colour;
+                const auto a = from_hex(0x000000); // black
+                const auto b = pixel.colour;
+                const auto t = (float)pixel.power / props.power_max;
+                d_texture_data[pos] = sand::lerp(a, b, t);
             }
             else if (props.power_type == pixel_power_type::conductor) {
                 const auto a = pixel.colour;

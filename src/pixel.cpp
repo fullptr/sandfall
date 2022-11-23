@@ -219,7 +219,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .always_awake = true,
                 .spontaneous_destroy = 0.3f,
                 .corrosion_resist = 0.1f,
-                .power_type = pixel_power_type::source
+                .power_type = pixel_power_type::source,
+                .power_max = 100
             };
             return px;
         }
@@ -410,7 +411,7 @@ auto pixel::spark() -> pixel
         .type = pixel_type::spark,
         .colour = from_hex(0xE1B12C)
     };
-    p.power = 4;
+    p.power = properties(p).power_max;
     return p;
 }
 
@@ -424,7 +425,8 @@ auto pixel::c4() -> pixel
 
 auto is_active_power_source(const pixel& px) -> bool
 {
-    return properties(px).power_type == pixel_power_type::source && px.power == 4;
+    const auto& props = properties(px);
+    return props.power_type == pixel_power_type::source && px.power == props.power_max;
 }
 
 }

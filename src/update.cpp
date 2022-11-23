@@ -255,7 +255,9 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     // Check to see if battery pixels should switch on or off, powered diode_out turns off
     // batteries
     if (props.power_type == pixel_power_type::source) {
-        pixel.power = std::min(pixel.power + 1, 4);
+        if (pixel.power < props.power_max) {
+            ++pixel.power;
+        }
         for (const auto& offset : adjacent_offsets) {
             if (!pixels.valid(pos + offset)) continue;
             auto& neighbour = pixels.at(pos + offset);
