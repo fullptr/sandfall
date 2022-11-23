@@ -224,7 +224,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     }
 
     // Electricity
-    if (props.is_conductor) {
+    if (props.power_type == pixel_power_type::conductor) {
         if (pixel.power > 0) {
             --pixel.power;
         } else {
@@ -252,7 +252,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 
     // Check to see if battery pixels should switch on or off, powered diode_out turns off
     // batteries
-    if (pixel.type == pixel_type::battery) {
+    if (props.power_type == pixel_power_type::source) {
         pixel.power = std::min(pixel.power + 1, 4);
         for (const auto& offset : adjacent_offsets) {
             if (!pixels.valid(pos + offset)) continue;
