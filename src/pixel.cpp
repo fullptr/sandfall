@@ -427,11 +427,6 @@ auto pixel::c4() -> pixel
     };
 }
 
-auto is_powered(const pixel& px) -> bool
-{
-    return px.power > properties(px).power_min_level;
-}
-
 auto is_active_power_source(const pixel& px) -> bool
 {
     return properties(px).power_type == pixel_power_type::source && px.power == 4;
