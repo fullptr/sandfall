@@ -189,7 +189,7 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
     // maximum power level so electricity can only flow one block per tick.
     const auto& props = properties(src);
     return is_active_power_source(src)
-        || (props.power_min_level < src.power && src.power < props.power_max_level);
+        || ((props.power_max) / 2 < src.power && src.power < props.power_max);
 }
 
 // Update logic for single pixels depending on properties only
@@ -235,7 +235,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 auto& neighbour = pixels.at(pos + offset);
 
                 if (should_get_powered(pixel, neighbour)) {
-                    pixel.power = props.power_max_level;
+                    pixel.power = props.power_max;
                     break;
                 }
             }

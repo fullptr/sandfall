@@ -140,7 +140,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
             else if (props.power_type == pixel_power_type::conductor) {
                 const auto a = pixel.colour;
                 const auto b = sand::random_element(electricity_colours);
-                const auto t = (float)pixel.power / props.power_max_level;
+                const auto t = (float)pixel.power / props.power_max;
                 d_texture_data[pos] = sand::lerp(a, b, t);
             }
             else {

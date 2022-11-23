@@ -86,8 +86,7 @@ struct pixel_properties
 
     // Electricity Controls
     pixel_power_type power_type     = pixel_power_type::none;
-    int         power_max_level     = 0; // Power level set when the pixel turns on
-    int         power_min_level     = 0; // Under this level, the pixel is no longer powered
+    std::uint8_t     power_max      = 0;
 };
 
 struct pixel

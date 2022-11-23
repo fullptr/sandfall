@@ -104,8 +104,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             static constexpr auto px = pixel_properties{
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
-                .power_max_level = 25,
-                .power_min_level = 20
+                .power_max = 25
             };
             return px;
         }
@@ -190,8 +189,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::source,
-                .power_max_level = 100,
-                .power_min_level = 99
+                .power_max = 5
             };
             return px;
         }
@@ -202,8 +200,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .inertial_resistance = 0.05f,
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
-                .power_max_level = 24,
-                .power_min_level = 6
+                .power_max = 24
             };
             return px;
         }
@@ -213,8 +210,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
-                .power_max_level = 25,
-                .power_min_level = 20
+                .power_max = 25
             };
             return px;
         }
@@ -232,8 +228,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .corrosion_resist = 0.95f,
                 .explodes_on_power = true,
                 .power_type = pixel_power_type::conductor,
-                .power_max_level = 10,
-                .power_min_level = 5
+                .power_max = 10
             };
             return px;
         }
