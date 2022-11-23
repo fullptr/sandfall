@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "utility.hpp"
+#include "pixel.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
@@ -106,6 +107,11 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xfad390)
     };
 
+    static const auto electricity_colours = std::array{
+        sand::from_hex(0xf6e58d),
+        sand::from_hex(0xf9ca24)
+    };
+
     const auto camera_width = camera.zoom * (camera.screen_width / camera.screen_height);
     const auto camera_height = camera.zoom;
 
@@ -122,10 +128,18 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
-            if (world.at(world_coord).flags[is_burning]) {
+            const auto& pixel = world.at(world_coord);
+            if (pixel.flags[is_burning]) {
                 d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
-            } else {
-                d_texture_data[pos] = world.at(world_coord).colour;
+            }
+            else if (properties(pixel).is_power_source) {
+                d_texture_data[pos] = ((float)pixel.power / 4) * pixel.colour;
+            }
+            else if (pixel.power > properties(pixel).power_min_level) {
+                d_texture_data[pos] = sand::random_element(electricity_colours);
+            }
+            else {
+                d_texture_data[pos] = pixel.colour;
             }
 
             if (show_chunks && world.is_chunk_awake(world_coord)) {

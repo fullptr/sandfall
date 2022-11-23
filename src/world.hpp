@@ -18,6 +18,11 @@ static_assert(num_pixels % chunk_size == 0);
 
 static constexpr std::uint32_t num_chunks = num_pixels / chunk_size;
 
+static constexpr glm::ivec2 UP = {0, -1};
+static constexpr glm::ivec2 DOWN = {0, 1};
+static constexpr glm::ivec2 LEFT = {-1, 0};
+static constexpr glm::ivec2 RIGHT = {1, 0};
+
 struct chunk
 {
     bool should_step      = true;

@@ -8,9 +8,9 @@ namespace sand {
 
 enum pixel_flags : std::size_t
 {
-    is_updated,
-    is_falling,
-    is_burning,
+    is_updated, // 0
+    is_falling, // 1
+    is_burning, // 2
 };
 
 enum class pixel_phase : std::uint8_t
@@ -37,6 +37,12 @@ enum class pixel_type : std::uint8_t
     oil,
     gunpowder,
     methane,
+    battery,
+    solder,
+    diode_in,
+    diode_out,
+    spark,
+    c4,
 };
 
 struct pixel_properties
@@ -47,6 +53,12 @@ struct pixel_properties
     float       gravity_factor      = 0.0f;
     float       inertial_resistance = 0.0f;
     int         dispersion_rate     = 0;
+
+    // Simulator Specifics
+    bool        always_awake        = false; // If enabled, then the chunk never sleeps
+
+    // Misc
+    float       spontaneous_destroy = 0.0f; // Chance the pixel randomly dies
 
     // Water Controls
     bool        can_boil_water      = false;
@@ -63,6 +75,13 @@ struct pixel_properties
     float       explosion_chance    = 0.0f; // Change that it explodes when destroyed
     bool        is_burn_source      = false; // Can this pixel cause others to burn?
     bool        is_ember_source     = false; // Does this pixel produce embers?
+    bool        explodes_on_power   = false; // Does this pixel explode when powered?
+
+    // Electricity Controls
+    bool        is_power_source     = false;
+    bool        is_conductor        = false;
+    int         power_max_level     = 0; // Power level set when the pixel turns on
+    int         power_min_level     = 0; // Under this level, the pixel is no longer powered
 };
 
 struct pixel
@@ -71,6 +90,10 @@ struct pixel
     glm::vec4       colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
+
+    // For conductors, this is the current power level
+    // For power sources, it is a value between in [0, 5), with 5 being active
+    std::int8_t     power = 0;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
@@ -87,12 +110,21 @@ struct pixel
     static auto oil() -> pixel;
     static auto gunpowder() -> pixel;
     static auto methane() -> pixel;
+    static auto battery() -> pixel;
+    static auto solder() -> pixel;
+    static auto diode_in() -> pixel;
+    static auto diode_out() -> pixel;
+    static auto spark() -> pixel;
+    static auto c4() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;
 
 auto serialise(auto& archive, pixel& px) -> void {
-    archive(px.type, px.colour, px.velocity, px.flags);
+    archive(px.type, px.colour, px.velocity, px.flags, px.power);
 }
+
+auto is_powered(const pixel& px) -> bool;
+auto is_active_power_source(const pixel& px) -> bool;
 
 }

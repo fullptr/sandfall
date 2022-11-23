@@ -27,6 +27,13 @@ static constexpr auto neighbour_offsets = std::array{
     glm::ivec2{1, -1}
 };
 
+static constexpr auto adjacent_offsets = std::array{
+    glm::ivec2{1, 0},
+    glm::ivec2{-1, 0},
+    glm::ivec2{0, 1},
+    glm::ivec2{0, -1}
+};
+
 auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
     if (!pixels.valid(src_pos) || !pixels.valid(dst_pos)) { return false; }
@@ -164,37 +171,101 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 }
 
+// Determines if the source pixel should power the destination pixel
+auto should_get_powered(const pixel& dst, const pixel& src) -> bool
+{
+    // Prevents current from flowing from diode_out to diode_in
+    if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
+        return false;
+    }
+
+    // diode_out can *only* be powered by diode_in
+    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in) {
+        return false;
+    }
+
+    // dst can get powered if src is either a power source or powered. Excludes the
+    // maximum power level so electricity can only flow one block per tick.
+    return is_active_power_source(src)
+        || (is_powered(src) && src.power != properties(src).power_max_level);
+}
+
 // Update logic for single pixels depending on properties only
 inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 {
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
-    // If a pixel is burning, keep the chunk awake
-    if (pixel.flags[is_burning]) {
+    if (pixel.flags[is_burning] || props.always_awake) {
         pixels.wake_chunk_with_pixel(pos);
     }
 
     // is_burning status
     if (pixel.flags[is_burning]) {
 
-        // First, see if it can be put out
+        // See if it can be put out
         const auto put_out = is_surrounded(pixels, pos) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
             pixel.flags[is_burning] = false;
         }
 
-        // Second, see if it gets destroyed
+        // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
             pixel = pixel::air();
         }
 
-        // Lastly, see if it explodes
+        // See if it explodes
         if (random_unit() < props.explosion_chance) {
             apply_explosion(pixels, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
+
+    }
+
+    // Electricity
+    if (props.is_conductor) {
+        if (pixel.power > 0) {
+            --pixel.power;
+        } else {
+            for (const auto& offset : adjacent_offsets) {
+                if (!pixels.valid(pos + offset)) continue;
+                auto& neighbour = pixels.at(pos + offset);
+
+                if (should_get_powered(pixel, neighbour)) {
+                    pixel.power = props.power_max_level;
+                    break;
+                }
+            }
+        }
+
+        if (pixel.power > 0 && props.explodes_on_power) {
+            apply_explosion(pixels, pos, sand::explosion{
+                .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
+            });
+        }
+    }
+
+    if (pixel.power > 0) {
+        pixels.wake_chunk_with_pixel(pos);
+    }
+
+    // Check to see if battery pixels should switch on or off, powered diode_out turns off
+    // batteries
+    if (pixel.type == pixel_type::battery) {
+        pixel.power = std::min(pixel.power + 1, 4);
+        for (const auto& offset : adjacent_offsets) {
+            if (!pixels.valid(pos + offset)) continue;
+            auto& neighbour = pixels.at(pos + offset);
+
+            if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
+                pixel.power = 0;
+            }
+        }
+    }
+
+    if (random_unit() < props.spontaneous_destroy) {
+        pixels.set(pos, pixel::air());
     }
 }
 
@@ -203,43 +274,42 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
 
+    // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
-        if (pixels.valid(pos + offset)) {
-            const auto neigh_pos = pos + offset;
-            auto& neighbour = pixels.at(neigh_pos);
+        if (!pixels.valid(pos + offset)) continue;             
+        const auto neigh_pos = pos + offset;
+        auto& neighbour = pixels.at(neigh_pos);
 
-            // Boil water
-            if (props.can_boil_water) {
-                if (neighbour.type == pixel_type::water) {
-                    neighbour = pixel::steam();
+        // Boil water
+        if (props.can_boil_water) {
+            if (neighbour.type == pixel_type::water) {
+                neighbour = pixel::steam();
+            }
+        }
+
+        // Corrode neighbours
+        if (props.is_corrosion_source) {
+            if (random_unit() > properties(neighbour).corrosion_resist) {
+                neighbour = pixel::air();
+                if (random_unit() > 0.9f) {
+                    pixel = pixel::air();
                 }
             }
-
-            // Corrode neighbours
-            if (props.is_corrosion_source) {
-                if (random_unit() > properties(neighbour).corrosion_resist) {
-                    neighbour = pixel::air();
-                    if (random_unit() > 0.9f) {
-                        pixel = pixel::air();
-                    }
-                }
+        }
+        
+        // Spread fire
+        if (props.is_burn_source || pixel.flags[is_burning]) {
+            if (random_unit() < properties(neighbour).flammability) {
+                neighbour.flags[is_burning] = true;
+                pixels.wake_chunk_with_pixel(neigh_pos);
             }
-            
-            // Spread fire
-            if (props.is_burn_source || pixel.flags[is_burning]) {
-                if (random_unit() < properties(neighbour).flammability) {
-                    neighbour.flags[is_burning] = true;
-                    pixels.wake_chunk_with_pixel(neigh_pos);
-                }
-            }
+        }
 
-            // Produce embers
-            const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
-            if (can_produce_embers && neighbour.type == pixel_type::none) {
-                if (random_unit() < 0.01f) {
-                    neighbour = pixel::ember();
-                    pixels.wake_chunk_with_pixel(neigh_pos);
-                }
+        // Produce embers
+        const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
+        if (can_produce_embers && neighbour.type == pixel_type::none) {
+            if (random_unit() < 0.01f) {
+                pixels.set(neigh_pos, pixel::ember());
             }
         }
     }

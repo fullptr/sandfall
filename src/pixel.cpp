@@ -96,13 +96,16 @@ auto properties(const pixel& pix) -> const pixel_properties&
         }
         case pixel_type::rock: {
             static constexpr auto px = pixel_properties{
-                .corrosion_resist = 0.95f
+                .corrosion_resist = 0.95f,
             };
             return px;
         }
         case pixel_type::titanium: {
             static constexpr auto px = pixel_properties{
-                .corrosion_resist = 1.0f
+                .corrosion_resist = 1.0f,
+                .is_conductor = true,
+                .power_max_level = 25,
+                .power_min_level = 20
             };
             return px;
         }
@@ -131,6 +134,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .phase = pixel_phase::gas,
                 .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
+                .always_awake = true,
                 .corrosion_resist = 0.1f,
                 .flammability = 1.0f,
                 .put_out_surrounded = 0.0f,
@@ -178,6 +182,58 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out_surrounded = 0.0f,
                 .put_out = 0.0f,
                 .burn_out_chance = 0.1f
+            };
+            return px;
+        }
+        case pixel_type::battery: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .corrosion_resist = 1.0f,
+                .is_power_source = true,
+                .power_max_level = 100,
+                .power_min_level = 99
+            };
+            return px;
+        }
+        case pixel_type::solder: {
+            static constexpr auto px = pixel_properties{
+                .can_move_diagonally = true,
+                .gravity_factor = 1.0f,
+                .inertial_resistance = 0.05f,
+                .corrosion_resist = 1.0f,
+                .is_conductor = true,
+                .power_max_level = 24,
+                .power_min_level = 6
+            };
+            return px;
+        }
+        case pixel_type::diode_in:
+        case pixel_type::diode_out: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .corrosion_resist = 1.0f,
+                .is_conductor = true,
+                .power_max_level = 25,
+                .power_min_level = 20
+            };
+            return px;
+        }
+        case pixel_type::spark: {
+            static constexpr auto px = pixel_properties{
+                .always_awake = true,
+                .spontaneous_destroy = 0.3f,
+                .corrosion_resist = 0.1f,
+                .is_power_source = true
+            };
+            return px;
+        }
+        case pixel_type::c4: {
+            static constexpr auto px = pixel_properties{
+                .corrosion_resist = 0.95f,
+                .explodes_on_power = true,
+                .is_conductor = true,
+                .power_max_level = 10,
+                .power_min_level = 5
             };
             return px;
         }
@@ -287,7 +343,7 @@ auto pixel::ember() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::ember,
-        .colour = from_hex(0xFFFFFF) + light_noise()
+        .colour = from_hex(0xFFFFFF)
     };
     p.flags[is_burning] = true;
     return p;
@@ -319,5 +375,66 @@ auto pixel::methane() -> pixel
     };
 }
 
+auto pixel::battery() -> pixel
+{
+    return {
+        .type = pixel_type::battery,
+        .colour = from_hex(0xF0932B)
+    };
+}
+
+auto pixel::solder() -> pixel
+{
+    auto p = pixel{
+        .type = pixel_type::solder,
+        .colour = from_hex(0xB2BEC3)
+    };
+    p.flags[is_falling] = true;
+    return p;
+}
+
+auto pixel::diode_in() -> pixel
+{
+    return {
+        .type = pixel_type::diode_in,
+        .colour = from_hex(0x22A6B3)
+    };
+}
+
+auto pixel::diode_out() -> pixel
+{
+    return {
+        .type = pixel_type::diode_out,
+        .colour = from_hex(0xBE2EDD)
+    };
+}
+
+auto pixel::spark() -> pixel
+{
+    auto p = pixel{
+        .type = pixel_type::spark,
+        .colour = from_hex(0xE1B12C)
+    };
+    p.power = 4;
+    return p;
+}
+
+auto pixel::c4() -> pixel
+{
+    return {
+        .type = pixel_type::c4,
+        .colour = from_hex(0xB8E994)
+    };
+}
+
+auto is_powered(const pixel& px) -> bool
+{
+    return px.power > properties(px).power_min_level;
+}
+
+auto is_active_power_source(const pixel& px) -> bool
+{
+    return properties(px).is_power_source && px.power == 4;
+}
 
 }
