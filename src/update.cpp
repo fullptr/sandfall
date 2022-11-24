@@ -171,23 +171,40 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 }
 
-// Determines if the source pixel should power the destination pixel
-auto should_get_powered(const pixel& dst, const pixel& src) -> bool
+// Determines if the pixel at the given offset should power the current position.
+// offset must be a unit vector.
+auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
+    const auto& src = pixels.at(pos + offset);
+    const auto& dst = pixels.at(pos);
+
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
         return false;
     }
 
-    // diode_out can *only* be powered by diode_in
-    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in) {
+    // diode_out can *only* be powered by diode_in and itself
+    if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in
+                                          && src.type != pixel_type::diode_out) {
         return false;
+    }
+
+    // If the neighbour is a relay, we need to jump over it and check the pixel on the
+    // other side.
+    if (src.type == pixel_type::relay) {
+        auto new_pos = pos + 2 * offset;
+        if (!pixels.valid(new_pos)) return false;
+        const auto& new_src = pixels.at(new_pos);
+        const auto& props = properties(new_src);
+        return is_active_power_source(new_src)
+            || ((props.power_max) / 2 < new_src.power && new_src.power < props.power_max);
     }
 
     // dst can get powered if src is either a power source or powered. Excludes the
     // maximum power level so electricity can only flow one block per tick.
+    const auto& props = properties(src);
     return is_active_power_source(src)
-        || (is_powered(src) && src.power != properties(src).power_max_level);
+        || ((props.power_max) / 2 < src.power && src.power < props.power_max);
 }
 
 // Update logic for single pixels depending on properties only
@@ -224,44 +241,54 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     }
 
     // Electricity
-    if (props.is_conductor) {
-        if (pixel.power > 0) {
-            --pixel.power;
-        } else {
+    switch (props.power_type) {
+        case pixel_power_type::conductor: {
+            if (pixel.power > 0) {
+                --pixel.power;
+            }
+
+            // Check to see if we should power up just before we hit zero in order to
+            // maintain a current
+            if (pixel.power <= 1) {
+                for (const auto& offset : adjacent_offsets) {
+                    if (!pixels.valid(pos + offset)) continue;
+                    auto& neighbour = pixels.at(pos + offset);
+
+                    if (should_get_powered(pixels, pos, offset)) {
+                        pixel.power = props.power_max;
+                        break;
+                    }
+                }
+            }
+
+            if (pixel.power > 0 && props.explodes_on_power) {
+                apply_explosion(pixels, pos, sand::explosion{
+                    .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
+                });
+            }
+        } break;
+
+        case pixel_power_type::source: {
+            if (pixel.power < props.power_max) {
+                ++pixel.power;
+            }
             for (const auto& offset : adjacent_offsets) {
                 if (!pixels.valid(pos + offset)) continue;
                 auto& neighbour = pixels.at(pos + offset);
 
-                if (should_get_powered(pixel, neighbour)) {
-                    pixel.power = props.power_max_level;
+                // Powered diode_offs disable power sources
+                if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
+                    pixel.power = 0;
                     break;
                 }
             }
-        }
+        } break;
 
-        if (pixel.power > 0 && props.explodes_on_power) {
-            apply_explosion(pixels, pos, sand::explosion{
-                .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
-            });
-        }
+        case pixel_power_type::none: {} break;
     }
 
     if (pixel.power > 0) {
         pixels.wake_chunk_with_pixel(pos);
-    }
-
-    // Check to see if battery pixels should switch on or off, powered diode_out turns off
-    // batteries
-    if (pixel.type == pixel_type::battery) {
-        pixel.power = std::min(pixel.power + 1, 4);
-        for (const auto& offset : adjacent_offsets) {
-            if (!pixels.valid(pos + offset)) continue;
-            auto& neighbour = pixels.at(pos + offset);
-
-            if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
-                pixel.power = 0;
-            }
-        }
     }
 
     if (random_unit() < props.spontaneous_destroy) {
