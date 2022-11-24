@@ -14,12 +14,16 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec4 position_uv;
 
 uniform mat4 u_proj_matrix;
+uniform int  u_screen_width;
+uniform int  u_screen_height;
 
 out vec2 pass_uv;
 
 void main()
 {
     vec2 position = position_uv.xy;
+    position.x = position.x * u_screen_width;
+    position.y = position.y * u_screen_height;
     pass_uv = position_uv.zw;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
@@ -112,12 +116,18 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xf9ca24)
     };
 
-    const auto camera_width = camera.zoom * (camera.screen_width / camera.screen_height);
+    const auto camera_width = camera.zoom * ((float)camera.screen_width / camera.screen_height);
     const auto camera_height = camera.zoom;
 
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);
     }
+
+    d_shader.load_int("u_screen_width", camera.screen_width);
+    d_shader.load_int("u_screen_height", camera.screen_height);
+
+    const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
+    d_shader.load_mat4("u_proj_matrix", projection);
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {

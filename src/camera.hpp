@@ -6,8 +6,8 @@ namespace sand {
 struct camera
 {
     glm::vec2 top_left;
-    float     screen_width;
-    float     screen_height;
+    std::uint32_t       screen_width;
+    std::uint32_t       screen_height;
     int       zoom;
 };
 

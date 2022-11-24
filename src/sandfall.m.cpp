@@ -33,8 +33,8 @@ auto main() -> int
 
     auto camera = sand::camera{
         .top_left = {0, 0},
-        .screen_width = static_cast<float>(window.width()),
-        .screen_height = static_cast<float>(window.height()),
+        .screen_width = window.width(),
+        .screen_height = window.height(),
         .zoom = 256
     };
 
