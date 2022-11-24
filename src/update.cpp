@@ -178,6 +178,9 @@ auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) 
     const auto& src = pixels.at(pos + offset);
     const auto& dst = pixels.at(pos);
 
+    // relays should be powered themselves
+    if (dst.type == pixel_type::relay) return false;
+
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
         return false;
@@ -192,10 +195,12 @@ auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) 
     // If the neighbour is a relay, we need to jump over it and check the pixel on the
     // other side.
     if (src.type == pixel_type::relay) {
-        const auto& src = pixels.at(pos + 2 * offset);
-        const auto& props = properties(src);
-        return is_active_power_source(src)
-            || ((props.power_max) / 2 < src.power && src.power < props.power_max);
+        auto new_pos = pos + 2 * offset;
+        if (!pixels.valid(new_pos)) return false;
+        const auto& new_src = pixels.at(new_pos);
+        const auto& props = properties(new_src);
+        return is_active_power_source(new_src)
+            || ((props.power_max) / 2 < new_src.power && new_src.power < props.power_max);
     }
 
     // dst can get powered if src is either a power source or powered. Excludes the
