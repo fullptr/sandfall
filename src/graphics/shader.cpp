@@ -83,6 +83,11 @@ auto shader::load_mat4(const std::string& name, const glm::mat4& matrix) const -
     glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+auto shader::load_vec2(const std::string& name, const glm::vec2& vector) const -> void
+{
+	glUniform2f(get_location(name), vector.x, vector.y);
+}
+
 auto shader::load_sampler(const std::string& name, int value) const -> void
 {
 	glProgramUniform1i(d_program, get_location(name), value);
@@ -91,6 +96,11 @@ auto shader::load_sampler(const std::string& name, int value) const -> void
 auto shader::load_int(const std::string& name, int value) const -> void
 {
 	glProgramUniform1i(d_program, get_location(name), value);
+}
+
+auto shader::load_float(const std::string& name, float value) const -> void
+{
+	glUniform1f(get_location(name), value);
 }
 
 }

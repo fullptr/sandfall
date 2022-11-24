@@ -14,16 +14,20 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec4 position_uv;
 
 uniform mat4 u_proj_matrix;
+uniform vec2 u_top_left;
 uniform int  u_screen_width;
 uniform int  u_screen_height;
+
+uniform float u_width_offset;
+uniform float u_height offset;
 
 out vec2 pass_uv;
 
 void main()
 {
     vec2 position = position_uv.xy;
-    position.x = position.x * u_screen_width;
-    position.y = position.y * u_screen_height;
+    position.x = position.x * u_screen_width - u_width_offset;
+    position.y = position.y * u_screen_height - u_height_offset;
     pass_uv = position_uv.zw;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
@@ -93,7 +97,6 @@ renderer::renderer()
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
-    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, 1.0f, 1.0f, 0.0f));
 }
 
 renderer::~renderer()
@@ -116,13 +119,22 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xf9ca24)
     };
 
-    const auto camera_width = camera.zoom * ((float)camera.screen_width / camera.screen_height);
-    const auto camera_height = camera.zoom;
+    const auto aspect_ratio = static_cast<float>(camera.screen_width) / camera.screen_height;
+
+    const auto camera_top_left = glm::ivec2{
+        std::floor(camera.top_left.x), std::floor(camera.top_left.y)
+    };
+
+    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio + 1);
+    const auto camera_height = static_cast<int>(camera.zoom + 1);
 
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);
     }
 
+    d_shader.load_vec2("u_top_left", camera.top_left);
+    d_shader.load_float("u_width_offset", camera.top_left.x - camera_top_left.x);
+    d_shader.load_float("u_height_offset", camera.top_left.y - camera_top_left.y);
     d_shader.load_int("u_screen_width", camera.screen_width);
     d_shader.load_int("u_screen_height", camera.screen_height);
 
