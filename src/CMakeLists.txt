@@ -18,6 +18,7 @@ add_executable(sandfall
     update.cpp
     utility.cpp
     editor.cpp
+    mouse.cpp
 
     graphics/renderer.cpp
     graphics/window.cpp

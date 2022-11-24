@@ -99,7 +99,7 @@ struct pixel
 
     // For conductors, this is the current power level
     // For power sources, it is a value between in [0, 5), with 5 being active
-    std::int8_t     power = 0;
+    std::uint8_t    power = 0;
 
     static auto air() -> pixel;
     static auto sand() -> pixel;
