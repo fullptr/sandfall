@@ -205,10 +205,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
             return px;
         }
         case pixel_type::diode_in:
-        case pixel_type::diode_out:
-        case pixel_type::relay: {
+        case pixel_type::diode_out: {
             static constexpr auto px = pixel_properties{
-                .always_awake = true,
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
                 .power_max = 25
@@ -231,6 +229,12 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .explodes_on_power = true,
                 .power_type = pixel_power_type::conductor,
                 .power_max = 10
+            };
+            return px;
+        }
+        case pixel_type::relay: {
+            static constexpr auto px = pixel_properties{
+                .corrosion_resist = 1.0f
             };
             return px;
         }
