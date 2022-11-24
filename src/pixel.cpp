@@ -205,7 +205,8 @@ auto properties(const pixel& pix) -> const pixel_properties&
             return px;
         }
         case pixel_type::diode_in:
-        case pixel_type::diode_out: {
+        case pixel_type::diode_out:
+        case pixel_type::relay: {
             static constexpr auto px = pixel_properties{
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
@@ -420,6 +421,14 @@ auto pixel::c4() -> pixel
     return {
         .type = pixel_type::c4,
         .colour = from_hex(0xB8E994)
+    };
+}
+
+auto pixel::relay() -> pixel
+{
+    return {
+        .type = pixel_type::relay,
+        .colour = from_hex(0x192A56)
     };
 }
 

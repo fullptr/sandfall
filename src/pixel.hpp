@@ -50,6 +50,7 @@ enum class pixel_type : std::uint8_t
     diode_out,
     spark,
     c4,
+    relay
 };
 
 struct pixel_properties
@@ -86,7 +87,7 @@ struct pixel_properties
 
     // Electricity Controls
     pixel_power_type power_type     = pixel_power_type::none;
-    std::uint8_t     power_max      = 0;
+    std::uint8_t     power_max      = 0; // The maximum power this pixel can accept
 };
 
 struct pixel
@@ -121,6 +122,7 @@ struct pixel
     static auto diode_out() -> pixel;
     static auto spark() -> pixel;
     static auto c4() -> pixel;
+    static auto relay() -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;

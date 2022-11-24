@@ -171,9 +171,13 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
     }
 }
 
-// Determines if the source pixel should power the destination pixel
-auto should_get_powered(const pixel& dst, const pixel& src) -> bool
+// Determines if the pixel at the given offset should power the current position.
+// offset must be a unit vector.
+auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
+    const auto& src = pixels.at(pos + offset);
+    const auto& dst = pixels.at(pos);
+
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
         return false;
@@ -183,6 +187,15 @@ auto should_get_powered(const pixel& dst, const pixel& src) -> bool
     if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in
                                           && src.type != pixel_type::diode_out) {
         return false;
+    }
+
+    // If the neighbour is a relay, we need to jump over it and check the pixel on the
+    // other side.
+    if (src.type == pixel_type::relay) {
+        const auto& src = pixels.at(pos + 2 * offset);
+        const auto& props = properties(src);
+        return is_active_power_source(src)
+            || ((props.power_max) / 2 < src.power && src.power < props.power_max);
     }
 
     // dst can get powered if src is either a power source or powered. Excludes the
@@ -234,7 +247,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 if (!pixels.valid(pos + offset)) continue;
                 auto& neighbour = pixels.at(pos + offset);
 
-                if (should_get_powered(pixel, neighbour)) {
+                if (should_get_powered(pixels, pos, offset)) {
                     pixel.power = props.power_max;
                     break;
                 }
