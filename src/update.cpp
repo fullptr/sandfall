@@ -178,7 +178,7 @@ auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) 
     const auto& src = pixels.at(pos + offset);
     const auto& dst = pixels.at(pos);
 
-    // relays should be powered themselves
+    // relays should not be powered themselves
     if (dst.type == pixel_type::relay) return false;
 
     // Prevents current from flowing from diode_out to diode_in
