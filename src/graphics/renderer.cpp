@@ -19,7 +19,7 @@ uniform int  u_screen_width;
 uniform int  u_screen_height;
 
 uniform float u_width_offset;
-uniform float u_height offset;
+uniform float u_height_offset;
 
 out vec2 pass_uv;
 
@@ -125,16 +125,19 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         std::floor(camera.top_left.x), std::floor(camera.top_left.y)
     };
 
+
     const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio + 1);
     const auto camera_height = static_cast<int>(camera.zoom + 1);
+
+    const auto scale_factor = (float)camera.screen_width / (camera.zoom * (static_cast<float>(camera.screen_width) / camera.screen_height));
 
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);
     }
 
     d_shader.load_vec2("u_top_left", camera.top_left);
-    d_shader.load_float("u_width_offset", camera.top_left.x - camera_top_left.x);
-    d_shader.load_float("u_height_offset", camera.top_left.y - camera_top_left.y);
+    d_shader.load_float("u_width_offset",  scale_factor * (camera.top_left.x - camera_top_left.x));
+    d_shader.load_float("u_height_offset", scale_factor * (camera.top_left.y - camera_top_left.y));
     d_shader.load_int("u_screen_width", camera.screen_width);
     d_shader.load_int("u_screen_height", camera.screen_height);
 
@@ -144,7 +147,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
             const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = glm::ivec2{camera.top_left} + screen_coord;
+            const auto world_coord = camera_top_left + screen_coord;
             const auto pos = x + d_texture.width() * y;
             if (!world.valid(world_coord)) {
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
