@@ -125,8 +125,8 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     };
 
 
-    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio) + 2;
-    const auto camera_height = static_cast<int>(camera.zoom) + 2;
+    const auto camera_width = static_cast<int>(std::ceil(camera.zoom * aspect_ratio)) + 1;
+    const auto camera_height = static_cast<int>(std::ceil(camera.zoom)) + 1;
 
     const auto scale_factor = (float)camera.screen_height / camera.zoom;
 
