@@ -118,27 +118,23 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xf9ca24)
     };
 
-    const auto aspect_ratio = static_cast<float>(camera.screen_width) / camera.screen_height;
-
     const auto camera_top_left = glm::ivec2{glm::floor(camera.top_left)};
 
     const auto camera_width = static_cast<int>(
-        ((float)camera.screen_height/camera.world_to_screen) * aspect_ratio
+        (float)camera.screen_width/camera.world_to_screen
     ) + 2;
     const auto camera_height = static_cast<int>(
         (float)camera.screen_height/camera.world_to_screen
     ) + 2;
 
-    const auto scale_factor = (float)camera.screen_height / ((float)camera.screen_height/camera.world_to_screen);
-
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);
     }
 
-    d_shader.load_float("u_width_offset",  scale_factor * (camera.top_left.x - camera_top_left.x));
-    d_shader.load_float("u_height_offset", scale_factor * (camera.top_left.y - camera_top_left.y));
-    d_shader.load_int("u_screen_width",  scale_factor * camera_width);
-    d_shader.load_int("u_screen_height", scale_factor * camera_height);
+    d_shader.load_float("u_width_offset",  camera.world_to_screen * (camera.top_left.x - camera_top_left.x));
+    d_shader.load_float("u_height_offset", camera.world_to_screen * (camera.top_left.y - camera_top_left.y));
+    d_shader.load_int("u_screen_width",    camera.world_to_screen * camera_width);
+    d_shader.load_int("u_screen_height",   camera.world_to_screen * camera_height);
 
     const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
