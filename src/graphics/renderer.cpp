@@ -126,10 +126,10 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     };
 
 
-    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio + 1);
-    const auto camera_height = static_cast<int>(camera.zoom + 1);
+    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio + 2);
+    const auto camera_height = static_cast<int>(camera.zoom + 2);
 
-    const auto scale_factor = (float)camera.screen_width / (camera.zoom * (static_cast<float>(camera.screen_width) / camera.screen_height));
+    const auto scale_factor = (float)camera.screen_height / camera.zoom;
 
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);
@@ -138,8 +138,8 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     d_shader.load_vec2("u_top_left", camera.top_left);
     d_shader.load_float("u_width_offset",  scale_factor * (camera.top_left.x - camera_top_left.x));
     d_shader.load_float("u_height_offset", scale_factor * (camera.top_left.y - camera_top_left.y));
-    d_shader.load_int("u_screen_width", camera.screen_width);
-    d_shader.load_int("u_screen_height", camera.screen_height);
+    d_shader.load_int("u_screen_width",  scale_factor * camera_width);
+    d_shader.load_int("u_screen_height", scale_factor * camera_height);
 
     const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
