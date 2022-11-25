@@ -125,10 +125,14 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     };
 
 
-    const auto camera_width = static_cast<int>(std::ceil(camera.zoom * aspect_ratio)) + 1;
-    const auto camera_height = static_cast<int>(std::ceil(camera.zoom)) + 1;
+    const auto camera_width = static_cast<int>(
+        ((float)camera.screen_height/camera.world_to_screen) * aspect_ratio
+    ) + 2;
+    const auto camera_height = static_cast<int>(
+        (float)camera.screen_height/camera.world_to_screen
+    ) + 2;
 
-    const auto scale_factor = (float)camera.screen_height / camera.zoom;
+    const auto scale_factor = (float)camera.screen_height / ((float)camera.screen_height/camera.world_to_screen);
 
     if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
         resize(camera_width, camera_height);

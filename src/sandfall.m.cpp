@@ -16,11 +16,14 @@
 
 #include <memory>
 
+auto mouse_pos_world_space(const sand::window& w, const sand::camera& c) -> glm::vec2
+{
+    return w.get_mouse_pos() / c.world_to_screen + c.top_left;
+}
+
 auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 {
-    const auto mouse = w.get_mouse_pos();
-    const auto scale = (float)c.zoom / w.height();
-    return glm::ivec2{mouse * scale + c.top_left};
+    return glm::ivec2{mouse_pos_world_space(w, c)};
 }
 
 auto main() -> int
@@ -35,7 +38,7 @@ auto main() -> int
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .zoom = 256
+        .world_to_screen = 720.0f / 256.0f
     };
 
     window.set_callback([&](const sand::event& event) {
@@ -51,8 +54,8 @@ auto main() -> int
 
         if (mouse.is_button_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
-            const auto scale = (float)camera.zoom / window.height();
-            camera.top_left -= glm::vec2{e.x_offset * scale, e.y_offset * scale};
+            // Diving by world_to_screen takes you from screen space to world space
+            camera.top_left -= e.offset / camera.world_to_screen;
         }
         else if (event.is<sand::window_resize_event>()) {
             camera.screen_width = window.width();
@@ -60,10 +63,10 @@ auto main() -> int
         }
         else if (event.is<sand::mouse_scrolled_event>()) {
             const auto& e = event.as<sand::mouse_scrolled_event>();
-            const auto old_centre = pixel_at_mouse(window, camera);
-            camera.zoom -= 5 * e.y_offset;
-            camera.zoom = std::clamp(camera.zoom, 50, 500);
-            const auto new_centre = pixel_at_mouse(window, camera);
+            const auto old_centre = mouse_pos_world_space(window, camera);
+            camera.world_to_screen += 0.1f * e.offset.y;
+            camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
+            const auto new_centre = mouse_pos_world_space(window, camera);
             camera.top_left -= new_centre - old_centre;
         }
     });

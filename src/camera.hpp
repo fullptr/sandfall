@@ -8,7 +8,8 @@ struct camera
     glm::vec2 top_left;
     std::uint32_t       screen_width;
     std::uint32_t       screen_height;
-    int       zoom;
+
+    float world_to_screen; // the number of screen pixels per world pixel, multiplying by it takes you from world space to screen space
 };
 
 }
