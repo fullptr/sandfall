@@ -120,10 +120,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
 
     const auto aspect_ratio = static_cast<float>(camera.screen_width) / camera.screen_height;
 
-    const auto camera_top_left = glm::ivec2{
-        std::floor(camera.top_left.x), std::floor(camera.top_left.y)
-    };
-
+    const auto camera_top_left = glm::ivec2{glm::floor(camera.top_left)};
 
     const auto camera_width = static_cast<int>(
         ((float)camera.screen_height/camera.world_to_screen) * aspect_ratio

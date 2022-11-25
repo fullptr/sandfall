@@ -54,7 +54,6 @@ auto main() -> int
 
         if (mouse.is_button_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
-            // Diving by world_to_screen takes you from screen space to world space
             camera.top_left -= e.offset / camera.world_to_screen;
         }
         else if (event.is<sand::window_resize_event>()) {
