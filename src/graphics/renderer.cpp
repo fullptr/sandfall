@@ -118,23 +118,19 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         sand::from_hex(0xf9ca24)
     };
 
-    const auto camera_top_left = glm::ivec2{glm::floor(camera.top_left)};
+    const auto tex_top_left = glm::ivec2{glm::floor(camera.top_left)};
+    const auto tex_offset = camera.top_left - glm::vec2{tex_top_left};
+    const auto tex_width = std::ceil(camera.screen_width / camera.world_to_screen + 1);
+    const auto tex_height = std::ceil(camera.screen_height / camera.world_to_screen + 1);
 
-    const auto camera_width = static_cast<int>(
-        (float)camera.screen_width/camera.world_to_screen
-    ) + 2;
-    const auto camera_height = static_cast<int>(
-        (float)camera.screen_height/camera.world_to_screen
-    ) + 2;
-
-    if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
-        resize(camera_width, camera_height);
+    if (d_texture.width() != tex_width || d_texture.height() != tex_height) {
+        resize(tex_width, tex_height);
     }
 
-    d_shader.load_float("u_width_offset",  camera.world_to_screen * (camera.top_left.x - camera_top_left.x));
-    d_shader.load_float("u_height_offset", camera.world_to_screen * (camera.top_left.y - camera_top_left.y));
-    d_shader.load_int("u_screen_width",    camera.world_to_screen * camera_width);
-    d_shader.load_int("u_screen_height",   camera.world_to_screen * camera_height);
+    d_shader.load_float("u_width_offset",  camera.world_to_screen * tex_offset.x);
+    d_shader.load_float("u_height_offset", camera.world_to_screen * tex_offset.y);
+    d_shader.load_int("u_screen_width",    camera.world_to_screen * tex_width);
+    d_shader.load_int("u_screen_height",   camera.world_to_screen * tex_height);
 
     const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
@@ -142,7 +138,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
             const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = camera_top_left + screen_coord;
+            const auto world_coord = tex_top_left + screen_coord;
             const auto pos = x + d_texture.width() * y;
             if (!world.valid(world_coord)) {
                 d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};

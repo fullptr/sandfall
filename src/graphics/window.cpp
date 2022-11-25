@@ -213,12 +213,12 @@ void window::set_callback(const window_callback& callback)
     d_data.callback = callback;
 }
 
-auto window::width() const -> std::uint32_t
+auto window::width() const -> int
 {
 	return d_data.width; 
 }
 
-auto window::height() const -> std::uint32_t
+auto window::height() const -> int
 {
 	return d_data.height; 
 }

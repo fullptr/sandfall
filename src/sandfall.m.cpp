@@ -36,8 +36,8 @@ auto main() -> int
 
     auto camera = sand::camera{
         .top_left = {0, 0},
-        .screen_width = window.width(),
-        .screen_height = window.height(),
+        .screen_width = (float)window.width(),
+        .screen_height = (float)window.height(),
         .world_to_screen = 720.0f / 256.0f
     };
 
