@@ -14,7 +14,6 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec4 position_uv;
 
 uniform mat4 u_proj_matrix;
-uniform vec2 u_top_left;
 uniform int  u_screen_width;
 uniform int  u_screen_height;
 
@@ -126,8 +125,8 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     };
 
 
-    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio + 2);
-    const auto camera_height = static_cast<int>(camera.zoom + 2);
+    const auto camera_width = static_cast<int>(camera.zoom * aspect_ratio) + 2;
+    const auto camera_height = static_cast<int>(camera.zoom) + 2;
 
     const auto scale_factor = (float)camera.screen_height / camera.zoom;
 
@@ -135,7 +134,6 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         resize(camera_width, camera_height);
     }
 
-    d_shader.load_vec2("u_top_left", camera.top_left);
     d_shader.load_float("u_width_offset",  scale_factor * (camera.top_left.x - camera_top_left.x));
     d_shader.load_float("u_height_offset", scale_factor * (camera.top_left.y - camera_top_left.y));
     d_shader.load_int("u_screen_width",  scale_factor * camera_width);
