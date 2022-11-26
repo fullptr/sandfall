@@ -125,37 +125,37 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
-            const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = tex_top_left + screen_coord;
-            const auto pos = x + d_texture.width() * y;
+            const auto world_coord = tex_top_left + glm::ivec2{x, y};
+            auto& colour = d_texture_data[x + d_texture.width() * y];
+
             if (!world.valid(world_coord)) {
-                d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
+                colour = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
             const auto& pixel = world.at(world_coord);
             const auto& props = properties(pixel);
 
             if (pixel.flags[is_burning]) {
-                d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
+                colour = sand::random_element(fire_colours);
             }
             else if (props.power_type == pixel_power_type::source) {
                 const auto a = from_hex(0x000000); // black
                 const auto b = pixel.colour;
                 const auto t = (float)pixel.power / props.power_max;
-                d_texture_data[pos] = sand::lerp(a, b, t);
+                colour = sand::lerp(a, b, t);
             }
             else if (props.power_type == pixel_power_type::conductor) {
                 const auto a = pixel.colour;
                 const auto b = sand::random_element(electricity_colours);
                 const auto t = (float)pixel.power / props.power_max;
-                d_texture_data[pos] = sand::lerp(a, b, t);
+                colour = sand::lerp(a, b, t);
             }
             else {
-                d_texture_data[pos] = pixel.colour;
+                colour = pixel.colour;
             }
 
             if (show_chunks && world.is_chunk_awake(world_coord)) {
-                d_texture_data[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
+                colour += glm::vec4{0.05, 0.05, 0.05, 0};
             }
         }
     }
