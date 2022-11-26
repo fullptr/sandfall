@@ -116,7 +116,7 @@ auto main() -> int
                 if (mouse.is_button_down(sand::mouse_button::left)) {
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
-                        for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent; ++y) {
+                        for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
                             if (world->valid({x, y})) {
                                 world->set({x, y}, editor.get_pixel());
                             }
