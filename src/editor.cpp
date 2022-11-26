@@ -58,11 +58,8 @@ auto display_ui(
         if (ImGui::RadioButton("Square", editor.brush_type == 1)) {
             editor.brush_type = 1;
         }
-        if (ImGui::RadioButton("Fine", editor.brush_type == 2)) {
+        if (ImGui::RadioButton("Explosion", editor.brush_type == 2)) {
             editor.brush_type = 2;
-        }
-        if (ImGui::RadioButton("Explosion", editor.brush_type == 3)) {
-            editor.brush_type = 3;
         }
         ImGui::Text("Brush: %d", editor.brush_type);
 

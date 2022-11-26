@@ -36,8 +36,8 @@ auto main() -> int
 
     auto camera = sand::camera{
         .top_left = {0, 0},
-        .screen_width = (float)window.width(),
-        .screen_height = (float)window.height(),
+        .screen_width = static_cast<float>(window.width()),
+        .screen_height = static_cast<float>(window.height()),
         .world_to_screen = 720.0f / 256.0f
     };
 
@@ -121,12 +121,6 @@ auto main() -> int
                                 world->set({x, y}, editor.get_pixel());
                             }
                         }
-                    }
-                }
-            break; case 2:
-                if (mouse.is_button_down(sand::mouse_button::left)) {
-                    if (world->valid(mouse_pos)) {
-                        world->set(mouse_pos, editor.get_pixel());
                     }
                 }
             break; case 3:
