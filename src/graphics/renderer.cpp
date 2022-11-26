@@ -11,16 +11,21 @@ namespace {
 
 constexpr auto vertex_shader = R"SHADER(
 #version 410 core
-layout (location = 0) in vec4 position_uv;
+layout (location = 0) in vec2 p_position;
 
-uniform mat4 u_proj_matrix;
+uniform mat4  u_proj_matrix;
+uniform vec2  u_tex_offset;
+uniform vec2  u_tex_dimensions;
+uniform float u_world_to_screen;
 
 out vec2 pass_uv;
 
 void main()
 {
-    vec2 position = position_uv.xy;
-    pass_uv = position_uv.zw;
+    vec2 position = (p_position * u_tex_dimensions - u_tex_offset)
+                  * u_world_to_screen;
+
+    pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
 )SHADER";
@@ -64,13 +69,7 @@ renderer::renderer()
     , d_texture_data{}
     , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
 {
-    const float vertices[] = {
-        0.0f, 0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 1.0f
-    };
-
+    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
@@ -84,12 +83,11 @@ renderer::renderer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
-    d_shader.load_mat4("u_proj_matrix", glm::ortho(0.0f, 1.0f, 1.0f, 0.0f));
 }
 
 renderer::~renderer()
@@ -102,56 +100,62 @@ renderer::~renderer()
 auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
 {
     static const auto fire_colours = std::array{
-        sand::from_hex(0xe55039),
-        sand::from_hex(0xf6b93b),
-        sand::from_hex(0xfad390)
+        from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
     };
 
     static const auto electricity_colours = std::array{
-        sand::from_hex(0xf6e58d),
-        sand::from_hex(0xf9ca24)
+        from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
-    const auto camera_width = camera.zoom * (camera.screen_width / camera.screen_height);
-    const auto camera_height = camera.zoom;
+    const auto tex_top_left = glm::ivec2{glm::floor(camera.top_left)};
+    const auto tex_offset = camera.top_left - glm::vec2{tex_top_left};
+    const auto tex_width = std::ceil(camera.screen_width / camera.world_to_screen + 1);
+    const auto tex_height = std::ceil(camera.screen_height / camera.world_to_screen + 1);
 
-    if (d_texture.width() != camera_width || d_texture.height() != camera_height) {
-        resize(camera_width, camera_height);
+    if (d_texture.width() != tex_width || d_texture.height() != tex_height) {
+        resize(tex_width, tex_height);
     }
+
+    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
+    d_shader.load_vec2("u_tex_offset", tex_offset);
+    d_shader.load_vec2("u_tex_dimensions", glm::vec2{tex_width, tex_height});
+
+    const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
+    d_shader.load_mat4("u_proj_matrix", projection);
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
-            const auto screen_coord = glm::ivec2{x, y};
-            const auto world_coord = glm::ivec2{camera.top_left} + screen_coord;
-            const auto pos = x + d_texture.width() * y;
+            const auto world_coord = tex_top_left + glm::ivec2{x, y};
+            auto& colour = d_texture_data[x + d_texture.width() * y];
+
             if (!world.valid(world_coord)) {
-                d_texture_data[pos] = glm::vec4{1.0, 1.0, 1.0, 1.0};
+                colour = glm::vec4{1.0, 1.0, 1.0, 1.0};
                 continue;
             }
             const auto& pixel = world.at(world_coord);
             const auto& props = properties(pixel);
 
             if (pixel.flags[is_burning]) {
-                d_texture_data[pos] = light_noise(sand::random_element(fire_colours));
+                colour = sand::random_element(fire_colours);
             }
             else if (props.power_type == pixel_power_type::source) {
                 const auto a = from_hex(0x000000); // black
                 const auto b = pixel.colour;
-                const auto t = (float)pixel.power / props.power_max;
-                d_texture_data[pos] = sand::lerp(a, b, t);
+                const auto t = static_cast<float>(pixel.power) / props.power_max;
+                colour = sand::lerp(a, b, t);
             }
             else if (props.power_type == pixel_power_type::conductor) {
                 const auto a = pixel.colour;
                 const auto b = sand::random_element(electricity_colours);
-                const auto t = (float)pixel.power / props.power_max;
-                d_texture_data[pos] = sand::lerp(a, b, t);
+                const auto t = static_cast<float>(pixel.power) / props.power_max;
+                colour = sand::lerp(a, b, t);
             }
             else {
-                d_texture_data[pos] = pixel.colour;
+                colour = pixel.colour;
             }
 
             if (show_chunks && world.is_chunk_awake(world_coord)) {
-                d_texture_data[pos] += glm::vec4{0.05, 0.05, 0.05, 0};
+                colour += glm::vec4{0.05, 0.05, 0.05, 0};
             }
         }
     }

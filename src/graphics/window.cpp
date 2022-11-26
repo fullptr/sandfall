@@ -124,7 +124,7 @@ window::window(const std::string& name, int width, int height)
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
 		auto event = make_event<mouse_moved_event>(
-			x_pos, y_pos, x_pos - data.mouse_pos.x, y_pos - data.mouse_pos.y
+			glm::vec2{x_pos, y_pos}, glm::vec2{x_pos - data.mouse_pos.x, y_pos - data.mouse_pos.y}
 		);
 		data.mouse_pos = {x_pos, y_pos};
 		data.callback(event);
@@ -133,7 +133,7 @@ window::window(const std::string& name, int width, int height)
 	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<mouse_scrolled_event>(x_offset, y_offset);
+		auto event = make_event<mouse_scrolled_event>(glm::vec2{x_offset, y_offset});
 		data.callback(event);
 	});
 
@@ -213,12 +213,12 @@ void window::set_callback(const window_callback& callback)
     d_data.callback = callback;
 }
 
-auto window::width() const -> std::uint32_t
+auto window::width() const -> int
 {
 	return d_data.width; 
 }
 
-auto window::height() const -> std::uint32_t
+auto window::height() const -> int
 {
 	return d_data.height; 
 }
