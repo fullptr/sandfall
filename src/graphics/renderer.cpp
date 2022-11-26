@@ -13,20 +13,18 @@ constexpr auto vertex_shader = R"SHADER(
 #version 410 core
 layout (location = 0) in vec4 position_uv;
 
-uniform mat4 u_proj_matrix;
-uniform int  u_screen_width;
-uniform int  u_screen_height;
-
-uniform float u_width_offset;
-uniform float u_height_offset;
+uniform mat4  u_proj_matrix;
+uniform vec2  u_screen_offset;
+uniform vec2  u_screen_dimensions;
+uniform float u_world_to_screen;
 
 out vec2 pass_uv;
 
 void main()
 {
-    vec2 position = position_uv.xy;
-    position.x = position.x * u_screen_width - u_width_offset;
-    position.y = position.y * u_screen_height - u_height_offset;
+    vec2 position = (position_uv.xy * u_screen_dimensions - u_screen_offset)
+                  * u_world_to_screen;
+
     pass_uv = position_uv.zw;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
@@ -127,10 +125,9 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         resize(tex_width, tex_height);
     }
 
-    d_shader.load_float("u_width_offset",  camera.world_to_screen * tex_offset.x);
-    d_shader.load_float("u_height_offset", camera.world_to_screen * tex_offset.y);
-    d_shader.load_int("u_screen_width",    camera.world_to_screen * tex_width);
-    d_shader.load_int("u_screen_height",   camera.world_to_screen * tex_height);
+    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
+    d_shader.load_vec2("u_screen_offset", tex_offset);
+    d_shader.load_vec2("u_screen_dimensions", glm::vec2{tex_width, tex_height});
 
     const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
