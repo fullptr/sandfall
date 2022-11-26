@@ -141,13 +141,13 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
             else if (props.power_type == pixel_power_type::source) {
                 const auto a = from_hex(0x000000); // black
                 const auto b = pixel.colour;
-                const auto t = (float)pixel.power / props.power_max;
+                const auto t = static_cast<float>(pixel.power) / props.power_max;
                 colour = sand::lerp(a, b, t);
             }
             else if (props.power_type == pixel_power_type::conductor) {
                 const auto a = pixel.colour;
                 const auto b = sand::random_element(electricity_colours);
-                const auto t = (float)pixel.power / props.power_max;
+                const auto t = static_cast<float>(pixel.power) / props.power_max;
                 colour = sand::lerp(a, b, t);
             }
             else {
