@@ -100,14 +100,11 @@ renderer::~renderer()
 auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
 {
     static const auto fire_colours = std::array{
-        sand::from_hex(0xe55039),
-        sand::from_hex(0xf6b93b),
-        sand::from_hex(0xfad390)
+        from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
     };
 
     static const auto electricity_colours = std::array{
-        sand::from_hex(0xf6e58d),
-        sand::from_hex(0xf9ca24)
+        from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
     const auto tex_top_left = glm::ivec2{glm::floor(camera.top_left)};
@@ -123,7 +120,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     d_shader.load_vec2("u_tex_offset", tex_offset);
     d_shader.load_vec2("u_tex_dimensions", glm::vec2{tex_width, tex_height});
 
-    const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
+    const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
 
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
