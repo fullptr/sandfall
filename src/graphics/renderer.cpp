@@ -11,21 +11,21 @@ namespace {
 
 constexpr auto vertex_shader = R"SHADER(
 #version 410 core
-layout (location = 0) in vec4 position_uv;
+layout (location = 0) in vec2 p_position;
 
 uniform mat4  u_proj_matrix;
-uniform vec2  u_screen_offset;
-uniform vec2  u_screen_dimensions;
+uniform vec2  u_tex_offset;
+uniform vec2  u_tex_dimensions;
 uniform float u_world_to_screen;
 
 out vec2 pass_uv;
 
 void main()
 {
-    vec2 position = (position_uv.xy * u_screen_dimensions - u_screen_offset)
+    vec2 position = (p_position * u_tex_dimensions - u_tex_offset)
                   * u_world_to_screen;
 
-    pass_uv = position_uv.zw;
+    pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
 }
 )SHADER";
@@ -69,13 +69,7 @@ renderer::renderer()
     , d_texture_data{}
     , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
 {
-    const float vertices[] = {
-        0.0f, 0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 0.0f, 1.0f
-    };
-
+    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
@@ -89,7 +83,7 @@ renderer::renderer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
     d_shader.bind();
@@ -126,8 +120,8 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     }
 
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
-    d_shader.load_vec2("u_screen_offset", tex_offset);
-    d_shader.load_vec2("u_screen_dimensions", glm::vec2{tex_width, tex_height});
+    d_shader.load_vec2("u_tex_offset", tex_offset);
+    d_shader.load_vec2("u_tex_dimensions", glm::vec2{tex_width, tex_height});
 
     const auto projection = glm::ortho(0.0f, (float)camera.screen_width, (float)camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
