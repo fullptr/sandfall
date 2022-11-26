@@ -126,12 +126,17 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 {
+    const auto start_pos = pos;
+
     auto& data = pixels.at(pos);
     const auto& props = properties(data);
 
     // Pixels that don't move have their is_falling flag set to false at the end
-    const auto after_position_update = scope_exit{[&, start_pos = pos] {
+    const auto after_position_update = scope_exit{[&] {
         pixels.at(pos).flags[is_falling] = pos != start_pos;
+        if (pos == start_pos && properties(pixels.at(pos)).gravity_factor) {
+            pixels.at(pos).velocity = glm::ivec2{0, 1}; // will always try to move at least one block
+        }
     }};
 
     // Apply gravity
@@ -159,7 +164,6 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 
     // Attempts to disperse outwards according to the dispersion rate
     if (props.dispersion_rate) {
-        data.velocity.y = 0.0f;
 
         const auto dr = props.dispersion_rate;
         auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
