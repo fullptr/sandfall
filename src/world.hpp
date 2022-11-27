@@ -12,16 +12,11 @@
 
 namespace sand {
 
-static constexpr std::uint32_t num_pixels  = 256;
-static constexpr std::uint32_t chunk_size = 16;
+static constexpr int num_pixels  = 256;
+static constexpr int chunk_size = 16;
 static_assert(num_pixels % chunk_size == 0);
 
-static constexpr std::uint32_t num_chunks = num_pixels / chunk_size;
-
-static constexpr glm::ivec2 UP = {0, -1};
-static constexpr glm::ivec2 DOWN = {0, 1};
-static constexpr glm::ivec2 LEFT = {-1, 0};
-static constexpr glm::ivec2 RIGHT = {1, 0};
+static constexpr int num_chunks = num_pixels / chunk_size;
 
 struct chunk
 {
@@ -44,14 +39,14 @@ public:
 
     // Returns true if the given position exists and false otherwise
     auto valid(glm::ivec2 pos) const -> bool;
-    
-    auto simulate() -> void;
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
 
     auto at(glm::ivec2 pos) const -> const pixel&;
     auto at(glm::ivec2 pos) -> pixel&;
+
+    auto new_frame() -> void;
 
     // Returns the rhs
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
