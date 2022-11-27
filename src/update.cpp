@@ -2,6 +2,7 @@
 #include "utility.hpp"
 #include "config.hpp"
 #include "explosion.hpp"
+#include "world.hpp"
 
 #include <array>
 #include <utility>
@@ -346,8 +347,6 @@ inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
     }
 }
 
-}
-
 auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.at(pos).type == pixel_type::none || pixels.at(pos).flags[is_updated]) {
@@ -360,6 +359,28 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     affect_neighbours(pixels, pos);
 
     pixels.at(pos).flags[is_updated] = true;
+}
+
+}
+
+auto update(world& pixels) -> void
+{
+    pixels.new_frame();
+
+    for (int y = num_pixels; y != 0; --y) {
+        if (coin_flip()) {
+            for (int x = 0; x != num_pixels; ++x) {
+                const auto pos = glm::ivec2{x, y - 1};
+                if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
+            }
+        }
+        else {
+            for (int x = num_pixels; x != 0; --x) {
+                const auto pos = glm::ivec2{x - 1, y - 1};
+                if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
+            }
+        }
+    }
 }
 
 }

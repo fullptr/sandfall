@@ -4,6 +4,7 @@
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"
+#include "update.hpp"
 #include "explosion.hpp"
 #include "mouse.hpp"
 
@@ -87,7 +88,7 @@ auto main() -> int
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
-            world->simulate();
+            sand::update(*world);
             accumulator -= sand::config::time_step;
             updated = true;
         }

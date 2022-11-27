@@ -34,36 +34,6 @@ auto world::valid(glm::ivec2 pos) const -> bool
     return 0 <= pos.x && pos.x < num_pixels && 0 <= pos.y && pos.y < num_pixels;
 }
 
-auto world::simulate() -> void
-{
-    for (auto& chunk : d_chunks) {
-        chunk.should_step = std::exchange(chunk.should_step_next, false);
-    }
-    
-    const auto inner = [&](glm::ivec2 pos) {
-        if (is_chunk_awake(pos)) {
-            update_pixel(*this, pos);
-        }
-    };
-
-    for (std::uint32_t y = num_pixels; y != 0; --y) {
-        if (coin_flip()) {
-            for (std::uint32_t x = 0; x != num_pixels; ++x) {
-                inner({x, y - 1});
-            }
-        }
-        else {
-            for (std::uint32_t x = num_pixels; x != 0; --x) {
-                inner({x - 1, y - 1});
-            }
-        }
-    }
-
-    for (auto& pixel : d_pixels) {
-        pixel.flags[is_updated] = false;
-    }
-}
-
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
 {
     assert(valid(pos));
@@ -78,9 +48,7 @@ auto world::fill(const pixel& p) -> void
 
 auto world::at(glm::ivec2 pos) const -> const pixel&
 {
-    if (!valid(pos)) {
-        return default_pixel;
-    }
+    assert(valid(pos));
     return d_pixels[get_pos(pos)];
 }
 
@@ -100,7 +68,7 @@ auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 
 auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
-    const auto chunk = pixel / static_cast<int>(chunk_size);
+    const auto chunk = pixel / chunk_size;
     d_chunks[get_chunk_pos(chunk)].should_step_next = true;
 
     // Wake right
@@ -145,16 +113,25 @@ auto world::wake_all_chunks() -> void
 
 auto world::num_awake_chunks() const -> std::size_t
 {
-    auto count = std::size_t{0};
-    for (const auto& chunk : d_chunks) {
-        count += static_cast<std::size_t>(chunk.should_step);
+    return std::count_if(d_chunks.begin(), d_chunks.end(), [](chunk c) {
+        return c.should_step;
+    });
+}
+
+auto world::new_frame() -> void
+{
+    for (auto& chunk : d_chunks) {
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
-    return count;
+
+    for (auto& pixel : d_pixels) {
+        pixel.flags[is_updated] = false;
+    }
 }
 
 auto world::is_chunk_awake(glm::ivec2 pixel) const -> bool
 {
-    const auto chunk = pixel / static_cast<int>(chunk_size);
+    const auto chunk = pixel / chunk_size;
     return d_chunks[get_chunk_pos(chunk)].should_step;
 }
 
