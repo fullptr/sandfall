@@ -301,7 +301,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     }
 }
 
-inline auto affect_neighbours(world& pixels, glm::ivec2 pos) -> void
+inline auto update_pixel_neighbours(world& pixels, glm::ivec2 pos) -> void
 {
     auto& pixel = pixels.at(pos);
     const auto& props = properties(pixel);
@@ -354,9 +354,8 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
     }
 
     update_pixel_position(pixels, pos);
+    update_pixel_neighbours(pixels, pos);
     update_pixel_attributes(pixels, pos);
-
-    affect_neighbours(pixels, pos);
 
     pixels.at(pos).flags[is_updated] = true;
 }

@@ -19,7 +19,7 @@ timer::timer()
     , d_frame_count(0)
 {}
 
-double timer::on_update()
+auto timer::on_update() -> double
 {
     d_prev_time = d_curr_time;
     d_curr_time = d_clock.now();
@@ -33,6 +33,11 @@ double timer::on_update()
 
     const auto dt = std::chrono::duration<double>{d_curr_time - d_prev_time};
     return dt.count();
+}
+
+auto timer::now() const -> clock::time_point
+{
+    return d_clock.now();
 }
 
 auto random_from_range(float min, float max) -> float

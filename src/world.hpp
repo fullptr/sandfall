@@ -12,7 +12,7 @@
 
 namespace sand {
 
-static constexpr int num_pixels  = 256;
+static constexpr int num_pixels = 256;
 static constexpr int chunk_size = 16;
 static_assert(num_pixels % chunk_size == 0);
 
