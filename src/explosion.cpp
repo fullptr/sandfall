@@ -39,6 +39,7 @@ auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosio
     while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
             pixels.at(curr).colour *= 0.8f;
+            pixels.wake_chunk_with_pixel(curr);
         }
         curr += step;
     }

@@ -83,17 +83,6 @@ auto main() -> int
             updated = true;
         }
 
-        // Draw the world
-        if (updated) {
-            renderer.update(*world, editor.show_chunks, camera);
-        }
-        renderer.draw();
-
-        // Next, draw the editor UI
-        ui.begin_frame();
-        display_ui(editor, *world, timer, window, camera);
-        ui.end_frame();
-        
         const auto mouse_pos = pixel_at_mouse(window, camera);
         switch (editor.brush_type) {
             break; case 0:
@@ -101,6 +90,7 @@ auto main() -> int
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (world->valid(coord)) {
                         world->set(coord, editor.get_pixel());
+                        updated = true;
                     }
                 }
             break; case 1:
@@ -110,6 +100,7 @@ auto main() -> int
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
                             if (world->valid({x, y})) {
                                 world->set({x, y}, editor.get_pixel());
+                                updated = true;
                             }
                         }
                     }
@@ -119,8 +110,21 @@ auto main() -> int
                     sand::apply_explosion(*world, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
+                    updated = true;
                 }
         }
+        
+        // Next, draw the editor UI
+        ui.begin_frame();
+        if (display_ui(editor, *world, timer, window, camera)) updated = true;
+        ui.end_frame();
+
+        // Draw the world
+        if (updated) {
+            renderer.update(*world, editor.show_chunks, camera);
+        }
+        renderer.draw();
+
         window.swap_buffers();
     }
     
