@@ -1,4 +1,6 @@
 #include "editor.hpp"
+#include "utility.hpp"
+#include "camera.hpp"
 
 #include <cereal/archives/binary.hpp>
 #include <imgui.h>
@@ -13,9 +15,11 @@ auto display_ui(
     world& world,
     const timer& timer,
     const window& window,
-    glm::ivec2 mouse
+    const camera& camera
 ) -> void
 {
+    const auto mouse = pixel_at_mouse(window, camera);
+
     ImGui::ShowDemoWindow(&editor.show_demo);
 
     if (ImGui::Begin("Editor")) {
@@ -65,7 +69,15 @@ auto display_ui(
 
         if (world.valid(mouse)) {
             ImGui::Text("Power at mouse: %d", world.at(mouse).power);
+        } else {
+            ImGui::Text("Power at mouse: n/a");
         }
+
+        ImGui::Text("Camera Info");
+        ImGui::Text("Top Left: {%f, %f}", camera.top_left.x, camera.top_left.y);
+        ImGui::Text("Screen width: %f", camera.screen_width);
+        ImGui::Text("Screen height: %f", camera.screen_height);
+        ImGui::Text("Scale: %f", camera.world_to_screen);
     }
     ImGui::End();
 }

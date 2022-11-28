@@ -1,4 +1,6 @@
 #include "utility.hpp"
+#include "camera.hpp"
+#include "graphics/window.hpp"
 
 #include <array>
 #include <random>
@@ -29,7 +31,7 @@ double timer::on_update()
         d_last_time_printed = d_curr_time;
     }
 
-    std::chrono::duration<double> dt = d_curr_time - d_prev_time;
+    const auto dt = std::chrono::duration<double>{d_curr_time - d_prev_time};
     return dt.count();
 }
 
@@ -103,6 +105,16 @@ auto get_executable_filepath() -> std::filesystem::path
         }
         buffer.resize(2 * buffer.size());
     }
+}
+
+auto mouse_pos_world_space(const sand::window& w, const sand::camera& c) -> glm::vec2
+{
+    return w.get_mouse_pos() / c.world_to_screen + c.top_left;
+}
+
+auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
+{
+    return glm::ivec2{mouse_pos_world_space(w, c)};
 }
     
 }
