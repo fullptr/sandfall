@@ -16,8 +16,10 @@ auto display_ui(
     const timer& timer,
     const window& window,
     const camera& camera
-) -> void
+) -> bool
 {
+    auto updated = false;
+
     const auto mouse_actual = mouse_pos_world_space(window, camera);
     const auto mouse = pixel_at_mouse(window, camera);
 
@@ -70,6 +72,7 @@ auto display_ui(
                 auto archive = cereal::BinaryInputArchive{file};
                 archive(world);
                 world.wake_all_chunks();
+                updated = true;
             }
             ImGui::SameLine();
             ImGui::Text("Save %d", i);
@@ -77,6 +80,8 @@ auto display_ui(
         }
     }
     ImGui::End();
+
+    return updated;
 }
     
 }

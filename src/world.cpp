@@ -17,11 +17,16 @@ auto get_pos(glm::vec2 pos) -> std::size_t
     return pos.x + num_pixels * pos.y;
 }
 
-auto get_chunk_pos(glm::vec2 chunk) -> std::size_t
-{
-    return chunk.x + num_chunks * chunk.y;
 }
 
+auto get_chunk_index(glm::ivec2 chunk) -> std::size_t
+{
+    return num_chunks * chunk.y + chunk.x;
+}
+
+auto get_chunk_pos(std::size_t index) -> glm::ivec2
+{
+    return {index % num_chunks, index / num_chunks};
 }
 
 world::world()
@@ -69,14 +74,14 @@ auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / chunk_size;
-    d_chunks[get_chunk_pos(chunk)].should_step_next = true;
+    d_chunks[get_chunk_index(chunk)].should_step_next = true;
 
     // Wake right
     if (pixel.x != num_pixels - 1 && (pixel.x + 1) % chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
         if (valid(neighbour))
-            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
     }
 
     // Wake left
@@ -84,7 +89,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     {
         const auto neighbour = chunk - glm::ivec2{1, 0};
         if (valid(neighbour))
-            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
     }
 
     // Wake down
@@ -92,7 +97,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
         if (valid(neighbour))
-            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
     }
 
     // Wake up
@@ -100,7 +105,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     {
         const auto neighbour = chunk - glm::ivec2{0, 1};
         if (valid(neighbour))
-            d_chunks[get_chunk_pos(neighbour)].should_step_next = true;
+            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
     }
 }
 
@@ -108,6 +113,7 @@ auto world::wake_all_chunks() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step_next = true;
+        chunk.should_step = true;
     }
 }
 
@@ -132,7 +138,7 @@ auto world::new_frame() -> void
 auto world::is_chunk_awake(glm::ivec2 pixel) const -> bool
 {
     const auto chunk = pixel / chunk_size;
-    return d_chunks[get_chunk_pos(chunk)].should_step;
+    return d_chunks[get_chunk_index(chunk)].should_step;
 }
 
 }

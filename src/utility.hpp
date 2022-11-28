@@ -50,8 +50,10 @@ class timer
 
 public:
     timer();
-    double on_update();
-    std::uint32_t frame_rate() const { return d_frame_rate; }
+    auto on_update() -> double;
+    auto frame_rate() const -> std::uint32_t { return d_frame_rate; }
+
+    auto now() const -> clock::time_point;
 };
 
 auto random_from_range(float min, float max) -> float;
