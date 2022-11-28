@@ -61,7 +61,7 @@ auto display_ui(
     world& world,
     const timer& timer,
     const window& window,
-    glm::ivec2 mouse
+    const camera& camera
 ) -> void;
 
 }

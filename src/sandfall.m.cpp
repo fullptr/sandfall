@@ -17,16 +17,6 @@
 
 #include <memory>
 
-auto mouse_pos_world_space(const sand::window& w, const sand::camera& c) -> glm::vec2
-{
-    return w.get_mouse_pos() / c.world_to_screen + c.top_left;
-}
-
-auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
-{
-    return glm::ivec2{mouse_pos_world_space(w, c)};
-}
-
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -101,7 +91,7 @@ auto main() -> int
 
         // Next, draw the editor UI
         ui.begin_frame();
-        display_ui(editor, *world, timer, window, pixel_at_mouse(window, camera));
+        display_ui(editor, *world, timer, window, camera);
         ui.end_frame();
         
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -124,7 +114,7 @@ auto main() -> int
                         }
                     }
                 }
-            break; case 3:
+            break; case 2:
                 if (mouse.is_button_clicked(sand::mouse_button::left)) {
                     sand::apply_explosion(*world, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
