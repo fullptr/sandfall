@@ -117,13 +117,13 @@ auto main() -> int
         // Next, draw the editor UI
         ui.begin_frame();
         if (display_ui(editor, *world, timer, window, camera)) updated = true;
-        ui.end_frame();
 
         // Draw the world
         if (updated) {
             renderer.update(*world, editor.show_chunks, camera);
         }
         renderer.draw();
+        ui.end_frame();
 
         window.swap_buffers();
     }

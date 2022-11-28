@@ -89,6 +89,7 @@ renderer::renderer()
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
+    d_shader.load_vec2("u_tex_dimensions", glm::vec2{num_pixels, num_pixels});
 
     resize(num_pixels, num_pixels);
 }
@@ -110,14 +111,8 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
-    const auto tex_top_left = glm::ivec2{0, 0};
-    const auto tex_offset = camera.top_left;
-    const auto tex_width = num_pixels;
-    const auto tex_height = num_pixels;
-
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
-    d_shader.load_vec2("u_tex_offset", tex_offset);
-    d_shader.load_vec2("u_tex_dimensions", glm::vec2{tex_width, tex_height});
+    d_shader.load_vec2("u_tex_offset", camera.top_left);
 
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
