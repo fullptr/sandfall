@@ -113,6 +113,7 @@ auto world::wake_all_chunks() -> void
 {
     for (auto& chunk : d_chunks) {
         chunk.should_step_next = true;
+        chunk.should_step = true;
     }
 }
 
