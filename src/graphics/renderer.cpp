@@ -124,6 +124,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t x = 0; x != d_texture.width(); ++x) {
         for (std::size_t y = 0; y != d_texture.height(); ++y) {
             const auto world_coord = tex_top_left + glm::ivec2{x, y};
+            if (!world.is_chunk_awake(world_coord)) continue;
             auto& colour = d_texture_data[x + d_texture.width() * y];
 
             if (!world.valid(world_coord)) {
