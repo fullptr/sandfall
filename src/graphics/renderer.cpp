@@ -88,6 +88,8 @@ renderer::renderer()
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
+
+    resize(num_pixels, num_pixels);
 }
 
 renderer::~renderer()
@@ -107,14 +109,10 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
         from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
-    const auto tex_top_left = glm::ivec2{glm::floor(camera.top_left)};
-    const auto tex_offset = camera.top_left - glm::vec2{tex_top_left};
-    const auto tex_width = std::ceil(camera.screen_width / camera.world_to_screen + 1);
-    const auto tex_height = std::ceil(camera.screen_height / camera.world_to_screen + 1);
-
-    if (d_texture.width() != tex_width || d_texture.height() != tex_height) {
-        resize(tex_width, tex_height);
-    }
+    const auto tex_top_left = glm::ivec2{0, 0};
+    const auto tex_offset = camera.top_left;
+    const auto tex_width = num_pixels;
+    const auto tex_height = num_pixels;
 
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
     d_shader.load_vec2("u_tex_offset", tex_offset);
