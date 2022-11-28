@@ -24,6 +24,9 @@ struct chunk
     bool should_step_next = true;
 };
 
+auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
+auto get_chunk_pos(std::size_t index) -> glm::ivec2;
+
 class world
 {
 public:
@@ -56,6 +59,8 @@ public:
     auto wake_all_chunks() -> void;
     auto num_awake_chunks() const -> std::size_t;
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
+
+    auto get_chunks() const -> const chunks& { return d_chunks; }
 
     auto serialise(auto& archive) -> void
     {

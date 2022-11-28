@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 #include "utility.hpp"
 #include "pixel.hpp"
+#include "camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
@@ -121,40 +122,42 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
 
-    for (std::size_t x = 0; x != d_texture.width(); ++x) {
-        for (std::size_t y = 0; y != d_texture.height(); ++y) {
-            const auto world_coord = tex_top_left + glm::ivec2{x, y};
-            if (!world.is_chunk_awake(world_coord)) continue;
-            auto& colour = d_texture_data[x + d_texture.width() * y];
+    const auto& chunks = world.get_chunks();
+    for (std::size_t index = 0; index != chunks.size(); ++index) {
+        if (!chunks[index].should_step && !show_chunks) continue;
 
-            if (!world.valid(world_coord)) {
-                colour = glm::vec4{1.0, 1.0, 1.0, 1.0};
-                continue;
-            }
-            const auto& pixel = world.at(world_coord);
-            const auto& props = properties(pixel);
+        const auto top_left = chunk_size * get_chunk_pos(index);
+        for (std::size_t x = 0; x != chunk_size; ++x) {
+            for (std::size_t y = 0; y != chunk_size; ++y) {
+                const auto world_coord = top_left + glm::ivec2{x, y};
 
-            if (pixel.flags[is_burning]) {
-                colour = sand::random_element(fire_colours);
-            }
-            else if (props.power_type == pixel_power_type::source) {
-                const auto a = from_hex(0x000000); // black
-                const auto b = pixel.colour;
-                const auto t = static_cast<float>(pixel.power) / props.power_max;
-                colour = sand::lerp(a, b, t);
-            }
-            else if (props.power_type == pixel_power_type::conductor) {
-                const auto a = pixel.colour;
-                const auto b = sand::random_element(electricity_colours);
-                const auto t = static_cast<float>(pixel.power) / props.power_max;
-                colour = sand::lerp(a, b, t);
-            }
-            else {
-                colour = pixel.colour;
-            }
+                auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
 
-            if (show_chunks && world.is_chunk_awake(world_coord)) {
-                colour += glm::vec4{0.05, 0.05, 0.05, 0};
+                const auto& pixel = world.at(world_coord);
+                const auto& props = properties(pixel);
+
+                if (pixel.flags[is_burning]) {
+                    colour = sand::random_element(fire_colours);
+                }
+                else if (props.power_type == pixel_power_type::source) {
+                    const auto a = from_hex(0x000000); // black
+                    const auto b = pixel.colour;
+                    const auto t = static_cast<float>(pixel.power) / props.power_max;
+                    colour = sand::lerp(a, b, t);
+                }
+                else if (props.power_type == pixel_power_type::conductor) {
+                    const auto a = pixel.colour;
+                    const auto b = sand::random_element(electricity_colours);
+                    const auto t = static_cast<float>(pixel.power) / props.power_max;
+                    colour = sand::lerp(a, b, t);
+                }
+                else {
+                    colour = pixel.colour;
+                }
+
+                if (show_chunks && chunks[index].should_step) {
+                    colour += glm::vec4{0.05, 0.05, 0.05, 0};
+                }
             }
         }
     }
