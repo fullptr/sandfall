@@ -16,4 +16,4 @@ add_library(vendor STATIC
 )
 
 target_include_directories(vendor PUBLIC . ./imgui)
-target_link_libraries(vendor PUBLIC glfw)
+target_link_libraries(vendor PRIVATE glfw)
