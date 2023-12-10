@@ -7,6 +7,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include <print>
 
 namespace sand {
 namespace {
@@ -22,7 +23,7 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
 
 	if (result == GL_FALSE) {
-        print("ERROR: Could not compile shader {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT");
+        std::print("ERROR: Could not compile shader {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT");
 		glDeleteShader(id);
 		return 0;
 	}

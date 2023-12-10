@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <print>
 
 namespace sand {
 namespace {
@@ -21,13 +22,13 @@ window::window(const std::string& name, int width, int height)
     : d_data({name, width, height, true, true, true})
 {
     if (GLFW_TRUE != glfwInit()) {
-		print("FATAL: Failed to initialise GLFW\n");
+		std::print("FATAL: Failed to initialise GLFW\n");
 		std::exit(-1);
 	}
 
 	auto native_window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 	if (!native_window) {
-		print("FATAL: Failed to create window\n");
+		std::print("FATAL: Failed to create window\n");
 		std::exit(-2);
 	}
 
@@ -42,7 +43,7 @@ window::window(const std::string& name, int width, int height)
 
 	// Initialise GLAD
 	if (0 == gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		print("FATAL: Failed to initialise GLAD\n");
+		std::print("FATAL: Failed to initialise GLAD\n");
 		std::exit(-3);
 	}
 
@@ -50,7 +51,7 @@ window::window(const std::string& name, int width, int height)
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void*) {
 		if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
-			print("{}, {}, {}, {}, {}\n", source, type, id, length, message);
+			std::print("{}, {}, {}, {}, {}\n", source, type, id, length, message);
 		}
 	}, nullptr);
 

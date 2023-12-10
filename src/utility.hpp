@@ -72,14 +72,6 @@ auto coin_flip() -> bool;
 auto sign_flip() -> int;
 auto random_unit() -> float; // Same as random_from_range(0.0f, 1.0f)
 
-auto _print_inner(const std::string& msg) -> void;
-
-template <typename... Args>
-auto print(std::format_string<Args...> fmt, Args&&... args) -> void
-{
-    _print_inner(std::format(fmt, std::forward<Args>(args)...));
-}
-
 auto from_hex(int hex) -> glm::vec4;
 
 auto get_executable_filepath() -> std::filesystem::path;

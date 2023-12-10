@@ -16,11 +16,12 @@
 #include <imgui/imgui.h>
 
 #include <memory>
+#include <print>
 
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
-    sand::print("Executable directory: {}\n", exe_path.string());
+    std::print("Executable directory: {}\n", exe_path.string());
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
     auto mouse = sand::mouse{};

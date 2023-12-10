@@ -2,16 +2,9 @@
 #include "event.hpp"
 
 #include <type_traits>
+#include <utility>
 
 namespace sand {
-namespace {
-
-auto to_underlying(mouse_button button)
-{
-    return static_cast<std::underlying_type_t<mouse_button>>(button);
-}
-
-}
 
 auto mouse::on_event(const event& e) -> void
 {
@@ -31,12 +24,12 @@ auto mouse::on_new_frame() -> void
 
 auto mouse::is_button_down(mouse_button button) -> bool
 {
-    return d_down.test(to_underlying(button));
+    return d_down.test(std::to_underlying(button));
 }
 
 auto mouse::is_button_clicked(mouse_button button) -> bool
 {
-    return d_clicked.test(to_underlying(button));
+    return d_clicked.test(std::to_underlying(button));
 }
 
 }
