@@ -3,7 +3,6 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <fmt/format.h>
 
 #include <cstdlib>
 #include <cstdint>
