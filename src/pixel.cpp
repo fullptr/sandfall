@@ -2,6 +2,7 @@
 #include "utility.hpp"
 
 #include <cstdlib>
+#include <print>
 #include <vector>
 
 namespace sand {
@@ -239,7 +240,7 @@ auto properties(const pixel& pix) -> const pixel_properties&
             return px;
         }
         default: {
-            print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
+            std::print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
             static constexpr auto px = pixel_properties{};
             return px;
         }
