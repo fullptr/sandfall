@@ -42,7 +42,10 @@ auto display_ui(
         ImGui::Text("FPS: %d", timer.frame_rate());
         ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
         ImGui::Checkbox("Show chunks", &editor.show_chunks);
-        if (ImGui::Button("Clear")) world.fill(sand::pixel::air());
+        if (ImGui::Button("Clear")) {
+            world.wake_all_chunks();
+            world.fill(sand::pixel::air());
+        }
         ImGui::Separator();
 
         ImGui::Text("Brush");
