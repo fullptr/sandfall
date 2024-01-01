@@ -2,6 +2,7 @@
 #include "graphics/texture.hpp"
 #include "graphics/shader.hpp"
 #include "world.hpp"
+#include "player.hpp"
 #include "camera.hpp"
 
 #include <glm/glm.hpp>
@@ -29,7 +30,7 @@ public:
 
     auto bind() const -> void;
 
-    auto update(const world& world, glm::vec2 pos, float width, float height, const camera& camera) -> void;
+    auto update(const world& world, const player& p, const camera& camera) -> void;
 
     auto draw() const -> void;
 };

@@ -89,6 +89,11 @@ auto shader::load_vec2(const std::string& name, const glm::vec2& vector) const -
 	glUniform2f(get_location(name), vector.x, vector.y);
 }
 
+auto shader::load_vec4(const std::string& name, const glm::vec4& vector) const -> void
+{
+	glUniform4f(get_location(name), vector.x, vector.y, vector.z, vector.w);
+}
+
 auto shader::load_sampler(const std::string& name, int value) const -> void
 {
 	glProgramUniform1i(d_program, get_location(name), value);

@@ -17,16 +17,17 @@ layout (location = 0) in vec2 p_position;
 uniform mat4  u_proj_matrix;
 uniform vec2  u_world_offset;
 uniform float u_world_to_screen;
-uniform float u_width;
-uniform float u_height;
 
 uniform sampler2D u_texture;
-uniform vec2 u_position;
+uniform vec4 u_dimensions;
 
 out vec2 pass_uv;
 
 void main()
 {
+    vec2 u_position = u_dimensions.xy;
+    float u_width = u_dimensions.z;
+    float u_height = u_dimensions.w;
     vec2 dimensions = vec2(u_width, u_height);
     vec2 position = (p_position * dimensions + u_position - u_world_offset)
                   * u_world_to_screen;
@@ -91,12 +92,10 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::update(const world& world, glm::vec2 pos, float width, float height, const camera& camera) -> void
+auto player_renderer::update(const world& world, const player& p, const camera& camera) -> void
 {
-    d_shader.load_vec2("u_position", pos);
-    d_shader.load_float("u_width", width);
-    d_shader.load_float("u_height", height);
-    
+    d_shader.load_vec4("u_dimensions", p.get_rect());
+
     d_shader.load_vec2("u_world_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
 
