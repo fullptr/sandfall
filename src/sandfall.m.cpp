@@ -26,6 +26,7 @@ auto main() -> int
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
     auto mouse = sand::mouse{};
+    auto keyboard = sand::keyboard{};
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -44,8 +45,9 @@ auto main() -> int
         }
 
         mouse.on_event(event);
+        keyboard.on_event(event);
 
-        if (mouse.is_button_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
+        if (mouse.is_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
             camera.top_left -= e.offset / camera.world_to_screen;
         }
@@ -75,6 +77,7 @@ auto main() -> int
         const double dt = timer.on_update();
 
         mouse.on_new_frame();
+        keyboard.on_new_frame();
         
         window.poll_events();
         window.clear();
@@ -85,12 +88,25 @@ auto main() -> int
             sand::update(*world);
             accumulator -= sand::config::time_step;
             updated = true;
+
+            if (keyboard.is_down(sand::keyboard_key::W)) {
+                player.y -= 1;
+            }
+            if (keyboard.is_down(sand::keyboard_key::A)) {
+                player.x -= 1;
+            }
+            if (keyboard.is_down(sand::keyboard_key::S)) {
+                player.y += 1;
+            }
+            if (keyboard.is_down(sand::keyboard_key::D)) {
+                player.x += 1;
+            }
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
         switch (editor.brush_type) {
             break; case 0:
-                if (mouse.is_button_down(sand::mouse_button::left)) {
+                if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (world->valid(coord)) {
                         world->set(coord, editor.get_pixel());
@@ -98,7 +114,7 @@ auto main() -> int
                     }
                 }
             break; case 1:
-                if (mouse.is_button_down(sand::mouse_button::left)) {
+                if (mouse.is_down(sand::mouse_button::left)) {
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
@@ -110,7 +126,7 @@ auto main() -> int
                     }
                 }
             break; case 2:
-                if (mouse.is_button_clicked(sand::mouse_button::left)) {
+                if (mouse.is_down_this_frame(sand::mouse_button::left)) {
                     sand::apply_explosion(*world, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
