@@ -21,6 +21,7 @@ add_executable(sandfall
     mouse.cpp
 
     graphics/renderer.cpp
+    graphics/player_renderer.cpp
     graphics/window.cpp
     graphics/shader.cpp
     graphics/texture.cpp

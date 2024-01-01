@@ -102,6 +102,12 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
+auto renderer::bind() const -> void
+{
+    glBindVertexArray(d_vao);
+    d_shader.bind();
+}
+
 auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
 {
     static const auto fire_colours = std::array{

@@ -9,6 +9,7 @@
 #include "mouse.hpp"
 
 #include "graphics/renderer.hpp"
+#include "graphics/player_renderer.hpp"
 #include "graphics/window.hpp"
 #include "graphics/ui.hpp"
 
@@ -67,6 +68,8 @@ auto main() -> int
     auto ui          = sand::ui{window};
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
+    auto player      = glm::vec2{0.0f, 0.0f};
+    auto p_renderer  = sand::player_renderer{};
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -120,10 +123,16 @@ auto main() -> int
         if (display_ui(editor, *world, timer, window, camera)) updated = true;
 
         // Draw the world
+        renderer.bind();
         if (updated) {
             renderer.update(*world, editor.show_chunks, camera);
         }
         renderer.draw();
+
+        p_renderer.bind();
+        p_renderer.update(*world, player, camera);
+        p_renderer.draw();
+
         ui.end_frame();
 
         window.swap_buffers();
