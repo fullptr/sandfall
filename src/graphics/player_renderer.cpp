@@ -15,16 +15,18 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec2 p_position;
 
 uniform mat4  u_proj_matrix;
+uniform vec2  u_tex_offset;
 uniform float u_world_to_screen;
 
 uniform sampler2D u_texture;
+uniform vec2 u_position;
 
 out vec2 pass_uv;
 
 void main()
 {
-    vec2 position = p_position;
-                 // * u_world_to_screen;
+    vec2 position = (u_position + p_position - u_tex_offset)
+                  * u_world_to_screen;
 
     pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(position, 0, 1);
@@ -88,7 +90,8 @@ auto player_renderer::bind() const -> void
 
 auto player_renderer::update(const world& world, glm::vec2 pos, const camera& camera) -> void
 {
-    d_shader.load_vec2("u_position", glm::vec2{0.0f, 0.0f});
+    d_shader.load_vec2("u_position", pos);
+    d_shader.load_vec2("u_tex_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
 
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);

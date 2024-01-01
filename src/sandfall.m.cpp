@@ -68,7 +68,7 @@ auto main() -> int
     auto ui          = sand::ui{window};
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
-    auto player      = glm::vec2{0.0f, 0.0f};
+    auto player      = glm::vec2{200.0f, 100.0f};
     auto p_renderer  = sand::player_renderer{};
 
     while (window.is_running()) {
