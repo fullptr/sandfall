@@ -14,26 +14,23 @@ constexpr auto vertex_shader = R"SHADER(
 #version 410 core
 layout (location = 0) in vec2 p_position;
 
+uniform vec4  u_rect;
 uniform mat4  u_proj_matrix;
 uniform vec2  u_world_offset;
 uniform float u_world_to_screen;
-
-uniform sampler2D u_texture;
-uniform vec4 u_dimensions;
 
 out vec2 pass_uv;
 
 void main()
 {
-    vec2 u_position = u_dimensions.xy;
-    float u_width = u_dimensions.z;
-    float u_height = u_dimensions.w;
-    vec2 dimensions = vec2(u_width, u_height);
-    vec2 position = (p_position * dimensions + u_position - u_world_offset)
-                  * u_world_to_screen;
+    vec2 position = u_rect.xy;
+    vec2 dimensions = u_rect.zw;
+
+    vec2 screen_position = (p_position * dimensions + position - u_world_offset)
+                         * u_world_to_screen;
 
     pass_uv = p_position;
-    gl_Position = u_proj_matrix * vec4(position, 0, 1);
+    gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
 }
 )SHADER";
 
@@ -94,7 +91,7 @@ auto player_renderer::bind() const -> void
 
 auto player_renderer::update(const world& world, const player& p, const camera& camera) -> void
 {
-    d_shader.load_vec4("u_dimensions", p.get_rect());
+    d_shader.load_vec4("u_rect", p.get_rect());
 
     d_shader.load_vec2("u_world_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
