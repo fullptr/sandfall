@@ -29,7 +29,7 @@ public:
 
     auto bind() const -> void;
 
-    auto update(const world& world, glm::vec2 pos, const camera& camera) -> void;
+    auto update(const world& world, glm::vec2 pos, float width, float height, const camera& camera) -> void;
 
     auto draw() const -> void;
 };

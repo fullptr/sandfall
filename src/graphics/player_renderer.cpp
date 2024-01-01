@@ -15,8 +15,10 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec2 p_position;
 
 uniform mat4  u_proj_matrix;
-uniform vec2  u_tex_offset;
+uniform vec2  u_world_offset;
 uniform float u_world_to_screen;
+uniform float u_width;
+uniform float u_height;
 
 uniform sampler2D u_texture;
 uniform vec2 u_position;
@@ -25,7 +27,8 @@ out vec2 pass_uv;
 
 void main()
 {
-    vec2 position = (u_position + p_position - u_tex_offset)
+    vec2 dimensions = vec2(u_width, u_height);
+    vec2 position = (p_position * dimensions + u_position - u_world_offset)
                   * u_world_to_screen;
 
     pass_uv = p_position;
@@ -55,7 +58,7 @@ player_renderer::player_renderer()
     , d_ebo{0}
     , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
 {
-    const float vertices[] = {0.0f, 0.0f, 100.0f, 0.0f, 100.0f, 100.0f, 0.0f, 100.0f};
+    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
@@ -88,10 +91,13 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::update(const world& world, glm::vec2 pos, const camera& camera) -> void
+auto player_renderer::update(const world& world, glm::vec2 pos, float width, float height, const camera& camera) -> void
 {
     d_shader.load_vec2("u_position", pos);
-    d_shader.load_vec2("u_tex_offset", camera.top_left);
+    d_shader.load_float("u_width", width);
+    d_shader.load_float("u_height", height);
+    
+    d_shader.load_vec2("u_world_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
 
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);

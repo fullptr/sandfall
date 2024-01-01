@@ -70,8 +70,11 @@ auto main() -> int
     auto ui          = sand::ui{window};
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
-    auto player      = glm::vec2{200.0f, 100.0f};
     auto p_renderer  = sand::player_renderer{};
+
+    auto player_pos    = glm::vec2{200.0f, 100.0f};
+    auto player_width  = 100.0f;
+    auto player_height = 100.0f;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -90,16 +93,16 @@ auto main() -> int
             updated = true;
 
             if (keyboard.is_down(sand::keyboard_key::W)) {
-                player.y -= 1;
+                player_pos.y -= 1;
             }
             if (keyboard.is_down(sand::keyboard_key::A)) {
-                player.x -= 1;
+                player_pos.x -= 1;
             }
             if (keyboard.is_down(sand::keyboard_key::S)) {
-                player.y += 1;
+                player_pos.y += 1;
             }
             if (keyboard.is_down(sand::keyboard_key::D)) {
-                player.x += 1;
+                player_pos.x += 1;
             }
         }
 
@@ -146,7 +149,7 @@ auto main() -> int
         renderer.draw();
 
         p_renderer.bind();
-        p_renderer.update(*world, player, camera);
+        p_renderer.update(*world, player_pos, player_width, player_height, camera);
         p_renderer.draw();
 
         ui.end_frame();
