@@ -91,17 +91,25 @@ auto main() -> int
             accumulator -= sand::config::time_step;
             updated = true;
 
-            if (keyboard.is_down(sand::keyboard_key::W)) {
-                p.position.y -= 1;
+            p.acceleration.y += 0.25f;
+            p.velocity += p.acceleration;
+            p.position += p.velocity;
+            if (p.position.y >= 256.0f) {
+                p.position.y = 256.0f;
+                p.velocity.y = 0.0f;
+                p.acceleration.y = 0.0f;
+            }
+            if (keyboard.is_down_this_frame(sand::keyboard_key::W)) {
+                p.acceleration.y = -2.0f;
             }
             if (keyboard.is_down(sand::keyboard_key::A)) {
-                p.position.x -= 1;
+                p.velocity.x = -1;
             }
-            if (keyboard.is_down(sand::keyboard_key::S)) {
-                p.position.y += 1;
+            else if (keyboard.is_down(sand::keyboard_key::D)) {
+                p.velocity.x = 1;
             }
-            if (keyboard.is_down(sand::keyboard_key::D)) {
-                p.position.x += 1;
+            else {
+                p.velocity.x = 0;
             }
         }
 
@@ -138,7 +146,7 @@ auto main() -> int
         
         // Next, draw the editor UI
         ui.begin_frame();
-        if (display_ui(editor, *world, timer, window, camera)) updated = true;
+        if (display_ui(editor, *world, timer, window, camera, p)) updated = true;
 
         // Draw the world
         renderer.bind();

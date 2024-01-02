@@ -15,7 +15,8 @@ auto display_ui(
     world& world,
     const timer& timer,
     const window& window,
-    const camera& camera
+    const camera& camera,
+    const player& player
 ) -> bool
 {
     auto updated = false;
@@ -36,6 +37,12 @@ auto display_ui(
         ImGui::Text("Screen width: %.2f", camera.screen_width);
         ImGui::Text("Screen height: %.2f", camera.screen_height);
         ImGui::Text("Scale: %f", camera.world_to_screen);
+        ImGui::Separator();
+
+        ImGui::Text("Player");
+        ImGui::Text("Position: {%.2f, %.2f}", player.position.x, player.position.y);
+        ImGui::Text("Velocity: {%.2f, %.2f}", player.velocity.x, player.velocity.y);
+        ImGui::Text("Acceleration: {%.2f, %.2f}", player.acceleration.x, player.acceleration.y);
         ImGui::Separator();
 
         ImGui::Text("Info");
