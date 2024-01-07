@@ -91,26 +91,26 @@ auto main() -> int
             accumulator -= sand::config::time_step;
             updated = true;
 
-            p.acceleration.y += 0.25f;
-            p.velocity += p.acceleration;
-            p.position += p.velocity;
             if (p.position.y >= 256.0f) {
                 p.position.y = 256.0f;
                 p.velocity.y = 0.0f;
-                p.acceleration.y = 0.0f;
             }
+
             if (keyboard.is_down_this_frame(sand::keyboard_key::W)) {
-                p.acceleration.y = -2.0f;
+                p.velocity.y = -60.0f;
             }
             if (keyboard.is_down(sand::keyboard_key::A)) {
-                p.velocity.x = -1;
+                p.velocity.x = -30.0f;
             }
             else if (keyboard.is_down(sand::keyboard_key::D)) {
-                p.velocity.x = 1;
+                p.velocity.x = 30.0f;
             }
             else {
                 p.velocity.x = 0;
             }
+
+            p.position += p.velocity * sand::config::time_step;
+            p.velocity.y += 2.0f;
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);

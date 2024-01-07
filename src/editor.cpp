@@ -42,7 +42,6 @@ auto display_ui(
         ImGui::Text("Player");
         ImGui::Text("Position: {%.2f, %.2f}", player.position.x, player.position.y);
         ImGui::Text("Velocity: {%.2f, %.2f}", player.velocity.x, player.velocity.y);
-        ImGui::Text("Acceleration: {%.2f, %.2f}", player.acceleration.x, player.acceleration.y);
         ImGui::Separator();
 
         ImGui::Text("Info");
