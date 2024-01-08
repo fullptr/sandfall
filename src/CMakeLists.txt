@@ -9,6 +9,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
+find_package(box2d CONFIG REQUIRED)
 
 add_executable(sandfall
     sandfall.m.cpp
@@ -37,4 +38,5 @@ target_link_libraries(sandfall PRIVATE
     glm::glm
     imgui::imgui
     cereal::cereal
+    box2d::box2d
 )

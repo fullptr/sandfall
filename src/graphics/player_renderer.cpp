@@ -86,9 +86,9 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::update(const world& world, const player& p, const camera& camera) -> void
+auto player_renderer::update(const world& world, glm::vec4 d, const camera& camera) -> void
 {
-    d_shader.load_vec4("u_rect", p.get_rect());
+    d_shader.load_vec4("u_rect", d);
 
     const auto dimensions = glm::vec2{camera.screen_width, camera.screen_height} / camera.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);

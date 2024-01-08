@@ -63,8 +63,8 @@ auto display_ui(
     world& world,
     const timer& timer,
     const window& window,
-    const camera& camera,
-    const player& player
+    const camera& camera
+    //const player& player
 ) -> bool;
 
 }

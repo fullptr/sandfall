@@ -30,7 +30,7 @@ public:
 
     auto bind() const -> void;
 
-    auto update(const world& world, const player& p, const camera& camera) -> void;
+    auto update(const world& world, glm::vec4 dimensions, const camera& camera) -> void;
 
     auto draw() const -> void;
 };

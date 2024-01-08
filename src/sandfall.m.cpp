@@ -16,9 +16,76 @@
 
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
+#include <box2d/box2d.h>
 
 #include <memory>
 #include <print>
+
+class PlayerController : public b2ContactListener {
+public:
+    PlayerController(b2World& world) : world(world) {
+        // Create player body
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.position.Set(200.0f, 100.0f);
+        playerBody = world.CreateBody(&bodyDef);
+
+        b2PolygonShape dynamicBox;
+        dynamicBox.SetAsBox(5.0f, 10.0f);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &dynamicBox;
+        fixtureDef.density = 5.0f;
+        fixtureDef.friction = 0.3f;
+        playerBody->CreateFixture(&fixtureDef);
+        playerBody->SetFixedRotation(true);
+
+        // Set up contact listener
+        world.SetContactListener(this);
+    }
+
+    void handleInput(sand::keyboard& k) {
+        // Move left
+        if (k.is_down(sand::keyboard_key::A)) {
+            playerBody->ApplyForceToCenter(b2Vec2(-50000.0f, 0.0f), true);
+        }
+
+        // Move right
+        if (k.is_down(sand::keyboard_key::D)) {
+            playerBody->ApplyForceToCenter(b2Vec2(50000.0f, 0.0f), true);
+        }
+
+        // Jump
+        if (k.is_down_this_frame(sand::keyboard_key::W) && onGround) {
+            playerBody->ApplyLinearImpulse(b2Vec2(0.0f, -50000.0f), playerBody->GetWorldCenter(), true);
+            onGround = false;
+        }
+    }
+
+    void Step(float timeStep) {
+        world.Step(timeStep, 8, 3);
+    }
+
+    // Contact listener functions
+    void BeginContact(b2Contact* contact) {
+        // Check if player is on the ground
+        b2Fixture* fixtureA = contact->GetFixtureA();
+        b2Fixture* fixtureB = contact->GetFixtureB();
+
+        if (fixtureA == playerBody->GetFixtureList() || fixtureB == playerBody->GetFixtureList()) {
+            onGround = true;
+        }
+    }
+
+    auto rect() const {
+        return playerBody->GetPosition();
+    }
+
+private:
+    b2World& world;
+    b2Body* playerBody;
+    bool onGround = false;
+};
 
 auto main() -> int
 {
@@ -28,6 +95,27 @@ auto main() -> int
     auto editor = sand::editor{};
     auto mouse = sand::mouse{};
     auto keyboard = sand::keyboard{};
+
+    auto gravity = b2Vec2{0.0f, 10.0f};
+    auto physics = b2World{gravity};
+
+    // Create ground body (solid line segment)
+    {
+        b2BodyDef groundBodyDef;
+        groundBodyDef.position.Set(0.0f, 0.0f);
+        b2Body* groundBody = physics.CreateBody(&groundBodyDef);
+
+        b2Vec2 point1(0.0f, 256.0f); // Replace with your actual coordinates
+        b2Vec2 point2(256.0f, 256.0f); // Replace with your actual coordinates
+
+        b2EdgeShape edgeShape{};
+        edgeShape.SetTwoSided(point1, point2);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &edgeShape;
+
+        groundBody->CreateFixture(&fixtureDef);
+    }
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -72,8 +160,7 @@ auto main() -> int
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
     auto p_renderer  = sand::player_renderer{};
-
-    auto p = sand::player{glm::vec2{100.0f, 100.0f}, 10.0f, 20.0f};
+    PlayerController playerController(physics);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -88,29 +175,10 @@ auto main() -> int
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             sand::update(*world);
+            playerController.handleInput(keyboard);
+            playerController.Step(sand::config::time_step);
             accumulator -= sand::config::time_step;
             updated = true;
-
-            if (p.position.y >= 256.0f) {
-                p.position.y = 256.0f;
-                p.velocity.y = 0.0f;
-            }
-
-            if (keyboard.is_down_this_frame(sand::keyboard_key::W)) {
-                p.velocity.y = -60.0f;
-            }
-            if (keyboard.is_down(sand::keyboard_key::A)) {
-                p.velocity.x = -30.0f;
-            }
-            else if (keyboard.is_down(sand::keyboard_key::D)) {
-                p.velocity.x = 30.0f;
-            }
-            else {
-                p.velocity.x = 0;
-            }
-
-            p.position += p.velocity * sand::config::time_step;
-            p.velocity.y += 2.0f;
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -146,7 +214,7 @@ auto main() -> int
         
         // Next, draw the editor UI
         ui.begin_frame();
-        if (display_ui(editor, *world, timer, window, camera, p)) updated = true;
+        if (display_ui(editor, *world, timer, window, camera)) updated = true;
 
         // Draw the world
         renderer.bind();
@@ -156,7 +224,8 @@ auto main() -> int
         renderer.draw();
 
         p_renderer.bind();
-        p_renderer.update(*world, p, camera);
+        const auto player_pos = playerController.rect();
+        p_renderer.update(*world, {player_pos.x - 5.0f, player_pos.y - 10.0f, 10.0f, 20.0f}, camera);
         p_renderer.draw();
 
         ui.end_frame();
