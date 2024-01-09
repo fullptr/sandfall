@@ -2,6 +2,7 @@
 #include "pixel.hpp"
 #include "world.hpp"
 #include "utility.hpp"
+#include "player.hpp"
 #include "graphics/window.hpp"
 
 #include <cstdint>
@@ -63,6 +64,7 @@ auto display_ui(
     const timer& timer,
     const window& window,
     const camera& camera
+    //const player& player
 ) -> bool;
 
 }

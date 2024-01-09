@@ -16,6 +16,7 @@ auto display_ui(
     const timer& timer,
     const window& window,
     const camera& camera
+    //const player& player
 ) -> bool
 {
     auto updated = false;
@@ -38,11 +39,19 @@ auto display_ui(
         ImGui::Text("Scale: %f", camera.world_to_screen);
         ImGui::Separator();
 
+        //ImGui::Text("Player");
+        //ImGui::Text("Position: {%.2f, %.2f}", player.position.x, player.position.y);
+        //ImGui::Text("Velocity: {%.2f, %.2f}", player.velocity.x, player.velocity.y);
+        ImGui::Separator();
+
         ImGui::Text("Info");
         ImGui::Text("FPS: %d", timer.frame_rate());
         ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
         ImGui::Checkbox("Show chunks", &editor.show_chunks);
-        if (ImGui::Button("Clear")) world.fill(sand::pixel::air());
+        if (ImGui::Button("Clear")) {
+            world.wake_all_chunks();
+            world.fill(sand::pixel::air());
+        }
         ImGui::Separator();
 
         ImGui::Text("Brush");

@@ -7,16 +7,85 @@
 #include "update.hpp"
 #include "explosion.hpp"
 #include "mouse.hpp"
+#include "player.hpp"
 
 #include "graphics/renderer.hpp"
+#include "graphics/player_renderer.hpp"
 #include "graphics/window.hpp"
 #include "graphics/ui.hpp"
 
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
+#include <box2d/box2d.h>
 
 #include <memory>
 #include <print>
+
+class PlayerController : public b2ContactListener {
+public:
+    PlayerController(b2World& world) : world(world) {
+        // Create player body
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.position.Set(200.0f, 100.0f);
+        playerBody = world.CreateBody(&bodyDef);
+
+        b2PolygonShape dynamicBox;
+        dynamicBox.SetAsBox(5.0f, 10.0f);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &dynamicBox;
+        fixtureDef.density = 5.0f;
+        fixtureDef.friction = 0.3f;
+        playerBody->CreateFixture(&fixtureDef);
+        playerBody->SetFixedRotation(true);
+
+        // Set up contact listener
+        world.SetContactListener(this);
+    }
+
+    void handleInput(sand::keyboard& k) {
+        // Move left
+        if (k.is_down(sand::keyboard_key::A)) {
+            playerBody->ApplyForceToCenter(b2Vec2(-50000.0f, 0.0f), true);
+        }
+
+        // Move right
+        if (k.is_down(sand::keyboard_key::D)) {
+            playerBody->ApplyForceToCenter(b2Vec2(50000.0f, 0.0f), true);
+        }
+
+        // Jump
+        if (k.is_down_this_frame(sand::keyboard_key::W) && onGround) {
+            playerBody->ApplyLinearImpulse(b2Vec2(0.0f, -50000.0f), playerBody->GetWorldCenter(), true);
+            onGround = false;
+        }
+    }
+
+    void Step(float timeStep) {
+        world.Step(timeStep, 8, 3);
+    }
+
+    // Contact listener functions
+    void BeginContact(b2Contact* contact) {
+        // Check if player is on the ground
+        b2Fixture* fixtureA = contact->GetFixtureA();
+        b2Fixture* fixtureB = contact->GetFixtureB();
+
+        if (fixtureA == playerBody->GetFixtureList() || fixtureB == playerBody->GetFixtureList()) {
+            onGround = true;
+        }
+    }
+
+    auto rect() const {
+        return playerBody->GetPosition();
+    }
+
+private:
+    b2World& world;
+    b2Body* playerBody;
+    bool onGround = false;
+};
 
 auto main() -> int
 {
@@ -25,6 +94,28 @@ auto main() -> int
     auto window = sand::window{"sandfall", 1280, 720};
     auto editor = sand::editor{};
     auto mouse = sand::mouse{};
+    auto keyboard = sand::keyboard{};
+
+    auto gravity = b2Vec2{0.0f, 10.0f};
+    auto physics = b2World{gravity};
+
+    // Create ground body (solid line segment)
+    {
+        b2BodyDef groundBodyDef;
+        groundBodyDef.position.Set(0.0f, 0.0f);
+        b2Body* groundBody = physics.CreateBody(&groundBodyDef);
+
+        b2Vec2 point1(0.0f, 256.0f); // Replace with your actual coordinates
+        b2Vec2 point2(256.0f, 256.0f); // Replace with your actual coordinates
+
+        b2EdgeShape edgeShape{};
+        edgeShape.SetTwoSided(point1, point2);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &edgeShape;
+
+        groundBody->CreateFixture(&fixtureDef);
+    }
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -43,8 +134,9 @@ auto main() -> int
         }
 
         mouse.on_event(event);
+        keyboard.on_event(event);
 
-        if (mouse.is_button_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
+        if (mouse.is_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
             const auto& e = event.as<sand::mouse_moved_event>();
             camera.top_left -= e.offset / camera.world_to_screen;
         }
@@ -67,11 +159,14 @@ auto main() -> int
     auto ui          = sand::ui{window};
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
+    auto p_renderer  = sand::player_renderer{};
+    PlayerController playerController(physics);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
 
         mouse.on_new_frame();
+        keyboard.on_new_frame();
         
         window.poll_events();
         window.clear();
@@ -80,6 +175,8 @@ auto main() -> int
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             sand::update(*world);
+            playerController.handleInput(keyboard);
+            playerController.Step(sand::config::time_step);
             accumulator -= sand::config::time_step;
             updated = true;
         }
@@ -87,7 +184,7 @@ auto main() -> int
         const auto mouse_pos = pixel_at_mouse(window, camera);
         switch (editor.brush_type) {
             break; case 0:
-                if (mouse.is_button_down(sand::mouse_button::left)) {
+                if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (world->valid(coord)) {
                         world->set(coord, editor.get_pixel());
@@ -95,7 +192,7 @@ auto main() -> int
                     }
                 }
             break; case 1:
-                if (mouse.is_button_down(sand::mouse_button::left)) {
+                if (mouse.is_down(sand::mouse_button::left)) {
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
@@ -107,7 +204,7 @@ auto main() -> int
                     }
                 }
             break; case 2:
-                if (mouse.is_button_clicked(sand::mouse_button::left)) {
+                if (mouse.is_down_this_frame(sand::mouse_button::left)) {
                     sand::apply_explosion(*world, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
@@ -120,10 +217,17 @@ auto main() -> int
         if (display_ui(editor, *world, timer, window, camera)) updated = true;
 
         // Draw the world
+        renderer.bind();
         if (updated) {
             renderer.update(*world, editor.show_chunks, camera);
         }
         renderer.draw();
+
+        p_renderer.bind();
+        const auto player_pos = playerController.rect();
+        p_renderer.update(*world, {player_pos.x - 5.0f, player_pos.y - 10.0f, 10.0f, 20.0f}, camera);
+        p_renderer.draw();
+
         ui.end_frame();
 
         window.swap_buffers();

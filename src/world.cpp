@@ -118,7 +118,7 @@ auto world::wake_all_chunks() -> void
 }
 
 auto world::num_awake_chunks() const -> std::size_t
-{
+{  
     return std::count_if(d_chunks.begin(), d_chunks.end(), [](chunk c) {
         return c.should_step;
     });
