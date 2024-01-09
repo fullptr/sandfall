@@ -22,7 +22,7 @@ out vec2 pass_uv;
 void main()
 {
     vec2 position = u_rect.xy;
-    vec2 dimensions = u_rect.zw;
+    vec2 dimensions = u_rect.zw / 2;
 
     vec2 screen_position = p_position * dimensions + position;
 
@@ -53,7 +53,7 @@ player_renderer::player_renderer()
     , d_ebo{0}
     , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
 {
-    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+    const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
