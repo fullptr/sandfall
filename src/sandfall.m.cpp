@@ -81,6 +81,10 @@ public:
         return playerBody->GetPosition();
     }
 
+    auto angle() const {
+        return playerBody->GetAngle();
+    }
+
 private:
     b2World& world;
     b2Body* playerBody;
@@ -225,7 +229,7 @@ auto main() -> int
 
         p_renderer.bind();
         const auto player_pos = playerController.rect();
-        p_renderer.update(*world, {player_pos.x, player_pos.y, 10.0f, 20.0f}, camera);
+        p_renderer.update(*world, {player_pos.x, player_pos.y, 10.0f, 20.0f}, playerController.angle(), camera);
         p_renderer.draw();
 
         ui.end_frame();

@@ -19,13 +19,14 @@ auto compile_shader(std::uint32_t type, const std::string& source) -> std::uint3
 	glShaderSource(id, 1, &src, nullptr);
 	glCompileShader(id);
 
-	int result;
+	int result = 0;
 	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-
-	if (result == GL_FALSE) {
-        std::print("ERROR: Could not compile shader {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT");
+	if (!result) {
+		char infoLog[512];
+    	glGetShaderInfoLog(id, 512, NULL, infoLog);
+        std::print("[{} ERROR] {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT", infoLog);
 		glDeleteShader(id);
-		return 0;
+		std::terminate();
 	}
 
 	return id;

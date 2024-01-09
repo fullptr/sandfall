@@ -15,16 +15,24 @@ constexpr auto vertex_shader = R"SHADER(
 layout (location = 0) in vec2 p_position;
 
 uniform vec4  u_rect;
+uniform float u_angle;
 uniform mat4  u_proj_matrix;
 
 out vec2 pass_uv;
+
+mat2 rotate(float theta)
+{
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat2(c, s, -s, c);
+}
 
 void main()
 {
     vec2 position = u_rect.xy;
     vec2 dimensions = u_rect.zw / 2;
 
-    vec2 screen_position = p_position * dimensions + position;
+    vec2 screen_position = rotate(u_angle) * p_position * dimensions + position;
 
     pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
@@ -86,9 +94,10 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::update(const world& world, glm::vec4 d, const camera& camera) -> void
+auto player_renderer::update(const world& world, glm::vec4 d, float angle, const camera& camera) -> void
 {
     d_shader.load_vec4("u_rect", d);
+    d_shader.load_float("u_angle", angle);
 
     const auto dimensions = glm::vec2{camera.screen_width, camera.screen_height} / camera.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
