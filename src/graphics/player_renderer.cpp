@@ -95,7 +95,7 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::update(const world& world, glm::vec4 d, float angle, glm::vec3 colour, const camera& camera) -> void
+auto player_renderer::draw(const world& world, glm::vec4 d, float angle, glm::vec3 colour, const camera& camera) -> void
 {
     d_shader.load_vec4("u_rect", d);
     d_shader.load_float("u_angle", angle);
@@ -104,10 +104,6 @@ auto player_renderer::update(const world& world, glm::vec4 d, float angle, glm::
     const auto dimensions = glm::vec2{camera.screen_width, camera.screen_height} / camera.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
     d_shader.load_mat4("u_proj_matrix", glm::translate(projection, glm::vec3{-camera.top_left, 0.0f}));
-}
-
-auto player_renderer::draw() const -> void
-{
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
