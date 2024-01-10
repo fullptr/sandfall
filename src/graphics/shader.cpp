@@ -90,6 +90,11 @@ auto shader::load_vec2(const std::string& name, const glm::vec2& vector) const -
 	glUniform2f(get_location(name), vector.x, vector.y);
 }
 
+auto shader::load_vec3(const std::string& name, const glm::vec3& vector) const -> void
+{
+	glUniform3f(get_location(name), vector.x, vector.y, vector.z);
+}
+
 auto shader::load_vec4(const std::string& name, const glm::vec4& vector) const -> void
 {
 	glUniform4f(get_location(name), vector.x, vector.y, vector.z, vector.w);
