@@ -227,8 +227,8 @@ auto main() -> int
         }
         renderer.draw();
 
-        p_renderer.bind();
         const auto player_pos = playerController.rect();
+        p_renderer.bind();
         p_renderer.draw(*world, {player_pos.x, player_pos.y, 10.0f, 20.0f}, playerController.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
         p_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
 

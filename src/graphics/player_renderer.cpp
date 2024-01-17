@@ -32,7 +32,7 @@ void main()
     vec2 position = u_rect.xy;
     vec2 dimensions = u_rect.zw / 2;
 
-    vec2 screen_position = rotate(u_angle) * p_position * dimensions + position;
+    vec2 screen_position = rotate(u_angle) * (p_position * dimensions) + position;
 
     pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
