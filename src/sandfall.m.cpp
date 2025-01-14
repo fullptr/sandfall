@@ -52,7 +52,6 @@ public:
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &dynamicBox;
         fixtureDef.density = 5.0f;
-        fixtureDef.friction = 0.3f;
         playerBody->CreateFixture(&fixtureDef);
         playerBody->SetFixedRotation(true);
 
@@ -74,11 +73,17 @@ public:
         }
 
         // Jump
-        if (k.is_down_this_frame(sand::keyboard_key::W) && onGround) {
-            const auto v = playerBody->GetLinearVelocity();
-            playerBody->SetLinearVelocity({v.y, -5.0f});
-            //playerBody->ApplyLinearImpulse(b2Vec2(0.0f, -20.0f), playerBody->GetWorldCenter(), true);
-            onGround = false;
+        bool onGround = false;
+        for (auto edge = playerBody->GetContactList(); edge; edge = edge->next) {
+            onGround = onGround || edge->contact->IsTouching();
+        }
+        if (onGround) doubleJump = true;
+        if (k.is_down_this_frame(sand::keyboard_key::W)) {
+            if (onGround || doubleJump) {
+                if (!onGround) doubleJump = false;
+                const auto v = playerBody->GetLinearVelocity();
+                playerBody->SetLinearVelocity({v.y, -5.0f});
+            }
         }
     }
 
@@ -86,16 +91,7 @@ public:
         world.Step(timeStep, 8, 3);
     }
 
-    // Contact listener functions
-    void BeginContact(b2Contact* contact) {
-        // Check if player is on the ground
-        b2Fixture* fixtureA = contact->GetFixtureA();
-        b2Fixture* fixtureB = contact->GetFixtureB();
 
-        if (fixtureA == playerBody->GetFixtureList() || fixtureB == playerBody->GetFixtureList()) {
-            onGround = true;
-        }
-    }
 
     auto rect() const {
         return playerBody->GetPosition();
@@ -108,7 +104,7 @@ public:
 private:
     b2World& world;
     b2Body* playerBody;
-    bool onGround = false;
+    bool doubleJump = false;
 };
 
 auto main() -> int
@@ -137,6 +133,7 @@ auto main() -> int
 
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &edgeShape;
+        fixtureDef.friction = 1.5f;
 
         groundBody->CreateFixture(&fixtureDef);
     }
