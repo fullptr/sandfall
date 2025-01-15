@@ -60,7 +60,7 @@ player_renderer::player_renderer()
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
+    , d_shader{vertex_shader, fragment_shader}
 {
     const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};

@@ -72,17 +72,18 @@ public:
             playerBody->SetLinearVelocity({3.0f, v.y});
         }
 
-        // Jump
+        // Jump - need to check for collision below, this allows wall climbing
         bool onGround = false;
         for (auto edge = playerBody->GetContactList(); edge; edge = edge->next) {
             onGround = onGround || edge->contact->IsTouching();
         }
-        if (onGround) doubleJump = true;
+        if (onGround) { doubleJump = true; }
+        
         if (k.is_down_this_frame(sand::keyboard_key::W)) {
             if (onGround || doubleJump) {
                 if (!onGround) doubleJump = false;
                 const auto v = playerBody->GetLinearVelocity();
-                playerBody->SetLinearVelocity({v.y, -5.0f});
+                playerBody->SetLinearVelocity({v.x, -5.0f});
             }
         }
     }

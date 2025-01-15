@@ -70,7 +70,7 @@ renderer::renderer()
     , d_ebo{0}
     , d_texture{}
     , d_texture_data{}
-    , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
+    , d_shader{vertex_shader, fragment_shader}
 {
     const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
