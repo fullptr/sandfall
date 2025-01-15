@@ -21,22 +21,37 @@
 #include <memory>
 #include <print>
 
+// Converts a point in pixel space to world space
+auto pixel_to_world(glm::vec2 px) -> b2Vec2
+{
+    b2Vec2 pos(px.x / sand::config::pixels_per_meter, px.y / sand::config::pixels_per_meter);
+    return pos;
+}
+
+// Converts a point in world space to pixel space
+auto world_to_pixel(b2Vec2 px) -> glm::vec2
+{
+    glm::vec2 pos(px.x * sand::config::pixels_per_meter, px.y * sand::config::pixels_per_meter);
+    return pos;
+}
+
 class PlayerController : public b2ContactListener {
 public:
     PlayerController(b2World& world) : world(world) {
         // Create player body
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
-        bodyDef.position.Set(200.0f, 100.0f);
+        const auto position = pixel_to_world({200.0f, 100.0f});
+        bodyDef.position.Set(position.x, position.y);
         playerBody = world.CreateBody(&bodyDef);
 
         b2PolygonShape dynamicBox;
-        dynamicBox.SetAsBox(5.0f, 10.0f);
+        const auto dimensions = pixel_to_world({5.0f, 10.0f});
+        dynamicBox.SetAsBox(dimensions.x, dimensions.y);
 
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &dynamicBox;
         fixtureDef.density = 5.0f;
-        fixtureDef.friction = 0.3f;
         playerBody->CreateFixture(&fixtureDef);
         playerBody->SetFixedRotation(true);
 
@@ -47,18 +62,29 @@ public:
     void handleInput(sand::keyboard& k) {
         // Move left
         if (k.is_down(sand::keyboard_key::A)) {
-            playerBody->ApplyForceToCenter(b2Vec2(-50000.0f, 0.0f), true);
+            const auto v = playerBody->GetLinearVelocity();
+            playerBody->SetLinearVelocity({-3.0f, v.y});
         }
 
         // Move right
         if (k.is_down(sand::keyboard_key::D)) {
-            playerBody->ApplyForceToCenter(b2Vec2(50000.0f, 0.0f), true);
+            const auto v = playerBody->GetLinearVelocity();
+            playerBody->SetLinearVelocity({3.0f, v.y});
         }
 
-        // Jump
-        if (k.is_down_this_frame(sand::keyboard_key::W) && onGround) {
-            playerBody->ApplyLinearImpulse(b2Vec2(0.0f, -50000.0f), playerBody->GetWorldCenter(), true);
-            onGround = false;
+        // Jump - need to check for collision below, this allows wall climbing
+        bool onGround = false;
+        for (auto edge = playerBody->GetContactList(); edge; edge = edge->next) {
+            onGround = onGround || edge->contact->IsTouching();
+        }
+        if (onGround) { doubleJump = true; }
+        
+        if (k.is_down_this_frame(sand::keyboard_key::W)) {
+            if (onGround || doubleJump) {
+                if (!onGround) doubleJump = false;
+                const auto v = playerBody->GetLinearVelocity();
+                playerBody->SetLinearVelocity({v.x, -5.0f});
+            }
         }
     }
 
@@ -66,25 +92,20 @@ public:
         world.Step(timeStep, 8, 3);
     }
 
-    // Contact listener functions
-    void BeginContact(b2Contact* contact) {
-        // Check if player is on the ground
-        b2Fixture* fixtureA = contact->GetFixtureA();
-        b2Fixture* fixtureB = contact->GetFixtureB();
 
-        if (fixtureA == playerBody->GetFixtureList() || fixtureB == playerBody->GetFixtureList()) {
-            onGround = true;
-        }
-    }
 
     auto rect() const {
         return playerBody->GetPosition();
     }
 
+    auto angle() const {
+        return playerBody->GetAngle();
+    }
+
 private:
     b2World& world;
     b2Body* playerBody;
-    bool onGround = false;
+    bool doubleJump = false;
 };
 
 auto main() -> int
@@ -105,14 +126,15 @@ auto main() -> int
         groundBodyDef.position.Set(0.0f, 0.0f);
         b2Body* groundBody = physics.CreateBody(&groundBodyDef);
 
-        b2Vec2 point1(0.0f, 256.0f); // Replace with your actual coordinates
-        b2Vec2 point2(256.0f, 256.0f); // Replace with your actual coordinates
+        b2Vec2 point1 = pixel_to_world({0.0f, 256.0f});
+        b2Vec2 point2 = pixel_to_world({256.0f, 256.0f});
 
         b2EdgeShape edgeShape{};
         edgeShape.SetTwoSided(point1, point2);
 
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &edgeShape;
+        fixtureDef.friction = 1.5f;
 
         groundBody->CreateFixture(&fixtureDef);
     }
@@ -223,10 +245,11 @@ auto main() -> int
         }
         renderer.draw();
 
-        p_renderer.bind();
         const auto player_pos = playerController.rect();
-        p_renderer.update(*world, {player_pos.x - 5.0f, player_pos.y - 10.0f, 10.0f, 20.0f}, camera);
-        p_renderer.draw();
+        p_renderer.bind();
+        const auto player_pos_pixels = world_to_pixel({player_pos.x, player_pos.y});
+        p_renderer.draw(*world, {player_pos_pixels.x, player_pos_pixels.y, 10.0f, 20.0f}, playerController.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+        p_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
 
         ui.end_frame();
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "pixel.hpp"
 #include "serialise.hpp"
+#include "config.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -12,11 +13,7 @@
 
 namespace sand {
 
-static constexpr int num_pixels = 256;
-static constexpr int chunk_size = 16;
-static_assert(num_pixels % chunk_size == 0);
-
-static constexpr int num_chunks = num_pixels / chunk_size;
+static constexpr int num_chunks = sand::config::num_pixels / sand::config::chunk_size;
 
 struct chunk
 {
@@ -30,7 +27,7 @@ auto get_chunk_pos(std::size_t index) -> glm::ivec2;
 class world
 {
 public:
-    using pixels = std::array<pixel, num_pixels * num_pixels>;
+    using pixels = std::array<pixel, sand::config::num_pixels * sand::config::num_pixels>;
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:

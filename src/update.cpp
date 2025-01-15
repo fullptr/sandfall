@@ -366,15 +366,15 @@ auto update(world& pixels) -> void
 {
     pixels.new_frame();
 
-    for (int y = num_pixels; y != 0; --y) {
+    for (int y = sand::config::num_pixels; y != 0; --y) {
         if (coin_flip()) {
-            for (int x = 0; x != num_pixels; ++x) {
+            for (int x = 0; x != sand::config::num_pixels; ++x) {
                 const auto pos = glm::ivec2{x, y - 1};
                 if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
             }
         }
         else {
-            for (int x = num_pixels; x != 0; --x) {
+            for (int x = sand::config::num_pixels; x != 0; --x) {
                 const auto pos = glm::ivec2{x - 1, y - 1};
                 if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
             }

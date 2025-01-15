@@ -49,7 +49,7 @@ void main()
 
 auto get_pos(glm::vec2 pos) -> std::size_t
 {
-    return pos.x + sand::num_pixels * pos.y;
+    return pos.x + sand::config::num_pixels * pos.y;
 }
 
 auto light_noise(glm::vec4 vec) -> glm::vec4
@@ -70,7 +70,7 @@ renderer::renderer()
     , d_ebo{0}
     , d_texture{}
     , d_texture_data{}
-    , d_shader{std::string{vertex_shader}, std::string{fragment_shader}}
+    , d_shader{vertex_shader, fragment_shader}
 {
     const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
@@ -92,7 +92,7 @@ renderer::renderer()
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 
-    resize(num_pixels, num_pixels);
+    resize(sand::config::num_pixels, sand::config::num_pixels);
 }
 
 renderer::~renderer()
@@ -128,9 +128,9 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t index = 0; index != chunks.size(); ++index) {
         if (!chunks[index].should_step && !show_chunks) continue;
 
-        const auto top_left = chunk_size * get_chunk_pos(index);
-        for (std::size_t x = 0; x != chunk_size; ++x) {
-            for (std::size_t y = 0; y != chunk_size; ++y) {
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
+        for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
+            for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
                 const auto world_coord = top_left + glm::ivec2{x, y};
 
                 auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
