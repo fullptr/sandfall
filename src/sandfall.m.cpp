@@ -35,77 +35,76 @@ auto world_to_pixel(b2Vec2 px) -> glm::vec2
     return pos;
 }
 
-class PlayerController : public b2ContactListener {
+auto make_player(b2World& world) -> b2Body*
+{
+    // Create player body
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    const auto position = pixel_to_world({200.0f, 100.0f});
+    bodyDef.position.Set(position.x, position.y);
+    b2Body* playerBody = world.CreateBody(&bodyDef);
+
+    b2PolygonShape dynamicBox;
+    const auto dimensions = pixel_to_world({5.0f, 10.0f});
+    dynamicBox.SetAsBox(dimensions.x, dimensions.y);
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &dynamicBox;
+    fixtureDef.density = 5.0f;
+    playerBody->CreateFixture(&fixtureDef);
+    playerBody->SetFixedRotation(true);
+
+    return playerBody;
+}
+
+class player_controller {
 public:
-    PlayerController(b2World& world) : world(world) {
-        // Create player body
-        b2BodyDef bodyDef;
-        bodyDef.type = b2_dynamicBody;
-        const auto position = pixel_to_world({200.0f, 100.0f});
-        bodyDef.position.Set(position.x, position.y);
-        playerBody = world.CreateBody(&bodyDef);
-
-        b2PolygonShape dynamicBox;
-        const auto dimensions = pixel_to_world({5.0f, 10.0f});
-        dynamicBox.SetAsBox(dimensions.x, dimensions.y);
-
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &dynamicBox;
-        fixtureDef.density = 5.0f;
-        playerBody->CreateFixture(&fixtureDef);
-        playerBody->SetFixedRotation(true);
-
-        // Set up contact listener
-        world.SetContactListener(this);
+    player_controller(b2World& world)
+        : d_playerBody{make_player(world)}
+        , d_doubleJump{false}
+    {
     }
 
-    void handleInput(sand::keyboard& k) {
+    void handle_input(sand::keyboard& k) {
         // Move left
         if (k.is_down(sand::keyboard_key::A)) {
-            const auto v = playerBody->GetLinearVelocity();
-            playerBody->SetLinearVelocity({-3.0f, v.y});
+            const auto v = d_playerBody->GetLinearVelocity();
+            d_playerBody->SetLinearVelocity({-3.0f, v.y});
         }
 
         // Move right
         if (k.is_down(sand::keyboard_key::D)) {
-            const auto v = playerBody->GetLinearVelocity();
-            playerBody->SetLinearVelocity({3.0f, v.y});
+            const auto v = d_playerBody->GetLinearVelocity();
+            d_playerBody->SetLinearVelocity({3.0f, v.y});
         }
 
         // Jump - need to check for collision below, this allows wall climbing
         bool onGround = false;
-        for (auto edge = playerBody->GetContactList(); edge; edge = edge->next) {
+        for (auto edge = d_playerBody->GetContactList(); edge; edge = edge->next) {
             onGround = onGround || edge->contact->IsTouching();
         }
-        if (onGround) { doubleJump = true; }
+        if (onGround) { d_doubleJump = true; }
         
         if (k.is_down_this_frame(sand::keyboard_key::W)) {
-            if (onGround || doubleJump) {
-                if (!onGround) doubleJump = false;
-                const auto v = playerBody->GetLinearVelocity();
-                playerBody->SetLinearVelocity({v.x, -5.0f});
+            if (onGround || d_doubleJump) {
+                if (!onGround) d_doubleJump = false;
+                const auto v = d_playerBody->GetLinearVelocity();
+                d_playerBody->SetLinearVelocity({v.x, -5.0f});
             }
         }
     }
 
-    void Step(float timeStep) {
-        world.Step(timeStep, 8, 3);
-    }
-
-
-
     auto rect() const {
-        return playerBody->GetPosition();
+        return d_playerBody->GetPosition();
     }
 
     auto angle() const {
-        return playerBody->GetAngle();
+        return d_playerBody->GetAngle();
     }
 
 private:
-    b2World& world;
-    b2Body* playerBody;
-    bool doubleJump = false;
+    b2Body* d_playerBody;
+    bool    d_doubleJump;
 };
 
 auto main() -> int
@@ -182,7 +181,7 @@ auto main() -> int
     auto accumulator = 0.0;
     auto timer       = sand::timer{};
     auto p_renderer  = sand::player_renderer{};
-    PlayerController playerController(physics);
+    auto player      = player_controller(physics);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -197,8 +196,8 @@ auto main() -> int
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             sand::update(*world);
-            playerController.handleInput(keyboard);
-            playerController.Step(sand::config::time_step);
+            player.handle_input(keyboard);
+            physics.Step(sand::config::time_step, 8, 3);
             accumulator -= sand::config::time_step;
             updated = true;
         }
@@ -245,10 +244,10 @@ auto main() -> int
         }
         renderer.draw();
 
-        const auto player_pos = playerController.rect();
+        const auto player_pos = player.rect();
         p_renderer.bind();
         const auto player_pos_pixels = world_to_pixel({player_pos.x, player_pos.y});
-        p_renderer.draw(*world, {player_pos_pixels.x, player_pos_pixels.y, 10.0f, 20.0f}, playerController.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+        p_renderer.draw(*world, {player_pos_pixels.x, player_pos_pixels.y, 10.0f, 20.0f}, player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
         p_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
 
         ui.end_frame();
