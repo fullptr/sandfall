@@ -126,7 +126,7 @@ class static_physics_box
     b2Body*   d_body = nullptr;
 
 public:
-    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec3 colour)
+    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec3 colour, float angle = 0.0f)
         : d_width{width}
         , d_height{height}
         , d_colour{colour}
@@ -135,6 +135,7 @@ public:
         bodyDef.type = b2_staticBody;
         const auto position = pixel_to_physics(pos);
         bodyDef.position.Set(position.x, position.y);
+        bodyDef.angle = angle;
         d_body = world.CreateBody(&bodyDef);
 
         b2PolygonShape box;
@@ -217,14 +218,11 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player_renderer = sand::player_renderer{};
     auto player          = player_controller(physics, 10, 20);
-    
-    auto floor = static_physics_box(physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0});
-    auto box = static_physics_box(physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0});
 
     auto ground = std::vector<static_physics_box>{
         {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
         {physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {130, 215}, 30, 10, {1.0, 1.0, 0.0}}
+        {physics, {130, 215}, 30, 10, {1.0, 1.0, 0.0}, 1.5f}
     };
 
     while (window.is_running()) {
