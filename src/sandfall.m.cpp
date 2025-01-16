@@ -36,6 +36,11 @@ auto physics_to_pixel(b2Vec2 px) -> glm::vec2
 }
 
 class player_controller {
+    int     d_width;
+    int     d_height;
+    b2Body* d_playerBody = nullptr;
+    bool    d_doubleJump = false;
+
 public:
     // width and height are in pixel space
     player_controller(b2World& world, int width, int height)
@@ -46,18 +51,32 @@ public:
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
         const auto position = pixel_to_physics({200.0f, 100.0f});
+        const auto dimensions = pixel_to_physics({10, 20});
         bodyDef.position.Set(position.x, position.y);
         d_playerBody = world.CreateBody(&bodyDef);
         d_playerBody->SetFixedRotation(true);
 
-        b2PolygonShape dynamicBox;
-        const auto dimensions = pixel_to_physics({10, 20});
-        dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
+        {
+            b2PolygonShape dynamicBox;
+            dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
 
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &dynamicBox;
-        fixtureDef.density = 5.0f;
-        auto fixture = d_playerBody->CreateFixture(&fixtureDef);
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.density = 12.0f;
+            d_playerBody->CreateFixture(&fixtureDef);
+        }
+
+        // Slightly wider, slightly shorter, so the side have no friction
+        // There must be a better way to do this.
+        {
+            b2PolygonShape dynamicBox;
+            dynamicBox.SetAsBox(dimensions.x / 2 + 0.01, dimensions.y / 2 - 0.01);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.friction = 0.0;
+            d_playerBody->CreateFixture(&fixtureDef);
+        }
     }
 
     void handle_input(sand::keyboard& k) {
@@ -89,32 +108,57 @@ public:
         }
     }
 
-    auto position() const -> const b2Vec2& {
-        return d_playerBody->GetPosition();
-    }
-
-    auto angle() const -> float {
-        return d_playerBody->GetAngle();
-    }
-
-    auto width() const -> float {
-        return d_width;
-    }
-
-    auto height() const -> float {
-        return d_height;
-    }
-
     auto rect_pixels() const -> glm::vec4 {
         auto pos = physics_to_pixel(d_playerBody->GetPosition());
         return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
-private:
-    int     d_width;
-    int     d_height;
-    b2Body* d_playerBody = nullptr;
-    bool    d_doubleJump = false;
+    auto angle() const -> float {
+        return d_playerBody->GetAngle();
+    }
+};
+
+class static_physics_box
+{
+    int       d_width;
+    int       d_height;
+    glm::vec3 d_colour;
+    b2Body*   d_body = nullptr;
+
+public:
+    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec3 colour)
+        : d_width{width}
+        , d_height{height}
+        , d_colour{colour}
+    {
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_staticBody;
+        const auto position = pixel_to_physics(pos);
+        bodyDef.position.Set(position.x, position.y);
+        d_body = world.CreateBody(&bodyDef);
+
+        b2PolygonShape box;
+        const auto dimensions = pixel_to_physics({width, height});
+        box.SetAsBox(dimensions.x / 2, dimensions.y / 2);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &box;
+        fixtureDef.friction = 1.0;
+        d_body->CreateFixture(&fixtureDef);
+    }
+
+    auto rect_pixels() const -> glm::vec4 {
+        auto pos = physics_to_pixel(d_body->GetPosition());
+        return glm::vec4{pos.x, pos.y, d_width, d_height};
+    }
+
+    auto angle() const -> float {
+        return d_body->GetAngle();
+    }
+
+    auto colour() const -> glm::vec3 {
+        return d_colour;
+    }
 };
 
 auto main() -> int
@@ -128,25 +172,6 @@ auto main() -> int
 
     auto gravity = b2Vec2{0.0f, 10.0f};
     auto physics = b2World{gravity};
-
-    // Create ground body (solid line segment)
-    {
-        b2BodyDef groundBodyDef;
-        groundBodyDef.position.Set(0.0f, 0.0f);
-        b2Body* groundBody = physics.CreateBody(&groundBodyDef);
-
-        b2Vec2 point1 = pixel_to_physics({0.0f, 256.0f});
-        b2Vec2 point2 = pixel_to_physics({256.0f, 256.0f});
-
-        b2EdgeShape edgeShape{};
-        edgeShape.SetTwoSided(point1, point2);
-
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &edgeShape;
-        fixtureDef.friction = 1.5f;
-
-        groundBody->CreateFixture(&fixtureDef);
-    }
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -192,6 +217,15 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player_renderer = sand::player_renderer{};
     auto player          = player_controller(physics, 10, 20);
+    
+    auto floor = static_physics_box(physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0});
+    auto box = static_physics_box(physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0});
+
+    auto ground = std::vector<static_physics_box>{
+        {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
+        {physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}},
+        {physics, {130, 215}, 30, 10, {1.0, 1.0, 0.0}}
+    };
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -259,8 +293,11 @@ auto main() -> int
         // Render and display the player plus some temporary obstacles
         player_renderer.bind();
         player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
-        player_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
 
+        for (const auto& obj : ground) {
+            player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
+        }
+        
         // Display the UI
         ui.end_frame();
 
