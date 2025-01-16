@@ -22,90 +22,144 @@
 #include <print>
 
 // Converts a point in pixel space to world space
-auto pixel_to_world(glm::vec2 px) -> b2Vec2
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2
 {
     b2Vec2 pos(px.x / sand::config::pixels_per_meter, px.y / sand::config::pixels_per_meter);
     return pos;
 }
 
 // Converts a point in world space to pixel space
-auto world_to_pixel(b2Vec2 px) -> glm::vec2
+auto physics_to_pixel(b2Vec2 px) -> glm::vec2
 {
     glm::vec2 pos(px.x * sand::config::pixels_per_meter, px.y * sand::config::pixels_per_meter);
     return pos;
 }
 
-class PlayerController : public b2ContactListener {
+class player_controller {
+    int     d_width;
+    int     d_height;
+    b2Body* d_playerBody = nullptr;
+    bool    d_doubleJump = false;
+
 public:
-    PlayerController(b2World& world) : world(world) {
+    // width and height are in pixel space
+    player_controller(b2World& world, int width, int height)
+        : d_width{width}
+        , d_height{height}
+    {
         // Create player body
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
-        const auto position = pixel_to_world({200.0f, 100.0f});
+        const auto position = pixel_to_physics({200.0f, 100.0f});
+        const auto dimensions = pixel_to_physics({10, 20});
         bodyDef.position.Set(position.x, position.y);
-        playerBody = world.CreateBody(&bodyDef);
+        d_playerBody = world.CreateBody(&bodyDef);
+        d_playerBody->SetFixedRotation(true);
 
-        b2PolygonShape dynamicBox;
-        const auto dimensions = pixel_to_world({5.0f, 10.0f});
-        dynamicBox.SetAsBox(dimensions.x, dimensions.y);
+        {
+            b2PolygonShape dynamicBox;
+            dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
 
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &dynamicBox;
-        fixtureDef.density = 5.0f;
-        playerBody->CreateFixture(&fixtureDef);
-        playerBody->SetFixedRotation(true);
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.density = 12.0f;
+            d_playerBody->CreateFixture(&fixtureDef);
+        }
 
-        // Set up contact listener
-        world.SetContactListener(this);
+        // Slightly wider, slightly shorter, so the side have no friction
+        // There must be a better way to do this.
+        {
+            b2PolygonShape dynamicBox;
+            dynamicBox.SetAsBox(dimensions.x / 2 + 0.01, dimensions.y / 2 - 0.01);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &dynamicBox;
+            fixtureDef.friction = 0.0;
+            d_playerBody->CreateFixture(&fixtureDef);
+        }
     }
 
-    void handleInput(sand::keyboard& k) {
+    void handle_input(sand::keyboard& k) {
         // Move left
         if (k.is_down(sand::keyboard_key::A)) {
-            const auto v = playerBody->GetLinearVelocity();
-            playerBody->SetLinearVelocity({-3.0f, v.y});
+            const auto v = d_playerBody->GetLinearVelocity();
+            d_playerBody->SetLinearVelocity({-3.0f, v.y});
         }
 
         // Move right
         if (k.is_down(sand::keyboard_key::D)) {
-            const auto v = playerBody->GetLinearVelocity();
-            playerBody->SetLinearVelocity({3.0f, v.y});
+            const auto v = d_playerBody->GetLinearVelocity();
+            d_playerBody->SetLinearVelocity({3.0f, v.y});
         }
 
         // Jump - need to check for collision below, this allows wall climbing
         bool onGround = false;
-        for (auto edge = playerBody->GetContactList(); edge; edge = edge->next) {
+        for (auto edge = d_playerBody->GetContactList(); edge; edge = edge->next) {
             onGround = onGround || edge->contact->IsTouching();
         }
-        if (onGround) { doubleJump = true; }
+        if (onGround) { d_doubleJump = true; }
         
         if (k.is_down_this_frame(sand::keyboard_key::W)) {
-            if (onGround || doubleJump) {
-                if (!onGround) doubleJump = false;
-                const auto v = playerBody->GetLinearVelocity();
-                playerBody->SetLinearVelocity({v.x, -5.0f});
+            if (onGround || d_doubleJump) {
+                if (!onGround) d_doubleJump = false;
+                const auto v = d_playerBody->GetLinearVelocity();
+                d_playerBody->SetLinearVelocity({v.x, -5.0f});
             }
         }
     }
 
-    void Step(float timeStep) {
-        world.Step(timeStep, 8, 3);
+    auto rect_pixels() const -> glm::vec4 {
+        auto pos = physics_to_pixel(d_playerBody->GetPosition());
+        return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
+    auto angle() const -> float {
+        return d_playerBody->GetAngle();
+    }
+};
 
+class static_physics_box
+{
+    int       d_width;
+    int       d_height;
+    glm::vec3 d_colour;
+    b2Body*   d_body = nullptr;
 
-    auto rect() const {
-        return playerBody->GetPosition();
+public:
+    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec3 colour, float angle = 0.0f)
+        : d_width{width}
+        , d_height{height}
+        , d_colour{colour}
+    {
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_staticBody;
+        const auto position = pixel_to_physics(pos);
+        bodyDef.position.Set(position.x, position.y);
+        bodyDef.angle = angle;
+        d_body = world.CreateBody(&bodyDef);
+
+        b2PolygonShape box;
+        const auto dimensions = pixel_to_physics({width, height});
+        box.SetAsBox(dimensions.x / 2, dimensions.y / 2);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &box;
+        fixtureDef.friction = 1.0;
+        d_body->CreateFixture(&fixtureDef);
     }
 
-    auto angle() const {
-        return playerBody->GetAngle();
+    auto rect_pixels() const -> glm::vec4 {
+        auto pos = physics_to_pixel(d_body->GetPosition());
+        return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
-private:
-    b2World& world;
-    b2Body* playerBody;
-    bool doubleJump = false;
+    auto angle() const -> float {
+        return d_body->GetAngle();
+    }
+
+    auto colour() const -> glm::vec3 {
+        return d_colour;
+    }
 };
 
 auto main() -> int
@@ -119,25 +173,6 @@ auto main() -> int
 
     auto gravity = b2Vec2{0.0f, 10.0f};
     auto physics = b2World{gravity};
-
-    // Create ground body (solid line segment)
-    {
-        b2BodyDef groundBodyDef;
-        groundBodyDef.position.Set(0.0f, 0.0f);
-        b2Body* groundBody = physics.CreateBody(&groundBodyDef);
-
-        b2Vec2 point1 = pixel_to_world({0.0f, 256.0f});
-        b2Vec2 point2 = pixel_to_world({256.0f, 256.0f});
-
-        b2EdgeShape edgeShape{};
-        edgeShape.SetTwoSided(point1, point2);
-
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &edgeShape;
-        fixtureDef.friction = 1.5f;
-
-        groundBody->CreateFixture(&fixtureDef);
-    }
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -176,13 +211,19 @@ auto main() -> int
         }
     });
 
-    auto world       = std::make_unique<sand::world>();
-    auto renderer    = sand::renderer{};
-    auto ui          = sand::ui{window};
-    auto accumulator = 0.0;
-    auto timer       = sand::timer{};
-    auto p_renderer  = sand::player_renderer{};
-    PlayerController playerController(physics);
+    auto world           = std::make_unique<sand::world>();
+    auto world_renderer  = sand::renderer{};
+    auto ui              = sand::ui{window};
+    auto accumulator     = 0.0;
+    auto timer           = sand::timer{};
+    auto player_renderer = sand::player_renderer{};
+    auto player          = player_controller(physics, 10, 20);
+
+    auto ground = std::vector<static_physics_box>{
+        {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
+        {physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}},
+        {physics, {130, 215}, 30, 10, {1.0, 1.0, 0.0}, 1.5f}
+    };
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -197,8 +238,8 @@ auto main() -> int
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             sand::update(*world);
-            playerController.handleInput(keyboard);
-            playerController.Step(sand::config::time_step);
+            player.handle_input(keyboard);
+            physics.Step(sand::config::time_step, 8, 3);
             accumulator -= sand::config::time_step;
             updated = true;
         }
@@ -234,23 +275,28 @@ auto main() -> int
                 }
         }
         
-        // Next, draw the editor UI
+        // Renders the UI but doesn't yet draw on the screen
         ui.begin_frame();
-        if (display_ui(editor, *world, timer, window, camera)) updated = true;
-
-        // Draw the world
-        renderer.bind();
-        if (updated) {
-            renderer.update(*world, editor.show_chunks, camera);
+        if (display_ui(editor, *world, timer, window, camera)) {
+            updated = true;
         }
-        renderer.draw();
 
-        const auto player_pos = playerController.rect();
-        p_renderer.bind();
-        const auto player_pos_pixels = world_to_pixel({player_pos.x, player_pos.y});
-        p_renderer.draw(*world, {player_pos_pixels.x, player_pos_pixels.y, 10.0f, 20.0f}, playerController.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
-        p_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
+        // Render and display the world
+        world_renderer.bind();
+        if (updated) {
+            world_renderer.update(*world, editor.show_chunks, camera);
+        }
+        world_renderer.draw();
 
+        // Render and display the player plus some temporary obstacles
+        player_renderer.bind();
+        player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+
+        for (const auto& obj : ground) {
+            player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
+        }
+        
+        // Display the UI
         ui.end_frame();
 
         window.swap_buffers();
