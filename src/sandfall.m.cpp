@@ -22,47 +22,42 @@
 #include <print>
 
 // Converts a point in pixel space to world space
-auto pixel_to_world(glm::vec2 px) -> b2Vec2
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2
 {
     b2Vec2 pos(px.x / sand::config::pixels_per_meter, px.y / sand::config::pixels_per_meter);
     return pos;
 }
 
 // Converts a point in world space to pixel space
-auto world_to_pixel(b2Vec2 px) -> glm::vec2
+auto physics_to_pixel(b2Vec2 px) -> glm::vec2
 {
     glm::vec2 pos(px.x * sand::config::pixels_per_meter, px.y * sand::config::pixels_per_meter);
     return pos;
 }
 
-auto make_player(b2World& world) -> b2Body*
-{
-    // Create player body
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    const auto position = pixel_to_world({200.0f, 100.0f});
-    bodyDef.position.Set(position.x, position.y);
-    b2Body* playerBody = world.CreateBody(&bodyDef);
-
-    b2PolygonShape dynamicBox;
-    const auto dimensions = pixel_to_world({5.0f, 10.0f});
-    dynamicBox.SetAsBox(dimensions.x, dimensions.y);
-
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &dynamicBox;
-    fixtureDef.density = 5.0f;
-    playerBody->CreateFixture(&fixtureDef);
-    playerBody->SetFixedRotation(true);
-
-    return playerBody;
-}
-
 class player_controller {
 public:
-    player_controller(b2World& world)
-        : d_playerBody{make_player(world)}
-        , d_doubleJump{false}
+    // width and height are in pixel space
+    player_controller(b2World& world, int width, int height)
+        : d_width{width}
+        , d_height{height}
     {
+        // Create player body
+        b2BodyDef bodyDef;
+        bodyDef.type = b2_dynamicBody;
+        const auto position = pixel_to_physics({200.0f, 100.0f});
+        bodyDef.position.Set(position.x, position.y);
+        d_playerBody = world.CreateBody(&bodyDef);
+        d_playerBody->SetFixedRotation(true);
+
+        b2PolygonShape dynamicBox;
+        const auto dimensions = pixel_to_physics({10, 20});
+        dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &dynamicBox;
+        fixtureDef.density = 5.0f;
+        auto fixture = d_playerBody->CreateFixture(&fixtureDef);
     }
 
     void handle_input(sand::keyboard& k) {
@@ -94,17 +89,32 @@ public:
         }
     }
 
-    auto rect() const {
+    auto position() const -> const b2Vec2& {
         return d_playerBody->GetPosition();
     }
 
-    auto angle() const {
+    auto angle() const -> float {
         return d_playerBody->GetAngle();
     }
 
+    auto width() const -> float {
+        return d_width;
+    }
+
+    auto height() const -> float {
+        return d_height;
+    }
+
+    auto rect_pixels() const -> glm::vec4 {
+        auto pos = physics_to_pixel(d_playerBody->GetPosition());
+        return glm::vec4{pos.x, pos.y, d_width, d_height};
+    }
+
 private:
-    b2Body* d_playerBody;
-    bool    d_doubleJump;
+    int     d_width;
+    int     d_height;
+    b2Body* d_playerBody = nullptr;
+    bool    d_doubleJump = false;
 };
 
 auto main() -> int
@@ -125,8 +135,8 @@ auto main() -> int
         groundBodyDef.position.Set(0.0f, 0.0f);
         b2Body* groundBody = physics.CreateBody(&groundBodyDef);
 
-        b2Vec2 point1 = pixel_to_world({0.0f, 256.0f});
-        b2Vec2 point2 = pixel_to_world({256.0f, 256.0f});
+        b2Vec2 point1 = pixel_to_physics({0.0f, 256.0f});
+        b2Vec2 point2 = pixel_to_physics({256.0f, 256.0f});
 
         b2EdgeShape edgeShape{};
         edgeShape.SetTwoSided(point1, point2);
@@ -175,13 +185,13 @@ auto main() -> int
         }
     });
 
-    auto world       = std::make_unique<sand::world>();
-    auto renderer    = sand::renderer{};
-    auto ui          = sand::ui{window};
-    auto accumulator = 0.0;
-    auto timer       = sand::timer{};
-    auto p_renderer  = sand::player_renderer{};
-    auto player      = player_controller(physics);
+    auto world           = std::make_unique<sand::world>();
+    auto world_renderer  = sand::renderer{};
+    auto ui              = sand::ui{window};
+    auto accumulator     = 0.0;
+    auto timer           = sand::timer{};
+    auto player_renderer = sand::player_renderer{};
+    auto player          = player_controller(physics, 10, 20);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -233,23 +243,25 @@ auto main() -> int
                 }
         }
         
-        // Next, draw the editor UI
+        // Renders the UI but doesn't yet draw on the screen
         ui.begin_frame();
-        if (display_ui(editor, *world, timer, window, camera)) updated = true;
-
-        // Draw the world
-        renderer.bind();
-        if (updated) {
-            renderer.update(*world, editor.show_chunks, camera);
+        if (display_ui(editor, *world, timer, window, camera)) {
+            updated = true;
         }
-        renderer.draw();
 
-        const auto player_pos = player.rect();
-        p_renderer.bind();
-        const auto player_pos_pixels = world_to_pixel({player_pos.x, player_pos.y});
-        p_renderer.draw(*world, {player_pos_pixels.x, player_pos_pixels.y, 10.0f, 20.0f}, player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
-        p_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
+        // Render and display the world
+        world_renderer.bind();
+        if (updated) {
+            world_renderer.update(*world, editor.show_chunks, camera);
+        }
+        world_renderer.draw();
 
+        // Render and display the player plus some temporary obstacles
+        player_renderer.bind();
+        player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+        player_renderer.draw(*world, {128.0, 266.0, 256.0f, 20.0f}, 0, glm::vec3{1.0, 1.0, 0.0}, camera);
+
+        // Display the UI
         ui.end_frame();
 
         window.swap_buffers();
