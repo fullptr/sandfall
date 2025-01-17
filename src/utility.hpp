@@ -6,6 +6,9 @@
 #include <format>
 #include <filesystem>
 #include <glm/glm.hpp>
+#include <box2d/box2d.h>
+
+#include "config.hpp"
 
 namespace sand {
 
@@ -86,5 +89,12 @@ class window;
 struct camera;
 auto mouse_pos_world_space(const window& w, const camera& c) -> glm::vec2;
 auto pixel_at_mouse(const window& w, const camera& c) -> glm::ivec2;
+
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2;
+auto pixel_to_physics(float px) -> float;
+
+// Converts a point in world space to pixel space
+auto physics_to_pixel(b2Vec2 px) -> glm::vec2;
+auto physics_to_pixel(float px) -> float;
 
 }

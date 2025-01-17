@@ -13,10 +13,11 @@ namespace sand {
 auto display_ui(
     editor& editor,
     world& world,
+    const b2World& physics,
     const timer& timer,
     const window& window,
-    const camera& camera
-    //const player& player
+    const camera& camera,
+    const player_controller& player
 ) -> bool
 {
     auto updated = false;
@@ -39,9 +40,18 @@ auto display_ui(
         ImGui::Text("Scale: %f", camera.world_to_screen);
         ImGui::Separator();
 
-        //ImGui::Text("Player");
-        //ImGui::Text("Position: {%.2f, %.2f}", player.position.x, player.position.y);
-        //ImGui::Text("Velocity: {%.2f, %.2f}", player.velocity.x, player.velocity.y);
+        ImGui::Text("Player");
+        int count = 0;
+        auto* contact = player.get_contacts();
+        while (contact) {
+            count++;
+            const b2Vec2 normal = contact->contact->GetManifold()->localNormal;
+            b2Vec2 worldNormal = -contact->other->GetWorldVector(normal);
+            ImGui::Text("    (%f, %f)", worldNormal.x, worldNormal.y);
+            contact = contact->next;
+        }
+        //ImGui::Text("On Ground: %d", is_on_ground(physics, player));
+        //ImGui::Text("Num Contacts: %d", count);
         ImGui::Separator();
 
         ImGui::Text("Info");

@@ -5,6 +5,8 @@
 #include "player.hpp"
 #include "graphics/window.hpp"
 
+#include <box2d/box2d.h>
+
 #include <cstdint>
 #include <vector>
 #include <utility>
@@ -61,10 +63,11 @@ struct editor
 auto display_ui(
     editor& editor,
     world& world,
+    const b2World& physics,
     const timer& timer,
     const window& window,
-    const camera& camera
-    //const player& player
+    const camera& camera,
+    const player_controller& player
 ) -> bool;
 
 }
