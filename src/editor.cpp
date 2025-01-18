@@ -46,8 +46,8 @@ auto display_ui(
         while (contact) {
             count++;
             const b2Vec2 normal = contact->contact->GetManifold()->localNormal;
-            b2Vec2 worldNormal = -contact->other->GetWorldVector(normal);
-            ImGui::Text("    (%f, %f)", worldNormal.x, worldNormal.y);
+            b2Vec2 worldNormal = contact->other->GetWorldVector(normal);
+            ImGui::Text("World Normal: (%f, %f)", worldNormal.x, worldNormal.y);
             contact = contact->next;
         }
         //ImGui::Text("On Ground: %d", is_on_ground(physics, player));

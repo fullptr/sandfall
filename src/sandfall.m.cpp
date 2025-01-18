@@ -127,8 +127,8 @@ auto main() -> int
 
     auto ground = std::vector<static_physics_box>{
         {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
-        {physics, {64, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {130, 215}, 30, 10, {1.0, 1.0, 0.0}, 1.0f}
+        {physics, {200, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}, 0.1},
+        {physics, {130, 215}, 430, 10, {1.0, 1.0, 0.0}, 1.4f}
     };
 
     while (window.is_running()) {
@@ -144,7 +144,7 @@ auto main() -> int
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             sand::update(*world);
-            player.handle_input(keyboard);
+            player.update(keyboard);
             physics.Step(sand::config::time_step, 8, 3);
             accumulator -= sand::config::time_step;
             updated = true;
