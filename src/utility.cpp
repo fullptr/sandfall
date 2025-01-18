@@ -121,5 +121,28 @@ auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
 {
     return glm::ivec2{mouse_pos_world_space(w, c)};
 }
+
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2
+{
+    b2Vec2 pos(px.x / sand::config::pixels_per_meter, px.y / sand::config::pixels_per_meter);
+    return pos;
+}
+
+auto pixel_to_physics(float px) -> float
+{
+    return px / sand::config::pixels_per_meter;
+}
+
+// Converts a point in world space to pixel space
+auto physics_to_pixel(b2Vec2 px) -> glm::vec2
+{
+    glm::vec2 pos(px.x * sand::config::pixels_per_meter, px.y * sand::config::pixels_per_meter);
+    return pos;
+}
+
+auto physics_to_pixel(float px) -> float
+{
+    return px * sand::config::pixels_per_meter;
+}
     
 }
