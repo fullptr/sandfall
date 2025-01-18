@@ -8,27 +8,6 @@
 
 namespace sand {
 
-class ray_cast_callback : public b2RayCastCallback
-{
-public:
-    bool found = false;
-    float ReportFixture(b2Fixture* fixture, const b2Vec2& point,
-                        const b2Vec2& normal, float fraction) override {
-        found = true;          
-        return 0;         
-    }
-};
-
-inline auto is_on_ground(const b2World& world, const b2Vec2& bottom) -> bool
-{
-    auto callback = ray_cast_callback{};
-    auto start = bottom;
-    auto end = start;
-    end.y += 0.75f;
-    world.RayCast(&callback, start, end);
-    return callback.found;
-}
-
 class player_controller {
     int      d_width;
     int      d_height;
@@ -51,7 +30,7 @@ public:
         bodyDef.position.Set(position.x, position.y);
         d_body = world.CreateBody(&bodyDef);
         d_body->SetFixedRotation(true);
-        d_body->SetLinearDamping(0.5f);
+        d_body->SetLinearDamping(0.9f);
 
         {
             b2PolygonShape dynamicBox;
@@ -62,7 +41,7 @@ public:
 
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &circle;
-            fixtureDef.density = 12;
+            fixtureDef.density = 1;
             d_body->CreateFixture(&fixtureDef);
         }
 
@@ -82,21 +61,19 @@ public:
         bool on_ground = false;
         bool can_move_left = true;
         bool can_move_right = true;
-        auto* contact = d_body->GetContactList();
-        for (auto contact = d_body->GetContactList(); contact; contact = contact->next) {
-            if (!contact->contact->IsTouching()) continue;
-            
-            const b2Vec2 normal = contact->contact->GetManifold()->localNormal;
-            b2Vec2 worldNormal = contact->other->GetWorldVector(normal);
 
-            const auto dot = b2Dot(worldNormal, b2Vec2(0.0, -1.0));
-            if (dot > 0.7) { on_ground = true; }
+        for (auto c = d_body->GetContactList(); c; c = c->next) {
+            if (!c->contact->IsTouching()) continue;
 
-            const auto leftDot = b2Dot(worldNormal, b2Vec2(1.0, 0.0));
-            if (leftDot > 0.7) { can_move_left = false; }
+            const auto normal = -c->other->GetWorldVector(c->contact->GetManifold()->localNormal);
 
-            const auto rightDot = b2Dot(worldNormal, b2Vec2(-1.0, 0.0));
-            if (rightDot > 0.7) { can_move_right = false; }
+            const auto up_dot = b2Dot(normal, b2Vec2(0.0, 1.0));
+            const auto left_dot = b2Dot(normal, b2Vec2(-1.0, 0.0));
+            const auto right_dot = b2Dot(normal, b2Vec2(1.0, 0.0));
+
+            if (up_dot > 0.7) { on_ground = true; }
+            if (left_dot > 0.7) { can_move_left = false; }
+            if (right_dot > 0.7) { can_move_right = false; }
         }
 
         // Move left
