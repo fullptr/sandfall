@@ -56,7 +56,7 @@ public:
         }
     }
 
-    void update(sand::keyboard& k) {
+    void update(const sand::keyboard& k) {
 
         bool on_ground = false;
         bool can_move_left = true;
@@ -76,22 +76,24 @@ public:
             if (right_dot > 0.7) { can_move_right = false; }
         }
 
-        // Move left
         if (can_move_left && k.is_down(sand::keyboard_key::A)) {
             const auto v = d_body->GetLinearVelocity();
             d_body->SetLinearVelocity({-3.0f, v.y});
         }
 
-        // Move right
         if (can_move_right && k.is_down(sand::keyboard_key::D)) {
             const auto v = d_body->GetLinearVelocity();
             d_body->SetLinearVelocity({3.0f, v.y});
         }
 
-        if (on_ground) { d_double_jump = true; }
+        if (on_ground) {
+            d_double_jump = true;
+        }
         if (k.is_down_this_frame(sand::keyboard_key::W)) {
             if (on_ground || d_double_jump) {
-                if (!on_ground) d_double_jump = false;
+                if (!on_ground) {
+                    d_double_jump = false;
+                }
                 const auto v = d_body->GetLinearVelocity();
                 d_body->SetLinearVelocity({v.x, -5.0f});
             }

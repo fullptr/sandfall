@@ -22,12 +22,12 @@ auto mouse::on_new_frame() -> void
     d_down_this_frame.reset();
 }
 
-auto mouse::is_down(mouse_button button) -> bool
+auto mouse::is_down(mouse_button button) const -> bool
 {
     return d_down.test(std::to_underlying(button));
 }
 
-auto mouse::is_down_this_frame(mouse_button button) -> bool
+auto mouse::is_down_this_frame(mouse_button button) const -> bool
 {
     return d_down_this_frame.test(std::to_underlying(button));
 }
@@ -49,12 +49,12 @@ auto keyboard::on_new_frame() -> void
     d_down_this_frame.reset();
 }
 
-auto keyboard::is_down(keyboard_key key) -> bool
+auto keyboard::is_down(keyboard_key key) const -> bool
 {
     return d_down.test(std::to_underlying(key));
 }
 
-auto keyboard::is_down_this_frame(keyboard_key key) -> bool
+auto keyboard::is_down_this_frame(keyboard_key key) const -> bool
 {
     return d_down_this_frame.test(std::to_underlying(key));
 }

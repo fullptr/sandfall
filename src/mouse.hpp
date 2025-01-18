@@ -20,8 +20,8 @@ public:
     auto on_event(const event& e) -> void;
     auto on_new_frame() -> void;
 
-    auto is_down(mouse_button button) -> bool;
-    auto is_down_this_frame(mouse_button button) -> bool;
+    auto is_down(mouse_button button) const -> bool;
+    auto is_down_this_frame(mouse_button button) const-> bool;
 };
 
 enum class keyboard_key
@@ -43,8 +43,8 @@ public:
     auto on_event(const event& e) -> void;
     auto on_new_frame() -> void;
 
-    auto is_down(keyboard_key key) -> bool;
-    auto is_down_this_frame(keyboard_key key) -> bool;
+    auto is_down(keyboard_key key) const -> bool;
+    auto is_down_this_frame(keyboard_key key) const -> bool;
 };
     
 }
