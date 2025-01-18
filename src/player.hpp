@@ -32,28 +32,16 @@ public:
         d_body->SetFixedRotation(true);
         d_body->SetLinearDamping(0.9f);
 
-        {
-            b2PolygonShape dynamicBox;
-            dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
+        b2PolygonShape dynamicBox;
+        dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
 
-            b2CircleShape circle;
-            circle.m_radius = dimensions.x / 2.0;
+        b2CircleShape circle;
+        circle.m_radius = dimensions.x / 2.0;
 
-            b2FixtureDef fixtureDef;
-            fixtureDef.shape = &circle;
-            fixtureDef.density = 1;
-            d_body->CreateFixture(&fixtureDef);
-        }
-
-        if (false) {
-            b2PolygonShape dynamicBox;
-            dynamicBox.SetAsBox(dimensions.x / 2 + 0.01f, dimensions.y / 2 - 0.01f);
-            b2FixtureDef fixtureDef;
-            fixtureDef.shape = &dynamicBox;
-            fixtureDef.density = 12.0f;
-            fixtureDef.friction = 0.0f;
-            d_body->CreateFixture(&fixtureDef);
-        }
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &circle;
+        fixtureDef.density = 1;
+        d_body->CreateFixture(&fixtureDef);
     }
 
     void update(const sand::keyboard& k) {
