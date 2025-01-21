@@ -223,7 +223,7 @@ auto main() -> int
         ui.end_frame();
 
         // Testing the line renderer
-        shape_renderer.begin_frame(window.width(), window.height());
+        shape_renderer.begin_frame(window.width(), window.height(), camera);
         shape_renderer.draw_line({100, 100}, {200, 100}, {1, 0, 0, 1}, {0, 0, 1, 1}, 10);
         shape_renderer.end_frame();
 

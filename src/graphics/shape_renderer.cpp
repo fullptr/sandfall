@@ -63,6 +63,11 @@ in float o_line_thickness;
 uniform float u_width;
 uniform float u_height;
 
+uniform float u_camera_width;
+uniform float u_camera_height;
+uniform vec2 u_camera_top_left;
+uniform float u_camera_world_to_screen;
+
 float cross2d(vec2 a, vec2 b)
 {
     return a.x * b.y - b.x * a.y;
@@ -143,6 +148,11 @@ in float o_circle_angle;
 
 uniform float u_width;
 uniform float u_height;
+
+uniform float u_camera_width;
+uniform float u_camera_height;
+uniform vec2 u_camera_top_left;
+uniform float u_camera_world_to_screen;
 
 const float pi = 3.1415926535897932384626433832795;
 
@@ -245,18 +255,26 @@ shape_renderer::~shape_renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-void shape_renderer::begin_frame(const float width, const float height)
+void shape_renderer::begin_frame(const float width, const float height, const camera& c)
 {
     glBindVertexArray(d_vao);
 
     d_line_shader.bind();
     d_line_shader.load_float("u_width", width);
     d_line_shader.load_float("u_height", height);
+    d_line_shader.load_float("u_camera_width", c.screen_width);
+    d_line_shader.load_float("u_camera_height", c.screen_height);
+    d_line_shader.load_vec2("u_camera_top_left", c.top_left);
+    d_line_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
     d_lines.clear();
 
     d_circle_shader.bind();
     d_circle_shader.load_float("u_width", width);
     d_circle_shader.load_float("u_height", height);
+    d_circle_shader.load_float("u_camera_width", c.screen_width);
+    d_circle_shader.load_float("u_camera_height", c.screen_height);
+    d_circle_shader.load_vec2("u_camera_top_left", c.top_left);
+    d_circle_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
     d_circles.clear();
 }
 
