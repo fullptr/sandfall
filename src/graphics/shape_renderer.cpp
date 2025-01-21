@@ -72,30 +72,32 @@ float cross2d(vec2 a, vec2 b)
 
 void main()
 {   
-    vec2 pixel = vec2(
-        gl_FragCoord.x + u_camera_top_left.x * u_camera_world_to_screen,
-        u_camera_height - gl_FragCoord.y + u_camera_top_left.y * u_camera_world_to_screen
-    );
+    float thickness = o_line_thickness / u_camera_world_to_screen;
+    vec2 frag_coord = vec2(gl_FragCoord.x, u_camera_height - gl_FragCoord.y);
+    vec2 pixel = frag_coord / u_camera_world_to_screen + u_camera_top_left;
 
-    if (o_line_begin == o_line_end && distance(pixel, o_line_begin) < o_line_thickness) {
+    vec2 line_begin = o_line_begin;
+    vec2 line_end = o_line_end;
+
+    if (line_begin == line_end && distance(pixel, line_begin) < thickness) {
         out_colour = o_line_begin_colour;
         return;
     }
 
-    vec2 A = o_line_end - o_line_begin;
-    vec2 B = pixel - o_line_begin;
+    vec2 A = line_end - line_begin;
+    vec2 B = pixel - line_begin;
     float lengthA = length(A);
 
     float distance_from_line = abs(cross2d(A, B)) / lengthA;
 
     float ratio_along = dot(A, B) / (lengthA * lengthA);
 
-    if (distance_from_line <= o_line_thickness) {
+    if (distance_from_line <= thickness) {
         if (ratio_along > 0 && ratio_along < 1) {
             out_colour = mix(o_line_begin_colour, o_line_end_colour, ratio_along);
-        } else if (ratio_along <= 0 && distance(o_line_begin, pixel) < o_line_thickness) {
+        } else if (ratio_along <= 0 && distance(line_begin, pixel) < thickness) {
             out_colour = o_line_begin_colour;
-        } else if (ratio_along >= 1 && distance(o_line_end, pixel) < o_line_thickness) {
+        } else if (ratio_along >= 1 && distance(line_end, pixel) < thickness) {
             out_colour = o_line_end_colour;
         } else {
             out_colour = vec4(0.0);
