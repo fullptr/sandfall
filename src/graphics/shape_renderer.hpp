@@ -1,5 +1,6 @@
 #pragma once
-#include <sprocket/graphics/buffer.h>
+#include "graphics/buffer.hpp"
+#include "graphics/shader.hpp"
 
 #include <glm/glm.hpp>
 
@@ -40,6 +41,8 @@ struct circle_instance
 
 class shape_renderer
 {
+    std::uint32_t d_vao;
+
     // Combine these two into a static mesh? This is just a quad to be drawn onto the whole
     // screen. The actual line drawing will be done in the fragment shader.
     const spkt::vertex_buffer<quad_vertex>  d_quad_vertices;
@@ -55,6 +58,7 @@ class shape_renderer
 
 public:
     shape_renderer();
+    ~shape_renderer();
 
     void begin_frame(const float width, const float height);
     void end_frame();

@@ -11,6 +11,7 @@
 
 #include "graphics/renderer.hpp"
 #include "graphics/player_renderer.hpp"
+#include "graphics/shape_renderer.hpp"
 #include "graphics/window.hpp"
 #include "graphics/ui.hpp"
 
@@ -124,6 +125,7 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player_renderer = sand::player_renderer{};
     auto player          = sand::player_controller(physics, 10, 20);
+    auto shape_renderer  = spkt::shape_renderer{};
 
     auto ground = std::vector<static_physics_box>{
         {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
@@ -219,6 +221,11 @@ auto main() -> int
         
         // Display the UI
         ui.end_frame();
+
+        // Testing the line renderer
+        shape_renderer.begin_frame(window.width(), window.height());
+        shape_renderer.draw_line({100, 100}, {200, 100}, {1, 0, 0, 1}, {0, 0, 1, 1}, 10);
+        shape_renderer.end_frame();
 
         window.swap_buffers();
     }

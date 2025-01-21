@@ -1,7 +1,6 @@
-#include "shape_renderer.h"
+#include "shape_renderer.hpp"
 
-#include <sprocket/graphics/render_context.h>
-#include <sprocket/core/log.h>
+#include "render_context.hpp"
 
 #include <glad/glad.h>
 
@@ -22,6 +21,173 @@ constexpr std::vector<std::uint32_t> get_quad_indices()
 {
     return {0, 1, 2, 0, 2, 3};
 }
+
+constexpr auto line_vertex = R"SHADER(
+#version 410 core
+layout (location = 0) in vec2 position;
+
+layout (location = 1) in vec2  line_begin;
+layout (location = 2) in vec2  line_end;
+layout (location = 3) in vec4  line_begin_colour;
+layout (location = 4) in vec4  line_end_colour;
+layout (location = 5) in float line_thickness;
+
+out vec2  o_line_begin;
+out vec2  o_line_end;
+out vec4  o_line_begin_colour;
+out vec4  o_line_end_colour;
+out float o_line_thickness;
+
+void main()
+{
+    gl_Position = vec4(position, 0.0, 1.0);
+
+    o_line_begin = line_begin;
+    o_line_end = line_end;
+    o_line_begin_colour = line_begin_colour;
+    o_line_end_colour = line_end_colour;
+    o_line_thickness = line_thickness;
+} 
+)SHADER";
+
+constexpr auto line_fragment = R"SHADER(
+#version 410 core
+layout (location = 0) out vec4 out_colour;
+
+in vec2  o_line_begin;
+in vec2  o_line_end;
+in vec4  o_line_begin_colour;
+in vec4  o_line_end_colour;
+in float o_line_thickness;
+
+uniform float u_width;
+uniform float u_height;
+
+float cross2d(vec2 a, vec2 b)
+{
+    return a.x * b.y - b.x * a.y;
+}
+
+void main()
+{   
+    vec2 pixel = vec2(gl_FragCoord.x, u_height - gl_FragCoord.y);
+
+    if (o_line_begin == o_line_end && distance(pixel, o_line_begin) < o_line_thickness) {
+        out_colour = o_line_begin_colour;
+        return;
+    }
+
+    vec2 A = o_line_end - o_line_begin;
+    vec2 B = pixel - o_line_begin;
+    float lengthA = length(A);
+
+    float distance_from_line = abs(cross2d(A, B)) / lengthA;
+
+    float ratio_along = dot(A, B) / (lengthA * lengthA);
+
+    if (distance_from_line <= o_line_thickness) {
+        if (ratio_along > 0 && ratio_along < 1) {
+            out_colour = mix(o_line_begin_colour, o_line_end_colour, ratio_along);
+        } else if (ratio_along <= 0 && distance(o_line_begin, pixel) < o_line_thickness) {
+            out_colour = o_line_begin_colour;
+        } else if (ratio_along >= 1 && distance(o_line_end, pixel) < o_line_thickness) {
+            out_colour = o_line_end_colour;
+        } else {
+            out_colour = vec4(0.0);
+        }
+    }
+}
+)SHADER";
+
+constexpr auto circle_vertex = R"SHADER(
+#version 410 core
+layout (location = 0) in vec2 position;
+
+layout (location = 1) in vec2  circle_centre;
+layout (location = 2) in float circle_inner_radius;
+layout (location = 3) in float circle_outer_radius;
+layout (location = 4) in vec4  circle_begin_colour;
+layout (location = 5) in vec4  circle_end_colour;
+layout (location = 6) in float circle_angle;
+
+out vec2  o_circle_centre;
+out float o_circle_inner_radius;
+out float o_circle_outer_radius;
+out vec4  o_circle_begin_colour;
+out vec4  o_circle_end_colour;
+out float o_circle_angle;
+
+void main()
+{
+    gl_Position = vec4(position, 0.0, 1.0);
+    
+    o_circle_centre = circle_centre;
+    o_circle_inner_radius = circle_inner_radius;
+    o_circle_outer_radius = circle_outer_radius;
+    o_circle_begin_colour = circle_begin_colour;
+    o_circle_end_colour = circle_end_colour;
+    o_circle_angle = circle_angle;
+} 
+)SHADER";
+
+constexpr auto circle_fragment = R"SHADER(
+#version 410 core
+layout (location = 0) out vec4 out_colour;
+
+in vec2  o_circle_centre;
+in float o_circle_inner_radius;
+in float o_circle_outer_radius;
+in vec4  o_circle_begin_colour;
+in vec4  o_circle_end_colour;
+in float o_circle_angle;
+
+uniform float u_width;
+uniform float u_height;
+
+const float pi = 3.1415926535897932384626433832795;
+
+// Rotates the given vec2 anti-clockwise by the given amount of radians.
+vec2 rot(vec2 v, float rad)
+{
+    float s = sin(rad);
+	float c = cos(rad);
+	mat2 m = mat2(c, -s, s, c);
+	return m * v;
+}
+
+// Returns 0 for vectors on positive x axis, 0.5, for negative x axis, increasing
+// rotating clockwise.
+float rotation_value(vec2 v)
+{
+    if (v.y >= 0) { // Top right
+        float cos_theta = normalize(-v).x;
+        float theta = acos(cos_theta) + pi;
+        return theta / (2 * pi);
+    }
+    else {
+        float cos_theta = normalize(v).x;
+        float theta = acos(cos_theta);
+        return theta / (2 * pi);
+    }
+}
+
+void main()
+{   
+    vec2 pixel = vec2(gl_FragCoord.x, u_height - gl_FragCoord.y);
+    vec2 to_pixel = pixel - o_circle_centre;
+    float from_centre = length(to_pixel);
+    
+    if (o_circle_inner_radius < from_centre && from_centre < o_circle_outer_radius) {
+        float angle_offset = o_circle_angle / (2 * pi);
+        out_colour = mix(
+            o_circle_begin_colour,
+            o_circle_end_colour,
+            rotation_value(rot(to_pixel, -o_circle_angle))
+        );
+        return;
+    }
+}
+)SHADER";
 
 }
 
@@ -68,21 +234,29 @@ void circle_instance::set_buffer_attributes(std::uint32_t vbo)
 shape_renderer::shape_renderer()
     : d_quad_vertices(get_quad_vertices())
     , d_quad_indices(get_quad_indices())
-    , d_line_shader("Resources/Shaders/line.vert", "Resources/Shaders/line.frag")
-    , d_circle_shader("Resources/Shaders/circle.vert", "Resources/Shaders/circle.frag")
+    , d_line_shader(line_vertex, line_fragment)
+    , d_circle_shader(circle_vertex, circle_fragment)
 {
+    glGenVertexArrays(1, &d_vao);
+}
+
+shape_renderer::~shape_renderer()
+{
+    glDeleteVertexArrays(1, &d_vao);
 }
 
 void shape_renderer::begin_frame(const float width, const float height)
 {
+    glBindVertexArray(d_vao);
+
     d_line_shader.bind();
-    d_line_shader.load("u_width", width);
-    d_line_shader.load("u_height", height);
+    d_line_shader.load_float("u_width", width);
+    d_line_shader.load_float("u_height", height);
     d_lines.clear();
 
     d_circle_shader.bind();
-    d_circle_shader.load("u_width", width);
-    d_circle_shader.load("u_height", height);
+    d_circle_shader.load_float("u_width", width);
+    d_circle_shader.load_float("u_height", height);
     d_circles.clear();
 }
 
