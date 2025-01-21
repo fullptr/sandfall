@@ -72,8 +72,9 @@ float cross2d(vec2 a, vec2 b)
 
 void main()
 {   
-    float thickness = o_line_thickness / u_camera_world_to_screen;
     vec2 frag_coord = vec2(gl_FragCoord.x, u_camera_height - gl_FragCoord.y);
+
+    float thickness = o_line_thickness / u_camera_world_to_screen;
     vec2 pixel = frag_coord / u_camera_world_to_screen + u_camera_top_left;
 
     vec2 line_begin = o_line_begin;

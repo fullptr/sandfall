@@ -224,7 +224,7 @@ auto main() -> int
 
         // Testing the line renderer
         shape_renderer.begin_frame(window.width(), window.height(), camera);
-        shape_renderer.draw_line({100, 100}, {200, 100}, {1, 0, 0, 1}, {0, 0, 1, 1}, 0.5);
+        shape_renderer.draw_line({100, 100}, {200, 100}, {1, 0, 0, 1}, {0, 0, 1, 1}, camera.world_to_screen / 2);
         shape_renderer.end_frame();
 
         window.swap_buffers();
