@@ -60,9 +60,6 @@ in vec4  o_line_begin_colour;
 in vec4  o_line_end_colour;
 in float o_line_thickness;
 
-uniform float u_width;
-uniform float u_height;
-
 uniform float u_camera_width;
 uniform float u_camera_height;
 uniform vec2 u_camera_top_left;
@@ -75,7 +72,10 @@ float cross2d(vec2 a, vec2 b)
 
 void main()
 {   
-    vec2 pixel = vec2(gl_FragCoord.x, u_height - gl_FragCoord.y);
+    vec2 pixel = vec2(
+        gl_FragCoord.x + u_camera_top_left.x * u_camera_world_to_screen,
+        u_camera_height - gl_FragCoord.y + u_camera_top_left.y * u_camera_world_to_screen
+    );
 
     if (o_line_begin == o_line_end && distance(pixel, o_line_begin) < o_line_thickness) {
         out_colour = o_line_begin_colour;
