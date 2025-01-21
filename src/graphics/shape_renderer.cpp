@@ -9,7 +9,7 @@
 
 #include <cstddef>
 
-namespace spkt {
+namespace sand {
 namespace {
 
 constexpr std::vector<quad_vertex> get_quad_vertices()
@@ -262,7 +262,7 @@ void shape_renderer::begin_frame(const float width, const float height)
 
 void shape_renderer::end_frame()
 {
-    spkt::render_context rc;
+    sand::render_context rc;
     rc.alpha_blending(true);
     rc.depth_testing(false);
 

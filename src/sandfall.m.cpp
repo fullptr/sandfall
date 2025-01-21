@@ -125,7 +125,7 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player_renderer = sand::player_renderer{};
     auto player          = sand::player_controller(physics, 10, 20);
-    auto shape_renderer  = spkt::shape_renderer{};
+    auto shape_renderer  = sand::shape_renderer{};
 
     auto ground = std::vector<static_physics_box>{
         {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},

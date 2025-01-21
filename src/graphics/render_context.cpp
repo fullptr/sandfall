@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 
-namespace spkt {
+namespace sand {
 
 render_context::render_context()
     : d_depth_test(glIsEnabled(GL_DEPTH_TEST))

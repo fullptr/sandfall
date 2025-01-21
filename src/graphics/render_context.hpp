@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 
-namespace spkt {
+namespace sand {
 
 class render_context
 // A wrapper class that stores the current context and restores it upon

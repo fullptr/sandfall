@@ -6,7 +6,7 @@
 #include <functional>
 #include <span>
 
-namespace spkt {
+namespace sand {
 
 enum class buffer_usage
 {

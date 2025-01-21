@@ -1,12 +1,13 @@
 #pragma once
 #include "graphics/buffer.hpp"
 #include "graphics/shader.hpp"
+#include "camera.hpp"
 
 #include <glm/glm.hpp>
 
 #include <memory>
 
-namespace spkt {
+namespace sand {
 
 struct quad_vertex
 {
@@ -45,16 +46,16 @@ class shape_renderer
 
     // Combine these two into a static mesh? This is just a quad to be drawn onto the whole
     // screen. The actual line drawing will be done in the fragment shader.
-    const spkt::vertex_buffer<quad_vertex>  d_quad_vertices;
-    const spkt::index_buffer<std::uint32_t> d_quad_indices;
+    const sand::vertex_buffer<quad_vertex>  d_quad_vertices;
+    const sand::index_buffer<std::uint32_t> d_quad_indices;
 
     sand::shader                       d_line_shader;
     std::vector<line_instance>         d_lines;
-    spkt::vertex_buffer<line_instance> d_line_instances;
+    sand::vertex_buffer<line_instance> d_line_instances;
 
     sand::shader                         d_circle_shader;
     std::vector<circle_instance>         d_circles;
-    spkt::vertex_buffer<circle_instance> d_circle_instances;
+    sand::vertex_buffer<circle_instance> d_circle_instances;
 
 public:
     shape_renderer();
