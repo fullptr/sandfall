@@ -44,8 +44,6 @@ class shape_renderer
 {
     std::uint32_t d_vao;
 
-    // Combine these two into a static mesh? This is just a quad to be drawn onto the whole
-    // screen. The actual line drawing will be done in the fragment shader.
     const sand::vertex_buffer<quad_vertex>  d_quad_vertices;
     const sand::index_buffer<std::uint32_t> d_quad_indices;
 
