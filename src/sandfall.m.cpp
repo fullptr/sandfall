@@ -168,7 +168,7 @@ auto main() -> int
     world->wake_all_chunks();
 
     //{125, 140};
-    std::unordered_set<glm::ivec2> points = flood_fill(*world, 125, 140);
+    std::unordered_set<glm::ivec2> points = flood_fill(*world, 100, 243);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
