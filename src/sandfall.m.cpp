@@ -54,21 +54,16 @@ public:
         d_body->CreateFixture(&fixtureDef);
     }
 
-    auto centre_pixel() const -> glm::vec2 {
+    auto centre() const -> glm::vec2 {
         return sand::physics_to_pixel(d_body->GetPosition());;
     }
 
-    auto width_pixel() const {
+    auto width() const {
         return d_width;
     }
 
-    auto height_pixel() const {
+    auto height() const {
         return d_height;
-    }
-
-    auto rect_pixels() const -> glm::vec4 {
-        auto pos = centre_pixel();
-        return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
     auto angle() const -> float {
@@ -134,7 +129,7 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player          = sand::player_controller(physics, 10, 20);
+    auto player          = sand::player_controller(physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
 
     auto ground = std::vector<static_physics_box>{
@@ -223,22 +218,22 @@ auto main() -> int
 
         shape_renderer.begin_frame(camera);
 
-        shape_renderer.draw_circle(player.pos_pixel(), {1.0, 1.0, 0.0, 1.0}, player.width_pixel() / 2.0);
+        shape_renderer.draw_circle(player.centre(), {1.0, 1.0, 0.0, 1.0}, player.radius());
         
         for (const auto& obj : ground) {
-            shape_renderer.draw_quad(obj.centre_pixel(), obj.width_pixel(), obj.height_pixel(), obj.angle(), obj.colour());
+            shape_renderer.draw_quad(obj.centre(), obj.width(), obj.height(), obj.angle(), obj.colour());
         }
         
         // Testing the line renderer
         for (const auto& obj : ground) {
-            const auto& centre = obj.centre_pixel();
+            const auto& centre = obj.centre();
 
             const auto cos = glm::cos(obj.angle());
             const auto sin = glm::sin(obj.angle());
             const auto rotation = glm::mat2{cos, sin, -sin, cos};
 
-            const auto rW = rotation * glm::vec2{obj.width_pixel() / 2.0, 0.0};
-            const auto rH = rotation * glm::vec2{0.0, obj.height_pixel() / 2.0};
+            const auto rW = rotation * glm::vec2{obj.width() / 2.0, 0.0};
+            const auto rH = rotation * glm::vec2{0.0, obj.height() / 2.0};
 
             const auto tl = centre - rW - rH;
             const auto tr = centre + rW - rH;
