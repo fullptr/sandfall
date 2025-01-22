@@ -38,13 +38,13 @@ class shape_renderer
     std::uint32_t d_vbo;
     std::uint32_t d_ebo;
 
-    sand::shader                       d_line_shader;
-    std::vector<line_instance>         d_lines;
-    sand::vertex_buffer<line_instance> d_line_instances;
+    std::vector<line_instance>   d_lines;
+    std::vector<circle_instance> d_circles;
 
-    sand::shader                         d_circle_shader;
-    std::vector<circle_instance>         d_circles;
-    sand::vertex_buffer<circle_instance> d_circle_instances;
+    shader d_line_shader;
+    shader d_circle_shader;
+
+    vertex_buffer d_instances;
 
 public:
     shape_renderer();

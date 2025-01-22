@@ -6,30 +6,20 @@
 
 namespace sand {
 
-namespace detail {
-
-std::uint32_t new_vbo()
+void vertex_buffer::set_data(std::size_t size, const void* data) const
 {
-    std::uint32_t vbo = 0;
-    glCreateBuffers(1, &vbo);
-    return vbo;
+    glNamedBufferData(d_vbo, size, data, GL_STATIC_DRAW);
 }
 
-void delete_vbo(std::uint32_t vbo)
+vertex_buffer::vertex_buffer()
+    : d_vbo{0}
 {
-    glDeleteBuffers(1, &vbo);
+    glCreateBuffers(1, &d_vbo);
 }
 
-void bind_index_buffer(std::uint32_t vbo)
+vertex_buffer::~vertex_buffer()
 {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo);
-}
-
-void set_data(std::uint32_t vbo, std::size_t size, const void* data)
-{
-    glNamedBufferData(vbo, size, data, GL_STATIC_DRAW);
-}
-
+    glDeleteBuffers(1, &d_vbo);
 }
 
 }

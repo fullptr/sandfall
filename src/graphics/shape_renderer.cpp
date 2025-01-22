@@ -246,6 +246,8 @@ shape_renderer::shape_renderer()
 
 shape_renderer::~shape_renderer()
 {
+    glDeleteBuffers(1, &d_ebo);
+    glDeleteBuffers(1, &d_vbo);
     glDeleteVertexArrays(1, &d_vao);
 }
 
@@ -276,20 +278,17 @@ void shape_renderer::end_frame()
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const auto draw = [&](auto& instances, auto& shader, auto& data)
-    {
-        instances.set_data(data);
-        shader.bind();
-        instances.bind();
-        glDrawElementsInstanced(
-            GL_TRIANGLES, 6,
-            GL_UNSIGNED_INT, nullptr, (int)data.size()
-        );
-        shader.unbind();
-    };
+    d_line_shader.bind();
+    d_instances.bind<line_instance>(d_lines);
+    glDrawElementsInstanced(
+        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_lines.size()
+    );
 
-    draw(d_line_instances, d_line_shader, d_lines);
-    draw(d_circle_instances, d_circle_shader, d_circles);
+    d_circle_shader.bind();
+    d_instances.bind<circle_instance>(d_circles);
+    glDrawElementsInstanced(
+        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_circles.size()
+    );
 
     glDisable(GL_BLEND);
 }
