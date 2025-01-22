@@ -1,6 +1,7 @@
 #pragma once
 #include "graphics/texture.hpp"
 #include "graphics/shader.hpp"
+#include "graphics/buffer.hpp"
 #include "world.hpp"
 #include "player.hpp"
 #include "camera.hpp"

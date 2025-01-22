@@ -43,9 +43,8 @@ struct circle_instance
 class shape_renderer
 {
     std::uint32_t d_vao;
-
-    const sand::vertex_buffer<quad_vertex>  d_quad_vertices;
-    const sand::index_buffer<std::uint32_t> d_quad_indices;
+    std::uint32_t d_vbo;
+    std::uint32_t d_ebo;
 
     sand::shader                       d_line_shader;
     std::vector<line_instance>         d_lines;

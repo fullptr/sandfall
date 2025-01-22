@@ -242,12 +242,25 @@ void circle_instance::set_buffer_attributes(std::uint32_t vbo)
 }
 
 shape_renderer::shape_renderer()
-    : d_quad_vertices(get_quad_vertices())
-    , d_quad_indices(get_quad_indices())
-    , d_line_shader(line_vertex, line_fragment)
+    : d_line_shader(line_vertex, line_fragment)
     , d_circle_shader(circle_vertex, circle_fragment)
 {
+    const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
+    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
+
     glGenVertexArrays(1, &d_vao);
+    glBindVertexArray(d_vao);
+
+    glGenBuffers(1, &d_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, d_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &d_ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, d_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
 }
 
 shape_renderer::~shape_renderer()
@@ -276,12 +289,11 @@ void shape_renderer::begin_frame(const camera& c)
 
 void shape_renderer::end_frame()
 {
+    glBindVertexArray(d_vao);
+
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    d_quad_vertices.bind();
-    d_quad_indices.bind();
 
     const auto draw = [&](auto& instances, auto& shader, auto& data)
     {
@@ -289,7 +301,7 @@ void shape_renderer::end_frame()
         shader.bind();
         instances.bind();
         glDrawElementsInstanced(
-            GL_TRIANGLES, (int)d_quad_indices.size(),
+            GL_TRIANGLES, 6,
             GL_UNSIGNED_INT, nullptr, (int)instances.size()
         );
         shader.unbind();
