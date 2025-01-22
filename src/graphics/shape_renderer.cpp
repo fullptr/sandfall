@@ -10,16 +10,6 @@
 namespace sand {
 namespace {
 
-constexpr std::vector<quad_vertex> get_quad_vertices()
-{
-    return { {{-1, -1}}, {{-1, 1}}, {{1, 1}}, {{1, -1}} };
-}
-
-constexpr std::vector<std::uint32_t> get_quad_indices()
-{
-    return {0, 1, 2, 0, 2, 3};
-}
-
 constexpr auto line_vertex = R"SHADER(
 #version 410 core
 layout (location = 0) in vec2 position;
@@ -201,15 +191,6 @@ void main()
 
 }
 
-void quad_vertex::set_buffer_attributes(std::uint32_t vbo)
-{
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glEnableVertexAttribArray(0);
-    glVertexAttribDivisor(0, 0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(quad_vertex), (void*)offsetof(quad_vertex, position));
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void line_instance::set_buffer_attributes(std::uint32_t vbo)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -302,7 +283,7 @@ void shape_renderer::end_frame()
         instances.bind();
         glDrawElementsInstanced(
             GL_TRIANGLES, 6,
-            GL_UNSIGNED_INT, nullptr, (int)instances.size()
+            GL_UNSIGNED_INT, nullptr, (int)data.size()
         );
         shader.unbind();
     };

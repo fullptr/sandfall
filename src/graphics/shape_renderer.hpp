@@ -9,14 +9,6 @@
 
 namespace sand {
 
-struct quad_vertex
-{
-    glm::vec2 position;
-
-    static void set_buffer_attributes(std::uint32_t vbo);
-};
-
-
 struct line_instance
 {
     glm::vec2 begin;
