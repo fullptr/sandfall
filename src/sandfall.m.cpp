@@ -55,8 +55,20 @@ public:
         d_body->CreateFixture(&fixtureDef);
     }
 
+    auto centre_pixel() const -> glm::vec2 {
+        return sand::physics_to_pixel(d_body->GetPosition());;
+    }
+
+    auto width_pixel() const {
+        return d_width;
+    }
+
+    auto height_pixel() const {
+        return d_height;
+    }
+
     auto rect_pixels() const -> glm::vec4 {
-        auto pos = sand::physics_to_pixel(d_body->GetPosition());
+        auto pos = centre_pixel();
         return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
@@ -218,14 +230,33 @@ auto main() -> int
         for (const auto& obj : ground) {
             player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
         }
-        
-        // Display the UI
-        ui.end_frame();
 
         // Testing the line renderer
         shape_renderer.begin_frame(window.width(), window.height(), camera);
-        shape_renderer.draw_line({100, 100}, {200, 100}, {1, 0, 0, 1}, {0, 0, 1, 1}, camera.world_to_screen / 2);
+        for (const auto& obj : ground) {
+            const auto& centre = obj.centre_pixel();
+
+            const auto cos = glm::cos(obj.angle());
+            const auto sin = glm::sin(obj.angle());
+            const auto rotation = glm::mat2{cos, sin, -sin, cos};
+
+            const auto rW = rotation * glm::vec2{obj.width_pixel() / 2.0, 0.0};
+            const auto rH = rotation * glm::vec2{0.0, obj.height_pixel() / 2.0};
+
+            const auto tl = centre - rW - rH;
+            const auto tr = centre + rW - rH;
+            const auto bl = centre - rW + rH;
+            const auto br = centre + rW + rH;
+
+            shape_renderer.draw_line(tl, tr, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(tr, br, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+        }
         shape_renderer.end_frame();
+        
+        // Display the UI
+        ui.end_frame();
 
         window.swap_buffers();
     }
