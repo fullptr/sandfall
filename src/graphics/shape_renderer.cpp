@@ -349,21 +349,15 @@ void shape_renderer::end_frame()
 
     d_quad_shader.bind();
     d_instances.bind<quad_instance>(d_quads);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size());
 
     d_line_shader.bind();
     d_instances.bind<line_instance>(d_lines);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_lines.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_lines.size());
 
     d_circle_shader.bind();
     d_instances.bind<circle_instance>(d_circles);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_circles.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_circles.size());
 
     glDisable(GL_BLEND);
 }
