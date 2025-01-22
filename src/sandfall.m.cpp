@@ -17,9 +17,11 @@
 #include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <box2d/box2d.h>
+#include <cereal/archives/binary.hpp>
 
 #include <memory>
 #include <print>
+#include <fstream>
 
 // Converts a point in pixel space to world space
 
@@ -74,6 +76,30 @@ public:
         return d_colour;
     }
 };
+
+auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
+{
+    std::unordered_set<glm::ivec2> ret;
+    std::unordered_set<glm::ivec2> seen;
+    std::vector<glm::ivec2> jobs;
+    jobs.push_back({x, y});
+    while (!jobs.empty()) {
+        glm::ivec2 curr = jobs.back();
+        jobs.pop_back();
+        ret.insert(curr);
+        ret.insert(curr + glm::ivec2(1, 0));
+        ret.insert(curr + glm::ivec2(0, 1));
+        ret.insert(curr + glm::ivec2(1, 1));
+        seen.insert(curr);
+        for (const auto offset : {glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}}) {
+            const auto neighbour = curr + offset;
+            if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type == sand::pixel_type::rock) {
+                jobs.push_back(neighbour);
+            }
+        }
+    }
+    return ret;
+}
 
 auto main() -> int
 {
@@ -135,6 +161,14 @@ auto main() -> int
     auto ground = std::vector<static_physics_box>{
         {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0, 1.0}},
     };
+
+    auto file = std::ifstream{"save2.bin", std::ios::binary};
+    auto archive = cereal::BinaryInputArchive{file};
+    archive(*world);
+    world->wake_all_chunks();
+
+    //{125, 140};
+    std::unordered_set<glm::ivec2> points = flood_fill(*world, 125, 140);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -227,6 +261,9 @@ auto main() -> int
             shape_renderer.draw_line(tr, br, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+        }
+        for (const auto point : points) {
+            shape_renderer.draw_circle(glm::vec2{point}, {1,0,0,1}, 0.25);
         }
         shape_renderer.end_frame();
         
