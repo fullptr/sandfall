@@ -257,7 +257,7 @@ shape_renderer::~shape_renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-void shape_renderer::begin_frame(const float width, const float height, const camera& c)
+void shape_renderer::begin_frame(const camera& c)
 {
     glBindVertexArray(d_vao);
 

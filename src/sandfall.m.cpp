@@ -232,7 +232,7 @@ auto main() -> int
             player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
         }
 
-        shape_renderer.begin_frame(window.width(), window.height(), camera);
+        shape_renderer.begin_frame(camera);
         shape_renderer.draw_circle(player.pos_pixel(), {1.0, 1.0, 0.0, 1.0}, player.width_pixel() / 2.0);
         
         // Testing the line renderer

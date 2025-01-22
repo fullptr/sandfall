@@ -61,7 +61,7 @@ public:
     shape_renderer();
     ~shape_renderer();
 
-    void begin_frame(const float width, const float height, const camera& c);
+    void begin_frame(const camera& c);
     void end_frame();
 
     void draw_line(
