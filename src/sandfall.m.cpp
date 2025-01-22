@@ -10,7 +10,6 @@
 #include "player.hpp"
 
 #include "graphics/renderer.hpp"
-#include "graphics/player_renderer.hpp"
 #include "graphics/shape_renderer.hpp"
 #include "graphics/window.hpp"
 #include "graphics/ui.hpp"
@@ -135,7 +134,6 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player_renderer = sand::player_renderer{};
     auto player          = sand::player_controller(physics, 10, 20);
     auto shape_renderer  = sand::shape_renderer{};
 
@@ -223,14 +221,10 @@ auto main() -> int
         }
         world_renderer.draw();
 
-        // Render and display the player plus some temporary obstacles
-        player_renderer.bind();
-    
-        //player_renderer.draw(player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
-
-
         shape_renderer.begin_frame(camera);
+
         shape_renderer.draw_circle(player.pos_pixel(), {1.0, 1.0, 0.0, 1.0}, player.width_pixel() / 2.0);
+        
         for (const auto& obj : ground) {
             shape_renderer.draw_quad(obj.rect_pixels(), obj.angle(), obj.colour());
         }
