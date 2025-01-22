@@ -8,19 +8,12 @@
 
 namespace sand {
 
-enum class buffer_usage
-{
-    STATIC,
-    DYNAMIC,
-    STREAM
-};
-
 namespace detail {
 
 std::uint32_t new_vbo();
 void delete_vbo(std::uint32_t vbo);
 void bind_index_buffer(std::uint32_t vbo);
-void set_data(std::uint32_t vbo, std::size_t size, const void* data, buffer_usage usage);
+void set_data(std::uint32_t vbo, std::size_t size, const void* data);
 
 }
 
@@ -43,7 +36,7 @@ public:
     void set_data(std::span<const T> data)
     {
         d_size = data.size();
-        detail::set_data(d_vbo, data.size_bytes(), data.data(), buffer_usage::STATIC);
+        detail::set_data(d_vbo, data.size_bytes(), data.data());
     }
 
     std::size_t size() const { return d_size; }
@@ -68,7 +61,7 @@ public:
     void set_data(std::span<const T> data)
     {
         d_size = data.size();
-        detail::set_data(d_vbo, data.size_bytes(), data.data(), buffer_usage::STATIC);
+        detail::set_data(d_vbo, data.size_bytes(), data.data());
     }
 
     std::size_t size() const { return d_size; }
