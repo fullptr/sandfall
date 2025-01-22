@@ -46,11 +46,11 @@ layout (location = 0) out vec4 out_colour;
 in vec2 pass_uv;
 
 uniform sampler2D u_texture;
-uniform vec3  u_colour;
+uniform vec4      u_colour;
 
 void main()
 {
-    out_colour = vec4(u_colour, 1.0);
+    out_colour = u_colour;
 }
 )SHADER";
 
@@ -95,11 +95,11 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::draw(const world& world, glm::vec4 d, float angle, glm::vec3 colour, const camera& camera) -> void
+auto player_renderer::draw(const world& world, glm::vec4 d, float angle, glm::vec4 colour, const camera& camera) -> void
 {
     d_shader.load_vec4("u_rect", d);
     d_shader.load_float("u_angle", angle);
-    d_shader.load_vec3("u_colour", colour);
+    d_shader.load_vec4("u_colour", colour);
 
     const auto dimensions = glm::vec2{camera.screen_width, camera.screen_height} / camera.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
