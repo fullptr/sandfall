@@ -193,9 +193,11 @@ constexpr auto quad_vertex = R"SHADER(
 #version 410 core
 layout (location = 0) in vec2 p_position;
 
-layout (location = 1) in vec4  u_rect;
-layout (location = 2) in float u_angle;
-layout (location = 3) in vec4  u_colour;
+layout (location = 1) in vec2  u_centre;
+layout (location = 2) in float u_width;
+layout (location = 3) in float u_height;
+layout (location = 4) in float u_angle;
+layout (location = 5) in vec4  u_colour;
 
 uniform  mat4  u_proj_matrix;
 
@@ -211,8 +213,8 @@ mat2 rotate(float theta)
 
 void main()
 {
-    vec2 position = u_rect.xy;
-    vec2 dimensions = u_rect.zw / 2;
+    vec2 position = u_centre;
+    vec2 dimensions = vec2(u_width, u_height) / 2;
 
     vec2 screen_position = rotate(u_angle) * (p_position * dimensions) + position;
 
@@ -272,13 +274,15 @@ void circle_instance::set_buffer_attributes(std::uint32_t vbo)
 void quad_instance::set_buffer_attributes(std::uint32_t vbo)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    for (int i = 1; i != 4; ++i) {
+    for (int i = 1; i != 6; ++i) {
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, dimensions));
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, angle));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, colour));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, centre));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, width));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, height));
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, angle));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, colour));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -368,11 +372,13 @@ void shape_renderer::end_frame()
 }
 
 void shape_renderer::draw_quad(
-    const glm::vec4& dimensions,
+    const glm::vec2& centre,
+    const float      width,
+    const float      height,
     const float      angle,
     const glm::vec4& colour)
 {
-    d_quads.emplace_back(dimensions, angle, colour);
+    d_quads.emplace_back(centre, width, height, angle, colour);
 }
 
 void shape_renderer::draw_line(

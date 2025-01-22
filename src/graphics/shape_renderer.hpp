@@ -34,7 +34,9 @@ struct circle_instance
 
 struct quad_instance
 {
-    glm::vec4 dimensions;
+    glm::vec2 centre;
+    float     width;
+    float     height;
     float     angle;
     glm::vec4 colour;
 
@@ -65,7 +67,9 @@ public:
     void end_frame();
 
     void draw_quad(
-        const glm::vec4& dimensions,
+        const glm::vec2& centre,
+        const float      width,
+        const float      height,
         const float      angle,
         const glm::vec4& colour
     );
