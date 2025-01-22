@@ -2,7 +2,6 @@
 #include "graphics/texture.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/buffer.hpp"
-#include "world.hpp"
 #include "player.hpp"
 #include "camera.hpp"
 
@@ -31,7 +30,7 @@ public:
 
     auto bind() const -> void;
 
-    auto draw(const world& world, glm::vec4 dimensions, float angle, glm::vec4 colour, const camera& camera) -> void;
+    auto draw(glm::vec4 dimensions, float angle, glm::vec4 colour, const camera& camera) -> void;
 };
 
 }

@@ -2,8 +2,6 @@
 
 #include <glad/glad.h>
 
-#include <ranges>
-
 namespace sand {
 
 void vertex_buffer::set_data(std::size_t size, const void* data) const

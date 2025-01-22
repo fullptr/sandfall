@@ -189,6 +189,53 @@ void main()
 }
 )SHADER";
 
+constexpr auto quad_vertex = R"SHADER(
+#version 410 core
+layout (location = 0) in vec2 p_position;
+
+layout (location = 1) in vec4  u_rect;
+layout (location = 2) in float u_angle;
+layout (location = 3) in vec4  u_colour;
+
+uniform  mat4  u_proj_matrix;
+
+out vec2 pass_uv;
+out vec4 pass_colour;
+
+mat2 rotate(float theta)
+{
+    float c = cos(theta);
+    float s = sin(theta);
+    return mat2(c, s, -s, c);
+}
+
+void main()
+{
+    vec2 position = u_rect.xy;
+    vec2 dimensions = u_rect.zw / 2;
+
+    vec2 screen_position = rotate(u_angle) * (p_position * dimensions) + position;
+
+    pass_uv = p_position;
+    gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
+
+    pass_colour = u_colour;
+}
+)SHADER";
+
+constexpr auto quad_fragment = R"SHADER(
+#version 410 core
+layout (location = 0) out vec4 out_colour;
+
+in vec2 pass_uv;
+in vec4 pass_colour;
+
+void main()
+{
+    out_colour = pass_colour;
+}
+)SHADER";
+
 }
 
 void line_instance::set_buffer_attributes(std::uint32_t vbo)
@@ -222,9 +269,23 @@ void circle_instance::set_buffer_attributes(std::uint32_t vbo)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void quad_instance::set_buffer_attributes(std::uint32_t vbo)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    for (int i = 1; i != 4; ++i) {
+        glEnableVertexAttribArray(i);
+        glVertexAttribDivisor(i, 1);
+    }
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, dimensions));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, angle));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, colour));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 shape_renderer::shape_renderer()
     : d_line_shader(line_vertex, line_fragment)
     , d_circle_shader(circle_vertex, circle_fragment)
+    , d_quad_shader(quad_vertex, quad_fragment)
 {
     const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
@@ -268,6 +329,13 @@ void shape_renderer::begin_frame(const camera& c)
     d_circle_shader.load_vec2("u_camera_top_left", c.top_left);
     d_circle_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
     d_circles.clear();
+
+    const auto dimensions = glm::vec2{c.screen_width, c.screen_height} / c.world_to_screen;
+    const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
+
+    d_quad_shader.bind();
+    d_quad_shader.load_mat4("u_proj_matrix", glm::translate(projection, glm::vec3{-c.top_left, 0.0f}));
+    d_quads.clear();
 }
 
 void shape_renderer::end_frame()
@@ -277,6 +345,12 @@ void shape_renderer::end_frame()
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    d_quad_shader.bind();
+    d_instances.bind<quad_instance>(d_quads);
+    glDrawElementsInstanced(
+        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size()
+    );
 
     d_line_shader.bind();
     d_instances.bind<line_instance>(d_lines);
@@ -291,6 +365,14 @@ void shape_renderer::end_frame()
     );
 
     glDisable(GL_BLEND);
+}
+
+void shape_renderer::draw_quad(
+    const glm::vec4& dimensions,
+    const float      angle,
+    const glm::vec4& colour)
+{
+    d_quads.emplace_back(dimensions, angle, colour);
 }
 
 void shape_renderer::draw_line(

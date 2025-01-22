@@ -95,7 +95,7 @@ auto player_renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto player_renderer::draw(const world& world, glm::vec4 d, float angle, glm::vec4 colour, const camera& camera) -> void
+auto player_renderer::draw(glm::vec4 d, float angle, glm::vec4 colour, const camera& camera) -> void
 {
     d_shader.bind();
     d_shader.load_vec4("u_rect", d);

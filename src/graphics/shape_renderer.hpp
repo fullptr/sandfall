@@ -32,15 +32,26 @@ struct circle_instance
     static void set_buffer_attributes(std::uint32_t vbo);
 };
 
+struct quad_instance
+{
+    glm::vec4 dimensions;
+    float     angle;
+    glm::vec4 colour;
+
+    static void set_buffer_attributes(std::uint32_t vbo);
+};
+
 class shape_renderer
 {
     std::uint32_t d_vao;
     std::uint32_t d_vbo;
     std::uint32_t d_ebo;
 
+    std::vector<quad_instance>   d_quads;
     std::vector<line_instance>   d_lines;
     std::vector<circle_instance> d_circles;
 
+    shader d_quad_shader;
     shader d_line_shader;
     shader d_circle_shader;
 
@@ -52,6 +63,12 @@ public:
 
     void begin_frame(const camera& c);
     void end_frame();
+
+    void draw_quad(
+        const glm::vec4& dimensions,
+        const float      angle,
+        const glm::vec4& colour
+    );
 
     void draw_line(
         const glm::vec2& begin,
