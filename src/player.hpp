@@ -100,8 +100,16 @@ public:
         return d_body->GetPosition();
     }
 
+    auto pos_pixel() const {
+        return physics_to_pixel(pos_physics());
+    }
+
     auto width_physics() const -> int {
         return pixel_to_physics((float)d_width);
+    }
+
+    auto width_pixel() const -> int {
+        return d_width;
     }
 
     auto height_physics() const -> int {

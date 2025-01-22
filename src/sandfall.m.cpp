@@ -10,7 +10,7 @@
 #include "player.hpp"
 
 #include "graphics/renderer.hpp"
-#include "graphics/player_renderer.hpp"
+#include "graphics/shape_renderer.hpp"
 #include "graphics/window.hpp"
 #include "graphics/ui.hpp"
 
@@ -28,11 +28,11 @@ class static_physics_box
 {
     int       d_width;
     int       d_height;
-    glm::vec3 d_colour;
+    glm::vec4 d_colour;
     b2Body*   d_body = nullptr;
 
 public:
-    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec3 colour, float angle = 0.0f)
+    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec4 colour, float angle = 0.0f)
         : d_width{width}
         , d_height{height}
         , d_colour{colour}
@@ -54,8 +54,20 @@ public:
         d_body->CreateFixture(&fixtureDef);
     }
 
+    auto centre_pixel() const -> glm::vec2 {
+        return sand::physics_to_pixel(d_body->GetPosition());;
+    }
+
+    auto width_pixel() const {
+        return d_width;
+    }
+
+    auto height_pixel() const {
+        return d_height;
+    }
+
     auto rect_pixels() const -> glm::vec4 {
-        auto pos = sand::physics_to_pixel(d_body->GetPosition());
+        auto pos = centre_pixel();
         return glm::vec4{pos.x, pos.y, d_width, d_height};
     }
 
@@ -63,7 +75,7 @@ public:
         return d_body->GetAngle();
     }
 
-    auto colour() const -> glm::vec3 {
+    auto colour() const -> glm::vec4 {
         return d_colour;
     }
 };
@@ -122,28 +134,28 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player_renderer = sand::player_renderer{};
     auto player          = sand::player_controller(physics, 10, 20);
+    auto shape_renderer  = sand::shape_renderer{};
 
     auto ground = std::vector<static_physics_box>{
-        {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0}},
-        {physics, {200, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}, 0.1},
-        {physics, {100, 256 + 5}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {101, 256 + 4}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {102, 256 + 3}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {103, 256 + 2}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {104, 256 + 1}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {105, 256 + 0}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {106, 255}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {107, 254}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {108, 253}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {109, 252}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {110, 251}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {111, 250}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {112, 249}, 30, 50, {1.0, 1.0, 0.0}},
-        {physics, {113, 248}, 30, 50, {1.0, 1.0, 0.0}},
+        {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {200, 256 + 5}, 30, 50, {1.0, 1.0, 0.0, 1.0}, 0.1},
+        {physics, {100, 256 + 5}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {101, 256 + 4}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {102, 256 + 3}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {103, 256 + 2}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {104, 256 + 1}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {105, 256 + 0}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {106, 255}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {107, 254}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {108, 253}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {109, 252}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {110, 251}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {111, 250}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {112, 249}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
+        {physics, {113, 248}, 30, 50, {1.0, 1.0, 0.0, 1.0}},
 
-        {physics, {40, 215}, 430, 10, {1.0, 1.0, 0.0}, 1.4f}
+        {physics, {40, 215}, 430, 10, {1.0, 1.0, 0.0, 1.0}, 1.4f}
     };
 
     while (window.is_running()) {
@@ -209,13 +221,36 @@ auto main() -> int
         }
         world_renderer.draw();
 
-        // Render and display the player plus some temporary obstacles
-        player_renderer.bind();
-        player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+        shape_renderer.begin_frame(camera);
 
+        shape_renderer.draw_circle(player.pos_pixel(), {1.0, 1.0, 0.0, 1.0}, player.width_pixel() / 2.0);
+        
         for (const auto& obj : ground) {
-            player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
+            shape_renderer.draw_quad(obj.centre_pixel(), obj.width_pixel(), obj.height_pixel(), obj.angle(), obj.colour());
         }
+        
+        // Testing the line renderer
+        for (const auto& obj : ground) {
+            const auto& centre = obj.centre_pixel();
+
+            const auto cos = glm::cos(obj.angle());
+            const auto sin = glm::sin(obj.angle());
+            const auto rotation = glm::mat2{cos, sin, -sin, cos};
+
+            const auto rW = rotation * glm::vec2{obj.width_pixel() / 2.0, 0.0};
+            const auto rH = rotation * glm::vec2{0.0, obj.height_pixel() / 2.0};
+
+            const auto tl = centre - rW - rH;
+            const auto tr = centre + rW - rH;
+            const auto bl = centre - rW + rH;
+            const auto br = centre + rW + rH;
+
+            shape_renderer.draw_line(tl, tr, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(tr, br, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+            shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
+        }
+        shape_renderer.end_frame();
         
         // Display the UI
         ui.end_frame();
