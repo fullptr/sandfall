@@ -149,9 +149,6 @@ in vec4  o_circle_begin_colour;
 in vec4  o_circle_end_colour;
 in float o_circle_angle;
 
-uniform float u_width;
-uniform float u_height;
-
 uniform float u_camera_width;
 uniform float u_camera_height;
 uniform vec2 u_camera_top_left;
@@ -186,7 +183,9 @@ float rotation_value(vec2 v)
 
 void main()
 {   
-    vec2 pixel = vec2(gl_FragCoord.x, u_height - gl_FragCoord.y);
+    vec2 frag_coord = vec2(gl_FragCoord.x, u_camera_height - gl_FragCoord.y);
+    vec2 pixel = frag_coord / u_camera_world_to_screen + u_camera_top_left;
+
     vec2 to_pixel = pixel - o_circle_centre;
     float from_centre = length(to_pixel);
     
@@ -263,8 +262,6 @@ void shape_renderer::begin_frame(const float width, const float height, const ca
     glBindVertexArray(d_vao);
 
     d_line_shader.bind();
-    d_line_shader.load_float("u_width", width);
-    d_line_shader.load_float("u_height", height);
     d_line_shader.load_float("u_camera_width", c.screen_width);
     d_line_shader.load_float("u_camera_height", c.screen_height);
     d_line_shader.load_vec2("u_camera_top_left", c.top_left);
@@ -272,8 +269,6 @@ void shape_renderer::begin_frame(const float width, const float height, const ca
     d_lines.clear();
 
     d_circle_shader.bind();
-    d_circle_shader.load_float("u_width", width);
-    d_circle_shader.load_float("u_height", height);
     d_circle_shader.load_float("u_camera_width", c.screen_width);
     d_circle_shader.load_float("u_camera_height", c.screen_height);
     d_circle_shader.load_vec2("u_camera_top_left", c.top_left);

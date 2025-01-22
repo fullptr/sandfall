@@ -225,14 +225,17 @@ auto main() -> int
 
         // Render and display the player plus some temporary obstacles
         player_renderer.bind();
-        player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
+    
+        //player_renderer.draw(*world, player.rect_pixels(), player.angle(), glm::vec3{0.0, 1.0, 0.0}, camera);
 
         for (const auto& obj : ground) {
             player_renderer.draw(*world, obj.rect_pixels(), obj.angle(), obj.colour(), camera);
         }
 
-        // Testing the line renderer
         shape_renderer.begin_frame(window.width(), window.height(), camera);
+        shape_renderer.draw_circle(player.pos_pixel(), {1.0, 1.0, 0.0, 1.0}, player.width_pixel() / 2.0);
+        
+        // Testing the line renderer
         for (const auto& obj : ground) {
             const auto& centre = obj.centre_pixel();
 
