@@ -316,27 +316,27 @@ shape_renderer::~shape_renderer()
 void shape_renderer::begin_frame(const camera& c)
 {
     glBindVertexArray(d_vao);
+    d_lines.clear();
+    d_circles.clear();
+    d_quads.clear();
 
     d_line_shader.bind();
     d_line_shader.load_float("u_camera_width", c.screen_width);
     d_line_shader.load_float("u_camera_height", c.screen_height);
     d_line_shader.load_vec2("u_camera_top_left", c.top_left);
     d_line_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
-    d_lines.clear();
 
     d_circle_shader.bind();
     d_circle_shader.load_float("u_camera_width", c.screen_width);
     d_circle_shader.load_float("u_camera_height", c.screen_height);
     d_circle_shader.load_vec2("u_camera_top_left", c.top_left);
     d_circle_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
-    d_circles.clear();
 
     const auto dimensions = glm::vec2{c.screen_width, c.screen_height} / c.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
 
     d_quad_shader.bind();
     d_quad_shader.load_mat4("u_proj_matrix", glm::translate(projection, glm::vec3{-c.top_left, 0.0f}));
-    d_quads.clear();
 }
 
 void shape_renderer::end_frame()
