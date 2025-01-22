@@ -1,7 +1,5 @@
 #include "shape_renderer.hpp"
 
-#include "render_context.hpp"
-
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
@@ -278,9 +276,9 @@ void shape_renderer::begin_frame(const camera& c)
 
 void shape_renderer::end_frame()
 {
-    sand::render_context rc;
-    rc.alpha_blending(true);
-    rc.depth_testing(false);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     d_quad_vertices.bind();
     d_quad_indices.bind();
@@ -299,6 +297,8 @@ void shape_renderer::end_frame()
 
     draw(d_line_instances, d_line_shader, d_lines);
     draw(d_circle_instances, d_circle_shader, d_circles);
+
+    glDisable(GL_BLEND);
 }
 
 void shape_renderer::draw_line(

@@ -24,7 +24,6 @@ add_executable(sandfall
     graphics/buffer.cpp
     graphics/renderer.cpp
     graphics/player_renderer.cpp
-    graphics/render_context.cpp
     graphics/shape_renderer.cpp
     graphics/window.cpp
     graphics/shader.cpp
