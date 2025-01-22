@@ -193,13 +193,13 @@ constexpr auto quad_vertex = R"SHADER(
 #version 410 core
 layout (location = 0) in vec2 p_position;
 
-layout (location = 1) in vec2  u_centre;
-layout (location = 2) in float u_width;
-layout (location = 3) in float u_height;
-layout (location = 4) in float u_angle;
-layout (location = 5) in vec4  u_colour;
+layout (location = 1) in vec2  quad_centre;
+layout (location = 2) in float quad_width;
+layout (location = 3) in float quad_height;
+layout (location = 4) in float quad_angle;
+layout (location = 5) in vec4  quad_colour;
 
-uniform  mat4  u_proj_matrix;
+uniform mat4 u_proj_matrix;
 
 out vec2 pass_uv;
 out vec4 pass_colour;
@@ -213,15 +213,15 @@ mat2 rotate(float theta)
 
 void main()
 {
-    vec2 position = u_centre;
-    vec2 dimensions = vec2(u_width, u_height) / 2;
+    vec2 position = quad_centre;
+    vec2 dimensions = vec2(quad_width, quad_height) / 2;
 
-    vec2 screen_position = rotate(u_angle) * (p_position * dimensions) + position;
+    vec2 screen_position = rotate(quad_angle) * (p_position * dimensions) + position;
 
     pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
 
-    pass_colour = u_colour;
+    pass_colour = quad_colour;
 }
 )SHADER";
 
