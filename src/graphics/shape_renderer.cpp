@@ -201,8 +201,7 @@ layout (location = 5) in vec4  quad_colour;
 
 uniform mat4 u_proj_matrix;
 
-out vec2 pass_uv;
-out vec4 pass_colour;
+out vec4 o_colour;
 
 mat2 rotate(float theta)
 {
@@ -218,10 +217,9 @@ void main()
 
     vec2 screen_position = rotate(quad_angle) * (p_position * dimensions) + position;
 
-    pass_uv = p_position;
     gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
 
-    pass_colour = quad_colour;
+    o_colour = quad_colour;
 }
 )SHADER";
 
@@ -229,12 +227,11 @@ constexpr auto quad_fragment = R"SHADER(
 #version 410 core
 layout (location = 0) out vec4 out_colour;
 
-in vec2 pass_uv;
-in vec4 pass_colour;
+in vec4 o_colour;
 
 void main()
 {
-    out_colour = pass_colour;
+    out_colour = o_colour;
 }
 )SHADER";
 
