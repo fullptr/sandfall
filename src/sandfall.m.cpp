@@ -15,6 +15,7 @@
 #include "graphics/ui.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 #include <imgui/imgui.h>
 #include <box2d/box2d.h>
 #include <cereal/archives/binary.hpp>
@@ -91,7 +92,10 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         ret.insert(curr + glm::ivec2(0, 1));
         ret.insert(curr + glm::ivec2(1, 1));
         seen.insert(curr);
-        for (const auto offset : {glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}}) {
+        for (const auto offset : {
+                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
+                //,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
+        }) {
             const auto neighbour = curr + offset;
             if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type == sand::pixel_type::rock) {
                 jobs.push_back(neighbour);
@@ -99,6 +103,56 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         }
     }
     return ret;
+}
+
+auto boundary(const std::unordered_set<glm::ivec2>& points) -> std::unordered_set<glm::ivec2>
+{
+    std::unordered_set<glm::ivec2> ret;
+    for (const auto point : points) {
+        for (const auto offset : {
+                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
+                //,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
+        }) {
+            const auto neighbour = point + offset;
+            if (!points.contains(neighbour)) {
+                ret.insert(point);
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+auto connection(const sand::world& w, glm::ivec2 a, glm::ivec2 b) -> bool
+{
+    assert(glm::abs(a.x - b.x) < 2 && glm::abs(a.y - b.y) < 2);
+    if (!w.valid(a) || !w.valid(b)) return true; // on the edge of the map, which is fine
+
+    // diagonal, so check the pixel this crosses over, find the top left
+    if (glm::abs(a.x - b.x) == 1 && glm::abs(a.y - b.y) == 1) {
+        const auto pixel = glm::ivec2{glm::min(a.x, b.x), glm::min(a.y, b.y)};
+        return w.at(pixel).type == sand::pixel_type::none;
+    }
+
+    // On top of each other, so look at pixels to the left and right
+    if (a.x == b.x) {
+        const auto right = glm::ivec2{a.x, glm::min(a.y, b.y)}; // a or b
+        const auto left = glm::ivec2{right.x - 1, right.y};
+        if (!w.valid(left)) return true; // on edge
+        return w.at(left).type == sand::pixel_type::none
+            || w.at(right).type == sand::pixel_type::none;
+    }
+
+    if (a.y == b.y) {
+        const auto down = glm::ivec2{glm::min(a.x, b.x), a.y}; // a or b
+        const auto up = glm::ivec2{down.x, down.y - 1};
+        if (!w.valid(up)) return true; // on edge
+        return w.at(up).type == sand::pixel_type::none
+            || w.at(down).type == sand::pixel_type::none;
+    }
+
+    assert(false);
+    std::unreachable();
 }
 
 auto main() -> int
@@ -168,7 +222,7 @@ auto main() -> int
     world->wake_all_chunks();
 
     //{125, 140};
-    std::unordered_set<glm::ivec2> points = flood_fill(*world, 100, 243);
+    std::unordered_set<glm::ivec2> points = boundary(flood_fill(*world, 100, 243));
 
     while (window.is_running()) {
         const double dt = timer.on_update();
