@@ -184,6 +184,63 @@ auto to_path(const sand::world& w, const std::unordered_set<glm::ivec2>& points)
     return path;
 }
 
+static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{0, 1}};
+
+auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
+{
+    for (const auto offset : offsets) {
+        const auto n = pos + offset;
+        if (!w.valid(n) || w.at(n).type == sand::pixel_type::none) {
+            return true;
+        }
+    }
+    return false;
+}
+
+auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
+{
+    auto current = glm::ivec2{x, y};
+    while (!is_boundary(w, current)) { current.y -= 1; }
+    return current;
+}
+
+auto is_reachable_neighbour(const sand::world& w, glm::ivec2 src, glm::ivec2 dst) -> bool
+{
+    // ensure adjacent
+    if (glm::abs(src.x - dst.x) + glm::abs(src.y - dst.y) != 1) return false; // adjacent
+    if (!w.valid(dst)) return false; // src on boundary
+
+    if (src.x == dst.x) { // vertical
+        if (dst.y == src.y - 1) { // dst on top
+            const auto A = dst;
+            const auto B = dst + glm::ivec2{-1, 0};
+            if (!w.valid(B)) return true; // along edge of map
+            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
+                && (w.at(A).type != w.at(B).type);
+        } else { // src on top
+            const auto A = src;
+            const auto B = src + glm::ivec2{-1, 0};
+            if (!w.valid(B)) return true; // along edge of map
+            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
+                && (w.at(A).type != w.at(B).type);
+        }
+    } else { // horizonal
+        if (dst.x == src.x - 1) { // dst to left
+            const auto A = dst;
+            const auto B = dst + glm::ivec2{0, -1};
+            if (!w.valid(B)) return true; // along edge of map
+            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
+                && (w.at(A).type != w.at(B).type);
+        } else { // src to left
+            const auto A = src;
+            const auto B = src + glm::ivec2{0, -1};
+            if (!w.valid(B)) return true; // along edge of map
+            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
+                && (w.at(A).type != w.at(B).type);
+        }
+    }
+}
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -346,10 +403,20 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        for (size_t i = 0; i != path.size() - 1; i++) {
-            shape_renderer.draw_line({path[i]}, {path[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
-            shape_renderer.draw_circle({path[i]}, {0, 0, 1, 1}, 0.25);
-            
+        //for (size_t i = 0; i != path.size() - 1; i++) {
+        //    shape_renderer.draw_line({path[i]}, {path[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
+        //    shape_renderer.draw_circle({path[i]}, {0, 0, 1, 1}, 0.25);
+        //    
+        //}
+        const auto b = find_boundary(*world, 112, 243);
+        shape_renderer.draw_circle(b, {0, 0, 1, 1}, 0.25);
+        for (const auto offset : offsets) {
+            const auto n = b + offset;
+            if (is_reachable_neighbour(*world, b, n)) {
+                shape_renderer.draw_circle(n, {0, 1, 0, 1}, 0.25);
+            } else {
+                shape_renderer.draw_circle(n, {1, 0, 0, 1}, 0.25);
+            }
         }
         shape_renderer.end_frame();
         
