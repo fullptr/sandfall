@@ -155,6 +155,36 @@ auto connection(const sand::world& w, glm::ivec2 a, glm::ivec2 b) -> bool
     std::unreachable();
 }
 
+auto to_path(const sand::world& w, const std::unordered_set<glm::ivec2>& points) -> std::vector<glm::ivec2>
+{
+    std::unordered_set<glm::ivec2> remaining = points;
+    std::vector<glm::ivec2> path;
+    const auto seen = [&](glm::vec2 pos) { return points.contains(pos) && !remaining.contains(pos); };
+
+    auto curr = *remaining.begin();
+    while (!remaining.empty()) {
+        remaining.erase(curr);
+        path.push_back(curr);
+        bool found = false;
+        for (const auto offset : {
+                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
+                ,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
+        }) {
+            const auto neighbour = curr + offset;
+            if (!points.contains(neighbour)) continue;
+            if (!seen(neighbour) && connection(w, curr, neighbour)) {
+                // found the next link
+                curr = neighbour;
+                found = true;
+                break;
+            }
+        }
+        if (!found) break;
+    }
+    path.push_back(path.front());
+    return path;
+}
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -223,6 +253,7 @@ auto main() -> int
 
     //{125, 140};
     std::unordered_set<glm::ivec2> points = boundary(flood_fill(*world, 100, 243));
+    const auto path = to_path(*world, points);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -316,8 +347,10 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        for (const auto point : points) {
-            shape_renderer.draw_circle(glm::vec2{point}, {1,0,0,1}, 0.25);
+        for (size_t i = 0; i != path.size() - 1; i++) {
+            shape_renderer.draw_line({path[i]}, {path[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
+            shape_renderer.draw_circle({path[i]}, {0, 0, 1, 1}, 0.25);
+            
         }
         shape_renderer.end_frame();
         
