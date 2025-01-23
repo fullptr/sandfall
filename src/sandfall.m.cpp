@@ -159,7 +159,6 @@ auto to_path(const sand::world& w, const std::unordered_set<glm::ivec2>& points)
 {
     std::unordered_set<glm::ivec2> remaining = points;
     std::vector<glm::ivec2> path;
-    const auto seen = [&](glm::vec2 pos) { return points.contains(pos) && !remaining.contains(pos); };
 
     auto curr = *remaining.begin();
     while (!remaining.empty()) {
@@ -172,7 +171,7 @@ auto to_path(const sand::world& w, const std::unordered_set<glm::ivec2>& points)
         }) {
             const auto neighbour = curr + offset;
             if (!points.contains(neighbour)) continue;
-            if (!seen(neighbour) && connection(w, curr, neighbour)) {
+            if (remaining.contains(neighbour) && connection(w, curr, neighbour)) {
                 // found the next link
                 curr = neighbour;
                 found = true;
