@@ -59,15 +59,4 @@ struct editor
     }
 };
 
-// Returns true if the world has changed and should be rerendered
-auto display_ui(
-    editor& editor,
-    world& world,
-    const b2World& physics,
-    const timer& timer,
-    const window& window,
-    const camera& camera,
-    const player_controller& player
-) -> bool;
-
 }
