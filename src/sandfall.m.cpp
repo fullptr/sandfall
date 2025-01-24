@@ -97,7 +97,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         seen.insert(curr);
         for (const auto offset : offsets) {
             const auto neighbour = curr + offset;
-            if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type == sand::pixel_type::rock) {
+            if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type != sand::pixel_type::none && !w.at(neighbour).flags.test(sand::pixel_flags::is_falling)) {
                 jobs.push_back(neighbour);
             }
         }
@@ -214,10 +214,11 @@ float perpendicular_distance(const glm::ivec2& p, const glm::ivec2& a, const glm
 }
 
 // Douglas-Peucker algorithm
-void douglas_peucker(const std::vector<glm::ivec2>& points, float tolerance, std::vector<glm::ivec2>& result) {
+auto douglas_peucker(
+    const std::vector<glm::ivec2>& points, float tolerance) -> std::vector<glm::ivec2>
+{
     if (points.size() < 2) {
-        result = points;
-        return;
+        return points;
     }
 
     // Find the point with the maximum distance
@@ -235,20 +236,26 @@ void douglas_peucker(const std::vector<glm::ivec2>& points, float tolerance, std
     // If the maximum distance is greater than tolerance, split the curve
     if (max_dist > tolerance) {
         // Recursively apply to the two sub-segments
-        std::vector<glm::ivec2> left_segment, right_segment;
         std::vector<glm::ivec2> left(points.begin(), points.begin() + index + 1);
         std::vector<glm::ivec2> right(points.begin() + index, points.end());
         
-        douglas_peucker(left, tolerance, left_segment);
-        douglas_peucker(right, tolerance, right_segment);
+        auto left_segment = douglas_peucker(left, tolerance);
+        const auto right_segment = douglas_peucker(right, tolerance);
 
         // Merge the results
-        result = left_segment;
-        result.insert(result.end(), right_segment.begin() + 1, right_segment.end());
+        left_segment.insert(left_segment.end(), right_segment.begin() + 1, right_segment.end());
+        return left_segment;
     } else {
         // If the maximum distance is less than or equal to tolerance, just take the endpoints
-        result = { points.front(), points.back() };
+        return { points.front(), points.back() };
     }
+}
+
+auto calc_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
+{
+    const auto points = get_boundary(w, x, y);
+    const auto simplified = douglas_peucker(points, 1.5);
+    return points;
 }
 
 auto main() -> int
@@ -317,11 +324,8 @@ auto main() -> int
     archive(*world);
     world->wake_all_chunks();
 
-    std::vector<glm::ivec2> points = get_boundary(*world, 122, 233);
-
-    std::vector<glm::ivec2> simplified;
-    douglas_peucker(points, 1.0, simplified);
-    std::print("simplified {}\n", simplified.size());
+    auto points = calc_boundary(*world, 122, 233);
+    auto count = 0;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -335,11 +339,20 @@ auto main() -> int
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
+            accumulator -= sand::config::time_step;
+            updated = true;
+
             sand::update(*world);
             player.update(keyboard);
             physics.Step(sand::config::time_step, 8, 3);
-            accumulator -= sand::config::time_step;
-            updated = true;
+            count++;
+            if (count % 5 == 0) {
+                if (world->at({122, 233}).type == sand::pixel_type::rock) {
+                    points = calc_boundary(*world, 122, 233);
+                } else {
+                    points = {};
+                }
+            }
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -415,10 +428,12 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        for (size_t i = 0; i != simplified.size() - 1; i++) {
-            shape_renderer.draw_line({simplified[i]}, {simplified[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
-            shape_renderer.draw_circle({simplified[i]}, {0, 0, 1, 1}, 0.25);
-            
+        if (points.size() >= 2) {
+            for (size_t i = 0; i != points.size() - 1; i++) {
+                shape_renderer.draw_line({points[i]}, {points[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
+                shape_renderer.draw_circle({points[i]}, {0, 0, 1, 1}, 0.25);
+                
+            }
         }
         //for (const auto point : points) {
         //    shape_renderer.draw_circle(point, {1, 1, 0, 1}, 0.25);
