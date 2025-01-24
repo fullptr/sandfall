@@ -123,6 +123,13 @@ auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
     return current;
 }
 
+auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
+{
+    if (!w.valid(A) || !w.valid(B)) return true;
+    return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
+        && (w.at(A).type != w.at(B).type);
+}
+
 auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const sand::world& w, glm::ivec2 src, glm::ivec2 dst) -> bool
 {
     // ensure adjacent
@@ -135,34 +142,16 @@ auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const 
     }
 
     if (src.x == dst.x) { // vertical
-        if (src.x == w.length()) return true; // edge case along the right, valid but no pixel to check
         if (dst.y == src.y - 1) { // dst on top
-            const auto A = dst;
-            const auto B = dst + glm::ivec2{-1, 0};
-            if (!w.valid(B)) return true;
-            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
-                && (w.at(A).type != w.at(B).type);
+            return is_air_boundary(w, dst, dst + glm::ivec2{-1, 0});
         } else { // src on top
-            const auto A = src;
-            const auto B = src + glm::ivec2{-1, 0};
-            if (!w.valid(B)) return true;
-            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
-                && (w.at(A).type != w.at(B).type);
+            return is_air_boundary(w, src, src + glm::ivec2{-1, 0});
         }
     } else { // horizonal
-        if (src.y == w.length()) return true; // edge case along the bottom, valid but no pixel to check
         if (dst.x == src.x - 1) { // dst to left
-            const auto A = dst;
-            const auto B = dst + glm::ivec2{0, -1};
-            if (!w.valid(B)) return true;
-            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
-                && (w.at(A).type != w.at(B).type);
+            return is_air_boundary(w, dst, dst + glm::ivec2{0, -1});
         } else { // src to left
-            const auto A = src;
-            const auto B = src + glm::ivec2{0, -1};
-            if (!w.valid(B)) return true;
-            return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
-                && (w.at(A).type != w.at(B).type);
+            return is_air_boundary(w, src, src + glm::ivec2{0, -1});
         }
     }
 }
