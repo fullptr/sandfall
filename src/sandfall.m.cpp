@@ -194,7 +194,61 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         }
     }
 
+    ret.pop_back(); // last element equals the first, so remove it otherwise douglas is unhappy
     return ret;
+}
+
+float perpendicular_distance(const glm::ivec2& p, const glm::ivec2& a, const glm::ivec2& b) {
+    // Vector AB
+    glm::ivec2 ab = b - a;
+    // Vector AP
+    glm::ivec2 ap = p - a;
+    
+    // Cross product to get the area of the parallelogram formed by AB and AP
+    float cross_product = ab.x * ap.y - ab.y * ap.x;
+    // Length of the line segment AB
+    float length_ab = std::sqrt(ab.x * ab.x + ab.y * ab.y);
+    
+    // Perpendicular distance is the absolute value of the cross product divided by the length of AB
+    return std::abs(cross_product) / length_ab;
+}
+
+// Douglas-Peucker algorithm
+void douglas_peucker(const std::vector<glm::ivec2>& points, float tolerance, std::vector<glm::ivec2>& result) {
+    if (points.size() < 2) {
+        result = points;
+        return;
+    }
+
+    // Find the point with the maximum distance
+    float max_dist = 0.0f;
+    size_t index = 0;
+    
+    for (size_t i = 2; i < points.size() - 1; ++i) {
+        float dist = perpendicular_distance(points[i], points.front(), points.back());
+        if (dist > max_dist) {
+            max_dist = dist;
+            index = i;
+        }
+    }
+
+    // If the maximum distance is greater than tolerance, split the curve
+    if (max_dist > tolerance) {
+        // Recursively apply to the two sub-segments
+        std::vector<glm::ivec2> left_segment, right_segment;
+        std::vector<glm::ivec2> left(points.begin(), points.begin() + index + 1);
+        std::vector<glm::ivec2> right(points.begin() + index, points.end());
+        
+        douglas_peucker(left, tolerance, left_segment);
+        douglas_peucker(right, tolerance, right_segment);
+
+        // Merge the results
+        result = left_segment;
+        result.insert(result.end(), right_segment.begin() + 1, right_segment.end());
+    } else {
+        // If the maximum distance is less than or equal to tolerance, just take the endpoints
+        result = { points.front(), points.back() };
+    }
 }
 
 auto main() -> int
@@ -264,6 +318,10 @@ auto main() -> int
     world->wake_all_chunks();
 
     std::vector<glm::ivec2> points = get_boundary(*world, 122, 233);
+
+    std::vector<glm::ivec2> simplified;
+    douglas_peucker(points, 1.0, simplified);
+    std::print("simplified {}\n", simplified.size());
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -357,9 +415,9 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        for (size_t i = 0; i != points.size() - 1; i++) {
-            shape_renderer.draw_line({points[i]}, {points[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
-            shape_renderer.draw_circle({points[i]}, {0, 0, 1, 1}, 0.25);
+        for (size_t i = 0; i != simplified.size() - 1; i++) {
+            shape_renderer.draw_line({simplified[i]}, {simplified[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
+            shape_renderer.draw_circle({simplified[i]}, {0, 0, 1, 1}, 0.25);
             
         }
         //for (const auto point : points) {
