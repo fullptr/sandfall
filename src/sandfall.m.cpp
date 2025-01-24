@@ -255,7 +255,7 @@ auto calc_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2
 {
     const auto points = get_boundary(w, x, y);
     const auto simplified = douglas_peucker(points, 1.5);
-    return points;
+    return simplified;
 }
 
 auto main() -> int
