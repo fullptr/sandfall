@@ -135,6 +135,7 @@ auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const 
     }
 
     if (src.x == dst.x) { // vertical
+        if (src.x == w.length()) return true; // edge case along the right, valid but no pixel to check
         if (dst.y == src.y - 1) { // dst on top
             const auto A = dst;
             const auto B = dst + glm::ivec2{-1, 0};
@@ -149,6 +150,7 @@ auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const 
                 && (w.at(A).type != w.at(B).type);
         }
     } else { // horizonal
+        if (src.y == w.length()) return true; // edge case along the bottom, valid but no pixel to check
         if (dst.x == src.x - 1) { // dst to left
             const auto A = dst;
             const auto B = dst + glm::ivec2{0, -1};

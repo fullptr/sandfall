@@ -59,6 +59,8 @@ public:
 
     auto get_chunks() const -> const chunks& { return d_chunks; }
 
+    inline auto length() const { return sand::config::num_pixels; }
+
     auto serialise(auto& archive) -> void
     {
         archive(d_pixels);
