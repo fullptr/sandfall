@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <format>
+#include <cmath>
 
 namespace sand {
 
@@ -30,6 +31,7 @@ auto display_ui(
     if (ImGui::Begin("Editor")) {
         ImGui::Text("Mouse");
         ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
+        ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
         ImGui::Text("Pixel: {%d, %d}", mouse.x, mouse.y);
         ImGui::Separator();
 

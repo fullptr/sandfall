@@ -23,6 +23,7 @@
 #include <memory>
 #include <print>
 #include <fstream>
+#include <cmath>
 
 // Converts a point in pixel space to world space
 
@@ -78,6 +79,8 @@ public:
     }
 };
 
+static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{0, 1}};
+
 auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
 {
     std::unordered_set<glm::ivec2> ret;
@@ -92,10 +95,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         ret.insert(curr + glm::ivec2(0, 1));
         ret.insert(curr + glm::ivec2(1, 1));
         seen.insert(curr);
-        for (const auto offset : {
-                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
-                //,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
-        }) {
+        for (const auto offset : offsets) {
             const auto neighbour = curr + offset;
             if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type == sand::pixel_type::rock) {
                 jobs.push_back(neighbour);
@@ -104,87 +104,6 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
     }
     return ret;
 }
-
-auto boundary(const std::unordered_set<glm::ivec2>& points) -> std::unordered_set<glm::ivec2>
-{
-    std::unordered_set<glm::ivec2> ret;
-    for (const auto point : points) {
-        for (const auto offset : {
-                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
-                //,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
-        }) {
-            const auto neighbour = point + offset;
-            if (!points.contains(neighbour)) {
-                ret.insert(point);
-                break;
-            }
-        }
-    }
-    return ret;
-}
-
-auto connection(const sand::world& w, glm::ivec2 a, glm::ivec2 b) -> bool
-{
-    assert(glm::abs(a.x - b.x) < 2 && glm::abs(a.y - b.y) < 2);
-    if (!w.valid(a) || !w.valid(b)) return true; // on the edge of the map, which is fine
-
-    // diagonal, so check the pixel this crosses over, find the top left
-    if (glm::abs(a.x - b.x) == 1 && glm::abs(a.y - b.y) == 1) {
-        const auto pixel = glm::ivec2{glm::min(a.x, b.x), glm::min(a.y, b.y)};
-        return w.at(pixel).type == sand::pixel_type::none;
-    }
-
-    // On top of each other, so look at pixels to the left and right
-    if (a.x == b.x) {
-        const auto right = glm::ivec2{a.x, glm::min(a.y, b.y)}; // a or b
-        const auto left = glm::ivec2{right.x - 1, right.y};
-        if (!w.valid(left)) return true; // on edge
-        return w.at(left).type == sand::pixel_type::none
-            || w.at(right).type == sand::pixel_type::none;
-    }
-
-    if (a.y == b.y) {
-        const auto down = glm::ivec2{glm::min(a.x, b.x), a.y}; // a or b
-        const auto up = glm::ivec2{down.x, down.y - 1};
-        if (!w.valid(up)) return true; // on edge
-        return w.at(up).type == sand::pixel_type::none
-            || w.at(down).type == sand::pixel_type::none;
-    }
-
-    assert(false);
-    std::unreachable();
-}
-
-auto to_path(const sand::world& w, const std::unordered_set<glm::ivec2>& points) -> std::vector<glm::ivec2>
-{
-    std::unordered_set<glm::ivec2> remaining = points;
-    std::vector<glm::ivec2> path;
-
-    auto curr = *remaining.begin();
-    while (!remaining.empty()) {
-        remaining.erase(curr);
-        path.push_back(curr);
-        bool found = false;
-        for (const auto offset : {
-                glm::ivec2{0, 1}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{-1, 0}
-                ,glm::ivec2{1, 1}, glm::ivec2{1, -1}, glm::ivec2{-1, 1}, glm::ivec2{-1, -1}
-        }) {
-            const auto neighbour = curr + offset;
-            if (!points.contains(neighbour)) continue;
-            if (remaining.contains(neighbour) && connection(w, curr, neighbour)) {
-                // found the next link
-                curr = neighbour;
-                found = true;
-                break;
-            }
-        }
-        if (!found) break;
-    }
-    path.push_back(path.front());
-    return path;
-}
-
-static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{0, 1}};
 
 auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
 {
@@ -204,23 +123,28 @@ auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
     return current;
 }
 
-auto is_reachable_neighbour(const sand::world& w, glm::ivec2 src, glm::ivec2 dst) -> bool
+auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const sand::world& w, glm::ivec2 src, glm::ivec2 dst) -> bool
 {
     // ensure adjacent
-    if (glm::abs(src.x - dst.x) + glm::abs(src.y - dst.y) != 1) return false; // adjacent
-    if (!w.valid(dst)) return false; // src on boundary
+    if (!points.contains(src) || !points.contains(dst)) {
+        return false;
+    }
+
+    if (glm::abs(src.x - dst.x) + glm::abs(src.y - dst.y) != 1) {
+        return false; // adjacent
+    }
 
     if (src.x == dst.x) { // vertical
         if (dst.y == src.y - 1) { // dst on top
             const auto A = dst;
             const auto B = dst + glm::ivec2{-1, 0};
-            if (!w.valid(B)) return true; // along edge of map
+            if (!w.valid(B)) return true;
             return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
                 && (w.at(A).type != w.at(B).type);
         } else { // src on top
             const auto A = src;
             const auto B = src + glm::ivec2{-1, 0};
-            if (!w.valid(B)) return true; // along edge of map
+            if (!w.valid(B)) return true;
             return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
                 && (w.at(A).type != w.at(B).type);
         }
@@ -228,17 +152,58 @@ auto is_reachable_neighbour(const sand::world& w, glm::ivec2 src, glm::ivec2 dst
         if (dst.x == src.x - 1) { // dst to left
             const auto A = dst;
             const auto B = dst + glm::ivec2{0, -1};
-            if (!w.valid(B)) return true; // along edge of map
+            if (!w.valid(B)) return true;
             return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
                 && (w.at(A).type != w.at(B).type);
         } else { // src to left
             const auto A = src;
             const auto B = src + glm::ivec2{0, -1};
-            if (!w.valid(B)) return true; // along edge of map
+            if (!w.valid(B)) return true;
             return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
                 && (w.at(A).type != w.at(B).type);
         }
     }
+}
+
+auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
+{
+    const auto points = flood_fill(w, x, y);
+
+    auto ret = std::vector<glm::ivec2>{};
+    auto current = find_boundary(w, x, y);
+    ret.push_back(current);
+    
+    // Find second point
+    bool found_second = false;
+    for (const auto offset : offsets) {
+        const auto neigh = current + offset;
+        if (is_reachable_neighbour(points, w, current, neigh)) {
+            current = neigh;
+            ret.push_back(current);
+            found_second = true;
+            break;
+        }
+    }
+    assert(found_second);
+
+    // continue until we get back to the start
+    while (current != ret.front()) {
+        bool found = false;
+        for (const auto offset : offsets) {
+            const auto neigh = current + offset;
+            if (is_reachable_neighbour(points, w, current, neigh) && neigh != ret.rbegin()[1]) {
+                current = neigh;
+                found = true;
+                ret.push_back(current);
+                break;
+            }
+        }
+        if (!found) {
+            return ret; // hmm
+        }
+    }
+
+    return ret;
 }
 
 auto main() -> int
@@ -307,9 +272,7 @@ auto main() -> int
     archive(*world);
     world->wake_all_chunks();
 
-    //{125, 140};
-    std::unordered_set<glm::ivec2> points = boundary(flood_fill(*world, 100, 243));
-    const auto path = to_path(*world, points);
+    std::vector<glm::ivec2> points = get_boundary(*world, 122, 233);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -403,21 +366,14 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        //for (size_t i = 0; i != path.size() - 1; i++) {
-        //    shape_renderer.draw_line({path[i]}, {path[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
-        //    shape_renderer.draw_circle({path[i]}, {0, 0, 1, 1}, 0.25);
-        //    
-        //}
-        const auto b = find_boundary(*world, 112, 243);
-        shape_renderer.draw_circle(b, {0, 0, 1, 1}, 0.25);
-        for (const auto offset : offsets) {
-            const auto n = b + offset;
-            if (is_reachable_neighbour(*world, b, n)) {
-                shape_renderer.draw_circle(n, {0, 1, 0, 1}, 0.25);
-            } else {
-                shape_renderer.draw_circle(n, {1, 0, 0, 1}, 0.25);
-            }
+        for (size_t i = 0; i != points.size() - 1; i++) {
+            shape_renderer.draw_line({points[i]}, {points[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
+            shape_renderer.draw_circle({points[i]}, {0, 0, 1, 1}, 0.25);
+            
         }
+        //for (const auto point : points) {
+        //    shape_renderer.draw_circle(point, {1, 1, 0, 1}, 0.25);
+        //}
         shape_renderer.end_frame();
         
         // Display the UI
