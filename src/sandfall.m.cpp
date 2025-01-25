@@ -92,30 +92,6 @@ auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
         && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
-auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
-{
-    std::unordered_set<glm::ivec2> ret;
-    std::unordered_set<glm::ivec2> seen;
-    std::vector<glm::ivec2> jobs;
-    jobs.push_back({x, y});
-    while (!jobs.empty()) {
-        glm::ivec2 curr = jobs.back();
-        jobs.pop_back();
-        ret.insert(curr);
-        ret.insert(curr + glm::ivec2(1, 0));
-        ret.insert(curr + glm::ivec2(0, 1));
-        ret.insert(curr + glm::ivec2(1, 1));
-        seen.insert(curr);
-        for (const auto offset : offsets) {
-            const auto neighbour = curr + offset;
-            if (!seen.contains(neighbour) && is_static_pixel(w, neighbour)) {
-                jobs.push_back(neighbour);
-            }
-        }
-    }
-    return ret;
-}
-
 auto is_boundary_point(const sand::world& w, glm::ivec2 pos) -> bool
 {
     for (const auto offset : offsets) {
@@ -175,16 +151,10 @@ auto is_invalid_step(
 }
 
 auto is_reachable_neighbour(
-    const std::unordered_set<glm::ivec2>& points,
     const sand::world& w,
     glm::ivec2 src,
     glm::ivec2 dst) -> bool
 {
-    // ensure adjacent
-    if (!points.contains(src) || !points.contains(dst)) {
-        return false;
-    }
-
     if (glm::abs(src.x - dst.x) + glm::abs(src.y - dst.y) != 1) {
         return false; // adjacent
     }
@@ -206,8 +176,6 @@ auto is_reachable_neighbour(
 
 auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
 {
-    const auto points = flood_fill(w, x, y);
-
     auto ret = std::vector<glm::ivec2>{};
     auto current = find_boundary(w, x, y);
     ret.push_back(current);
@@ -216,7 +184,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
     bool found_second = false;
     for (const auto offset : offsets) {
         const auto neigh = current + offset;
-        if (is_reachable_neighbour(points, w, current, neigh)) {
+        if (is_reachable_neighbour(w, current, neigh)) {
             current = neigh;
             ret.push_back(current);
             found_second = true;
@@ -232,7 +200,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_reachable_neighbour(points, w, current, neigh) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
+            if (is_reachable_neighbour(w, current, neigh) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
