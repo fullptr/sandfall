@@ -83,7 +83,7 @@ static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec
 
 auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
 {
-    return w.type(pos) != sand::pixel_type::none;
+    return w.type(pos) != sand::pixel_type::none && !w.at(pos).flags.test(sand::pixel_flags::is_falling);
 }
 
 auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
@@ -102,7 +102,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         seen.insert(curr);
         for (const auto offset : offsets) {
             const auto neighbour = curr + offset;
-            if (!seen.contains(neighbour) && w.valid(neighbour) && is_static_pixel(w, neighbour) && !w.at(neighbour).flags.test(sand::pixel_flags::is_falling)) {
+            if (!seen.contains(neighbour) && w.valid(neighbour) && is_static_pixel(w, neighbour)) {
                 jobs.push_back(neighbour);
             }
         }
