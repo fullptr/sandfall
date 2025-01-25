@@ -233,6 +233,32 @@ auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std
     return simplified;
 }
 
+struct triangle {
+    glm::vec2 p1, p2, p3;
+};
+
+void triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) {
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_staticBody;
+    bodyDef.position.Set(0.0f, 0.0f);
+    b2Body* body = world.CreateBody(&bodyDef);
+
+    b2PolygonShape polygonShape;
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &polygonShape;
+
+    for (const triangle& t : triangles) {
+        const auto vertices = {
+            sand::pixel_to_physics(t.p1),
+            sand::pixel_to_physics(t.p2),
+            sand::pixel_to_physics(t.p3)
+        };
+
+        polygonShape.Set(std::data(vertices), std::size(vertices)); 
+        body->CreateFixture(&fixtureDef);
+    }
+}
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -302,6 +328,11 @@ auto main() -> int
     auto epsilon = 1.5f;
     auto points = calc_boundary(*world, {122, 233}, epsilon);
     auto count = 0;
+
+    auto triangles = std::vector<triangle>{};
+    triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
+    triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
+    triangles_to_rigid_bodies(physics, triangles);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -476,9 +507,11 @@ auto main() -> int
                 
             }
         }
-        //for (const auto point : points) {
-        //    shape_renderer.draw_circle(point, {1, 1, 0, 1}, 0.25);
-        //}
+        for (const auto triangle : triangles) {
+            shape_renderer.draw_line(triangle.p1, triangle.p2, {1,0,0,1}, {1,0,0,1}, 1);
+            shape_renderer.draw_line(triangle.p2, triangle.p3, {1,0,0,1}, {1,0,0,1}, 1);
+            shape_renderer.draw_line(triangle.p3, triangle.p1, {1,0,0,1}, {1,0,0,1}, 1);
+        }
         shape_renderer.end_frame();
         
         // Display the UI
