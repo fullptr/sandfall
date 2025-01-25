@@ -96,12 +96,6 @@ auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
         && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
-auto find_boundary(const sand::world& w, glm::ivec2 pos) -> glm::ivec2
-{
-    while (is_static_pixel(w, pos + up)) { pos += up; }
-    return pos;
-}
-
 auto is_invalid_step(
     const sand::world& w,
     glm::ivec2 prev,
@@ -156,10 +150,11 @@ auto is_valid_step(
     std::unreachable();
 }
 
-auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
+auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::ivec2>
 {
     auto ret = std::vector<glm::ivec2>{};
-    auto current = find_boundary(w, {x, y});
+    auto current = start;
+    while (is_static_pixel(w, current + up)) { current += up; }
     ret.push_back(current);
     
     // Find second point
@@ -238,11 +233,11 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
     }
 }
 
-auto calc_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
+auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
 {
-    const auto points = get_boundary(w, x, y);
+    const auto points = get_boundary(w, start);
     auto simplified = std::vector<glm::ivec2>{};
-    ramer_douglas_puecker(points, 1.5, simplified);
+    ramer_douglas_puecker(points, epsilon, simplified);
     return simplified;
 }
 
@@ -312,7 +307,8 @@ auto main() -> int
     archive(*world);
     world->wake_all_chunks();
 
-    auto points = calc_boundary(*world, 122, 233);
+    auto epsilon = 1.5f;
+    auto points = calc_boundary(*world, {122, 233}, epsilon);
     auto count = 0;
 
     while (window.is_running()) {
@@ -336,7 +332,7 @@ auto main() -> int
             count++;
             if (count % 5 == 0) {
                 if (world->at({122, 233}).type == sand::pixel_type::rock) {
-                    points = calc_boundary(*world, 122, 233);
+                    points = calc_boundary(*world, {122, 233}, epsilon);
                 } else {
                     points = {};
                 }
@@ -393,11 +389,10 @@ auto main() -> int
             ImGui::Text("Screen width: %.2f", camera.screen_width);
             ImGui::Text("Screen height: %.2f", camera.screen_height);
             ImGui::Text("Scale: %f", camera.world_to_screen);
-            ImGui::Separator();
 
-            ImGui::Text("Player");
-            //ImGui::Text("On Ground: %d", is_on_ground(physics, player));
-            //ImGui::Text("Num Contacts: %d", count);
+            ImGui::Separator();
+            ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
+            ImGui::Text("Vertices: %d", (int)points.size());
             ImGui::Separator();
 
             ImGui::Text("Info");
