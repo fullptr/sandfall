@@ -24,6 +24,7 @@
 #include <print>
 #include <fstream>
 #include <cmath>
+#include <span>
 
 // Converts a point in pixel space to world space
 
@@ -223,7 +224,9 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
             break;
         }
     }
-    assert(found_second);
+    if (!found_second) {
+        return {};
+    }
 
     // continue until we get back to the start
     while (current != ret.front()) {
@@ -245,66 +248,52 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
     return ret;
 }
 
-float perpendicular_distance(const glm::ivec2& p, const glm::ivec2& a, const glm::ivec2& b) {
-    // Vector AB
-    glm::ivec2 ab = b - a;
-    // Vector AP
-    glm::ivec2 ap = p - a;
-    
-    // Cross product to get the area of the parallelogram formed by AB and AP
-    float cross_product = ab.x * ap.y - ab.y * ap.x;
-    // Length of the line segment AB
-    float length_ab = std::sqrt(ab.x * ab.x + ab.y * ab.y);
-    
-    // Perpendicular distance is the absolute value of the cross product divided by the length of AB
-    return std::abs(cross_product) / length_ab;
+auto perpendicular_distance(const glm::ivec2& p, glm::ivec2 a, glm::ivec2 b) -> float {
+    if (a == b) { a.x++; } // little hack to avoid dividing by zero
+
+    const auto ab = glm::vec2{b - a};
+    const auto ap = glm::vec2{p - a};
+
+    const auto cross_product = ab.x * ap.y - ab.y * ap.x;
+    return glm::abs(cross_product) / glm::length(ab);
 }
 
-// Douglas-Peucker algorithm
-auto douglas_peucker(
-    const std::vector<glm::ivec2>& points, float tolerance) -> std::vector<glm::ivec2>
+auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, std::vector<glm::ivec2>& out) -> void
 {
-    if (points.size() < 2) {
-        return points;
+    if (points.size() < 3) {
+        out.insert(out.end(), points.begin(), points.end());
+        return;
     }
 
     // Find the point with the maximum distance
-    float max_dist = 0.0f;
-    size_t index = 0;
-    
-    for (size_t i = 2; i < points.size() - 1; ++i) {
-        auto start = points.front();
-        auto end = points.back();
-        if (start == end) { ++start.x; }
-        float dist = perpendicular_distance(points[i], start, end);
+    auto max_dist = 0.0f;
+    auto pivot = points.begin() + 2;
+    for (auto it = points.begin() + 2; it != points.end() - 1; ++it) {
+        const auto dist = perpendicular_distance(*it, points.front(), points.back());
         if (dist > max_dist) {
             max_dist = dist;
-            index = i;
+            pivot = it;
         }
     }
 
-    // If the maximum distance is greater than tolerance, split the curve
-    if (max_dist > tolerance) {
-        // Recursively apply to the two sub-segments
-        std::vector<glm::ivec2> left(points.begin(), points.begin() + index + 1);
-        std::vector<glm::ivec2> right(points.begin() + index, points.end());
-        
-        auto left_segment = douglas_peucker(left, tolerance);
-        const auto right_segment = douglas_peucker(right, tolerance);
+    // If the maximum distance is greater than epsilon, split the curve and recurse
+    if (max_dist > epsilon) {
+        ramer_douglas_puecker({ points.begin(), pivot + 1 }, epsilon, out);
+        ramer_douglas_puecker({ pivot, points.end() },       epsilon, out);
+    }
 
-        // Merge the results
-        left_segment.insert(left_segment.end(), right_segment.begin() + 1, right_segment.end());
-        return left_segment;
-    } else {
-        // If the maximum distance is less than or equal to tolerance, just take the endpoints
-        return { points.front(), points.back() };
+    // Other take the endpoints
+    else {
+        out.push_back(points.front());
+        out.push_back(points.back());
     }
 }
 
 auto calc_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
 {
     const auto points = get_boundary(w, x, y);
-    const auto simplified = douglas_peucker(points, 1.5);
+    auto simplified = std::vector<glm::ivec2>{};
+    ramer_douglas_puecker(points, 1.5, simplified);
     return simplified;
 }
 
