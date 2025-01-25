@@ -83,6 +83,7 @@ static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec
 
 auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
 {
+    if (!w.valid(pos)) return false;
     const auto& pixel = w.at(pos);
     const auto& props = sand::properties(pixel);
     return pixel.type != sand::pixel_type::none
@@ -106,7 +107,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         seen.insert(curr);
         for (const auto offset : offsets) {
             const auto neighbour = curr + offset;
-            if (!seen.contains(neighbour) && w.valid(neighbour) && is_static_pixel(w, neighbour)) {
+            if (!seen.contains(neighbour) && is_static_pixel(w, neighbour)) {
                 jobs.push_back(neighbour);
             }
         }
@@ -118,7 +119,7 @@ auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
 {
     for (const auto offset : offsets) {
         const auto n = pos + offset;
-        if (!w.valid(n) || !is_static_pixel(w, n)) {
+        if (!is_static_pixel(w, n)) {
             return true;
         }
     }
@@ -134,7 +135,6 @@ auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
 
 auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
 {
-    if (!w.valid(A) || !w.valid(B)) return true;
     const auto static_a = is_static_pixel(w, A);
     const auto static_b = is_static_pixel(w, B);
     return (!static_a && static_b) || (!static_b && static_a);
@@ -149,19 +149,15 @@ auto is_invalid_step(
 {
     if (prev == next) return true;
 
-    const auto tl = glm::ivec2{curr.x - 1, curr.y - 1};
-    if (!w.valid(tl)) return false; 
-    const auto tr = glm::ivec2{curr.x, curr.y - 1};
-    if (!w.valid(tr)) return false;
-    const auto bl = glm::ivec2{curr.x - 1, curr.y};
-    if (!w.valid(bl)) return false;
-    const auto br = curr;
-    if (!w.valid(br)) return false;
+    const auto tl = is_static_pixel(w, {curr.x - 1, curr.y - 1});
+    const auto tr = is_static_pixel(w, {curr.x,     curr.y - 1});
+    const auto bl = is_static_pixel(w, {curr.x - 1, curr.y    });
+    const auto br = is_static_pixel(w, {curr.x,     curr.y    });
 
     using pt = sand::pixel_type;
 
-    const auto cross1 = !is_static_pixel(w, tl) && !is_static_pixel(w, br) &&  is_static_pixel(w, tr) &&  is_static_pixel(w, bl);
-    const auto cross2 =  is_static_pixel(w, tl) &&  is_static_pixel(w, br) && !is_static_pixel(w, tr) && !is_static_pixel(w, bl);
+    const auto cross1 = !tl && !br &&  tr &&  bl;
+    const auto cross2 =  tl &&  br && !tr && !bl;
 
     if (!cross1 && !cross2) { return false; }
 
