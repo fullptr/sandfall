@@ -80,7 +80,11 @@ public:
     }
 };
 
-static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{0, 1}};
+static constexpr auto up = glm::ivec2{0, -1};
+static constexpr auto right = glm::ivec2{1, 0};
+static constexpr auto down = glm::ivec2{0, 1};
+static constexpr auto left = glm::ivec2{-1, 0};
+static constexpr auto offsets = {up, right, down, left};
 
 auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
 {
@@ -92,29 +96,10 @@ auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
         && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
-auto is_boundary_point(const sand::world& w, glm::ivec2 pos) -> bool
+auto find_boundary(const sand::world& w, glm::ivec2 pos) -> glm::ivec2
 {
-    for (const auto offset : offsets) {
-        const auto n = pos + offset;
-        if (!is_static_pixel(w, n)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
-{
-    auto current = glm::ivec2{x, y};
-    while (!is_boundary_point(w, current)) { current.y -= 1; }
-    return current;
-}
-
-auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
-{
-    const auto static_a = is_static_pixel(w, A);
-    const auto static_b = is_static_pixel(w, B);
-    return (!static_a && static_b) || (!static_b && static_a);
+    while (is_static_pixel(w, pos + up)) { pos += up; }
+    return pos;
 }
 
 auto is_invalid_step(
@@ -150,34 +135,31 @@ auto is_invalid_step(
     return !is_static_pixel(w, pixel);
 }
 
+auto is_static_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 offset) -> bool
+{
+    assert(glm::length2(offset) == 1);
+    const auto static_a = is_static_pixel(w, A);
+    const auto static_b = is_static_pixel(w, A + offset);
+    return (!static_a && static_b) || (!static_b && static_a);
+}
+
 auto is_valid_step(
     const sand::world& w,
     glm::ivec2 pos,
     glm::ivec2 offset) -> bool
 {
     assert(glm::length2(offset) == 1);
-    auto src = pos;
-    auto dst = pos + offset;
-
-    if (src.x == dst.x) { // vertical
-        if (dst.y == src.y - 1) { // dst on top
-            return is_air_boundary(w, dst, dst + glm::ivec2{-1, 0});
-        } else { // src on top
-            return is_air_boundary(w, src, src + glm::ivec2{-1, 0});
-        }
-    } else { // horizonal
-        if (dst.x == src.x - 1) { // dst to left
-            return is_air_boundary(w, dst, dst + glm::ivec2{0, -1});
-        } else { // src to left
-            return is_air_boundary(w, src, src + glm::ivec2{0, -1});
-        }
-    }
+    if (offset == up)    return is_static_boundary(w, pos + offset, left);
+    if (offset == down)  return is_static_boundary(w, pos,          left);
+    if (offset == left)  return is_static_boundary(w, pos + offset, up);
+    if (offset == right) return is_static_boundary(w, pos,          up);
+    std::unreachable();
 }
 
 auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
 {
     auto ret = std::vector<glm::ivec2>{};
-    auto current = find_boundary(w, x, y);
+    auto current = find_boundary(w, {x, y});
     ret.push_back(current);
     
     // Find second point
