@@ -130,7 +130,48 @@ auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
         && (w.at(A).type != w.at(B).type);
 }
 
-auto is_reachable_neighbour(const std::unordered_set<glm::ivec2>& points, const sand::world& w, glm::ivec2 src, glm::ivec2 dst) -> bool
+auto is_cross_over(
+    const std::unordered_set<glm::ivec2>& points,
+    const sand::world& w,
+    glm::ivec2 prev,
+    glm::ivec2 curr,
+    glm::ivec2 next) -> bool
+{
+    if (prev == next) return false;
+
+    const auto tl = glm::ivec2{curr.x - 1, curr.y - 1};
+    if (!w.valid(tl)) return false; 
+    const auto tr = glm::ivec2{curr.x, curr.y - 1};
+    if (!w.valid(tr)) return false;
+    const auto bl = glm::ivec2{curr.x - 1, curr.y};
+    if (!w.valid(bl)) return false;
+    const auto br = curr;
+    if (!w.valid(br)) return false;
+
+    using pt = sand::pixel_type;
+    const auto cross1 = w.type(tl) == pt::none && w.type(br) == pt::none && w.type(tr) != pt::none && w.type(bl) != pt::none;
+    const auto cross2 = w.type(tl) != pt::none && w.type(br) != pt::none && w.type(tr) == pt::none && w.type(bl) == pt::none;
+
+    if (!cross1 && !cross2) { return false; }
+
+    // in a straight line
+    if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
+        return true;
+    }
+
+    // 3 round a pixel
+    const auto pixel = glm::ivec2{
+        std::min({prev.x, curr.x, next.x}),
+        std::min({prev.y, curr.y, next.y})
+    };
+    return w.type(pixel) != pt::none;
+}
+
+auto is_reachable_neighbour(
+    const std::unordered_set<glm::ivec2>& points,
+    const sand::world& w,
+    glm::ivec2 src,
+    glm::ivec2 dst) -> bool
 {
     // ensure adjacent
     if (!points.contains(src) || !points.contains(dst)) {
@@ -182,7 +223,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_reachable_neighbour(points, w, current, neigh) && neigh != ret.rbegin()[1]) {
+            if (is_reachable_neighbour(points, w, current, neigh) && !is_cross_over(points, w, ret.rbegin()[], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
@@ -255,7 +296,7 @@ auto calc_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2
 {
     const auto points = get_boundary(w, x, y);
     const auto simplified = douglas_peucker(points, 1.5);
-    return simplified;
+    return points;
 }
 
 auto main() -> int
