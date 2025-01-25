@@ -81,6 +81,11 @@ public:
 
 static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec2{1, 0}, glm::ivec2{0, 1}};
 
+auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
+{
+    return w.type(pos) != sand::pixel_type::none;
+}
+
 auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
 {
     std::unordered_set<glm::ivec2> ret;
@@ -97,7 +102,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
         seen.insert(curr);
         for (const auto offset : offsets) {
             const auto neighbour = curr + offset;
-            if (!seen.contains(neighbour) && w.valid(neighbour) && w.at(neighbour).type != sand::pixel_type::none && !w.at(neighbour).flags.test(sand::pixel_flags::is_falling)) {
+            if (!seen.contains(neighbour) && w.valid(neighbour) && is_static_pixel(w, neighbour) && !w.at(neighbour).flags.test(sand::pixel_flags::is_falling)) {
                 jobs.push_back(neighbour);
             }
         }
@@ -109,7 +114,7 @@ auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
 {
     for (const auto offset : offsets) {
         const auto n = pos + offset;
-        if (!w.valid(n) || w.at(n).type == sand::pixel_type::none) {
+        if (!w.valid(n) || !is_static_pixel(w, n)) {
             return true;
         }
     }
@@ -126,8 +131,9 @@ auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
 auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
 {
     if (!w.valid(A) || !w.valid(B)) return true;
-    return (w.at(A).type == sand::pixel_type::none || w.at(B).type == sand::pixel_type::none)
-        && (w.at(A).type != w.at(B).type);
+    const auto static_a = is_static_pixel(w, A);
+    const auto static_b = is_static_pixel(w, B);
+    return (!static_a && static_b) || (!static_b && static_a);
 }
 
 auto is_invalid_step(
@@ -149,8 +155,9 @@ auto is_invalid_step(
     if (!w.valid(br)) return false;
 
     using pt = sand::pixel_type;
-    const auto cross1 = w.type(tl) == pt::none && w.type(br) == pt::none && w.type(tr) != pt::none && w.type(bl) != pt::none;
-    const auto cross2 = w.type(tl) != pt::none && w.type(br) != pt::none && w.type(tr) == pt::none && w.type(bl) == pt::none;
+
+    const auto cross1 = !is_static_pixel(w, tl) && !is_static_pixel(w, br) &&  is_static_pixel(w, tr) &&  is_static_pixel(w, bl);
+    const auto cross2 =  is_static_pixel(w, tl) &&  is_static_pixel(w, br) && !is_static_pixel(w, tr) && !is_static_pixel(w, bl);
 
     if (!cross1 && !cross2) { return false; }
 
@@ -164,7 +171,7 @@ auto is_invalid_step(
         std::min({prev.x, curr.x, next.x}),
         std::min({prev.y, curr.y, next.y})
     };
-    return w.type(pixel) == pt::none;
+    return !is_static_pixel(w, pixel);
 }
 
 auto is_reachable_neighbour(
