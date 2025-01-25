@@ -150,14 +150,14 @@ auto is_invalid_step(
     return !is_static_pixel(w, pixel);
 }
 
-auto is_reachable_neighbour(
+auto is_valid_step(
     const sand::world& w,
-    glm::ivec2 src,
-    glm::ivec2 dst) -> bool
+    glm::ivec2 pos,
+    glm::ivec2 offset) -> bool
 {
-    if (glm::abs(src.x - dst.x) + glm::abs(src.y - dst.y) != 1) {
-        return false; // adjacent
-    }
+    assert(glm::length2(offset) == 1);
+    auto src = pos;
+    auto dst = pos + offset;
 
     if (src.x == dst.x) { // vertical
         if (dst.y == src.y - 1) { // dst on top
@@ -184,7 +184,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
     bool found_second = false;
     for (const auto offset : offsets) {
         const auto neigh = current + offset;
-        if (is_reachable_neighbour(w, current, neigh)) {
+        if (is_valid_step(w, current, offset)) {
             current = neigh;
             ret.push_back(current);
             found_second = true;
@@ -200,7 +200,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_reachable_neighbour(w, current, neigh) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
+            if (is_valid_step(w, current, offset) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
