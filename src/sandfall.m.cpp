@@ -130,14 +130,14 @@ auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
         && (w.at(A).type != w.at(B).type);
 }
 
-auto is_cross_over(
+auto is_invalid_step(
     const std::unordered_set<glm::ivec2>& points,
     const sand::world& w,
     glm::ivec2 prev,
     glm::ivec2 curr,
     glm::ivec2 next) -> bool
 {
-    if (prev == next) return false;
+    if (prev == next) return true;
 
     const auto tl = glm::ivec2{curr.x - 1, curr.y - 1};
     if (!w.valid(tl)) return false; 
@@ -164,7 +164,7 @@ auto is_cross_over(
         std::min({prev.x, curr.x, next.x}),
         std::min({prev.y, curr.y, next.y})
     };
-    return w.type(pixel) != pt::none;
+    return w.type(pixel) == pt::none;
 }
 
 auto is_reachable_neighbour(
@@ -223,7 +223,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_reachable_neighbour(points, w, current, neigh) && !is_cross_over(points, w, ret.rbegin()[], current, neigh)) {
+            if (is_reachable_neighbour(points, w, current, neigh) && !is_invalid_step(points, w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
