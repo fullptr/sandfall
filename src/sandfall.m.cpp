@@ -242,7 +242,6 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         }
     }
 
-    ret.pop_back(); // last element equals the first, so remove it otherwise douglas is unhappy
     return ret;
 }
 
@@ -274,7 +273,10 @@ auto douglas_peucker(
     size_t index = 0;
     
     for (size_t i = 2; i < points.size() - 1; ++i) {
-        float dist = perpendicular_distance(points[i], points.front(), points.back());
+        auto start = points.front();
+        auto end = points.back();
+        if (start == end) { ++start.x; }
+        float dist = perpendicular_distance(points[i], start, end);
         if (dist > max_dist) {
             max_dist = dist;
             index = i;
