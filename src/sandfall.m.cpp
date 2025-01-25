@@ -116,7 +116,7 @@ auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::i
     return ret;
 }
 
-auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
+auto is_boundary_point(const sand::world& w, glm::ivec2 pos) -> bool
 {
     for (const auto offset : offsets) {
         const auto n = pos + offset;
@@ -130,7 +130,7 @@ auto is_boundary(const sand::world& w, glm::ivec2 pos) -> bool
 auto find_boundary(const sand::world& w, int x, int y) -> glm::ivec2
 {
     auto current = glm::ivec2{x, y};
-    while (!is_boundary(w, current)) { current.y -= 1; }
+    while (!is_boundary_point(w, current)) { current.y -= 1; }
     return current;
 }
 
@@ -142,7 +142,6 @@ auto is_air_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 B) -> bool
 }
 
 auto is_invalid_step(
-    const std::unordered_set<glm::ivec2>& points,
     const sand::world& w,
     glm::ivec2 prev,
     glm::ivec2 curr,
@@ -233,7 +232,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_reachable_neighbour(points, w, current, neigh) && !is_invalid_step(points, w, ret.rbegin()[1], current, neigh)) {
+            if (is_reachable_neighbour(points, w, current, neigh) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
@@ -248,7 +247,7 @@ auto get_boundary(const sand::world& w, int x, int y) -> std::vector<glm::ivec2>
     return ret;
 }
 
-auto perpendicular_distance(const glm::ivec2& p, glm::ivec2 a, glm::ivec2 b) -> float {
+auto perpendicular_distance(glm::ivec2 p, glm::ivec2 a, glm::ivec2 b) -> float {
     if (a == b) { a.x++; } // little hack to avoid dividing by zero
 
     const auto ab = glm::vec2{b - a};
