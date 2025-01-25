@@ -83,7 +83,11 @@ static constexpr auto offsets = {glm::ivec2{-1, 0}, glm::ivec2{0, -1}, glm::ivec
 
 auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
 {
-    return w.type(pos) != sand::pixel_type::none && !w.at(pos).flags.test(sand::pixel_flags::is_falling);
+    const auto& pixel = w.at(pos);
+    const auto& props = sand::properties(pixel);
+    return pixel.type != sand::pixel_type::none
+        && props.phase == sand::pixel_phase::solid
+        && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
 auto flood_fill(const sand::world& w, int x, int y) -> std::unordered_set<glm::ivec2>
