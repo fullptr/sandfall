@@ -96,58 +96,53 @@ auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
         && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
-auto is_invalid_step(
-    const sand::world& w,
-    glm::ivec2 prev,
-    glm::ivec2 curr,
-    glm::ivec2 next) -> bool
-{
-    if (prev == next) return true;
-
-    const auto tl = is_static_pixel(w, {curr.x - 1, curr.y - 1});
-    const auto tr = is_static_pixel(w, {curr.x,     curr.y - 1});
-    const auto bl = is_static_pixel(w, {curr.x - 1, curr.y    });
-    const auto br = is_static_pixel(w, {curr.x,     curr.y    });
-
-    using pt = sand::pixel_type;
-
-    const auto cross1 = !tl && !br &&  tr &&  bl;
-    const auto cross2 =  tl &&  br && !tr && !bl;
-
-    if (!cross1 && !cross2) { return false; }
-
-    // in a straight line
-    if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
-        return true;
-    }
-
-    // 3 round a pixel
-    const auto pixel = glm::ivec2{
-        std::min({prev.x, curr.x, next.x}),
-        std::min({prev.y, curr.y, next.y})
-    };
-    return !is_static_pixel(w, pixel);
-}
-
 auto is_static_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 offset) -> bool
 {
-    assert(glm::length2(offset) == 1);
+    assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
     const auto static_a = is_static_pixel(w, A);
     const auto static_b = is_static_pixel(w, A + offset);
     return (!static_a && static_b) || (!static_b && static_a);
 }
 
-auto is_valid_step(
-    const sand::world& w,
-    glm::ivec2 pos,
-    glm::ivec2 offset) -> bool
+auto is_along_boundary(const sand::world& w, glm::ivec2 curr, glm::ivec2 next) -> bool
 {
-    assert(glm::length2(offset) == 1);
-    if (offset == up)    return is_static_boundary(w, pos + offset, left);
-    if (offset == down)  return is_static_boundary(w, pos,          left);
-    if (offset == left)  return is_static_boundary(w, pos + offset, up);
-    if (offset == right) return is_static_boundary(w, pos,          up);
+    const auto offset = next - curr;
+    assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
+    if (offset == up)    return is_static_boundary(w, next, left);
+    if (offset == down)  return is_static_boundary(w, curr, left);
+    if (offset == left)  return is_static_boundary(w, next, up);
+    if (offset == right) return is_static_boundary(w, curr, up);
     std::unreachable();
+}
+
+auto is_boundary_cross(const sand::world& w, glm::ivec2 curr) -> bool
+{
+    const auto tl = is_static_pixel(w, curr + left + up);
+    const auto tr = is_static_pixel(w, curr + up);
+    const auto bl = is_static_pixel(w, curr + left);
+    const auto br = is_static_pixel(w, curr);
+    return (tl == br) && (bl == tr) && (tl != tr);
+}
+
+auto is_valid_step(const sand::world& w, glm::ivec2 prev, glm::ivec2 curr, glm::ivec2 next) -> bool
+{
+    if (!is_along_boundary(w, curr, next)) return false;
+    if (prev.x == 0 && prev.y == 0) return true;
+    if (prev == next) return false;
+
+    if (!is_boundary_cross(w, curr)) return true;
+
+    // in a straight line going over the cross
+    if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
+        return false;
+    }
+
+    // curving through the cross must go round an actual pixel
+    const auto pixel = glm::ivec2{
+        std::min({prev.x, curr.x, next.x}),
+        std::min({prev.y, curr.y, next.y})
+    };
+    return is_static_pixel(w, pixel);
 }
 
 auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::ivec2>
@@ -161,7 +156,7 @@ auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::iv
     bool found_second = false;
     for (const auto offset : offsets) {
         const auto neigh = current + offset;
-        if (is_valid_step(w, current, offset)) {
+        if (is_valid_step(w, {0, 0}, current, neigh)) {
             current = neigh;
             ret.push_back(current);
             found_second = true;
@@ -177,7 +172,7 @@ auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::iv
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_valid_step(w, current, offset) && !is_invalid_step(w, ret.rbegin()[1], current, neigh)) {
+            if (is_valid_step(w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
@@ -220,14 +215,11 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
         }
     }
 
-    // If the maximum distance is greater than epsilon, split the curve and recurse
+    // Split and recurse if further than epsilon, otherwise just take the endpoints
     if (max_dist > epsilon) {
         ramer_douglas_puecker({ points.begin(), pivot + 1 }, epsilon, out);
         ramer_douglas_puecker({ pivot, points.end() },       epsilon, out);
-    }
-
-    // Other take the endpoints
-    else {
+    } else {
         out.push_back(points.front());
         out.push_back(points.back());
     }
