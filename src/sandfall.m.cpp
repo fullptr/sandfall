@@ -224,6 +224,18 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
     }
 }
 
+// expects the first and last point to be the same
+auto signed_area(const std::vector<glm::ivec2>& points) -> float
+{
+    if (points.size() < 2) return 0.0f;
+    
+    float sum = 0.0f;
+    for (std::size_t i = 0; i < points.size() - 1; ++i) {
+        sum += points[i].x * points[i+1].y - points[i+1].y * points[i].y;
+    }
+    return sum / 2;
+}
+
 auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
 {
     const auto points = get_boundary(w, start);
@@ -233,6 +245,9 @@ auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std
     auto simplified = std::vector<glm::ivec2>{};
     ramer_douglas_puecker(points, epsilon, simplified);
     simplified.push_back(simplified.front()); // make it a closed loop
+    if (signed_area(simplified) < 0) { // if clockwise, reverse
+        std::ranges::reverse(simplified);
+    }
     return simplified;
 }
 
@@ -262,11 +277,6 @@ auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& tria
     }
 
     return body;
-}
-
-auto triangulate(const std::vector<glm::ivec2>& polygon) -> std::vector<triangle>
-{
-    return {};
 }
 
 auto main() -> int
@@ -427,9 +437,10 @@ auto main() -> int
             ImGui::Separator();
             ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
             ImGui::Text("Vertices: %u", points.size());
-            for (const auto point : points) {
-                ImGui::Text("{%i, %i}", point.x, point.y);
-            }
+            ImGui::Text("Is counter-clockwise? %s", signed_area(points) > 0 ? "yes" : "no");
+            //for (const auto point : points) {
+            //    ImGui::Text("{%i, %i}", point.x, point.y);
+            //}
             ImGui::Separator();
 
             ImGui::Text("Info");
@@ -515,9 +526,13 @@ auto main() -> int
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
         if (points.size() >= 2) {
+            const auto red = glm::vec4{1,0,0,1};
+            const auto blue =  glm::vec4{0, 0,1,1};
             for (size_t i = 0; i != points.size() - 1; i++) {
-                shape_renderer.draw_line({points[i]}, {points[i+1]}, {1,0,0,1}, {1,0,0,1}, 1);
-                shape_renderer.draw_circle({points[i]}, {0, 0, 1, 1}, 0.25);
+                const auto t = (float)i / points.size();
+                const auto colour = red * t + blue * (1 - t);
+                shape_renderer.draw_line({points[i]}, {points[i+1]}, colour, colour, 1);
+                shape_renderer.draw_circle({points[i]}, colour, 0.25);
                 
             }
         }
