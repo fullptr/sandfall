@@ -237,7 +237,7 @@ struct triangle {
     glm::vec2 p1, p2, p3;
 };
 
-void triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) {
+auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body* {
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
     bodyDef.position.Set(0.0f, 0.0f);
@@ -257,6 +257,13 @@ void triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& tria
         polygonShape.Set(std::data(vertices), std::size(vertices)); 
         body->CreateFixture(&fixtureDef);
     }
+
+    return body;
+}
+
+auto triangulate(const std::vector<glm::ivec2>& polygon) -> std::vector<triangle>
+{
+    return {};
 }
 
 auto main() -> int
@@ -329,9 +336,10 @@ auto main() -> int
     auto points = calc_boundary(*world, {122, 233}, epsilon);
     auto count = 0;
 
-    auto triangles = std::vector<triangle>{};
-    triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
-    triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
+    //auto triangles = std::vector<triangle>{};
+    //triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
+    //triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
+    auto triangles = triangulate(points);
     triangles_to_rigid_bodies(physics, triangles);
 
     while (window.is_running()) {
