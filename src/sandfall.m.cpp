@@ -215,12 +215,11 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
         }
     }
 
-    // Split and recurse if further than epsilon, otherwise just take the endpoints
+    // Split and recurse if further than epsilon, otherwise just take the endpoint
     if (max_dist > epsilon) {
         ramer_douglas_puecker({ points.begin(), pivot + 1 }, epsilon, out);
         ramer_douglas_puecker({ pivot, points.end() },       epsilon, out);
     } else {
-        out.push_back(points.front());
         out.push_back(points.back());
     }
 }
@@ -228,8 +227,12 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
 auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
 {
     const auto points = get_boundary(w, start);
+    if (epsilon == 0.0f) {
+        return points;
+    }
     auto simplified = std::vector<glm::ivec2>{};
     ramer_douglas_puecker(points, epsilon, simplified);
+    simplified.push_back(simplified.front()); // make it a closed loop
     return simplified;
 }
 
@@ -332,14 +335,14 @@ auto main() -> int
     archive(*world);
     world->wake_all_chunks();
 
-    auto epsilon = 1.5f;
+    auto epsilon = 0.0f;
     auto points = calc_boundary(*world, {122, 233}, epsilon);
     auto count = 0;
 
-    //auto triangles = std::vector<triangle>{};
-    //triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
-    //triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
-    auto triangles = triangulate(points);
+    auto triangles = std::vector<triangle>{};
+    triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
+    triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
+    //auto triangles = triangulate(points);
     triangles_to_rigid_bodies(physics, triangles);
 
     while (window.is_running()) {
@@ -423,7 +426,10 @@ auto main() -> int
 
             ImGui::Separator();
             ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
-            ImGui::Text("Vertices: %d", (int)points.size());
+            ImGui::Text("Vertices: %u", points.size());
+            for (const auto point : points) {
+                ImGui::Text("{%i, %i}", point.x, point.y);
+            }
             ImGui::Separator();
 
             ImGui::Text("Info");
