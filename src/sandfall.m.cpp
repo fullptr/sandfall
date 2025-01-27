@@ -241,9 +241,9 @@ auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std
 
 struct triangle
 {
-    glm::vec2 a;
-    glm::vec2 b;
-    glm::vec2 c;
+    glm::ivec2 a;
+    glm::ivec2 b;
+    glm::ivec2 c;
 };
 
 auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body*
@@ -276,31 +276,32 @@ inline auto are_collinear(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool
     return cross(b - a, c - a) == 0;
 }
 
+inline auto is_convex(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool {
+    return cross(b - a, c - a) > 0;  // Positive cross product means counter-clockwise turn (convex)
+}
+
 // Check if a point p is inside the triangle formed by points a, b, c
-auto pointInTriangle(glm::ivec2 p, glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool
+auto point_in_triangle(glm::ivec2 p, const triangle& t) -> bool
 {
-    int areaABC = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-    int areaPAB = (a.x - p.x) * (b.y - p.y) - (a.y - p.y) * (b.x - p.x);
-    int areaPBC = (b.x - p.x) * (c.y - p.y) - (b.y - p.y) * (c.x - p.x);
-    int areaPCA = (c.x - p.x) * (a.y - p.y) - (c.y - p.y) * (a.x - p.x);
+    int areaABC = (t.b.x - t.a.x) * (t.c.y - t.a.y) - (t.b.y - t.a.y) * (t.c.x - t.a.x);
+    int areaPAB = (t.a.x -   p.x) * (t.b.y -   p.y) - (t.a.y -   p.y) * (t.b.x -   p.x);
+    int areaPBC = (t.b.x -   p.x) * (t.c.y -   p.y) - (t.b.y -   p.y) * (t.c.x -   p.x);
+    int areaPCA = (t.c.x -   p.x) * (t.a.y -   p.y) - (t.c.y -   p.y) * (t.a.x -   p.x);
 
     return (areaABC >= 0 && areaPAB >= 0 && areaPBC >= 0 && areaPCA >= 0) ||
            (areaABC <= 0 && areaPAB <= 0 && areaPBC <= 0 && areaPCA <= 0);
 }
 
-bool is_convex(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) {
-    return cross(b - a, c - a) > 0;  // Positive cross product means counter-clockwise turn (convex)
-}
-
 // Check if a triangle is valid (no points inside it and not degenerate)
-bool isValidTriangle(const glm::ivec2& p1, const glm::ivec2& p2, const glm::ivec2& p3, const std::vector<glm::ivec2>& points) {
-    if (are_collinear(p1, p2, p3)) {
+auto is_valid_triangle(const triangle& t, std::span<const glm::ivec2> points) -> bool
+{
+    if (are_collinear(t.a, t.b, t.c)) {
         return false;  // Collinear points cannot form a valid triangle
     }
 
     for (const auto& point : points) {
-        if (point != p1 && point != p2 && point != p3) {
-            if (pointInTriangle(point, p1, p2, p3)) {
+        if (point != t.a && point != t.b && point != t.c) {
+            if (point_in_triangle(point, t)) {
                 return false;  // Point is inside the triangle, so it's not a valid triangle
             }
         }
@@ -309,7 +310,7 @@ bool isValidTriangle(const glm::ivec2& p1, const glm::ivec2& p2, const glm::ivec
 }
 
 // Remove collinear points from the polygon
-void removeCollinearPoints(std::vector<glm::ivec2>& points) {
+void remove_collinear_points(std::vector<glm::ivec2>& points) {
     size_t n = points.size();
     std::vector<glm::ivec2> filteredPoints;
 
@@ -326,47 +327,39 @@ void removeCollinearPoints(std::vector<glm::ivec2>& points) {
     points = filteredPoints;  // Replace original points with filtered ones
 }
 
-// Triangulation using the ear clipping method
-std::vector<triangle> triangulate(std::vector<glm::ivec2> vertices) {
-    std::vector<triangle> triangles;
-    std::vector<glm::ivec2> points = vertices;  // Work on a copy of the vertices
+auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
+{
+    auto triangles = std::vector<triangle>{};
+    auto points = vertices;  // Work on a copy of the vertices
 
-    // Remove collinear points before triangulation
-    removeCollinearPoints(points);
+    remove_collinear_points(points);
 
     while (points.size() > 3) {
         bool earFound = false;
 
-        for (size_t i = 0; i < points.size(); ++i) {
-            size_t prev = (i == 0) ? points.size() - 1 : i - 1;
-            size_t next = (i == points.size() - 1) ? 0 : i + 1;
+        for (size_t curr = 0; curr < points.size(); ++curr) {
+            const auto prev = (curr == 0) ? points.size() - 1 : curr - 1;
+            const auto next = (curr == points.size() - 1) ? 0 : curr + 1;
+            const auto t = triangle{points[prev], points[curr], points[next]};
 
-            glm::ivec2 p0 = points[prev];
-            glm::ivec2 p1 = points[i];
-            glm::ivec2 p2 = points[next];
-
-            // Skip reflex (concave) vertices
-            if (!is_convex(p0, p1, p2)) {
+            if (!is_convex(t.a, t.b, t.c)) {
                 continue;
             }
 
-            // Check if the triangle formed by (p0, p1, p2) is valid
-            if (isValidTriangle(p0, p1, p2, points)) {
-                // Add the valid triangle to the result
-                triangles.push_back({p0, p1, p2});
-                points.erase(points.begin() + i);  // Remove the vertex i from the polygon
+            if (is_valid_triangle(t, points)) {
+                triangles.push_back(t);
+                points.erase(points.begin() + curr);
                 earFound = true;
-                break;  // Start over with the reduced polygon
+                break;  // start over with the reduced polygon
             }
         }
 
         if (!earFound) {
-            std::cerr << "Degenerate polygon detected. Triangulation failed." << std::endl;
+            std::print("Degenerate polygon detected. Triangulation failed\n");
             break;
         }
     }
 
-    // Add the last remaining triangle
     if (points.size() == 3) {
         triangles.push_back({points[0], points[1], points[2]});
     }
@@ -430,10 +423,6 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player          = sand::player_controller(physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
-
-    auto ground = std::vector<static_physics_box>{
-        {physics, {128, 256 + 5}, 256, 10, {1.0, 1.0, 0.0, 1.0}},
-    };
 
     auto file = std::ifstream{"save2.bin", std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
@@ -595,32 +584,7 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         shape_renderer.draw_circle(player.centre(), {1.0, 1.0, 0.0, 1.0}, player.radius());
-        
-        for (const auto& obj : ground) {
-            shape_renderer.draw_quad(obj.centre(), obj.width(), obj.height(), obj.angle(), obj.colour());
-        }
-        
-        // Testing the line renderer
-        for (const auto& obj : ground) {
-            const auto& centre = obj.centre();
 
-            const auto cos = glm::cos(obj.angle());
-            const auto sin = glm::sin(obj.angle());
-            const auto rotation = glm::mat2{cos, sin, -sin, cos};
-
-            const auto rW = rotation * glm::vec2{obj.width() / 2.0, 0.0};
-            const auto rH = rotation * glm::vec2{0.0, obj.height() / 2.0};
-
-            const auto tl = centre - rW - rH;
-            const auto tr = centre + rW - rH;
-            const auto bl = centre - rW + rH;
-            const auto br = centre + rW + rH;
-
-            shape_renderer.draw_line(tl, tr, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
-            shape_renderer.draw_line(tr, br, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
-            shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
-            shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
-        }
         if (show_vertices && points.size() >= 2) {
             const auto red = glm::vec4{1,0,0,1};
             const auto blue =  glm::vec4{0, 0,1,1};
@@ -630,13 +594,13 @@ auto main() -> int
                 shape_renderer.draw_line({points[i]}, {points[i+1]}, colour, colour, 1);
                 shape_renderer.draw_circle({points[i]}, colour, 0.25);   
             }
-            shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, {0,1,0,1}, 1);
+            shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, 1);
         }
         if (show_triangles) {
             for (const auto triangle : triangles) {
-                shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, {1,0,0,1}, 1);
+                shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, 1);
+                shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, 1);
+                shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, 1);
             }
 
         }
