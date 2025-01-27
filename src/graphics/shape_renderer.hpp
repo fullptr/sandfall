@@ -82,6 +82,13 @@ public:
         const float      thickness
     );
 
+    void draw_line(
+        const glm::vec2& begin,
+        const glm::vec2& end,
+        const glm::vec4& colour,
+        const float      thickness
+    );
+
     void draw_circle(
         const glm::vec2& centre,
         const glm::vec4& colour,

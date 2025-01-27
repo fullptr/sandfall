@@ -382,6 +382,15 @@ void shape_renderer::draw_line(
     d_lines.emplace_back(begin, end, begin_colour, end_colour, thickness);
 }
 
+void shape_renderer::draw_line(
+    const glm::vec2& begin,
+    const glm::vec2& end,
+    const glm::vec4& colour,
+    const float thickness)
+{
+    d_lines.emplace_back(begin, end, colour, colour, thickness);
+}
+
 void shape_renderer::draw_circle(
     const glm::vec2& centre,
     const glm::vec4& colour,
