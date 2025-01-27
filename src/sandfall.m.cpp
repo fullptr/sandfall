@@ -228,18 +228,6 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
     }
 }
 
-// expects the first and last point to be the same
-auto signed_area(const std::vector<glm::ivec2>& points) -> float
-{
-    if (points.size() < 2) return 0.0f;
-    
-    float sum = 0.0f;
-    for (std::size_t i = 0; i < points.size() - 1; ++i) {
-        sum += points[i].x * points[i+1].y - points[i+1].y * points[i].y;
-    }
-    return sum / 2;
-}
-
 auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
 {
     const auto points = get_boundary(w, start);
@@ -455,10 +443,9 @@ auto main() -> int
     auto epsilon = 0.0f;
     auto points = calc_boundary(*world, {122, 233}, 1.5f);
     auto count = 0;
+    auto show_triangles = false;
+    auto show_vertices = false;
 
-    //auto triangles = std::vector<triangle>{};
-    //triangles.push_back({{200, 250}, {220, 250}, {220, 240}});
-    //triangles.push_back({{200, 250}, {220, 240}, {200, 240}});
     auto triangles = triangulate(points);
     auto triangle_body = triangles_to_rigid_bodies(physics, triangles);
 
@@ -548,10 +535,8 @@ auto main() -> int
             ImGui::Separator();
             ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
             ImGui::Text("Vertices: %u", points.size());
-            ImGui::Text("Is counter-clockwise? %s", signed_area(points) > 0 ? "yes" : "no");
-            //for (const auto point : points) {
-            //    ImGui::Text("{%i, %i}", point.x, point.y);
-            //}
+            ImGui::Checkbox("Show Triangles", &show_triangles);
+            ImGui::Checkbox("Show Vertices", &show_vertices);
             ImGui::Separator();
 
             ImGui::Text("Info");
@@ -636,7 +621,7 @@ auto main() -> int
             shape_renderer.draw_line(br, bl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
             shape_renderer.draw_line(bl, tl, {1, 0, 0, 1}, {0, 0, 1, 1}, 1);
         }
-        if (points.size() >= 2) {
+        if (show_vertices && points.size() >= 2) {
             const auto red = glm::vec4{1,0,0,1};
             const auto blue =  glm::vec4{0, 0,1,1};
             for (size_t i = 0; i != points.size() - 1; i++) {
@@ -647,10 +632,13 @@ auto main() -> int
             }
             shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, {0,1,0,1}, 1);
         }
-        for (const auto triangle : triangles) {
-            shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, {1,0,0,1}, 1);
-            shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, {1,0,0,1}, 1);
-            shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, {1,0,0,1}, 1);
+        if (show_triangles) {
+            for (const auto triangle : triangles) {
+                shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, {1,0,0,1}, 1);
+                shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, {1,0,0,1}, 1);
+                shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, {1,0,0,1}, 1);
+            }
+
         }
         shape_renderer.end_frame();
         
