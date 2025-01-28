@@ -17,6 +17,11 @@ auto get_pos(glm::vec2 pos) -> std::size_t
     return pos.x + sand::config::num_pixels * pos.y;
 }
 
+auto wake_chunk(chunk& c) -> void
+{
+    c.should_step_next = true;
+}
+
 }
 
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t
@@ -30,6 +35,7 @@ auto get_chunk_pos(std::size_t index) -> glm::ivec2
 }
 
 world::world()
+    : d_physics{{sand::config::gravity.x, sand::config::gravity.y}}
 {
     d_pixels.fill(pixel::air());
 }
@@ -79,46 +85,41 @@ auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / sand::config::chunk_size;
-    d_chunks[get_chunk_index(chunk)].should_step_next = true;
+    wake_chunk(d_chunks[get_chunk_index(chunk)]);
 
     // Wake right
     if (pixel.x != sand::config::num_pixels - 1 && (pixel.x + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
-        if (valid(neighbour))
-            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
+        if (valid(neighbour)) { wake_chunk(d_chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake left
     if (pixel.x != 0 && (pixel.x - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{1, 0};
-        if (valid(neighbour))
-            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
+        if (valid(neighbour)) { wake_chunk(d_chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake down
     if (pixel.y != sand::config::num_pixels - 1 && (pixel.y + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
-        if (valid(neighbour))
-            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
+        if (valid(neighbour)) { wake_chunk(d_chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake up
     if (pixel.y != 0 && (pixel.y - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{0, 1};
-        if (valid(neighbour))
-            d_chunks[get_chunk_index(neighbour)].should_step_next = true;
+        if (valid(neighbour)) { wake_chunk(d_chunks[get_chunk_index(neighbour)]); }
     }
 }
 
 auto world::wake_all_chunks() -> void
 {
     for (auto& chunk : d_chunks) {
-        chunk.should_step_next = true;
-        chunk.should_step = true;
+        wake_chunk(chunk);
     }
 }
 

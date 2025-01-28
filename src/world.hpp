@@ -33,8 +33,9 @@ public:
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
-    pixels d_pixels;
-    chunks d_chunks;
+    b2World d_physics;
+    pixels  d_pixels;
+    chunks  d_chunks;
 
 public:
     world();
