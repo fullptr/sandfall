@@ -316,27 +316,27 @@ shape_renderer::~shape_renderer()
 void shape_renderer::begin_frame(const camera& c)
 {
     glBindVertexArray(d_vao);
+    d_lines.clear();
+    d_circles.clear();
+    d_quads.clear();
 
     d_line_shader.bind();
     d_line_shader.load_float("u_camera_width", c.screen_width);
     d_line_shader.load_float("u_camera_height", c.screen_height);
     d_line_shader.load_vec2("u_camera_top_left", c.top_left);
     d_line_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
-    d_lines.clear();
 
     d_circle_shader.bind();
     d_circle_shader.load_float("u_camera_width", c.screen_width);
     d_circle_shader.load_float("u_camera_height", c.screen_height);
     d_circle_shader.load_vec2("u_camera_top_left", c.top_left);
     d_circle_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
-    d_circles.clear();
 
     const auto dimensions = glm::vec2{c.screen_width, c.screen_height} / c.world_to_screen;
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
 
     d_quad_shader.bind();
     d_quad_shader.load_mat4("u_proj_matrix", glm::translate(projection, glm::vec3{-c.top_left, 0.0f}));
-    d_quads.clear();
 }
 
 void shape_renderer::end_frame()
@@ -349,21 +349,15 @@ void shape_renderer::end_frame()
 
     d_quad_shader.bind();
     d_instances.bind<quad_instance>(d_quads);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size());
 
     d_line_shader.bind();
     d_instances.bind<line_instance>(d_lines);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_lines.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_lines.size());
 
     d_circle_shader.bind();
     d_instances.bind<circle_instance>(d_circles);
-    glDrawElementsInstanced(
-        GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_circles.size()
-    );
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_circles.size());
 
     glDisable(GL_BLEND);
 }
@@ -388,15 +382,13 @@ void shape_renderer::draw_line(
     d_lines.emplace_back(begin, end, begin_colour, end_colour, thickness);
 }
 
-void shape_renderer::draw_circle_shape(
-    const glm::vec2& centre,
-    const float      inner_radius,
-    const float      outer_radius,
-    const glm::vec4& begin_colour,
-    const glm::vec4& end_colour,
-    const float      angle)
+void shape_renderer::draw_line(
+    const glm::vec2& begin,
+    const glm::vec2& end,
+    const glm::vec4& colour,
+    const float thickness)
 {
-    d_circles.emplace_back(centre, inner_radius, outer_radius, begin_colour, end_colour, angle);
+    d_lines.emplace_back(begin, end, colour, colour, thickness);
 }
 
 void shape_renderer::draw_circle(

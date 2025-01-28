@@ -82,13 +82,11 @@ public:
         const float      thickness
     );
 
-    void draw_circle_shape(
-        const glm::vec2& centre,
-        const float      inner_radius,
-        const float      outer_radius,
-        const glm::vec4& begin_colour,
-        const glm::vec4& end_colour,
-        const float      angle
+    void draw_line(
+        const glm::vec2& begin,
+        const glm::vec2& end,
+        const glm::vec4& colour,
+        const float      thickness
     );
 
     void draw_circle(

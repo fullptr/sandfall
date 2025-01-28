@@ -10,6 +10,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
+#include <box2d/box2d.h>
 
 namespace sand {
 
@@ -17,8 +18,9 @@ static constexpr int num_chunks = sand::config::num_pixels / sand::config::chunk
 
 struct chunk
 {
-    bool should_step      = true;
-    bool should_step_next = true;
+    bool    should_step      = true;
+    bool    should_step_next = true;
+    b2Body* triangles        = nullptr;
 };
 
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
@@ -45,6 +47,7 @@ public:
 
     auto at(glm::ivec2 pos) const -> const pixel&;
     auto at(glm::ivec2 pos) -> pixel&;
+    auto type(glm::ivec2 pos) const -> pixel_type;
 
     auto new_frame() -> void;
 
@@ -58,6 +61,8 @@ public:
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto get_chunks() const -> const chunks& { return d_chunks; }
+
+    inline auto length() const { return sand::config::num_pixels; }
 
     auto serialise(auto& archive) -> void
     {

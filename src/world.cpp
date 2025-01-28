@@ -63,6 +63,11 @@ auto world::at(glm::ivec2 pos) -> pixel&
     return d_pixels[get_pos(pos)];
 }
 
+auto world::type(glm::ivec2 pos) const -> pixel_type
+{
+    return at(pos).type;
+}
+
 auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 {
     wake_chunk_with_pixel(lhs);

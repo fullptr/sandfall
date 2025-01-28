@@ -18,7 +18,6 @@ add_executable(sandfall
     explosion.cpp
     update.cpp
     utility.cpp
-    editor.cpp
     mouse.cpp
 
     graphics/buffer.cpp

@@ -9,34 +9,28 @@
 namespace sand {
 
 class player_controller {
-    int      d_width;
-    int      d_height;
+    int      d_radius;
     b2World* d_world;
     b2Body*  d_body        = nullptr;
     bool     d_double_jump = false;
 
 public:
     // width and height are in pixel space
-    player_controller(b2World& world, int width, int height)
-        : d_width{width}
-        , d_height{width}
+    player_controller(b2World& world, int radius)
+        : d_radius{radius}
         , d_world{&world}
     {
         // Create player body
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
         const auto position = pixel_to_physics({200.0f, 100.0f});
-        const auto dimensions = pixel_to_physics({width, width});
         bodyDef.position.Set(position.x, position.y);
         d_body = world.CreateBody(&bodyDef);
         d_body->SetFixedRotation(true);
         d_body->SetLinearDamping(0.9f);
 
-        b2PolygonShape dynamicBox;
-        dynamicBox.SetAsBox(dimensions.x / 2, dimensions.y / 2);
-
         b2CircleShape circle;
-        circle.m_radius = dimensions.x / 2.0;
+        circle.m_radius = pixel_to_physics(d_radius);
 
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circle;
@@ -44,8 +38,8 @@ public:
         d_body->CreateFixture(&fixtureDef);
     }
 
-    void update(const sand::keyboard& k) {
-
+    void update(const sand::keyboard& k)
+    {
         bool on_ground = false;
         bool can_move_left = true;
         bool can_move_right = true;
@@ -88,41 +82,12 @@ public:
         }
     }
 
-    auto get_body() const -> const b2Body* {
-        return d_body;
+    auto centre() const {
+        return physics_to_pixel(d_body->GetPosition());
     }
 
-    auto get_contacts() const -> const b2ContactEdge* {
-        return d_body->GetContactList();
-    }
-
-    auto pos_physics() const -> const b2Vec2& {
-        return d_body->GetPosition();
-    }
-
-    auto pos_pixel() const {
-        return physics_to_pixel(pos_physics());
-    }
-
-    auto width_physics() const -> int {
-        return pixel_to_physics((float)d_width);
-    }
-
-    auto width_pixel() const -> int {
-        return d_width;
-    }
-
-    auto height_physics() const -> int {
-        return pixel_to_physics((float)d_height);
-    }
-
-    auto rect_pixels() const -> glm::vec4 {
-        auto pos = physics_to_pixel(d_body->GetPosition());
-        return glm::vec4{pos.x, pos.y, d_width, d_height};
-    }
-
-    auto angle() const -> float {
-        return d_body->GetAngle();
+    auto radius() const -> int {
+        return d_radius;
     }
 };
 

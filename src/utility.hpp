@@ -1,19 +1,18 @@
 #pragma once
 #include <chrono>
+#include <concepts>
 #include <cstddef>
 #include <string>
 #include <span>
 #include <format>
 #include <filesystem>
+
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
 #include "config.hpp"
 
 namespace sand {
-
-using i32 = std::int32_t;
-using u32 = std::uint32_t;
 
 static constexpr auto step = 1.0 / 60.0;
 
@@ -96,5 +95,44 @@ auto pixel_to_physics(float px) -> float;
 // Converts a point in world space to pixel space
 auto physics_to_pixel(b2Vec2 px) -> glm::vec2;
 auto physics_to_pixel(float px) -> float;
+
+inline auto to_string(glm::ivec2 v) -> std::string
+{
+    return std::format("glm::ivec2{{{}, {}}}", v.x, v.y);
+}
+
+inline auto to_string(glm::vec2 v) -> std::string
+{
+    return std::format("glm::vec2{{{}, {}}}", v.x, v.y);
+}
+
+
+template <typename T>
+concept has_to_string_member = requires(T obj)
+{
+    { obj.to_string() } -> std::convertible_to<std::string>;
+};
+
+template <has_to_string_member T>
+struct std::formatter<T> : std::formatter<std::string>
+{
+    auto format(const T& obj, auto& ctx) const {
+        return std::formatter<std::string>::format(obj.to_string(), ctx);
+    }
+};
+
+template <typename T>
+concept has_to_string_free_function = requires(T obj)
+{
+    { sand::to_string(obj) } -> std::convertible_to<std::string>;
+};
+
+template <has_to_string_free_function T>
+struct std::formatter<T> : std::formatter<std::string>
+{
+    auto format(const T& obj, auto& ctx) const {
+        return std::formatter<std::string>::format(sand::to_string(obj), ctx);
+    }
+};
 
 }
