@@ -26,60 +26,6 @@
 #include <cmath>
 #include <span>
 
-// Converts a point in pixel space to world space
-
-
-class static_physics_box
-{
-    int       d_width;
-    int       d_height;
-    glm::vec4 d_colour;
-    b2Body*   d_body = nullptr;
-
-public:
-    static_physics_box(b2World& world, glm::vec2 pos, int width, int height, glm::vec4 colour, float angle = 0.0f)
-        : d_width{width}
-        , d_height{height}
-        , d_colour{colour}
-    {
-        b2BodyDef bodyDef;
-        bodyDef.type = b2_staticBody;
-        const auto position = sand::pixel_to_physics(pos);
-        bodyDef.position.Set(position.x, position.y);
-        bodyDef.angle = angle;
-        d_body = world.CreateBody(&bodyDef);
-
-        b2PolygonShape box;
-        const auto dimensions = sand::pixel_to_physics({width, height});
-        box.SetAsBox(dimensions.x / 2, dimensions.y / 2);
-
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &box;
-        fixtureDef.friction = 1.0;
-        d_body->CreateFixture(&fixtureDef);
-    }
-
-    auto centre() const -> glm::vec2 {
-        return sand::physics_to_pixel(d_body->GetPosition());;
-    }
-
-    auto width() const {
-        return d_width;
-    }
-
-    auto height() const {
-        return d_height;
-    }
-
-    auto angle() const -> float {
-        return d_body->GetAngle();
-    }
-
-    auto colour() const -> glm::vec4 {
-        return d_colour;
-    }
-};
-
 static constexpr auto up = glm::ivec2{0, -1};
 static constexpr auto right = glm::ivec2{1, 0};
 static constexpr auto down = glm::ivec2{0, 1};
@@ -376,7 +322,7 @@ auto main() -> int
     auto mouse = sand::mouse{};
     auto keyboard = sand::keyboard{};
 
-    auto gravity = b2Vec2{0.0f, 10.0f};
+    auto gravity = b2Vec2{sand::config::gravity.x, sand::config::gravity.y};
     auto physics = b2World{gravity};
 
     auto camera = sand::camera{

@@ -10,6 +10,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
+#include <box2d/box2d.h>
 
 namespace sand {
 
@@ -17,8 +18,9 @@ static constexpr int num_chunks = sand::config::num_pixels / sand::config::chunk
 
 struct chunk
 {
-    bool should_step      = true;
-    bool should_step_next = true;
+    bool    should_step      = true;
+    bool    should_step_next = true;
+    b2Body* triangles        = nullptr;
 };
 
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
