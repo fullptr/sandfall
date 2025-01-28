@@ -226,16 +226,16 @@ inline auto is_convex(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool {
     return cross(b - a, c - a) > 0;  // Positive cross product means counter-clockwise turn (convex)
 }
 
-// Check if a point p is inside the triangle formed by points a, b, c
+// Check if a point p is inside the triangle
 auto point_in_triangle(glm::ivec2 p, const triangle& t) -> bool
 {
-    int areaABC = (t.b.x - t.a.x) * (t.c.y - t.a.y) - (t.b.y - t.a.y) * (t.c.x - t.a.x);
-    int areaPAB = (t.a.x -   p.x) * (t.b.y -   p.y) - (t.a.y -   p.y) * (t.b.x -   p.x);
-    int areaPBC = (t.b.x -   p.x) * (t.c.y -   p.y) - (t.b.y -   p.y) * (t.c.x -   p.x);
-    int areaPCA = (t.c.x -   p.x) * (t.a.y -   p.y) - (t.c.y -   p.y) * (t.a.x -   p.x);
+    const auto area_abc = (t.b.x - t.a.x) * (t.c.y - t.a.y) - (t.b.y - t.a.y) * (t.c.x - t.a.x);
+    const auto area_pab = (t.a.x -   p.x) * (t.b.y -   p.y) - (t.a.y -   p.y) * (t.b.x -   p.x);
+    const auto area_pbc = (t.b.x -   p.x) * (t.c.y -   p.y) - (t.b.y -   p.y) * (t.c.x -   p.x);
+    const auto area_pca = (t.c.x -   p.x) * (t.a.y -   p.y) - (t.c.y -   p.y) * (t.a.x -   p.x);
 
-    return (areaABC >= 0 && areaPAB >= 0 && areaPBC >= 0 && areaPCA >= 0) ||
-           (areaABC <= 0 && areaPAB <= 0 && areaPBC <= 0 && areaPCA <= 0);
+    return (area_abc >= 0 && area_pab >= 0 && area_pbc >= 0 && area_pca >= 0) ||
+           (area_abc <= 0 && area_pab <= 0 && area_pbc <= 0 && area_pca <= 0);
 }
 
 // Check if a triangle is valid (no points inside it and not degenerate)
@@ -255,30 +255,26 @@ auto is_valid_triangle(const triangle& t, std::span<const glm::ivec2> points) ->
     return true;
 }
 
-// Remove collinear points from the polygon
-void remove_collinear_points(std::vector<glm::ivec2>& points) {
-    size_t n = points.size();
-    std::vector<glm::ivec2> filteredPoints;
+auto remove_collinear_points(const std::vector<glm::ivec2>& points) -> std::vector<glm::ivec2>
+{
+    const auto n = points.size();
+    auto filtered_points = std::vector<glm::ivec2>{};
 
-    // Iterate through the points and remove collinear ones
-    for (size_t i = 0; i < n; ++i) {
-        size_t prev = (i == 0) ? n - 1 : i - 1;
-        size_t next = (i == n - 1) ? 0 : i + 1;
-
-        if (!are_collinear(points[prev], points[i], points[next])) {
-            filteredPoints.push_back(points[i]);
+    for (std::size_t curr = 0; curr != n; ++curr) {
+        const auto prev = (curr == 0) ? n - 1 : curr - 1;
+        const auto next = (curr == n - 1) ? 0 : curr + 1;
+        if (!are_collinear(points[prev], points[curr], points[next])) {
+            filtered_points.push_back(points[curr]);
         }
     }
 
-    points = filteredPoints;  // Replace original points with filtered ones
+    return filtered_points;
 }
 
 auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
 {
     auto triangles = std::vector<triangle>{};
-    auto points = vertices;  // Work on a copy of the vertices
-
-    remove_collinear_points(points);
+    auto points = remove_collinear_points(vertices);  // Work on a copy of the vertices
 
     while (points.size() > 3) {
         bool earFound = false;
@@ -301,7 +297,7 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
         }
 
         if (!earFound) {
-            std::print("Degenerate polygon detected. Triangulation failed\n");
+            std::print("degenerate polygon detected, could not triangulate\n");
             break;
         }
     }
