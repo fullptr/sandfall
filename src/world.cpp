@@ -139,6 +139,8 @@ auto world::new_frame() -> void
     for (auto& pixel : d_pixels) {
         pixel.flags[is_updated] = false;
     }
+
+    d_physics.Step(sand::config::time_step, 8, 3);
 }
 
 auto world::is_chunk_awake(glm::ivec2 pixel) const -> bool

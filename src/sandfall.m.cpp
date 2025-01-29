@@ -318,9 +318,6 @@ auto main() -> int
     auto mouse = sand::mouse{};
     auto keyboard = sand::keyboard{};
 
-    auto gravity = b2Vec2{sand::config::gravity.x, sand::config::gravity.y};
-    auto physics = b2World{gravity};
-
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = static_cast<float>(window.width()),
@@ -363,7 +360,7 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player          = sand::player_controller(physics, 5);
+    auto player          = sand::player_controller(world->physics(), 5);
     auto shape_renderer  = sand::shape_renderer{};
 
     auto file = std::ifstream{"save2.bin", std::ios::binary};
@@ -378,7 +375,7 @@ auto main() -> int
     auto show_vertices = false;
 
     auto triangles = triangulate(points);
-    auto triangle_body = triangles_to_rigid_bodies(physics, triangles);
+    auto triangle_body = triangles_to_rigid_bodies(world->physics(), triangles);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -397,14 +394,13 @@ auto main() -> int
 
             sand::update(*world);
             player.update(keyboard);
-            physics.Step(sand::config::time_step, 8, 3);
             count++;
             if (count % 5 == 0) {
                 if (world->at({122, 233}).type == sand::pixel_type::rock) {
                     points = calc_boundary(*world, {122, 233}, epsilon);
                     triangles = triangulate(points);
-                    physics.DestroyBody(triangle_body);
-                    triangle_body = triangles_to_rigid_bodies(physics, triangles);
+                    world->physics().DestroyBody(triangle_body);
+                    triangle_body = triangles_to_rigid_bodies(world->physics(), triangles);
                 } else {
                     points = {};
                     triangles = {};

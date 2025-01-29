@@ -40,6 +40,9 @@ private:
 public:
     world();
 
+    // TODO: Remove
+    auto physics() -> b2World& { return d_physics; }
+
     // Returns true if the given position exists and false otherwise
     auto valid(glm::ivec2 pos) const -> bool;
 
