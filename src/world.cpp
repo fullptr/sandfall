@@ -24,6 +24,24 @@ auto wake_chunk(chunk& c) -> void
 
 }
 
+auto pixel_world::valid(glm::ivec2 pos) const -> bool
+{
+    return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
+}
+
+auto pixel_world::operator[](glm::ivec2 pos) -> pixel&
+{
+    assert(valid(pos));
+    return d_pixels[pos.x + d_width * pos.y];
+}
+
+auto pixel_world::operator[](glm::ivec2 pos) const -> const pixel&
+{
+    assert(valid(pos));
+    return d_pixels[pos.x + d_width * pos.y];
+}
+
+
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t
 {
     return num_chunks * chunk.y + chunk.x;

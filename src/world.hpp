@@ -26,6 +26,32 @@ struct chunk
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
 auto get_chunk_pos(std::size_t index) -> glm::ivec2;
 
+class pixel_world
+{
+    std::vector<pixel> d_pixels;
+    std::size_t        d_width;
+    std::size_t        d_height;
+
+public:
+    pixel_world(std::size_t width, std::size_t height)
+        : d_pixels{width * height, pixel::air()}
+        , d_width{width}
+        , d_height{height}
+    {}
+
+    auto valid(glm::ivec2 pos) const -> bool;
+    auto operator[](glm::ivec2 pos) -> pixel&;
+    auto operator[](glm::ivec2 pos) const -> const pixel&;
+
+    inline auto width() const -> std::size_t { return d_width; }
+    inline auto height() const -> std::size_t { return d_height; }
+};
+
+class physics_world
+{
+
+};
+
 class world
 {
 public:
