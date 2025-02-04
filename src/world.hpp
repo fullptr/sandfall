@@ -89,6 +89,7 @@ public:
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto get_chunks() const -> const std::vector<chunk>& { return d_chunks; }
+    auto get_chunk(glm::ivec2 pos) -> chunk& { return d_chunks[get_chunk_index(pos)]; }
 
     inline auto length() const { return sand::config::num_pixels; }
 

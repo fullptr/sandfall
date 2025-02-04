@@ -368,14 +368,14 @@ auto main() -> int
     archive(world);
     world.wake_all_chunks();
 
-    auto epsilon = 0.0f;
-    auto points = calc_boundary(world, {122, 233}, 1.5f);
     auto count = 0;
     auto show_triangles = false;
     auto show_vertices = false;
 
-    auto triangles = triangulate(points);
-    auto triangle_body = triangles_to_rigid_bodies(world.physics(), triangles);
+    auto epsilon = 1.5f;
+    auto points = std::vector<glm::ivec2>{};
+    auto triangles = std::vector<triangle>{};
+    b2Body* triangle_body = nullptr;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -396,14 +396,17 @@ auto main() -> int
             player.update(keyboard);
             count++;
             if (count % 5 == 0) {
+                if (triangle_body) {
+                    world.physics().DestroyBody(triangle_body);
+                } 
                 if (world.at({122, 233}).type == sand::pixel_type::rock) {
                     points = calc_boundary(world, {122, 233}, epsilon);
                     triangles = triangulate(points);
-                    world.physics().DestroyBody(triangle_body);
                     triangle_body = triangles_to_rigid_bodies(world.physics(), triangles);
                 } else {
                     points = {};
                     triangles = {};
+                    triangle_body = nullptr;
                 }
             }
         }
