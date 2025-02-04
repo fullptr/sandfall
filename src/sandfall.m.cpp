@@ -363,7 +363,7 @@ auto main() -> int
     auto player          = sand::player_controller(world->physics(), 5);
     auto shape_renderer  = sand::shape_renderer{};
 
-    auto file = std::ifstream{"save2.bin", std::ios::binary};
+    auto file = std::ifstream{"save0.bin", std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
     archive(*world);
     world->wake_all_chunks();

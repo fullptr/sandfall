@@ -4,6 +4,7 @@
 #define CEREAL_SERIALIZE_FUNCTION_NAME serialise
 #include <cereal/types/array.hpp>
 #include <cereal/types/bitset.hpp>
+#include <cereal/types/vector.hpp>
 
 namespace cereal {
 

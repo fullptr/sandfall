@@ -41,7 +41,6 @@ auto pixel_world::operator[](glm::ivec2 pos) const -> const pixel&
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t
 {
     return num_chunks * chunk.y + chunk.x;
@@ -54,8 +53,8 @@ auto get_chunk_pos(std::size_t index) -> glm::ivec2
 
 world::world()
     : d_physics{{sand::config::gravity.x, sand::config::gravity.y}}
+    , d_pixels{sand::config::num_pixels, sand::config::num_pixels}
 {
-    d_pixels.fill(pixel::air());
 }
 
 auto world::valid(glm::ivec2 pos) const -> bool
@@ -65,26 +64,24 @@ auto world::valid(glm::ivec2 pos) const -> bool
 
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
 {
-    assert(valid(pos));
+    assert(d_pixels.valid(pos));
     wake_chunk_with_pixel(pos);
-    d_pixels[get_pos(pos)] = pixel;
+    d_pixels[pos] = pixel;
 }
 
 auto world::fill(const pixel& p) -> void
 {
-    d_pixels.fill(p);
+    std::fill(d_pixels.begin(), d_pixels.end(), p);
 }
 
 auto world::at(glm::ivec2 pos) const -> const pixel&
 {
-    assert(valid(pos));
-    return d_pixels[get_pos(pos)];
+    return d_pixels[pos];
 }
 
 auto world::at(glm::ivec2 pos) -> pixel&
 {
-    assert(valid(pos));
-    return d_pixels[get_pos(pos)];
+    return d_pixels[pos];
 }
 
 auto world::type(glm::ivec2 pos) const -> pixel_type

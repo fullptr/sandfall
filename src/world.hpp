@@ -43,24 +43,26 @@ public:
     auto operator[](glm::ivec2 pos) -> pixel&;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
 
+    inline auto begin() { return d_pixels.begin(); }
+    inline auto end() { return d_pixels.end(); }
+
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
-};
 
-class physics_world
-{
-
+    auto serialise(auto& archive) -> void
+    {
+        archive(d_pixels, d_width, d_height);
+    }
 };
 
 class world
 {
 public:
-    using pixels = std::array<pixel, sand::config::num_pixels * sand::config::num_pixels>;
     using chunks = std::array<chunk, num_chunks * num_chunks>;
 
 private:
     b2World d_physics;
-    pixels  d_pixels;
+    pixel_world  d_pixels;
     chunks  d_chunks;
 
 public:
