@@ -55,6 +55,7 @@ world::world()
     : d_physics{{sand::config::gravity.x, sand::config::gravity.y}}
     , d_pixels{sand::config::num_pixels, sand::config::num_pixels}
 {
+    d_chunks.resize(num_chunks * num_chunks);
 }
 
 auto world::valid(glm::ivec2 pos) const -> bool

@@ -57,13 +57,9 @@ public:
 
 class world
 {
-public:
-    using chunks = std::array<chunk, num_chunks * num_chunks>;
-
-private:
-    b2World     d_physics;
-    pixel_world d_pixels;
-    chunks      d_chunks;
+    b2World            d_physics;
+    pixel_world        d_pixels;
+    std::vector<chunk> d_chunks;
 
 public:
     world();
@@ -92,7 +88,7 @@ public:
     auto num_awake_chunks() const -> std::size_t;
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
-    auto get_chunks() const -> const chunks& { return d_chunks; }
+    auto get_chunks() const -> const std::vector<chunk>& { return d_chunks; }
 
     inline auto length() const { return sand::config::num_pixels; }
 
