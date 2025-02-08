@@ -74,8 +74,6 @@ public:
     auto at(glm::ivec2 pos) -> pixel&;
     auto type(glm::ivec2 pos) const -> pixel_type;
 
-    auto new_frame() -> void;
-
     // Returns the rhs
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
 

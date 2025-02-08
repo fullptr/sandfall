@@ -309,6 +309,16 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
     return triangles;
 }
 
+auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
+{
+
+}
+
+auto render_chunk_triangles(const sand::world& w, glm::ivec2 chunk_pos, const b2Body* body) -> void
+{
+
+}
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -371,6 +381,8 @@ auto main() -> int
     auto count = 0;
     auto show_triangles = false;
     auto show_vertices = false;
+
+    auto chunk_pos = glm::ivec2{3, 3};
 
     auto epsilon = 1.5f;
     auto points = std::vector<glm::ivec2>{};
@@ -538,10 +550,18 @@ auto main() -> int
             shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, 1);
         }
         if (show_triangles) {
-            for (const auto triangle : triangles) {
-                shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, 1);
+            auto fixture = triangle_body->GetFixtureList();
+            for (; fixture; fixture = fixture->GetNext()) {
+                const b2Shape* shape = fixture->GetShape();
+                assert(shape->GetType() == e_polygon);
+                const auto* triangle = static_cast<const b2PolygonShape*>(shape);
+                assert(triangle->m_count == 3);
+                const auto p1 = sand::physics_to_pixel(triangle->m_vertices[0]);
+                const auto p2 = sand::physics_to_pixel(triangle->m_vertices[1]);
+                const auto p3 = sand::physics_to_pixel(triangle->m_vertices[2]);
+                shape_renderer.draw_line(p1, p2, {1,0,0,1}, 1);
+                shape_renderer.draw_line(p2, p3, {1,0,0,1}, 1);
+                shape_renderer.draw_line(p3, p1, {1,0,0,1}, 1);
             }
 
         }
