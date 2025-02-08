@@ -317,17 +317,17 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
 auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> void
 {
     for (auto fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
-        const b2Shape* shape = fixture->GetShape();
-
-        assert(shape->GetType() == e_polygon);
-        const auto* triangle = static_cast<const b2PolygonShape*>(shape);
-        assert(triangle->m_count == 3);
-        const auto p1 = sand::physics_to_pixel(triangle->m_vertices[0]);
-        const auto p2 = sand::physics_to_pixel(triangle->m_vertices[1]);
-        const auto p3 = sand::physics_to_pixel(triangle->m_vertices[2]);
-        rend.draw_line(p1, p2, {1,0,0,1}, 1);
-        rend.draw_line(p2, p3, {1,0,0,1}, 1);
-        rend.draw_line(p3, p1, {1,0,0,1}, 1);
+        if (fixture->GetShape()->GetType() == b2Shape::Type::e_polygon) {
+            const auto* shape = static_cast<const b2PolygonShape*>(fixture->GetShape());
+            if (shape->m_count == 3) {
+                const auto p1 = sand::physics_to_pixel(shape->m_vertices[0]);
+                const auto p2 = sand::physics_to_pixel(shape->m_vertices[1]);
+                const auto p3 = sand::physics_to_pixel(shape->m_vertices[2]);
+                rend.draw_line(p1, p2, {1,0,0,1}, 1);
+                rend.draw_line(p2, p3, {1,0,0,1}, 1);
+                rend.draw_line(p3, p1, {1,0,0,1}, 1);
+            }
+        }
     }
 }
 
