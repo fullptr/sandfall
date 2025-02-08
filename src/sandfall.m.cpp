@@ -360,7 +360,7 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player          = sand::player_controller(world.physics(), 5);
+    auto player          = sand::player_controller(world.physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
 
     auto file = std::ifstream{"save0.bin", std::ios::binary};
@@ -397,12 +397,12 @@ auto main() -> int
             count++;
             if (count % 5 == 0) {
                 if (triangle_body) {
-                    world.physics().DestroyBody(triangle_body);
+                    world.physics.DestroyBody(triangle_body);
                 } 
                 if (world.at({122, 233}).type == sand::pixel_type::rock) {
                     points = calc_boundary(world, {122, 233}, epsilon);
                     triangles = triangulate(points);
-                    triangle_body = triangles_to_rigid_bodies(world.physics(), triangles);
+                    triangle_body = triangles_to_rigid_bodies(world.physics, triangles);
                 } else {
                     points = {};
                     triangles = {};

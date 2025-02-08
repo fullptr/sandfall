@@ -362,21 +362,29 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 
 }
 
-auto update(world& pixels) -> void
+auto update(world& w) -> void
 {
-    pixels.new_frame();
+    for (auto& chunk : w.chunks) {
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
+    }
+
+    for (auto& pixel : w.pixels) {
+        pixel.flags[is_updated] = false;
+    }
+
+    w.physics.Step(sand::config::time_step, 8, 3);
 
     for (int y = sand::config::num_pixels; y != 0; --y) {
         if (coin_flip()) {
             for (int x = 0; x != sand::config::num_pixels; ++x) {
                 const auto pos = glm::ivec2{x, y - 1};
-                if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
+                if (w.is_chunk_awake(pos)) update_pixel(w, pos);
             }
         }
         else {
             for (int x = sand::config::num_pixels; x != 0; --x) {
                 const auto pos = glm::ivec2{x - 1, y - 1};
-                if (pixels.is_chunk_awake(pos)) update_pixel(pixels, pos);
+                if (w.is_chunk_awake(pos)) update_pixel(w, pos);
             }
         }
     }

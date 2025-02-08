@@ -55,17 +55,14 @@ public:
     }
 };
 
-class world
+struct world
 {
-    b2World            d_physics;
-    pixel_world        d_pixels;
-    std::vector<chunk> d_chunks;
+    b2World            physics;
+    pixel_world        pixels;
+    std::vector<chunk> chunks;
 
 public:
     world();
-
-    // TODO: Remove
-    auto physics() -> b2World& { return d_physics; }
 
     // Returns true if the given position exists and false otherwise
     auto valid(glm::ivec2 pos) const -> bool;
@@ -88,14 +85,13 @@ public:
     auto num_awake_chunks() const -> std::size_t;
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
-    auto get_chunks() const -> const std::vector<chunk>& { return d_chunks; }
-    auto get_chunk(glm::ivec2 pos) -> chunk& { return d_chunks[get_chunk_index(pos)]; }
+    auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 
     inline auto length() const { return sand::config::num_pixels; }
 
     auto serialise(auto& archive) -> void
     {
-        archive(d_pixels);
+        archive(pixels);
     }
 };
 

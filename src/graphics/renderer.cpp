@@ -124,7 +124,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
 
-    const auto& chunks = world.get_chunks();
+    const auto& chunks = world.chunks;
     for (std::size_t index = 0; index != chunks.size(); ++index) {
         if (!chunks[index].should_step && !show_chunks) continue;
 
