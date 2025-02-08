@@ -87,8 +87,6 @@ public:
 
     auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 
-    inline auto length() const { return sand::config::num_pixels; }
-
     auto serialise(auto& archive) -> void
     {
         archive(pixels);
