@@ -192,13 +192,16 @@ struct triangle
     glm::ivec2 c;
 };
 
-auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body*
+auto new_body(b2World& world) -> b2Body*
 {
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
     bodyDef.position.Set(0.0f, 0.0f);
-    b2Body* body = world.CreateBody(&bodyDef);
+    return world.CreateBody(&bodyDef);
+}
 
+auto add_triangles_to_body(b2Body& body, const std::vector<triangle>& triangles) -> void
+{
     b2PolygonShape polygonShape;
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &polygonShape;
@@ -211,9 +214,14 @@ auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& tria
         };
 
         polygonShape.Set(std::data(vertices), std::size(vertices)); 
-        body->CreateFixture(&fixtureDef);
+        body.CreateFixture(&fixtureDef);
     }
+}
 
+auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body*
+{
+    b2Body* body = new_body(world);
+    add_triangles_to_body(*body, triangles);
     return body;
 }
 
@@ -309,9 +317,77 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
     return triangles;
 }
 
+auto flood_remove(std::bitset<sand::config::chunk_size * sand::config::chunk_size>& pixels, glm::ivec2 pos) -> void
+{
+    const auto is_valid = [](const glm::ivec2 p) {
+        return 0 <= p.x && p.x < sand::config::chunk_size && 0 <= p.y && p.y < sand::config::chunk_size;
+    };
+
+    const auto to_index = [](const glm::ivec2 p) {
+        return p.y * sand::config::chunk_size + p.x;
+    };
+
+    std::vector<glm::ivec2> to_visit;
+    to_visit.push_back(pos);
+    while (!to_visit.empty()) {
+        const auto curr = to_visit.back();
+        to_visit.pop_back();
+        pixels.reset(to_index(curr));
+        for (const auto offset : offsets) {
+            const auto neigh = curr + offset;
+            if (is_valid(neigh) && pixels.test(to_index(neigh))) {
+                to_visit.push_back(neigh);
+            }
+        }
+    }
+}
+
+auto get_starting_pixel(const std::bitset<sand::config::chunk_size * sand::config::chunk_size>& pixels) -> glm::ivec2
+{
+    assert(pixels.any());
+    for (int x = 0; x != sand::config::chunk_size; ++x) {
+        for (int y = 0; y != sand::config::chunk_size; ++y) {
+            const auto index = y * sand::config::chunk_size + x;
+            if (pixels.test(index)) {
+                return {x, y};
+            }
+        }
+    }
+}
+
 auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
 {
+    auto& chunk = w.chunks[sand::get_chunk_index(chunk_pos)];
+ 
+    if (chunk.triangles) {
+        w.physics.DestroyBody(chunk.triangles);
+    }
 
+    chunk.triangles = new_body(w.physics);
+
+    const auto top_left = sand::config::chunk_size * chunk_pos;
+    auto nodes = std::bitset<sand::config::chunk_size * sand::config::chunk_size>{};
+
+    // Fill up the bitset
+    for (int x = 0; x != sand::config::chunk_size; ++x) {
+        for (int y = 0; y != sand::config::chunk_size; ++y) {
+            const auto index = y * sand::config::chunk_size + x;
+            if (is_static_pixel(w, {x, y})) {
+                nodes.set(index);
+            }
+        }
+    }
+
+    // While bitset still has elements, take one, apply algorithm to create
+    // triangles, then flood remove the pixels
+    while (nodes.any()) {
+        const auto pos = get_starting_pixel(nodes) + top_left;
+        const auto boundary = calc_boundary(w, pos, 1.5f);
+        const auto triangles = triangulate(boundary);
+        add_triangles_to_body(*chunk.triangles, triangles);
+        const auto body = triangles_to_rigid_bodies(w.physics, triangles);
+        flood_remove(nodes, pos - top_left);
+    }
 }
 
 auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> void
