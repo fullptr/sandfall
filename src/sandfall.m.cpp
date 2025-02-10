@@ -353,6 +353,7 @@ auto get_starting_pixel(const std::bitset<sand::config::chunk_size * sand::confi
             }
         }
     }
+    std::unreachable();
 }
 
 auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
@@ -364,20 +365,20 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
     }
 
     chunk.triangles = new_body(w.physics);
-
+    
     const auto top_left = sand::config::chunk_size * chunk_pos;
     auto nodes = std::bitset<sand::config::chunk_size * sand::config::chunk_size>{};
-
+    
     // Fill up the bitset
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(w, {x, y})) {
+            if (is_static_pixel(w, top_left + glm::ivec2{x, y})) {
                 nodes.set(index);
             }
         }
     }
-
+    
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
     while (nodes.any()) {
@@ -470,12 +471,9 @@ auto main() -> int
     auto show_triangles = false;
     auto show_vertices = false;
 
-    auto chunk_pos = glm::ivec2{3, 3};
-
-    auto epsilon = 1.5f;
-    auto points = std::vector<glm::ivec2>{};
-    auto triangles = std::vector<triangle>{};
-    b2Body* triangle_body = nullptr;
+    const auto chunk_pos = glm::ivec2{3, 3};
+    create_chunk_triangles(world, chunk_pos);
+    b2Body* triangle_body = world.chunks[sand::get_chunk_index(chunk_pos)].triangles;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -496,18 +494,8 @@ auto main() -> int
             player.update(keyboard);
             count++;
             if (count % 5 == 0) {
-                if (triangle_body) {
-                    world.physics.DestroyBody(triangle_body);
-                } 
-                if (world.at({122, 233}).type == sand::pixel_type::rock) {
-                    points = calc_boundary(world, {122, 233}, epsilon);
-                    triangles = triangulate(points);
-                    triangle_body = triangles_to_rigid_bodies(world.physics, triangles);
-                } else {
-                    points = {};
-                    triangles = {};
-                    triangle_body = nullptr;
-                }
+                create_chunk_triangles(world, chunk_pos);
+                triangle_body = world.chunks[sand::get_chunk_index(chunk_pos)].triangles;
             }
         }
 
@@ -563,8 +551,6 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
-            ImGui::Text("Vertices: %u", points.size());
             ImGui::Checkbox("Show Triangles", &show_triangles);
             ImGui::Checkbox("Show Vertices", &show_vertices);
             ImGui::Separator();
@@ -626,17 +612,17 @@ auto main() -> int
 
         shape_renderer.draw_circle(player.centre(), {1.0, 1.0, 0.0, 1.0}, player.radius());
 
-        if (show_vertices && points.size() >= 2) {
-            const auto red = glm::vec4{1,0,0,1};
-            const auto blue =  glm::vec4{0, 0,1,1};
-            for (size_t i = 0; i != points.size() - 1; i++) {
-                const auto t = (float)i / points.size();
-                const auto colour = sand::lerp(red, blue, t);
-                shape_renderer.draw_line({points[i]}, {points[i+1]}, colour, colour, 1);
-                shape_renderer.draw_circle({points[i]}, colour, 0.25);   
-            }
-            shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, 1);
-        }
+        //if (show_vertices && points.size() >= 2) {
+        //    const auto red = glm::vec4{1,0,0,1};
+        //    const auto blue =  glm::vec4{0, 0,1,1};
+        //    for (size_t i = 0; i != points.size() - 1; i++) {
+        //        const auto t = (float)i / points.size();
+        //        const auto colour = sand::lerp(red, blue, t);
+        //        shape_renderer.draw_line({points[i]}, {points[i+1]}, colour, colour, 1);
+        //        shape_renderer.draw_circle({points[i]}, colour, 0.25);   
+        //    }
+        //    shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, 1);
+        //}
         if (show_triangles) {
             render_body_triangles(shape_renderer, triangle_body);
         }
