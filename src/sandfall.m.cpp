@@ -32,7 +32,11 @@ static constexpr auto down = glm::ivec2{0, 1};
 static constexpr auto left = glm::ivec2{-1, 0};
 static constexpr auto offsets = {up, right, down, left};
 
-auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
+using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config::chunk_size>;
+
+auto is_static_pixel_temp(
+    const sand::world& w,
+    glm::ivec2 pos) -> bool
 {
     if (!w.valid(pos)) return false;
     const auto& pixel = w.at(pos);
@@ -42,41 +46,73 @@ auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
         && !pixel.flags.test(sand::pixel_flags::is_falling);
 }
 
-auto is_static_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 offset) -> bool
+auto is_static_pixel(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 pos) -> bool
+{
+    if (!w.valid(pos)) return false;
+    const auto& pixel = w.at(pos);
+    const auto& props = sand::properties(pixel);
+    return pixel.type != sand::pixel_type::none
+        && props.phase == sand::pixel_phase::solid
+        && !pixel.flags.test(sand::pixel_flags::is_falling);
+}
+
+auto is_static_boundary(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 A, glm::ivec2 offset) -> bool
 {
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
-    const auto static_a = is_static_pixel(w, A);
-    const auto static_b = is_static_pixel(w, A + offset);
+    const auto static_a = is_static_pixel(top_left, static_pixels, w, A);
+    const auto static_b = is_static_pixel(top_left, static_pixels, w, A + offset);
     return (!static_a && static_b) || (!static_b && static_a);
 }
 
-auto is_along_boundary(const sand::world& w, glm::ivec2 curr, glm::ivec2 next) -> bool
+auto is_along_boundary(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 curr, glm::ivec2 next) -> bool
 {
     const auto offset = next - curr;
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
-    if (offset == up)    return is_static_boundary(w, next, left);
-    if (offset == down)  return is_static_boundary(w, curr, left);
-    if (offset == left)  return is_static_boundary(w, next, up);
-    if (offset == right) return is_static_boundary(w, curr, up);
+    if (offset == up)    return is_static_boundary(top_left, static_pixels, w, next, left);
+    if (offset == down)  return is_static_boundary(top_left, static_pixels, w, curr, left);
+    if (offset == left)  return is_static_boundary(top_left, static_pixels, w, next, up);
+    if (offset == right) return is_static_boundary(top_left, static_pixels, w, curr, up);
     std::unreachable();
 }
 
-auto is_boundary_cross(const sand::world& w, glm::ivec2 curr) -> bool
+auto is_boundary_cross(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 curr) -> bool
 {
-    const auto tl = is_static_pixel(w, curr + left + up);
-    const auto tr = is_static_pixel(w, curr + up);
-    const auto bl = is_static_pixel(w, curr + left);
-    const auto br = is_static_pixel(w, curr);
+    const auto tl = is_static_pixel(top_left, static_pixels, w, curr + left + up);
+    const auto tr = is_static_pixel(top_left, static_pixels, w, curr + up);
+    const auto bl = is_static_pixel(top_left, static_pixels, w, curr + left);
+    const auto br = is_static_pixel(top_left, static_pixels, w, curr);
     return (tl == br) && (bl == tr) && (tl != tr);
 }
 
-auto is_valid_step(const sand::world& w, glm::ivec2 prev, glm::ivec2 curr, glm::ivec2 next) -> bool
+auto is_valid_step(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 prev,
+    glm::ivec2 curr,
+    glm::ivec2 next) -> bool
 {
-    if (!is_along_boundary(w, curr, next)) return false;
+    if (!is_along_boundary(top_left, static_pixels, w, curr, next)) return false;
     if (prev.x == 0 && prev.y == 0) return true;
     if (prev == next) return false;
 
-    if (!is_boundary_cross(w, curr)) return true;
+    if (!is_boundary_cross(top_left, static_pixels, w, curr)) return true;
 
     // in a straight line going over the cross
     if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
@@ -88,21 +124,25 @@ auto is_valid_step(const sand::world& w, glm::ivec2 prev, glm::ivec2 curr, glm::
         std::min({prev.x, curr.x, next.x}),
         std::min({prev.y, curr.y, next.y})
     };
-    return is_static_pixel(w, pixel);
+    return is_static_pixel(top_left, static_pixels, w, pixel);
 }
 
-auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::ivec2>
+auto get_boundary(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 start) -> std::vector<glm::ivec2>
 {
     auto ret = std::vector<glm::ivec2>{};
     auto current = start;
-    while (is_static_pixel(w, current + up)) { current += up; }
+    while (is_static_pixel(top_left, static_pixels, w, current + up)) { current += up; }
     ret.push_back(current);
     
     // Find second point
     bool found_second = false;
     for (const auto offset : offsets) {
         const auto neigh = current + offset;
-        if (is_valid_step(w, {0, 0}, current, neigh)) {
+        if (is_valid_step(top_left, static_pixels, w, {0, 0}, current, neigh)) {
             current = neigh;
             ret.push_back(current);
             found_second = true;
@@ -118,7 +158,7 @@ auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::iv
         bool found = false;
         for (const auto offset : offsets) {
             const auto neigh = current + offset;
-            if (is_valid_step(w, ret.rbegin()[1], current, neigh)) {
+            if (is_valid_step(top_left, static_pixels, w, ret.rbegin()[1], current, neigh)) {
                 current = neigh;
                 found = true;
                 ret.push_back(current);
@@ -174,9 +214,14 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
     }
 }
 
-auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
+auto calc_boundary(
+    glm::ivec2 top_left,
+    const chunk_static_pixels& static_pixels,
+    const sand::world& w,
+    glm::ivec2 start,
+    float epsilon) -> std::vector<glm::ivec2>
 {
-    const auto points = get_boundary(w, start);
+    const auto points = get_boundary(top_left, static_pixels, w, start);
     if (epsilon == 0.0f) {
         return points;
     }
@@ -317,7 +362,7 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
     return triangles;
 }
 
-auto flood_remove(std::bitset<sand::config::chunk_size * sand::config::chunk_size>& pixels, glm::ivec2 pos) -> void
+auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 pos) -> void
 {
     const auto is_valid = [](const glm::ivec2 p) {
         return 0 <= p.x && p.x < sand::config::chunk_size && 0 <= p.y && p.y < sand::config::chunk_size;
@@ -342,7 +387,7 @@ auto flood_remove(std::bitset<sand::config::chunk_size * sand::config::chunk_siz
     }
 }
 
-auto get_starting_pixel(const std::bitset<sand::config::chunk_size * sand::config::chunk_size>& pixels) -> glm::ivec2
+auto get_starting_pixel(const chunk_static_pixels& pixels) -> glm::ivec2
 {
     assert(pixels.any());
     for (int x = 0; x != sand::config::chunk_size; ++x) {
@@ -367,13 +412,13 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
     chunk.triangles = new_body(w.physics);
     
     const auto top_left = sand::config::chunk_size * chunk_pos;
-    auto nodes = std::bitset<sand::config::chunk_size * sand::config::chunk_size>{};
+    auto nodes = chunk_static_pixels{};
     
     // Fill up the bitset
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(w, top_left + glm::ivec2{x, y})) {
+            if (is_static_pixel_temp(w, top_left + glm::ivec2{x, y})) {
                 nodes.set(index);
             }
         }
@@ -383,7 +428,7 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
     // triangles, then flood remove the pixels
     while (nodes.any()) {
         const auto pos = get_starting_pixel(nodes) + top_left;
-        const auto boundary = calc_boundary(w, pos, 1.5f);
+        const auto boundary = calc_boundary(top_left, nodes, w, pos, 1.5f);
         const auto triangles = triangulate(boundary);
         add_triangles_to_body(*chunk.triangles, triangles);
         const auto body = triangles_to_rigid_bodies(w.physics, triangles);
