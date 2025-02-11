@@ -105,7 +105,6 @@ auto main() -> int
     world.wake_all_chunks();
 
     auto show_triangles = false;
-    auto show_vertices = false;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -178,7 +177,6 @@ auto main() -> int
 
             ImGui::Separator();
             ImGui::Checkbox("Show Triangles", &show_triangles);
-            ImGui::Checkbox("Show Vertices", &show_vertices);
             ImGui::Separator();
 
             ImGui::Text("Info");

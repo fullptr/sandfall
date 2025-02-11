@@ -374,26 +374,26 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
     chunk.triangles = new_body(w.physics);
     
     const auto top_left = sand::config::chunk_size * chunk_pos;
-    auto nodes = chunk_static_pixels{};
+    auto chunk_pixels = chunk_static_pixels{};
     
     // Fill up the bitset
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
             if (is_static_pixel(top_left, w, top_left + glm::ivec2{x, y})) {
-                nodes.set(index);
+                chunk_pixels.set(index);
             }
         }
     }
     
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
-    while (nodes.any()) {
-        const auto pos = get_starting_pixel(nodes) + top_left;
+    while (chunk_pixels.any()) {
+        const auto pos = get_starting_pixel(chunk_pixels) + top_left;
         const auto boundary = calc_boundary(top_left, w, pos, 1.5f);
         const auto triangles = triangulate(boundary);
         add_triangles_to_body(*chunk.triangles, triangles);
-        flood_remove(nodes, pos - top_left);
+        flood_remove(chunk_pixels, pos - top_left);
     }
 }
     
