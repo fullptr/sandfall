@@ -17,6 +17,7 @@ add_executable(sandfall
     pixel.cpp
     explosion.cpp
     update.cpp
+    update_rigid_bodies.cpp
     utility.cpp
     mouse.cpp
 

@@ -3,10 +3,12 @@
 #include "config.hpp"
 #include "explosion.hpp"
 #include "world.hpp"
+#include "update_rigid_bodies.hpp"
 
 #include <array>
 #include <utility>
 #include <variant>
+#include <print>
 #include <algorithm>
 #include <random>
 #include <ranges>
@@ -372,8 +374,7 @@ auto update(world& w) -> void
         pixel.flags[is_updated] = false;
     }
 
-    w.physics.Step(sand::config::time_step, 8, 3);
-
+    
     for (int y = sand::config::num_pixels; y != 0; --y) {
         if (coin_flip()) {
             for (int x = 0; x != sand::config::num_pixels; ++x) {
@@ -388,6 +389,18 @@ auto update(world& w) -> void
             }
         }
     }
+    
+    for (int x = 0; x != num_chunks; ++x) {
+        for (int y = 0; y != num_chunks; ++y) {
+            const auto pos = glm::ivec2{x, y};
+            auto& chunk = w.chunks[get_chunk_index(pos)];
+            if (chunk.should_step) {
+                create_chunk_triangles(w, pos);
+            }
+        }
+    }
+    
+    w.physics.Step(sand::config::time_step, 8, 3);
 }
 
 }

@@ -14,6 +14,12 @@
 
 namespace sand {
 
+static constexpr auto up = glm::ivec2{0, -1};
+static constexpr auto right = glm::ivec2{1, 0};
+static constexpr auto down = glm::ivec2{0, 1};
+static constexpr auto left = glm::ivec2{-1, 0};
+static constexpr auto offsets = {up, right, down, left};
+
 static constexpr auto step = 1.0 / 60.0;
 
 template <typename... Ts>
