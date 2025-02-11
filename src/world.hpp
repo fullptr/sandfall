@@ -26,15 +26,40 @@ struct chunk
 auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
 auto get_chunk_pos(std::size_t index) -> glm::ivec2;
 
-class world
+class pixel_world
 {
-public:
-    using pixels = std::array<pixel, sand::config::num_pixels * sand::config::num_pixels>;
-    using chunks = std::array<chunk, num_chunks * num_chunks>;
+    std::vector<pixel> d_pixels;
+    std::size_t        d_width;
+    std::size_t        d_height;
 
-private:
-    pixels d_pixels;
-    chunks d_chunks;
+public:
+    pixel_world(std::size_t width, std::size_t height)
+        : d_pixels{width * height, pixel::air()}
+        , d_width{width}
+        , d_height{height}
+    {}
+
+    auto valid(glm::ivec2 pos) const -> bool;
+    auto operator[](glm::ivec2 pos) -> pixel&;
+    auto operator[](glm::ivec2 pos) const -> const pixel&;
+
+    inline auto begin() { return d_pixels.begin(); }
+    inline auto end() { return d_pixels.end(); }
+
+    inline auto width() const -> std::size_t { return d_width; }
+    inline auto height() const -> std::size_t { return d_height; }
+
+    auto serialise(auto& archive) -> void
+    {
+        archive(d_pixels, d_width, d_height);
+    }
+};
+
+struct world
+{
+    b2World            physics;
+    pixel_world        pixels;
+    std::vector<chunk> chunks;
 
 public:
     world();
@@ -49,8 +74,6 @@ public:
     auto at(glm::ivec2 pos) -> pixel&;
     auto type(glm::ivec2 pos) const -> pixel_type;
 
-    auto new_frame() -> void;
-
     // Returns the rhs
     auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
 
@@ -60,13 +83,11 @@ public:
     auto num_awake_chunks() const -> std::size_t;
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
-    auto get_chunks() const -> const chunks& { return d_chunks; }
-
-    inline auto length() const { return sand::config::num_pixels; }
+    auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 
     auto serialise(auto& archive) -> void
     {
-        archive(d_pixels);
+        archive(pixels);
     }
 };
 

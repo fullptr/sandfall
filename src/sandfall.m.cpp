@@ -5,6 +5,7 @@
 #include "editor.hpp"
 #include "camera.hpp"
 #include "update.hpp"
+#include "update_rigid_bodies.hpp"
 #include "explosion.hpp"
 #include "mouse.hpp"
 #include "player.hpp"
@@ -26,287 +27,22 @@
 #include <cmath>
 #include <span>
 
-static constexpr auto up = glm::ivec2{0, -1};
-static constexpr auto right = glm::ivec2{1, 0};
-static constexpr auto down = glm::ivec2{0, 1};
-static constexpr auto left = glm::ivec2{-1, 0};
-static constexpr auto offsets = {up, right, down, left};
-
-auto is_static_pixel(const sand::world& w, glm::ivec2 pos) -> bool
+auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> void
 {
-    if (!w.valid(pos)) return false;
-    const auto& pixel = w.at(pos);
-    const auto& props = sand::properties(pixel);
-    return pixel.type != sand::pixel_type::none
-        && props.phase == sand::pixel_phase::solid
-        && !pixel.flags.test(sand::pixel_flags::is_falling);
-}
-
-auto is_static_boundary(const sand::world& w, glm::ivec2 A, glm::ivec2 offset) -> bool
-{
-    assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
-    const auto static_a = is_static_pixel(w, A);
-    const auto static_b = is_static_pixel(w, A + offset);
-    return (!static_a && static_b) || (!static_b && static_a);
-}
-
-auto is_along_boundary(const sand::world& w, glm::ivec2 curr, glm::ivec2 next) -> bool
-{
-    const auto offset = next - curr;
-    assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
-    if (offset == up)    return is_static_boundary(w, next, left);
-    if (offset == down)  return is_static_boundary(w, curr, left);
-    if (offset == left)  return is_static_boundary(w, next, up);
-    if (offset == right) return is_static_boundary(w, curr, up);
-    std::unreachable();
-}
-
-auto is_boundary_cross(const sand::world& w, glm::ivec2 curr) -> bool
-{
-    const auto tl = is_static_pixel(w, curr + left + up);
-    const auto tr = is_static_pixel(w, curr + up);
-    const auto bl = is_static_pixel(w, curr + left);
-    const auto br = is_static_pixel(w, curr);
-    return (tl == br) && (bl == tr) && (tl != tr);
-}
-
-auto is_valid_step(const sand::world& w, glm::ivec2 prev, glm::ivec2 curr, glm::ivec2 next) -> bool
-{
-    if (!is_along_boundary(w, curr, next)) return false;
-    if (prev.x == 0 && prev.y == 0) return true;
-    if (prev == next) return false;
-
-    if (!is_boundary_cross(w, curr)) return true;
-
-    // in a straight line going over the cross
-    if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
-        return false;
-    }
-
-    // curving through the cross must go round an actual pixel
-    const auto pixel = glm::ivec2{
-        std::min({prev.x, curr.x, next.x}),
-        std::min({prev.y, curr.y, next.y})
-    };
-    return is_static_pixel(w, pixel);
-}
-
-auto get_boundary(const sand::world& w, glm::ivec2 start) -> std::vector<glm::ivec2>
-{
-    auto ret = std::vector<glm::ivec2>{};
-    auto current = start;
-    while (is_static_pixel(w, current + up)) { current += up; }
-    ret.push_back(current);
-    
-    // Find second point
-    bool found_second = false;
-    for (const auto offset : offsets) {
-        const auto neigh = current + offset;
-        if (is_valid_step(w, {0, 0}, current, neigh)) {
-            current = neigh;
-            ret.push_back(current);
-            found_second = true;
-            break;
-        }
-    }
-    if (!found_second) {
-        return {};
-    }
-
-    // continue until we get back to the start
-    while (current != ret.front()) {
-        bool found = false;
-        for (const auto offset : offsets) {
-            const auto neigh = current + offset;
-            if (is_valid_step(w, ret.rbegin()[1], current, neigh)) {
-                current = neigh;
-                found = true;
-                ret.push_back(current);
-                break;
-            }
-        }
-        if (!found) {
-            return ret; // hmm
-        }
-    }
-
-    return ret;
-}
-
-auto cross(glm::ivec2 a, glm::ivec2 b) -> float
-{
-    return a.x * b.y - a.y * b.x;
-}
-
-auto perpendicular_distance(glm::ivec2 p, glm::ivec2 a, glm::ivec2 b) -> float
-{
-    if (a == b) { a.x++; } // little hack to avoid dividing by zero
-
-    const auto ab = glm::vec2{b - a};
-    const auto ap = glm::vec2{p - a};
-    return glm::abs(cross(ab, ap)) / glm::length(ab);
-}
-
-auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, std::vector<glm::ivec2>& out) -> void
-{
-    if (points.size() < 3) {
-        out.insert(out.end(), points.begin(), points.end());
-        return;
-    }
-
-    // Find the point with the maximum distance
-    auto max_dist = 0.0f;
-    auto pivot = points.begin() + 2;
-    for (auto it = points.begin() + 2; it != points.end() - 1; ++it) {
-        const auto dist = perpendicular_distance(*it, points.front(), points.back());
-        if (dist > max_dist) {
-            max_dist = dist;
-            pivot = it;
-        }
-    }
-
-    // Split and recurse if further than epsilon, otherwise just take the endpoint
-    if (max_dist > epsilon) {
-        ramer_douglas_puecker({ points.begin(), pivot + 1 }, epsilon, out);
-        ramer_douglas_puecker({ pivot, points.end() },       epsilon, out);
-    } else {
-        out.push_back(points.back());
-    }
-}
-
-auto calc_boundary(const sand::world& w, glm::ivec2 start, float epsilon) -> std::vector<glm::ivec2>
-{
-    const auto points = get_boundary(w, start);
-    if (epsilon == 0.0f) {
-        return points;
-    }
-    auto simplified = std::vector<glm::ivec2>{};
-    ramer_douglas_puecker(points, epsilon, simplified);
-    return simplified;
-}
-
-struct triangle
-{
-    glm::ivec2 a;
-    glm::ivec2 b;
-    glm::ivec2 c;
-};
-
-auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body*
-{
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_staticBody;
-    bodyDef.position.Set(0.0f, 0.0f);
-    b2Body* body = world.CreateBody(&bodyDef);
-
-    b2PolygonShape polygonShape;
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &polygonShape;
-
-    for (const triangle& t : triangles) {
-        const auto vertices = {
-            sand::pixel_to_physics(t.a),
-            sand::pixel_to_physics(t.b),
-            sand::pixel_to_physics(t.c)
-        };
-
-        polygonShape.Set(std::data(vertices), std::size(vertices)); 
-        body->CreateFixture(&fixtureDef);
-    }
-
-    return body;
-}
-
-inline auto are_collinear(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool
-{
-    return cross(b - a, c - a) == 0;
-}
-
-inline auto is_convex(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool {
-    return cross(b - a, c - a) > 0;  // Positive cross product means counter-clockwise turn (convex)
-}
-
-// Check if a point p is inside the triangle
-auto point_in_triangle(glm::ivec2 p, const triangle& t) -> bool
-{
-    const auto area_abc = (t.b.x - t.a.x) * (t.c.y - t.a.y) - (t.b.y - t.a.y) * (t.c.x - t.a.x);
-    const auto area_pab = (t.a.x -   p.x) * (t.b.y -   p.y) - (t.a.y -   p.y) * (t.b.x -   p.x);
-    const auto area_pbc = (t.b.x -   p.x) * (t.c.y -   p.y) - (t.b.y -   p.y) * (t.c.x -   p.x);
-    const auto area_pca = (t.c.x -   p.x) * (t.a.y -   p.y) - (t.c.y -   p.y) * (t.a.x -   p.x);
-
-    return (area_abc >= 0 && area_pab >= 0 && area_pbc >= 0 && area_pca >= 0) ||
-           (area_abc <= 0 && area_pab <= 0 && area_pbc <= 0 && area_pca <= 0);
-}
-
-// Check if a triangle is valid (no points inside it and not degenerate)
-auto is_valid_triangle(const triangle& t, std::span<const glm::ivec2> points) -> bool
-{
-    if (are_collinear(t.a, t.b, t.c)) {
-        return false;  // Collinear points cannot form a valid triangle
-    }
-
-    for (const auto& point : points) {
-        if (point != t.a && point != t.b && point != t.c) {
-            if (point_in_triangle(point, t)) {
-                return false;  // Point is inside the triangle, so it's not a valid triangle
+    if (!body) return;
+    for (auto fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
+        if (fixture->GetShape()->GetType() == b2Shape::Type::e_polygon) {
+            const auto* shape = static_cast<const b2PolygonShape*>(fixture->GetShape());
+            if (shape->m_count == 3) {
+                const auto p1 = sand::physics_to_pixel(shape->m_vertices[0]);
+                const auto p2 = sand::physics_to_pixel(shape->m_vertices[1]);
+                const auto p3 = sand::physics_to_pixel(shape->m_vertices[2]);
+                rend.draw_line(p1, p2, {1,0,0,1}, 1);
+                rend.draw_line(p2, p3, {1,0,0,1}, 1);
+                rend.draw_line(p3, p1, {1,0,0,1}, 1);
             }
         }
     }
-    return true;
-}
-
-auto remove_collinear_points(const std::vector<glm::ivec2>& points) -> std::vector<glm::ivec2>
-{
-    const auto n = points.size();
-    auto filtered_points = std::vector<glm::ivec2>{};
-
-    for (std::size_t curr = 0; curr != n; ++curr) {
-        const auto prev = (curr == 0) ? n - 1 : curr - 1;
-        const auto next = (curr == n - 1) ? 0 : curr + 1;
-        if (!are_collinear(points[prev], points[curr], points[next])) {
-            filtered_points.push_back(points[curr]);
-        }
-    }
-
-    return filtered_points;
-}
-
-auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
-{
-    auto triangles = std::vector<triangle>{};
-    auto points = remove_collinear_points(vertices);  // Work on a copy of the vertices
-
-    while (points.size() > 3) {
-        bool earFound = false;
-
-        for (size_t curr = 0; curr < points.size(); ++curr) {
-            const auto prev = (curr == 0) ? points.size() - 1 : curr - 1;
-            const auto next = (curr == points.size() - 1) ? 0 : curr + 1;
-            const auto t = triangle{points[prev], points[curr], points[next]};
-
-            if (!is_convex(t.a, t.b, t.c)) {
-                continue;
-            }
-
-            if (is_valid_triangle(t, points)) {
-                triangles.push_back(t);
-                points.erase(points.begin() + curr);
-                earFound = true;
-                break;  // start over with the reduced polygon
-            }
-        }
-
-        if (!earFound) {
-            std::print("degenerate polygon detected, could not triangulate\n");
-            break;
-        }
-    }
-
-    if (points.size() == 3) {
-        triangles.push_back({points[0], points[1], points[2]});
-    }
-
-    return triangles;
 }
 
 auto main() -> int
@@ -317,9 +53,6 @@ auto main() -> int
     auto editor = sand::editor{};
     auto mouse = sand::mouse{};
     auto keyboard = sand::keyboard{};
-
-    auto gravity = b2Vec2{sand::config::gravity.x, sand::config::gravity.y};
-    auto physics = b2World{gravity};
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -358,27 +91,20 @@ auto main() -> int
         }
     });
 
-    auto world           = std::make_unique<sand::world>();
+    auto world           = sand::world{};
     auto world_renderer  = sand::renderer{};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player          = sand::player_controller(physics, 5);
+    auto player          = sand::player_controller(world.physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
 
-    auto file = std::ifstream{"save2.bin", std::ios::binary};
+    auto file = std::ifstream{"save0.bin", std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
-    archive(*world);
-    world->wake_all_chunks();
+    archive(world);
+    world.wake_all_chunks();
 
-    auto epsilon = 0.0f;
-    auto points = calc_boundary(*world, {122, 233}, 1.5f);
-    auto count = 0;
     auto show_triangles = false;
-    auto show_vertices = false;
-
-    auto triangles = triangulate(points);
-    auto triangle_body = triangles_to_rigid_bodies(physics, triangles);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -394,22 +120,8 @@ auto main() -> int
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-
-            sand::update(*world);
+            sand::update(world);
             player.update(keyboard);
-            physics.Step(sand::config::time_step, 8, 3);
-            count++;
-            if (count % 5 == 0) {
-                if (world->at({122, 233}).type == sand::pixel_type::rock) {
-                    points = calc_boundary(*world, {122, 233}, epsilon);
-                    triangles = triangulate(points);
-                    physics.DestroyBody(triangle_body);
-                    triangle_body = triangles_to_rigid_bodies(physics, triangles);
-                } else {
-                    points = {};
-                    triangles = {};
-                }
-            }
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -417,8 +129,8 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (world->valid(coord)) {
-                        world->set(coord, editor.get_pixel());
+                    if (world.valid(coord)) {
+                        world.set(coord, editor.get_pixel());
                         updated = true;
                     }
                 }
@@ -427,8 +139,8 @@ auto main() -> int
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
-                            if (world->valid({x, y})) {
-                                world->set({x, y}, editor.get_pixel());
+                            if (world.valid({x, y})) {
+                                world.set({x, y}, editor.get_pixel());
                                 updated = true;
                             }
                         }
@@ -436,7 +148,7 @@ auto main() -> int
                 }
             break; case 2:
                 if (mouse.is_down_this_frame(sand::mouse_button::left)) {
-                    sand::apply_explosion(*world, mouse_pos, sand::explosion{
+                    sand::apply_explosion(world, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
                     updated = true;
@@ -464,19 +176,16 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::SliderFloat("Ramer-Douglas-Puecker epsilon", &epsilon, 0.0f, 10.0f);
-            ImGui::Text("Vertices: %u", points.size());
             ImGui::Checkbox("Show Triangles", &show_triangles);
-            ImGui::Checkbox("Show Vertices", &show_vertices);
             ImGui::Separator();
 
             ImGui::Text("Info");
             ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", world->num_awake_chunks());
+            ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
-                world->wake_all_chunks();
-                world->fill(sand::pixel::air());
+                world.wake_all_chunks();
+                world.fill(sand::pixel::air());
             }
             ImGui::Separator();
 
@@ -499,14 +208,14 @@ auto main() -> int
                 if (ImGui::Button("Save")) {
                     auto file = std::ofstream{filename, std::ios::binary};
                     auto archive = cereal::BinaryOutputArchive{file};
-                    archive(*world);
+                    archive(world);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     auto file = std::ifstream{filename, std::ios::binary};
                     auto archive = cereal::BinaryInputArchive{file};
-                    archive(*world);
-                    world->wake_all_chunks();
+                    archive(world);
+                    world.wake_all_chunks();
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -519,7 +228,7 @@ auto main() -> int
         // Render and display the world
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*world, editor.show_chunks, camera);
+            world_renderer.update(world, editor.show_chunks, camera);
         }
         world_renderer.draw();
 
@@ -527,25 +236,12 @@ auto main() -> int
 
         shape_renderer.draw_circle(player.centre(), {1.0, 1.0, 0.0, 1.0}, player.radius());
 
-        if (show_vertices && points.size() >= 2) {
-            const auto red = glm::vec4{1,0,0,1};
-            const auto blue =  glm::vec4{0, 0,1,1};
-            for (size_t i = 0; i != points.size() - 1; i++) {
-                const auto t = (float)i / points.size();
-                const auto colour = sand::lerp(red, blue, t);
-                shape_renderer.draw_line({points[i]}, {points[i+1]}, colour, colour, 1);
-                shape_renderer.draw_circle({points[i]}, colour, 0.25);   
-            }
-            shape_renderer.draw_line({points.front()}, {points.back()}, {0,1,0,1}, 1);
-        }
         if (show_triangles) {
-            for (const auto triangle : triangles) {
-                shape_renderer.draw_line(triangle.a, triangle.b, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.b, triangle.c, {1,0,0,1}, 1);
-                shape_renderer.draw_line(triangle.c, triangle.a, {1,0,0,1}, 1);
+            for (const auto& chunk : world.chunks) {
+                render_body_triangles(shape_renderer, chunk.triangles);
             }
-
         }
+
         shape_renderer.end_frame();
         
         // Display the UI
