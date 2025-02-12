@@ -374,21 +374,26 @@ auto update(world& w) -> void
         pixel.flags[is_updated] = false;
     }
 
-    
-    for (int y = sand::config::num_pixels; y != 0; --y) {
-        if (coin_flip()) {
-            for (int x = 0; x != sand::config::num_pixels; ++x) {
-                const auto pos = glm::ivec2{x, y - 1};
-                if (w.is_chunk_awake(pos)) update_pixel(w, pos);
+    for (std::size_t index = 0; index != w.chunks.size(); ++index) {
+        if (!w.chunks[index].should_step) continue;
+
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
+        for (int y = sand::config::chunk_size; y != 0; --y) {
+            if (coin_flip()) {
+                for (int x = 0; x != sand::config::chunk_size; ++x) {
+                    const auto pos = top_left + glm::ivec2{x, y - 1};
+                    update_pixel(w, pos);
+                }
             }
-        }
-        else {
-            for (int x = sand::config::num_pixels; x != 0; --x) {
-                const auto pos = glm::ivec2{x - 1, y - 1};
-                if (w.is_chunk_awake(pos)) update_pixel(w, pos);
+            else {
+                for (int x = sand::config::chunk_size; x != 0; --x) {
+                    const auto pos = top_left + glm::ivec2{x - 1, y - 1};
+                    update_pixel(w, pos);
+                }
             }
         }
     }
+    
     
     for (int x = 0; x != num_chunks; ++x) {
         for (int y = 0; y != num_chunks; ++y) {
