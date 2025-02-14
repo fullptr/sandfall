@@ -374,9 +374,11 @@ auto update(world& w) -> void
         pixel.flags[is_updated] = false;
     }
 
-    for (std::size_t index = 0; index != w.chunks.size(); ++index) {
-        if (!w.chunks[index].should_step) continue;
-
+    for (auto it = w.chunks.rbegin(); it != w.chunks.rend(); ++it) {
+        auto& chunk = *it;
+        if (!chunk.should_step) continue;
+    
+        const auto index = w.chunks.size() - std::distance(w.chunks.rbegin(), it) - 1;
         const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
         for (int y = sand::config::chunk_size; y != 0; --y) {
             if (coin_flip()) {
