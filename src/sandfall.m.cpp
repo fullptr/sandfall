@@ -52,12 +52,12 @@ auto save_world(const std::string& file_path, const sand::world& w) -> void
     auto archive = cereal::BinaryOutputArchive{file};
 
     auto save = sand::world_save{
-        .pixels = w.pixels.pixels(),
+        .pixels = w.pixels.data(),
         .width = w.pixels.width(),
         .height = w.pixels.height(),
         .spawn_point = w.spawn_point
     };
-    
+
     archive(save);
 }
 

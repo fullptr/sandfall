@@ -58,7 +58,7 @@ public:
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
 
-    auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
+    auto data() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
 struct world
