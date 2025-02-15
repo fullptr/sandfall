@@ -38,6 +38,13 @@ public:
         d_body->CreateFixture(&fixtureDef);
     }
 
+    auto set_position(glm::ivec2 pos) -> void
+    {
+        d_body->SetTransform(pixel_to_physics(pos), 0);
+        d_body->SetLinearVelocity({0, 0});
+        d_body->SetAwake(true);
+    }
+
     void update(const sand::keyboard& k)
     {
         bool on_ground = false;

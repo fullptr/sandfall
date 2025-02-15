@@ -51,8 +51,8 @@ auto save_world(const std::string& file_path, const sand::world& w) -> void
     auto file = std::ofstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryOutputArchive{file};
     auto save = w.pixels.to_save();
-    const auto save2 = sand::world_save2{save.pixels, save.height, save.width, w.spawn_point};
-    archive(save2);
+    save.spawn_point = w.spawn_point;
+    archive(save);
 }
 
 auto load_world(const std::string& file_path, sand::world& w) -> void
@@ -63,6 +63,7 @@ auto load_world(const std::string& file_path, sand::world& w) -> void
     archive(save);
     w.wake_all_chunks();
     w.pixels = sand::pixel_world::from_save(save);
+    w.spawn_point = save.spawn_point;
 }
 
 auto main() -> int
@@ -119,6 +120,7 @@ auto main() -> int
     auto player          = sand::player_controller(world.physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
     auto show_triangles = false;
+    auto show_spawn     = false;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -191,6 +193,12 @@ auto main() -> int
 
             ImGui::Separator();
             ImGui::Checkbox("Show Triangles", &show_triangles);
+            ImGui::Checkbox("Show Spawn", &show_spawn);
+            ImGui::SliderInt("Spawn X", &world.spawn_point.x, 1, 255);
+            ImGui::SliderInt("Spawn Y", &world.spawn_point.y, 1, 255);
+            if (ImGui::Button("Respawn")) {
+                player.set_position(world.spawn_point);
+            }
             ImGui::Separator();
 
             ImGui::Text("Info");
@@ -225,6 +233,7 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     load_world(filename, world);
+                    player.set_position(world.spawn_point);
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -249,6 +258,10 @@ auto main() -> int
             for (const auto& chunk : world.chunks) {
                 render_body_triangles(shape_renderer, chunk.triangles);
             }
+        }
+
+        if (show_spawn) {
+            shape_renderer.draw_circle(world.spawn_point, {0, 1, 0, 1}, 1.0);
         }
 
         shape_renderer.end_frame();
