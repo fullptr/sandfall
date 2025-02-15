@@ -363,17 +363,14 @@ auto get_starting_pixel(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
+auto create_chunk_triangles(world& w, chunk& c, glm::ivec2 top_left) -> void
 {
-    auto& chunk = w.chunks[sand::get_chunk_index(chunk_pos)];
-    
-    if (chunk.triangles) {
-        w.physics.DestroyBody(chunk.triangles);
+    if (c.triangles) {
+        w.physics.DestroyBody(c.triangles);
     }
     
-    chunk.triangles = new_body(w.physics);
+    c.triangles = new_body(w.physics);
     
-    const auto top_left = sand::config::chunk_size * chunk_pos;
     auto chunk_pixels = chunk_static_pixels{};
     
     // Fill up the bitset
@@ -392,7 +389,7 @@ auto create_chunk_triangles(sand::world& w, glm::ivec2 chunk_pos) -> void
         const auto pos = get_starting_pixel(chunk_pixels) + top_left;
         const auto boundary = calc_boundary(top_left, w, pos, 1.5f);
         const auto triangles = triangulate(boundary);
-        add_triangles_to_body(*chunk.triangles, triangles);
+        add_triangles_to_body(*c.triangles, triangles);
         flood_remove(chunk_pixels, pos - top_left);
     }
 }
