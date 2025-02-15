@@ -2,6 +2,7 @@
 #include "pixel.hpp"
 #include "serialise.hpp"
 #include "config.hpp"
+#include "world_save.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -32,6 +33,12 @@ class pixel_world
     std::size_t        d_width;
     std::size_t        d_height;
 
+    pixel_world(const std::vector<pixel>& pixels, std::size_t width, std::size_t height)
+        : d_pixels{pixels}
+        , d_width{width}
+        , d_height{height}
+    {}
+
 public:
     pixel_world(std::size_t width, std::size_t height)
         : d_pixels{width * height, pixel::air()}
@@ -49,9 +56,12 @@ public:
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
 
-    auto serialise(auto& archive) -> void
-    {
-        archive(d_pixels, d_width, d_height);
+    static pixel_world from_save(const world_save& ws) {
+        return {ws.pixels, ws.width, ws.height};
+    }
+
+    world_save to_save() const {
+        return {d_pixels, d_width, d_height};
     }
 };
 
@@ -84,11 +94,6 @@ public:
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
-
-    auto serialise(auto& archive) -> void
-    {
-        archive(pixels);
-    }
 };
 
 }

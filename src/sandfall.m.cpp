@@ -9,6 +9,7 @@
 #include "explosion.hpp"
 #include "mouse.hpp"
 #include "player.hpp"
+#include "world_save.hpp"
 
 #include "graphics/renderer.hpp"
 #include "graphics/shape_renderer.hpp"
@@ -43,6 +44,24 @@ auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> vo
             }
         }
     }
+}
+
+auto save_world(const std::string& file_path, const sand::world& w) -> void
+{
+    auto file = std::ofstream{file_path, std::ios::binary};
+    auto archive = cereal::BinaryOutputArchive{file};
+    auto save = w.pixels.to_save();
+    archive(save);
+}
+
+auto load_world(const std::string& file_path, sand::world& w) -> void
+{
+    auto file = std::ifstream{file_path, std::ios::binary};
+    auto archive = cereal::BinaryInputArchive{file};
+    auto save = sand::world_save{};
+    archive(save);
+    w.wake_all_chunks();
+    w.pixels = sand::pixel_world::from_save(save);
 }
 
 auto main() -> int
@@ -98,12 +117,6 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto player          = sand::player_controller(world.physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
-
-    auto file = std::ifstream{"save0.bin", std::ios::binary};
-    auto archive = cereal::BinaryInputArchive{file};
-    archive(world);
-    world.wake_all_chunks();
-
     auto show_triangles = false;
 
     while (window.is_running()) {
@@ -206,16 +219,11 @@ auto main() -> int
                 ImGui::PushID(i);
                 const auto filename = std::format("save{}.bin", i);
                 if (ImGui::Button("Save")) {
-                    auto file = std::ofstream{filename, std::ios::binary};
-                    auto archive = cereal::BinaryOutputArchive{file};
-                    archive(world);
+                    save_world(filename, world);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
-                    auto file = std::ifstream{filename, std::ios::binary};
-                    auto archive = cereal::BinaryInputArchive{file};
-                    archive(world);
-                    world.wake_all_chunks();
+                    load_world(filename, world);
                     updated = true;
                 }
                 ImGui::SameLine();
