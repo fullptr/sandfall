@@ -33,13 +33,15 @@ class pixel_world
     std::size_t        d_width;
     std::size_t        d_height;
 
-    pixel_world(const std::vector<pixel>& pixels, std::size_t width, std::size_t height)
+public:
+    pixel_world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
         : d_pixels{pixels}
         , d_width{width}
         , d_height{height}
-    {}
+    {
+        assert(pixels.size() == width * height);
+    }
 
-public:
     pixel_world(std::size_t width, std::size_t height)
         : d_pixels{width * height, pixel::air()}
         , d_width{width}
@@ -56,13 +58,7 @@ public:
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
 
-    static pixel_world from_save(const world_save& ws) {
-        return {ws.pixels, ws.width, ws.height};
-    }
-
-    world_save to_save() const {
-        return {d_pixels, d_width, d_height};
-    }
+    auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
 struct world
@@ -70,7 +66,7 @@ struct world
     b2World            physics;
     pixel_world        pixels;
     std::vector<chunk> chunks;
-    glm::ivec2         spawn_point = {128, 128};
+    glm::ivec2         spawn_point;
 
 public:
     world();

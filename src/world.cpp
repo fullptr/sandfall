@@ -54,6 +54,7 @@ auto get_chunk_pos(std::size_t index) -> glm::ivec2
 world::world()
     : physics{{sand::config::gravity.x, sand::config::gravity.y}}
     , pixels{sand::config::num_pixels, sand::config::num_pixels}
+    , spawn_point{128, 128}
 {
     chunks.resize(num_chunks * num_chunks);
 }

@@ -50,8 +50,14 @@ auto save_world(const std::string& file_path, const sand::world& w) -> void
 {
     auto file = std::ofstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryOutputArchive{file};
-    auto save = w.pixels.to_save();
-    save.spawn_point = w.spawn_point;
+
+    auto save = sand::world_save{
+        .pixels = w.pixels.pixels(),
+        .width = w.pixels.width(),
+        .height = w.pixels.height(),
+        .spawn_point = w.spawn_point
+    };
+    
     archive(save);
 }
 
@@ -59,11 +65,13 @@ auto load_world(const std::string& file_path, sand::world& w) -> void
 {
     auto file = std::ifstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
+
     auto save = sand::world_save{};
     archive(save);
-    w.wake_all_chunks();
-    w.pixels = sand::pixel_world::from_save(save);
+
+    w.pixels = {save.width, save.height, save.pixels};
     w.spawn_point = save.spawn_point;
+    w.wake_all_chunks();
 }
 
 auto main() -> int
