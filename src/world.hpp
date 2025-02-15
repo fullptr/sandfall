@@ -70,6 +70,7 @@ struct world
     b2World            physics;
     pixel_world        pixels;
     std::vector<chunk> chunks;
+    glm::ivec2         spawn_point = {128, 128};
 
 public:
     world();

@@ -11,11 +11,25 @@ struct world_save
     std::vector<pixel> pixels;
     std::size_t        width;
     std::size_t        height;
+
+    auto serialise(auto& archive) -> void
+    {
+        archive(pixels, width, height);
+    }
 };
 
-auto serialise(auto& archive, world_save& ws) -> void
+struct world_save2
 {
-    archive(ws.pixels, ws.width, ws.height);
-}
+    std::vector<pixel> pixels;
+    std::size_t        width;
+    std::size_t        height;
+    glm::ivec2         spawn_point;
+
+    auto serialise(auto& archive) -> void
+    {
+        archive(pixels, width, height, spawn_point);
+    }
+};
+
 
 }

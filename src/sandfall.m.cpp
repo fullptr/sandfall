@@ -51,7 +51,8 @@ auto save_world(const std::string& file_path, const sand::world& w) -> void
     auto file = std::ofstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryOutputArchive{file};
     auto save = w.pixels.to_save();
-    archive(save);
+    const auto save2 = sand::world_save2{save.pixels, save.height, save.width, w.spawn_point};
+    archive(save2);
 }
 
 auto load_world(const std::string& file_path, sand::world& w) -> void
