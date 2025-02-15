@@ -366,16 +366,13 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 
 auto update(world& w) -> void
 {
-    for (auto& chunk : w.chunks) {
-        chunk.should_step = std::exchange(chunk.should_step_next, false);
-    }
-
     for (auto& pixel : w.pixels) {
         pixel.flags[is_updated] = false;
     }
-
+    
     for (auto it = w.chunks.rbegin(); it != w.chunks.rend(); ++it) {
         auto& chunk = *it;
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
         if (!chunk.should_step) continue;
     
         const auto index = w.chunks.size() - std::distance(w.chunks.rbegin(), it) - 1;
@@ -394,17 +391,7 @@ auto update(world& w) -> void
                 }
             }
         }
-    }
-    
-    
-    for (int x = 0; x != num_chunks; ++x) {
-        for (int y = 0; y != num_chunks; ++y) {
-            const auto pos = glm::ivec2{x, y};
-            auto& chunk = w.chunks[get_chunk_index(pos)];
-            if (chunk.should_step) {
-                create_chunk_triangles(w, pos);
-            }
-        }
+        create_chunk_triangles(w, chunk, top_left);
     }
     
     w.physics.Step(sand::config::time_step, 8, 3);
