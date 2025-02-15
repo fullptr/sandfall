@@ -2,6 +2,7 @@
 #include "pixel.hpp"
 #include "serialise.hpp"
 #include "config.hpp"
+#include "world_save.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -33,6 +34,14 @@ class pixel_world
     std::size_t        d_height;
 
 public:
+    pixel_world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
+        : d_pixels{pixels}
+        , d_width{width}
+        , d_height{height}
+    {
+        assert(pixels.size() == width * height);
+    }
+
     pixel_world(std::size_t width, std::size_t height)
         : d_pixels{width * height, pixel::air()}
         , d_width{width}
@@ -49,10 +58,7 @@ public:
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
 
-    auto serialise(auto& archive) -> void
-    {
-        archive(d_pixels, d_width, d_height);
-    }
+    auto data() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
 struct world
@@ -60,6 +66,7 @@ struct world
     b2World            physics;
     pixel_world        pixels;
     std::vector<chunk> chunks;
+    glm::ivec2         spawn_point;
 
 public:
     world();
@@ -84,11 +91,6 @@ public:
     auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
-
-    auto serialise(auto& archive) -> void
-    {
-        archive(pixels);
-    }
 };
 
 }
