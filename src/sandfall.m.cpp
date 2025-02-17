@@ -71,7 +71,7 @@ auto load_world(const std::string& file_path, sand::world& w) -> void
 
     w.pixels = {save.width, save.height, save.pixels};
     w.spawn_point = save.spawn_point;
-    w.wake_all_chunks();
+    for (auto& c : w.chunks) { c.should_step_next = true; }
 }
 
 auto main() -> int
@@ -125,7 +125,6 @@ auto main() -> int
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
-    auto player          = sand::player_controller(world.physics, 5);
     auto shape_renderer  = sand::shape_renderer{};
     auto show_triangles = false;
     auto show_spawn     = false;
@@ -145,7 +144,7 @@ auto main() -> int
             accumulator -= sand::config::time_step;
             updated = true;
             sand::update(world);
-            player.update(keyboard);
+            world.player.update(keyboard);
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -207,7 +206,7 @@ auto main() -> int
             ImGui::SliderInt("Spawn X", &world.spawn_point.x, 1, 255);
             ImGui::SliderInt("Spawn Y", &world.spawn_point.y, 1, 255);
             if (ImGui::Button("Respawn")) {
-                player.set_position(world.spawn_point);
+                world.player.set_position(world.spawn_point);
             }
             ImGui::Separator();
 
@@ -218,7 +217,7 @@ auto main() -> int
             }));
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
-                world.wake_all_chunks();
+                for (auto& c : world.chunks) { c.should_step_next = true; }
                 std::fill(world.pixels.begin(), world.pixels.end(), sand::pixel::air());
             }
             ImGui::Separator();
@@ -245,7 +244,7 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     load_world(filename, world);
-                    player.set_position(world.spawn_point);
+                    world.player.set_position(world.spawn_point);
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -264,7 +263,7 @@ auto main() -> int
 
         shape_renderer.begin_frame(camera);
 
-        shape_renderer.draw_circle(player.centre(), {1.0, 1.0, 0.0, 1.0}, player.radius());
+        shape_renderer.draw_circle(world.player.centre(), {1.0, 1.0, 0.0, 1.0}, world.player.radius());
 
         if (show_triangles) {
             for (const auto& chunk : world.chunks) {

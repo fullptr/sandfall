@@ -3,6 +3,7 @@
 #include "serialise.hpp"
 #include "config.hpp"
 #include "world_save.hpp"
+#include "player.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -67,15 +68,10 @@ struct world
     pixel_world        pixels;
     std::vector<chunk> chunks;
     glm::ivec2         spawn_point;
+    player_controller  player;
 
-public:
     world();
-
-    // Chunk API
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
-    auto wake_all_chunks() -> void;
-
-    auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 };
 
 }
