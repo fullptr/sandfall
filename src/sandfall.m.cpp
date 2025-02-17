@@ -154,7 +154,8 @@ auto main() -> int
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (world.pixels.valid(coord)) {
-                        world.set(coord, editor.get_pixel());
+                        world.pixels[coord] = editor.get_pixel();
+                        world.wake_chunk_with_pixel(coord);
                         updated = true;
                     }
                 }
@@ -164,7 +165,8 @@ auto main() -> int
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
                             if (world.pixels.valid({x, y})) {
-                                world.set({x, y}, editor.get_pixel());
+                                world.pixels[{x, y}] = editor.get_pixel();
+                                world.wake_chunk_with_pixel({x, y});
                                 updated = true;
                             }
                         }
@@ -211,7 +213,9 @@ auto main() -> int
 
             ImGui::Text("Info");
             ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", world.num_awake_chunks());
+            ImGui::Text("Awake chunks: %d", std::count_if(world.chunks.begin(), world.chunks.end(), [](const sand::chunk& c) {
+                return c.should_step;
+            }));
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
                 world.wake_all_chunks();

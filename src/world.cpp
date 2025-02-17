@@ -59,26 +59,6 @@ world::world()
     chunks.resize(num_chunks * num_chunks);
 }
 
-auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
-{
-    assert(pixels.valid(pos));
-    wake_chunk_with_pixel(pos);
-    pixels[pos] = pixel;
-}
-
-auto world::type(glm::ivec2 pos) const -> pixel_type
-{
-    return pixels[pos].type;
-}
-
-auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
-{
-    wake_chunk_with_pixel(lhs);
-    wake_chunk_with_pixel(rhs);
-    std::swap(pixels[lhs], pixels[rhs]);
-    return rhs;
-}
-
 auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / sand::config::chunk_size;
@@ -118,19 +98,6 @@ auto world::wake_all_chunks() -> void
     for (auto& chunk : chunks) {
         wake_chunk(chunk);
     }
-}
-
-auto world::num_awake_chunks() const -> std::size_t
-{  
-    return std::count_if(chunks.begin(), chunks.end(), [](chunk c) {
-        return c.should_step;
-    });
-}
-
-auto world::is_chunk_awake(glm::ivec2 pixel) const -> bool
-{
-    const auto chunk = pixel / sand::config::chunk_size;
-    return chunks[get_chunk_index(chunk)].should_step;
 }
 
 }

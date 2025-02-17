@@ -95,7 +95,10 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
             break;
         }
 
-        pos = pixels.swap(pos, next_pos);
+        pixels.wake_chunk_with_pixel(pos);
+        pixels.wake_chunk_with_pixel(next_pos);
+        std::swap(pixels.pixels[pos], pixels.pixels[next_pos]);
+        pos = next_pos;
         set_adjacent_free_falling(pixels, pos);
     }
 
@@ -299,7 +302,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 
     if (random_unit() < props.spontaneous_destroy) {
-        w.set(pos, pixel::air());
+        w.pixels[pos] = pixel::air();
     }
 }
 
@@ -343,7 +346,8 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
-                w.set(neigh_pos, pixel::ember());
+                w.pixels[neigh_pos] = pixel::ember();
+                w.wake_chunk_with_pixel(neigh_pos);
             }
         }
     }

@@ -71,18 +71,9 @@ struct world
 public:
     world();
 
-    auto set(glm::ivec2 pos, const pixel& p) -> void;
-
-    auto type(glm::ivec2 pos) const -> pixel_type;
-
-    // Returns the rhs
-    auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
-
     // Chunk API
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
     auto wake_all_chunks() -> void;
-    auto num_awake_chunks() const -> std::size_t;
-    auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
 
     auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 };
