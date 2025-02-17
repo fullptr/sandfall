@@ -71,9 +71,6 @@ struct world
 public:
     world();
 
-    // Returns true if the given position exists and false otherwise
-    auto valid(glm::ivec2 pos) const -> bool;
-
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto fill(const pixel& p) -> void;
 

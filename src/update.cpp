@@ -37,15 +37,15 @@ static constexpr auto adjacent_offsets = std::array{
     glm::ivec2{0, -1}
 };
 
-auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
+auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
-    if (!pixels.valid(src_pos) || !pixels.valid(dst_pos)) { return false; }
+    if (!w.pixels.valid(src_pos) || !w.pixels.valid(dst_pos)) { return false; }
 
     // If the destination is empty, we can always move there
-    if (pixels.at(dst_pos).type == pixel_type::none) { return true; }
+    if (w.at(dst_pos).type == pixel_type::none) { return true; }
 
-    const auto src = properties(pixels.at(src_pos)).phase;
-    const auto dst = properties(pixels.at(dst_pos)).phase;
+    const auto src = properties(w.at(src_pos)).phase;
+    const auto dst = properties(w.at(dst_pos)).phase;
 
     using pm = pixel_phase;
     switch (src) {
@@ -61,17 +61,17 @@ auto can_pixel_move_to(const world& pixels, glm::ivec2 src_pos, glm::ivec2 dst_p
     }
 }
 
-auto set_adjacent_free_falling(world& pixels, glm::ivec2 pos) -> void
+auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
 
     for (const auto x : {l, r}) {
-        if (pixels.valid(x)) {
-            auto& px = pixels.at(x);
+        if (w.pixels.valid(x)) {
+            auto& px = w.at(x);
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
-                pixels.wake_chunk_with_pixel(l);
+                w.wake_chunk_with_pixel(l);
                 if (random_unit() > props.inertial_resistance) px.flags[is_falling] = true;
             }
         }
@@ -108,11 +108,11 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto is_surrounded(const world& pixels, glm::ivec2 pos) -> bool
+auto is_surrounded(const world& w, glm::ivec2 pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
-        if (pixels.valid(pos + offset)) {
-            if (pixels.at(pos + offset).type == pixel_type::none) {
+        if (w.pixels.valid(pos + offset)) {
+            if (w.at(pos + offset).type == pixel_type::none) {
                 return false;
             }
         }
@@ -180,10 +180,10 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
-auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) -> bool
+auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
-    const auto& src = pixels.at(pos + offset);
-    const auto& dst = pixels.at(pos);
+    const auto& src = w.at(pos + offset);
+    const auto& dst = w.at(pos);
 
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
@@ -200,8 +200,8 @@ auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) 
     // other side.
     if (src.type == pixel_type::relay) {
         auto new_pos = pos + 2 * offset;
-        if (!pixels.valid(new_pos)) return false;
-        const auto& new_src = pixels.at(new_pos);
+        if (!w.pixels.valid(new_pos)) return false;
+        const auto& new_src = w.at(new_pos);
         const auto& props = properties(new_src);
         return is_active_power_source(new_src)
             || ((props.power_max) / 2 < new_src.power && new_src.power < props.power_max);
@@ -215,20 +215,20 @@ auto should_get_powered(const world& pixels, glm::ivec2 pos, glm::ivec2 offset) 
 }
 
 // Update logic for single pixels depending on properties only
-inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
+inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
+    auto& pixel = w.at(pos);
     const auto& props = properties(pixel);
 
     if (pixel.flags[is_burning] || props.always_awake) {
-        pixels.wake_chunk_with_pixel(pos);
+        w.wake_chunk_with_pixel(pos);
     }
 
     // is_burning status
     if (pixel.flags[is_burning]) {
 
         // See if it can be put out
-        const auto put_out = is_surrounded(pixels, pos) ? props.put_out_surrounded : props.put_out;
+        const auto put_out = is_surrounded(w, pos) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
             pixel.flags[is_burning] = false;
         }
@@ -240,7 +240,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
 
         // See if it explodes
         if (random_unit() < props.explosion_chance) {
-            apply_explosion(pixels, pos, sand::explosion{
+            apply_explosion(w, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
@@ -258,10 +258,10 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
             // maintain a current
             if (pixel.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    if (!pixels.valid(pos + offset)) continue;
-                    auto& neighbour = pixels.at(pos + offset);
+                    if (!w.pixels.valid(pos + offset)) continue;
+                    auto& neighbour = w.at(pos + offset);
 
-                    if (should_get_powered(pixels, pos, offset)) {
+                    if (should_get_powered(w, pos, offset)) {
                         pixel.power = props.power_max;
                         break;
                     }
@@ -269,7 +269,7 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
             }
 
             if (pixel.power > 0 && props.explodes_on_power) {
-                apply_explosion(pixels, pos, sand::explosion{
+                apply_explosion(w, pos, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
             }
@@ -280,8 +280,8 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
                 ++pixel.power;
             }
             for (const auto& offset : adjacent_offsets) {
-                if (!pixels.valid(pos + offset)) continue;
-                auto& neighbour = pixels.at(pos + offset);
+                if (!w.pixels.valid(pos + offset)) continue;
+                auto& neighbour = w.at(pos + offset);
 
                 // Powered diode_offs disable power sources
                 if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
@@ -295,24 +295,24 @@ inline auto update_pixel_attributes(world& pixels, glm::ivec2 pos) -> void
     }
 
     if (pixel.power > 0) {
-        pixels.wake_chunk_with_pixel(pos);
+        w.wake_chunk_with_pixel(pos);
     }
 
     if (random_unit() < props.spontaneous_destroy) {
-        pixels.set(pos, pixel::air());
+        w.set(pos, pixel::air());
     }
 }
 
-inline auto update_pixel_neighbours(world& pixels, glm::ivec2 pos) -> void
+inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
 {
-    auto& pixel = pixels.at(pos);
+    auto& pixel = w.at(pos);
     const auto& props = properties(pixel);
 
     // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
-        if (!pixels.valid(pos + offset)) continue;             
+        if (!w.pixels.valid(pos + offset)) continue;             
         const auto neigh_pos = pos + offset;
-        auto& neighbour = pixels.at(neigh_pos);
+        auto& neighbour = w.at(neigh_pos);
 
         // Boil water
         if (props.can_boil_water) {
@@ -335,7 +335,7 @@ inline auto update_pixel_neighbours(world& pixels, glm::ivec2 pos) -> void
         if (props.is_burn_source || pixel.flags[is_burning]) {
             if (random_unit() < properties(neighbour).flammability) {
                 neighbour.flags[is_burning] = true;
-                pixels.wake_chunk_with_pixel(neigh_pos);
+                w.wake_chunk_with_pixel(neigh_pos);
             }
         }
 
@@ -343,7 +343,7 @@ inline auto update_pixel_neighbours(world& pixels, glm::ivec2 pos) -> void
         const bool can_produce_embers = props.is_ember_source || pixel.flags[is_burning];
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
-                pixels.set(neigh_pos, pixel::ember());
+                w.set(neigh_pos, pixel::ember());
             }
         }
     }

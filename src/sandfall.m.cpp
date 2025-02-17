@@ -153,7 +153,7 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (world.valid(coord)) {
+                    if (world.pixels.valid(coord)) {
                         world.set(coord, editor.get_pixel());
                         updated = true;
                     }
@@ -163,7 +163,7 @@ auto main() -> int
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
-                            if (world.valid({x, y})) {
+                            if (world.pixels.valid({x, y})) {
                                 world.set({x, y}, editor.get_pixel());
                                 updated = true;
                             }

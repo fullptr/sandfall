@@ -59,11 +59,6 @@ world::world()
     chunks.resize(num_chunks * num_chunks);
 }
 
-auto world::valid(glm::ivec2 pos) const -> bool
-{
-    return 0 <= pos.x && pos.x < sand::config::num_pixels && 0 <= pos.y && pos.y < sand::config::num_pixels;
-}
-
 auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
 {
     assert(pixels.valid(pos));
@@ -108,28 +103,28 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     if (pixel.x != sand::config::num_pixels - 1 && (pixel.x + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
-        if (valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
+        if (pixels.valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake left
     if (pixel.x != 0 && (pixel.x - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{1, 0};
-        if (valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
+        if (pixels.valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake down
     if (pixel.y != sand::config::num_pixels - 1 && (pixel.y + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
-        if (valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
+        if (pixels.valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
     }
 
     // Wake up
     if (pixel.y != 0 && (pixel.y - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{0, 1};
-        if (valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
+        if (pixels.valid(neighbour)) { wake_chunk(chunks[get_chunk_index(neighbour)]); }
     }
 }
 
