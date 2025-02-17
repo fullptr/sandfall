@@ -135,7 +135,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
 
                 auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
 
-                const auto& pixel = world.at(world_coord);
+                const auto& pixel = world.pixels[world_coord];
                 const auto& props = properties(pixel);
 
                 if (pixel.flags[is_burning]) {

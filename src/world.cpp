@@ -66,31 +66,16 @@ auto world::set(glm::ivec2 pos, const pixel& pixel) -> void
     pixels[pos] = pixel;
 }
 
-auto world::fill(const pixel& p) -> void
-{
-    std::fill(pixels.begin(), pixels.end(), p);
-}
-
-auto world::at(glm::ivec2 pos) const -> const pixel&
-{
-    return pixels[pos];
-}
-
-auto world::at(glm::ivec2 pos) -> pixel&
-{
-    return pixels[pos];
-}
-
 auto world::type(glm::ivec2 pos) const -> pixel_type
 {
-    return at(pos).type;
+    return pixels[pos].type;
 }
 
 auto world::swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2
 {
     wake_chunk_with_pixel(lhs);
     wake_chunk_with_pixel(rhs);
-    std::swap(at(lhs), at(rhs));
+    std::swap(pixels[lhs], pixels[rhs]);
     return rhs;
 }
 

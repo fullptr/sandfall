@@ -215,7 +215,7 @@ auto main() -> int
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
                 world.wake_all_chunks();
-                world.fill(sand::pixel::air());
+                std::fill(world.pixels.begin(), world.pixels.end(), sand::pixel::air());
             }
             ImGui::Separator();
 

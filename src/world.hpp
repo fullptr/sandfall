@@ -72,10 +72,7 @@ public:
     world();
 
     auto set(glm::ivec2 pos, const pixel& p) -> void;
-    auto fill(const pixel& p) -> void;
 
-    auto at(glm::ivec2 pos) const -> const pixel&;
-    auto at(glm::ivec2 pos) -> pixel&;
     auto type(glm::ivec2 pos) const -> pixel_type;
 
     // Returns the rhs
