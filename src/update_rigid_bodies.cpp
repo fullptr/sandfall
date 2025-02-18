@@ -312,7 +312,6 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
         }
 
         if (!earFound) {
-            std::print("degenerate polygon detected, could not triangulate\n");
             break;
         }
     }
