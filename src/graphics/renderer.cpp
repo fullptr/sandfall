@@ -47,11 +47,6 @@ void main()
 }
 )SHADER";
 
-auto get_pos(glm::vec2 pos) -> std::size_t
-{
-    return pos.x + sand::config::num_pixels * pos.y;
-}
-
 auto light_noise(glm::vec4 vec) -> glm::vec4
 {
     return {

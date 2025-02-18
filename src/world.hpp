@@ -15,9 +15,7 @@
 #include <box2d/box2d.h>
 
 namespace sand {
-
-static constexpr int num_chunks = sand::config::num_pixels / sand::config::chunk_size;
-
+    
 struct chunk
 {
     bool    should_step      = true;

@@ -12,11 +12,6 @@ namespace {
 
 static const auto default_pixel = pixel::air();
 
-auto get_pos(glm::vec2 pos) -> std::size_t
-{
-    return pos.x + sand::config::num_pixels * pos.y;
-}
-
 }
 
 auto pixel_world::valid(glm::ivec2 pos) const -> bool
@@ -65,9 +60,10 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / sand::config::chunk_size;
     chunks[get_chunk_index(*this, chunk)].should_step_next = true;
+    const auto width_pixels = static_cast<int>(pixels.width());
 
     // Wake right
-    if (pixel.x != sand::config::num_pixels - 1 && (pixel.x + 1) % sand::config::chunk_size == 0)
+    if (pixel.x != width_pixels - 1 && (pixel.x + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
         if (pixels.valid(neighbour)) { chunks[get_chunk_index(*this, neighbour)].should_step_next = true; }
@@ -81,7 +77,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     }
 
     // Wake down
-    if (pixel.y != sand::config::num_pixels - 1 && (pixel.y + 1) % sand::config::chunk_size == 0)
+    if (pixel.y != width_pixels - 1 && (pixel.y + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
         if (pixels.valid(neighbour)) { chunks[get_chunk_index(*this, neighbour)].should_step_next = true; }
