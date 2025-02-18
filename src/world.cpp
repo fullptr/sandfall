@@ -46,13 +46,17 @@ auto get_chunk_pos(std::size_t index) -> glm::ivec2
     return {index % num_chunks, index / num_chunks};
 }
 
-world::world()
+world::world(std::size_t width, std::size_t height)
     : physics{{sand::config::gravity.x, sand::config::gravity.y}}
-    , pixels{sand::config::num_pixels, sand::config::num_pixels}
-    , spawn_point{128, 128}
+    , pixels{width, height}
+    , spawn_point{width / 2, height / 2}
     , player{physics, 5}
 {
-    chunks.resize(num_chunks * num_chunks);
+    assert(width % config::chunk_size == 0);
+    assert(height % config::chunk_size == 0);
+    const auto width_chunks = width / config::chunk_size;
+    const auto height_chunks = height / config::chunk_size;
+    chunks.resize(width_chunks * height_chunks);
 }
 
 auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void

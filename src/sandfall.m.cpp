@@ -120,7 +120,7 @@ auto main() -> int
         }
     });
 
-    auto world           = sand::world{};
+    auto world           = sand::world{256, 256};
     auto world_renderer  = sand::renderer{};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;

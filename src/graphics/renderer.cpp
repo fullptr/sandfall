@@ -92,7 +92,8 @@ renderer::renderer()
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 
-    resize(sand::config::num_pixels, sand::config::num_pixels);
+    d_texture.resize(sand::config::num_pixels, sand::config::num_pixels);
+    d_texture_data.resize(sand::config::num_pixels * sand::config::num_pixels);
 }
 
 renderer::~renderer()
@@ -170,12 +171,6 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
 auto renderer::draw() const -> void
 {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-}
-
-auto renderer::resize(std::uint32_t width, std::uint32_t height) -> void
-{
-    d_texture.resize(width, height);
-    d_texture_data.resize(width * height);
 }
 
 }

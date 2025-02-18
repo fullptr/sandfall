@@ -35,8 +35,6 @@ public:
     auto update(const world& world, bool show_chunks, const camera& camera) -> void;
 
     auto draw() const -> void;
-
-    auto resize(std::uint32_t width, std::uint32_t height) -> void;
 };
 
 }

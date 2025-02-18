@@ -70,7 +70,7 @@ struct world
     glm::ivec2         spawn_point;
     player_controller  player;
 
-    world();
+    world(std::size_t width, std::size_t height);
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
 };
 
