@@ -105,6 +105,10 @@ auto renderer::bind() const -> void
 
 auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
 {
+    if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
+        resize(world.pixels.width(), world.pixels.height());
+    }
+
     static const auto fire_colours = std::array{
         from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
     };
