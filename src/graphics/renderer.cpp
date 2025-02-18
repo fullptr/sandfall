@@ -64,7 +64,7 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer()
+renderer::renderer(std::size_t width, std::size_t height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
@@ -92,8 +92,7 @@ renderer::renderer()
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 
-    d_texture.resize(sand::config::num_pixels, sand::config::num_pixels);
-    d_texture_data.resize(sand::config::num_pixels * sand::config::num_pixels);
+    resize(width, height);
 }
 
 renderer::~renderer()
@@ -171,6 +170,12 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
 auto renderer::draw() const -> void
 {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+}
+
+auto renderer::resize(std::size_t width, std::size_t height) -> void
+{
+    d_texture.resize(width, height);
+    d_texture_data.resize(width * height);
 }
 
 }

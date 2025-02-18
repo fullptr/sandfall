@@ -121,7 +121,7 @@ auto main() -> int
     });
 
     auto world           = sand::world{256, 256};
-    auto world_renderer  = sand::renderer{};
+    auto world_renderer  = sand::renderer{world.pixels.width(), world.pixels.height()};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};

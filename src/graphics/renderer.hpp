@@ -27,7 +27,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer();
+    renderer(std::size_t width, std::size_t height);
     ~renderer();
 
     auto bind() const -> void;
@@ -35,6 +35,8 @@ public:
     auto update(const world& world, bool show_chunks, const camera& camera) -> void;
 
     auto draw() const -> void;
+
+    auto resize(std::size_t width, std::size_t height) -> void;
 };
 
 }
