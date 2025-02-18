@@ -25,8 +25,9 @@ struct chunk
     b2Body* triangles        = nullptr;
 };
 
-auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
-auto get_chunk_pos(std::size_t index) -> glm::ivec2;
+class world;
+auto get_chunk_index(const world& w, glm::ivec2 chunk) -> std::size_t;
+auto get_chunk_pos(const world& w, std::size_t index) -> glm::ivec2;
 
 class pixel_world
 {

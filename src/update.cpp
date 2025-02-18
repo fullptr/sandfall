@@ -380,7 +380,7 @@ auto update(world& w) -> void
         if (!chunk.should_step) continue;
     
         const auto index = w.chunks.size() - std::distance(w.chunks.rbegin(), it) - 1;
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(w, index);
         for (int y = sand::config::chunk_size; y != 0; --y) {
             if (coin_flip()) {
                 for (int x = 0; x != sand::config::chunk_size; ++x) {

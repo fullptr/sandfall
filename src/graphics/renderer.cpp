@@ -128,7 +128,7 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t index = 0; index != chunks.size(); ++index) {
         if (!chunks[index].should_step && !show_chunks) continue;
 
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(world, index);
         for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
             for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
                 const auto world_coord = top_left + glm::ivec2{x, y};
