@@ -15,7 +15,7 @@
 #include <box2d/box2d.h>
 
 namespace sand {
-    
+
 struct chunk
 {
     bool    should_step      = true;
@@ -70,6 +70,9 @@ struct world
     player_controller  player;
 
     world(std::size_t width, std::size_t height);
+    world(const world&) = delete;
+    world& operator=(const world&) = delete;
+    
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
 };
 

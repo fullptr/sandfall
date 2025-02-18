@@ -76,10 +76,12 @@ auto load_world(const std::string& file_path) -> std::unique_ptr<sand::world>
     return w;
 }
 
-auto load_big_world() -> std::unique_ptr<sand::world>
+auto new_world(int chunks_width, int chunks_height) -> std::unique_ptr<sand::world>
 {
-    auto w = std::make_unique<sand::world>(sand::config::chunk_size * 10, sand::config::chunk_size * 5);
-    return w;
+    return std::make_unique<sand::world>(
+        sand::config::chunk_size * chunks_width,
+        sand::config::chunk_size * chunks_height
+    );
 }
 
 auto main() -> int
@@ -136,6 +138,9 @@ auto main() -> int
     auto shape_renderer  = sand::shape_renderer{};
     auto show_triangles = false;
     auto show_spawn     = false;
+
+    auto new_world_chunks_width  = 4;
+    auto new_world_chunks_height = 4;
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -242,11 +247,13 @@ auto main() -> int
                 }
             }
             ImGui::Separator();
-            ImGui::Text("Levels");
-            if (ImGui::Button("Big World")) {
-                world = load_big_world();
+            ImGui::InputInt("chunk width", &new_world_chunks_width);
+            ImGui::InputInt("chunk height", &new_world_chunks_height);
+            if (ImGui::Button("New World")) {
+                world = new_world(new_world_chunks_width, new_world_chunks_height);
                 updated = true;
             }
+            ImGui::Text("Levels");
             for (int i = 0; i != 5; ++i) {
                 ImGui::PushID(i);
                 const auto filename = std::format("save{}.bin", i);
