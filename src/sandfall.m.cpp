@@ -71,7 +71,10 @@ auto load_world(const std::string& file_path, sand::world& w) -> void
 
     w.pixels = {save.width, save.height, save.pixels};
     w.spawn_point = save.spawn_point;
-    for (auto& c : w.chunks) { c.should_step_next = true; }
+    for (auto& c : w.chunks) {
+        c.should_step_next = true;
+        c.should_step = true;
+    }
 }
 
 auto main() -> int
