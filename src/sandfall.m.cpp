@@ -211,8 +211,8 @@ auto main() -> int
             ImGui::Separator();
             ImGui::Checkbox("Show Triangles", &show_triangles);
             ImGui::Checkbox("Show Spawn", &show_spawn);
-            ImGui::SliderInt("Spawn X", &world->spawn_point.x, 1, 255);
-            ImGui::SliderInt("Spawn Y", &world->spawn_point.y, 1, 255);
+            ImGui::SliderInt("Spawn X", &world->spawn_point.x, 0, world->pixels.width());
+            ImGui::SliderInt("Spawn Y", &world->spawn_point.y, 0, world->pixels.height());
             if (ImGui::Button("Respawn")) {
                 world->player.set_position(world->spawn_point);
             }
