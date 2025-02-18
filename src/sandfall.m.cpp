@@ -70,13 +70,15 @@ auto load_world(const std::string& file_path) -> std::unique_ptr<sand::world>
     archive(save);
 
     auto w = std::make_unique<sand::world>(save.width, save.height);
-    // TODO: Handle width and height not being a multiple of the chunk size
-    const auto width_chunks = save.width / sand::config::chunk_size;
-    const auto height_chunks = save.height / sand::config::chunk_size;
-    w->chunks.reserve(width_chunks / height_chunks);
     w->pixels = {save.width, save.height, save.pixels};
     w->spawn_point = save.spawn_point;
     w->player.set_position(save.spawn_point);
+    return w;
+}
+
+auto load_big_world() -> std::unique_ptr<sand::world>
+{
+    auto w = std::make_unique<sand::world>(sand::config::chunk_size * 10, sand::config::chunk_size * 5);
     return w;
 }
 
@@ -241,6 +243,10 @@ auto main() -> int
             }
             ImGui::Separator();
             ImGui::Text("Levels");
+            if (ImGui::Button("Big World")) {
+                world = load_big_world();
+                updated = true;
+            }
             for (int i = 0; i != 5; ++i) {
                 ImGui::PushID(i);
                 const auto filename = std::format("save{}.bin", i);
