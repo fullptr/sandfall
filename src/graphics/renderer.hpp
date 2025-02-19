@@ -27,7 +27,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer();
+    renderer(std::size_t width, std::size_t height);
     ~renderer();
 
     auto bind() const -> void;
@@ -36,7 +36,7 @@ public:
 
     auto draw() const -> void;
 
-    auto resize(std::uint32_t width, std::uint32_t height) -> void;
+    auto resize(std::size_t width, std::size_t height) -> void;
 };
 
 }

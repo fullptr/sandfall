@@ -47,11 +47,6 @@ void main()
 }
 )SHADER";
 
-auto get_pos(glm::vec2 pos) -> std::size_t
-{
-    return pos.x + sand::config::num_pixels * pos.y;
-}
-
 auto light_noise(glm::vec4 vec) -> glm::vec4
 {
     return {
@@ -64,7 +59,7 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer()
+renderer::renderer(std::size_t width, std::size_t height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
@@ -92,7 +87,7 @@ renderer::renderer()
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 
-    resize(sand::config::num_pixels, sand::config::num_pixels);
+    resize(width, height);
 }
 
 renderer::~renderer()
@@ -110,6 +105,10 @@ auto renderer::bind() const -> void
 
 auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
 {
+    if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
+        resize(world.pixels.width(), world.pixels.height());
+    }
+
     static const auto fire_colours = std::array{
         from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
     };
@@ -128,14 +127,14 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     for (std::size_t index = 0; index != chunks.size(); ++index) {
         if (!chunks[index].should_step && !show_chunks) continue;
 
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(index);
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(world, index);
         for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
             for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
                 const auto world_coord = top_left + glm::ivec2{x, y};
 
                 auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
 
-                const auto& pixel = world.at(world_coord);
+                const auto& pixel = world.pixels[world_coord];
                 const auto& props = properties(pixel);
 
                 if (pixel.flags[is_burning]) {
@@ -172,7 +171,7 @@ auto renderer::draw() const -> void
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
-auto renderer::resize(std::uint32_t width, std::uint32_t height) -> void
+auto renderer::resize(std::size_t width, std::size_t height) -> void
 {
     d_texture.resize(width, height);
     d_texture_data.resize(width * height);

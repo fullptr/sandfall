@@ -20,8 +20,8 @@ auto is_static_pixel(
 {
     if (!(top_left.x <= pos.x && pos.x < top_left.x + sand::config::chunk_size) || !(top_left.y <= pos.y && pos.y < top_left.y + sand::config::chunk_size)) return false;
     
-    if (!w.valid(pos)) return false;
-    const auto& pixel = w.at(pos);
+    if (!w.pixels.valid(pos)) return false;
+    const auto& pixel = w.pixels[pos];
     const auto& props = sand::properties(pixel);
     return pixel.type != sand::pixel_type::none
         && props.phase == sand::pixel_phase::solid
@@ -312,7 +312,6 @@ auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
         }
 
         if (!earFound) {
-            std::print("degenerate polygon detected, could not triangulate\n");
             break;
         }
     }

@@ -9,7 +9,7 @@
 namespace sand {
 namespace {
 
-auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
+auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
 {
     // Calculate a step length small enough to hit every pixel on the path.
     const auto line = end - start;
@@ -18,28 +18,29 @@ auto explosion_ray(world& pixels, glm::vec2 start, glm::vec2 end, const explosio
     auto curr = start;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
-    while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
-        if (pixels.at(curr).type == pixel_type::titanium) {
+    while (w.pixels.valid(curr) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
+        if (w.pixels[curr].type == pixel_type::titanium) {
             break;
         }
-        pixels.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+        w.pixels[curr] = random_unit() < 0.05f ? pixel::ember() : pixel::air();
+        w.wake_chunk_with_pixel(curr);
         curr += step;
     }
     
     // Try to catch light to the first scorched pixel
-    if (pixels.valid(curr)) {
-        auto& pixel = pixels.at(curr);
+    if (w.pixels.valid(curr)) {
+        auto& pixel = w.pixels[curr];
         if (random_unit() < properties(pixel).flammability) {
             pixel.flags[is_burning] = true;
-            pixels.wake_chunk_with_pixel(curr);
+            w.wake_chunk_with_pixel(curr);
         }
     }
 
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
-    while (pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
-        if (properties(pixels.at(curr)).phase == pixel_phase::solid) {
-            pixels.at(curr).colour *= 0.8f;
-            pixels.wake_chunk_with_pixel(curr);
+    while (w.pixels.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
+        if (properties(w.pixels[curr]).phase == pixel_phase::solid) {
+            w.pixels[curr].colour *= 0.8f;
+            w.wake_chunk_with_pixel(curr);
         }
         curr += step;
     }

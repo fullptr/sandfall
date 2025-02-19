@@ -3,6 +3,7 @@
 #include "serialise.hpp"
 #include "config.hpp"
 #include "world_save.hpp"
+#include "player.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -15,8 +16,6 @@
 
 namespace sand {
 
-static constexpr int num_chunks = sand::config::num_pixels / sand::config::chunk_size;
-
 struct chunk
 {
     bool    should_step      = true;
@@ -24,8 +23,9 @@ struct chunk
     b2Body* triangles        = nullptr;
 };
 
-auto get_chunk_index(glm::ivec2 chunk) -> std::size_t;
-auto get_chunk_pos(std::size_t index) -> glm::ivec2;
+class world;
+auto get_chunk_index(const world& w, glm::ivec2 chunk) -> std::size_t;
+auto get_chunk_pos(const world& w, std::size_t index) -> glm::ivec2;
 
 class pixel_world
 {
@@ -67,30 +67,13 @@ struct world
     pixel_world        pixels;
     std::vector<chunk> chunks;
     glm::ivec2         spawn_point;
+    player_controller  player;
 
-public:
-    world();
-
-    // Returns true if the given position exists and false otherwise
-    auto valid(glm::ivec2 pos) const -> bool;
-
-    auto set(glm::ivec2 pos, const pixel& p) -> void;
-    auto fill(const pixel& p) -> void;
-
-    auto at(glm::ivec2 pos) const -> const pixel&;
-    auto at(glm::ivec2 pos) -> pixel&;
-    auto type(glm::ivec2 pos) const -> pixel_type;
-
-    // Returns the rhs
-    auto swap(glm::ivec2 lhs, glm::ivec2 rhs) -> glm::ivec2;
-
-    // Chunk API
+    world(std::size_t width, std::size_t height);
+    world(const world&) = delete;
+    world& operator=(const world&) = delete;
+    
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
-    auto wake_all_chunks() -> void;
-    auto num_awake_chunks() const -> std::size_t;
-    auto is_chunk_awake(glm::ivec2 pixel) const -> bool;
-
-    auto get_chunk(glm::ivec2 pos) -> chunk& { return chunks[get_chunk_index(pos)]; }
 };
 
 }
