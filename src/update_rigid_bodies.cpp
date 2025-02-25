@@ -365,10 +365,10 @@ auto get_starting_pixel(const chunk_static_pixels& pixels) -> glm::ivec2
 auto create_chunk_triangles(level& w, chunk& c, glm::ivec2 top_left) -> void
 {
     if (c.triangles) {
-        w.physics.DestroyBody(c.triangles);
+        w.pixels.physics().DestroyBody(c.triangles);
     }
     
-    c.triangles = new_body(w.physics);
+    c.triangles = new_body(w.pixels.physics());
     
     auto chunk_pixels = chunk_static_pixels{};
     

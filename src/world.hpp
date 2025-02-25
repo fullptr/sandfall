@@ -29,13 +29,15 @@ auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2;
 
 class world
 {
+    b2World            d_physics;
     std::vector<pixel> d_pixels;
     std::size_t        d_width;
     std::size_t        d_height;
 
 public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
-        : d_pixels{pixels}
+        : d_physics{{config::gravity.x, config::gravity.y}}
+        , d_pixels{pixels}
         , d_width{width}
         , d_height{height}
     {
@@ -43,10 +45,13 @@ public:
     }
 
     world(std::size_t width, std::size_t height)
-        : d_pixels{width * height, pixel::air()}
+        : d_physics{{config::gravity.x, config::gravity.y}}
+        , d_pixels{width * height, pixel::air()}
         , d_width{width}
         , d_height{height}
     {}
+
+    auto physics() -> b2World& { return d_physics; }
 
     auto valid(glm::ivec2 pos) const -> bool;
     auto operator[](glm::ivec2 pos) -> pixel&;
@@ -63,12 +68,12 @@ public:
 
 struct level
 {
-    b2World            physics;
-    world        pixels;
+    world              pixels;
     std::vector<chunk> chunks;
     glm::ivec2         spawn_point;
     player_controller  player;
 
+    level(std::size_t width, std::size_t height, const std::vector<pixel>& pixels);
     level(std::size_t width, std::size_t height);
     level(const level&) = delete;
     level& operator=(const level&) = delete;

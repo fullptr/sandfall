@@ -398,7 +398,7 @@ auto update(level& w) -> void
         create_chunk_triangles(w, chunk, top_left);
     }
     
-    w.physics.Step(sand::config::time_step, 8, 3);
+    w.pixels.physics().Step(sand::config::time_step, 8, 3);
 }
 
 }

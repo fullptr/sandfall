@@ -43,11 +43,22 @@ auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2
     return {index % width_chunks, index / width_chunks};
 }
 
-level::level(std::size_t width, std::size_t height)
-    : physics{{sand::config::gravity.x, sand::config::gravity.y}}
-    , pixels{width, height}
+level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
+    : pixels{width, height, data}
     , spawn_point{width / 2, height / 2}
-    , player{physics, 5}
+    , player{pixels.physics(), 5}
+{
+    assert(width % config::chunk_size == 0);
+    assert(height % config::chunk_size == 0);
+    const auto width_chunks = width / config::chunk_size;
+    const auto height_chunks = height / config::chunk_size;
+    chunks.resize(width_chunks * height_chunks);
+}
+
+level::level(std::size_t width, std::size_t height)
+    : pixels{width, height}
+    , spawn_point{width / 2, height / 2}
+    , player{pixels.physics(), 5}
 {
     assert(width % config::chunk_size == 0);
     assert(height % config::chunk_size == 0);
