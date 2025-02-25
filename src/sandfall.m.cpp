@@ -45,7 +45,7 @@ auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> vo
     }
 }
 
-auto save_world(const std::string& file_path, const sand::level& w) -> void
+auto save_level(const std::string& file_path, const sand::level& w) -> void
 {
     auto file = std::ofstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryOutputArchive{file};
@@ -60,7 +60,7 @@ auto save_world(const std::string& file_path, const sand::level& w) -> void
     archive(save);
 }
 
-auto load_world(const std::string& file_path) -> std::unique_ptr<sand::level>
+auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
 {
     auto file = std::ifstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
@@ -74,7 +74,7 @@ auto load_world(const std::string& file_path) -> std::unique_ptr<sand::level>
     return w;
 }
 
-auto new_world(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
+auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
 {
     const auto width = sand::config::chunk_size * chunks_width;
     const auto height = sand::config::chunk_size * chunks_height;
@@ -131,8 +131,8 @@ auto main() -> int
         }
     });
 
-    auto world           = new_world(4, 4);
-    auto world_renderer  = sand::renderer{world->pixels.width(), world->pixels.height()};
+    auto level           = new_level(4, 4);
+    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
@@ -157,8 +157,8 @@ auto main() -> int
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            world->pixels.step();
-            world->player.update(keyboard);
+            level->pixels.step();
+            level->player.update(keyboard);
         }
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
@@ -166,9 +166,9 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (world->pixels.valid(coord)) {
-                        world->pixels[coord] = editor.get_pixel();
-                        world->pixels.wake_chunk_with_pixel(coord);
+                    if (level->pixels.valid(coord)) {
+                        level->pixels[coord] = editor.get_pixel();
+                        level->pixels.wake_chunk_with_pixel(coord);
                         updated = true;
                     }
                 }
@@ -177,9 +177,9 @@ auto main() -> int
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
-                            if (world->pixels.valid({x, y})) {
-                                world->pixels[{x, y}] = editor.get_pixel();
-                                world->pixels.wake_chunk_with_pixel({x, y});
+                            if (level->pixels.valid({x, y})) {
+                                level->pixels[{x, y}] = editor.get_pixel();
+                                level->pixels.wake_chunk_with_pixel({x, y});
                                 updated = true;
                             }
                         }
@@ -187,7 +187,7 @@ auto main() -> int
                 }
             break; case 2:
                 if (mouse.is_down_this_frame(sand::mouse_button::left)) {
-                    sand::apply_explosion(world->pixels, mouse_pos, sand::explosion{
+                    sand::apply_explosion(level->pixels, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
                     updated = true;
@@ -217,22 +217,22 @@ auto main() -> int
             ImGui::Separator();
             ImGui::Checkbox("Show Triangles", &show_triangles);
             ImGui::Checkbox("Show Spawn", &show_spawn);
-            ImGui::SliderInt("Spawn X", &world->spawn_point.x, 0, world->pixels.width());
-            ImGui::SliderInt("Spawn Y", &world->spawn_point.y, 0, world->pixels.height());
+            ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
+            ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
             if (ImGui::Button("Respawn")) {
-                world->player.set_position(world->spawn_point);
+                level->player.set_position(level->spawn_point);
             }
             ImGui::Separator();
 
             ImGui::Text("Info");
             ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", std::count_if(world->pixels.chunks().begin(), world->pixels.chunks().end(), [](const sand::chunk& c) {
+            ImGui::Text("Awake chunks: %d", std::count_if(level->pixels.chunks().begin(), level->pixels.chunks().end(), [](const sand::chunk& c) {
                 return c.should_step;
             }));
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
-                world->pixels.wake_all();
-                std::fill(world->pixels.begin(), world->pixels.end(), sand::pixel::air());
+                level->pixels.wake_all();
+                std::fill(level->pixels.begin(), level->pixels.end(), sand::pixel::air());
             }
             ImGui::Separator();
 
@@ -251,7 +251,7 @@ auto main() -> int
             ImGui::InputInt("chunk width", &new_world_chunks_width);
             ImGui::InputInt("chunk height", &new_world_chunks_height);
             if (ImGui::Button("New World")) {
-                world = new_world(new_world_chunks_width, new_world_chunks_height);
+                level = new_level(new_world_chunks_width, new_world_chunks_height);
                 updated = true;
             }
             ImGui::Text("Levels");
@@ -259,11 +259,11 @@ auto main() -> int
                 ImGui::PushID(i);
                 const auto filename = std::format("save{}.bin", i);
                 if (ImGui::Button("Save")) {
-                    save_world(filename, *world);
+                    save_level(filename, *level);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
-                    world = load_world(filename);
+                    level = load_level(filename);
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -276,22 +276,22 @@ auto main() -> int
         // Render and display the world
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*world, editor.show_chunks, camera);
+            world_renderer.update(*level, editor.show_chunks, camera);
         }
         world_renderer.draw();
 
         shape_renderer.begin_frame(camera);
 
-        shape_renderer.draw_circle(world->player.centre(), {1.0, 1.0, 0.0, 1.0}, world->player.radius());
+        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, level->player.radius());
 
         if (show_triangles) {
-            for (const auto& chunk : world->pixels.chunks()) {
+            for (const auto& chunk : level->pixels.chunks()) {
                 render_body_triangles(shape_renderer, chunk.triangles);
             }
         }
 
         if (show_spawn) {
-            shape_renderer.draw_circle(world->spawn_point, {0, 1, 0, 1}, 1.0);
+            shape_renderer.draw_circle(level->spawn_point, {0, 1, 0, 1}, 1.0);
         }
 
         shape_renderer.end_frame();
