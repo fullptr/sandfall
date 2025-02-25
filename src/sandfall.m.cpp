@@ -4,7 +4,6 @@
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"
-#include "update.hpp"
 #include "update_rigid_bodies.hpp"
 #include "explosion.hpp"
 #include "mouse.hpp"

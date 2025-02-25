@@ -1,6 +1,5 @@
 #include "world.hpp"
 #include "pixel.hpp"
-#include "update.hpp"
 #include "utility.hpp"
 
 #include "update_rigid_bodies.hpp"
