@@ -33,6 +33,8 @@ class world
     std::size_t        d_width;
     std::size_t        d_height;
 
+    auto at(glm::ivec2) -> pixel&;
+
 public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
         : d_physics{{config::gravity.x, config::gravity.y}}
@@ -55,8 +57,24 @@ public:
     auto wake_all() -> void;
 
     auto valid(glm::ivec2 pos) const -> bool;
-    auto operator[](glm::ivec2 pos) -> pixel&;
+    auto set(glm::ivec2 pos, const pixel& p) -> void;
+    auto swap(glm::ivec2 a, glm::ivec2 b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
+
+    auto visit(glm::ivec2 pos, auto&& updater) -> void
+    {
+        assert(valid(pos));
+        auto& pixel = d_pixels[pos.x + d_width * pos.y];
+        updater(pixel);
+        wake_chunk_with_pixel(pos);
+    }
+
+    auto visit_no_wake(glm::ivec2 pos, auto&& updater) -> void
+    {
+        assert(valid(pos));
+        auto& pixel = d_pixels[pos.x + d_width * pos.y];
+        updater(pixel);
+    }
 
     inline auto begin() { return d_pixels.begin(); }
     inline auto end() { return d_pixels.end(); }
@@ -64,7 +82,7 @@ public:
     inline auto width() const -> std::size_t { return d_width; }
     inline auto height() const -> std::size_t { return d_height; }
 
-    auto data() const -> const std::vector<pixel>& { return d_pixels; }
+    auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
     auto chunks() const -> const std::vector<chunk>& { return d_chunks; }
 };
 

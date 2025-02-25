@@ -22,25 +22,21 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
         if (w[curr].type == pixel_type::titanium) {
             break;
         }
-        w[curr] = random_unit() < 0.05f ? pixel::ember() : pixel::air();
-        w.wake_chunk_with_pixel(curr);
+        w.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
         curr += step;
     }
     
     // Try to catch light to the first scorched pixel
     if (w.valid(curr)) {
-        auto& pixel = w[curr];
-        if (random_unit() < properties(pixel).flammability) {
-            pixel.flags[is_burning] = true;
-            w.wake_chunk_with_pixel(curr);
+        if (random_unit() < properties(w[curr]).flammability) {
+            w.visit(curr, [&](pixel& p) { p.flags[is_burning] = true; });
         }
     }
 
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
     while (w.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(w[curr]).phase == pixel_phase::solid) {
-            w[curr].colour *= 0.8f;
-            w.wake_chunk_with_pixel(curr);
+            w.visit(curr, [&](pixel& p) { p.colour *= 0.8f; });
         }
         curr += step;
     }

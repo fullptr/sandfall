@@ -51,7 +51,7 @@ auto save_level(const std::string& file_path, const sand::level& w) -> void
     auto archive = cereal::BinaryOutputArchive{file};
 
     auto save = sand::world_save{
-        .pixels = w.pixels.data(),
+        .pixels = w.pixels.pixels(),
         .width = w.pixels.width(),
         .height = w.pixels.height(),
         .spawn_point = w.spawn_point
@@ -167,8 +167,7 @@ auto main() -> int
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (level->pixels.valid(coord)) {
-                        level->pixels[coord] = editor.get_pixel();
-                        level->pixels.wake_chunk_with_pixel(coord);
+                        level->pixels.set(coord, editor.get_pixel());
                         updated = true;
                     }
                 }
@@ -178,8 +177,7 @@ auto main() -> int
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
                             if (level->pixels.valid({x, y})) {
-                                level->pixels[{x, y}] = editor.get_pixel();
-                                level->pixels.wake_chunk_with_pixel({x, y});
+                                level->pixels.set({x, y}, editor.get_pixel());
                                 updated = true;
                             }
                         }
