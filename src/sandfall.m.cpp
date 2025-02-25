@@ -46,7 +46,7 @@ auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> vo
     }
 }
 
-auto save_world(const std::string& file_path, const sand::world& w) -> void
+auto save_world(const std::string& file_path, const sand::level& w) -> void
 {
     auto file = std::ofstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryOutputArchive{file};
@@ -61,7 +61,7 @@ auto save_world(const std::string& file_path, const sand::world& w) -> void
     archive(save);
 }
 
-auto load_world(const std::string& file_path) -> std::unique_ptr<sand::world>
+auto load_world(const std::string& file_path) -> std::unique_ptr<sand::level>
 {
     auto file = std::ifstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
@@ -69,16 +69,16 @@ auto load_world(const std::string& file_path) -> std::unique_ptr<sand::world>
     auto save = sand::world_save{};
     archive(save);
 
-    auto w = std::make_unique<sand::world>(save.width, save.height);
+    auto w = std::make_unique<sand::level>(save.width, save.height);
     w->pixels = {save.width, save.height, save.pixels};
     w->spawn_point = save.spawn_point;
     w->player.set_position(save.spawn_point);
     return w;
 }
 
-auto new_world(int chunks_width, int chunks_height) -> std::unique_ptr<sand::world>
+auto new_world(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
 {
-    return std::make_unique<sand::world>(
+    return std::make_unique<sand::level>(
         sand::config::chunk_size * chunks_width,
         sand::config::chunk_size * chunks_height
     );
@@ -130,7 +130,7 @@ auto main() -> int
         }
     });
 
-    auto world           = std::make_unique<sand::world>(256, 256);
+    auto world           = std::make_unique<sand::level>(256, 256);
     auto world_renderer  = sand::renderer{world->pixels.width(), world->pixels.height()};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;

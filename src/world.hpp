@@ -23,9 +23,9 @@ struct chunk
     b2Body* triangles        = nullptr;
 };
 
-class world;
-auto get_chunk_index(const world& w, glm::ivec2 chunk) -> std::size_t;
-auto get_chunk_pos(const world& w, std::size_t index) -> glm::ivec2;
+class level;
+auto get_chunk_index(const level& w, glm::ivec2 chunk) -> std::size_t;
+auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2;
 
 class pixel_world
 {
@@ -61,7 +61,7 @@ public:
     auto data() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
-struct world
+struct level
 {
     b2World            physics;
     pixel_world        pixels;
@@ -69,9 +69,9 @@ struct world
     glm::ivec2         spawn_point;
     player_controller  player;
 
-    world(std::size_t width, std::size_t height);
-    world(const world&) = delete;
-    world& operator=(const world&) = delete;
+    level(std::size_t width, std::size_t height);
+    level(const level&) = delete;
+    level& operator=(const level&) = delete;
     
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
 };

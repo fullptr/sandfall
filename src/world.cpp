@@ -31,19 +31,19 @@ auto pixel_world::operator[](glm::ivec2 pos) const -> const pixel&
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto get_chunk_index(const world& w, glm::ivec2 chunk) -> std::size_t
+auto get_chunk_index(const level& w, glm::ivec2 chunk) -> std::size_t
 {
     const auto width_chunks = w.pixels.width() / config::chunk_size;
     return width_chunks * chunk.y + chunk.x;
 }
 
-auto get_chunk_pos(const world& w, std::size_t index) -> glm::ivec2
+auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2
 {
     const auto width_chunks = w.pixels.width() / config::chunk_size;
     return {index % width_chunks, index / width_chunks};
 }
 
-world::world(std::size_t width, std::size_t height)
+level::level(std::size_t width, std::size_t height)
     : physics{{sand::config::gravity.x, sand::config::gravity.y}}
     , pixels{width, height}
     , spawn_point{width / 2, height / 2}
@@ -56,7 +56,7 @@ world::world(std::size_t width, std::size_t height)
     chunks.resize(width_chunks * height_chunks);
 }
 
-auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
+auto level::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
 {
     const auto chunk = pixel / sand::config::chunk_size;
     chunks[get_chunk_index(*this, chunk)].should_step_next = true;

@@ -9,7 +9,7 @@
 namespace sand {
 namespace {
 
-auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
+auto explosion_ray(level& w, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
 {
     // Calculate a step length small enough to hit every pixel on the path.
     const auto line = end - start;
@@ -48,7 +48,7 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
 
 }
 
-auto apply_explosion(world& pixels, glm::vec2 pos, const explosion& info) -> void
+auto apply_explosion(level& pixels, glm::vec2 pos, const explosion& info) -> void
 {
     const auto a = info.max_radius + 3 * info.scorch;
     for (int b = -a; b != a + 1; ++b) {

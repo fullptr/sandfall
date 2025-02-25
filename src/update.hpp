@@ -2,7 +2,7 @@
 
 namespace sand {
 
-class world;
-auto update(world& pixel) -> void;
+class level;
+auto update(level& pixel) -> void;
     
 }

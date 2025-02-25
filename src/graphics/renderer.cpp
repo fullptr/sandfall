@@ -103,7 +103,7 @@ auto renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
+auto renderer::update(const level& world, bool show_chunks, const camera& camera) -> void
 {
     if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
         resize(world.pixels.width(), world.pixels.height());

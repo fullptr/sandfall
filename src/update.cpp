@@ -37,7 +37,7 @@ static constexpr auto adjacent_offsets = std::array{
     glm::ivec2{0, -1}
 };
 
-auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
+auto can_pixel_move_to(const level& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
     if (!w.pixels.valid(src_pos) || !w.pixels.valid(dst_pos)) { return false; }
 
@@ -61,7 +61,7 @@ auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -
     }
 }
 
-auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
+auto set_adjacent_free_falling(level& w, glm::ivec2 pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
@@ -80,7 +80,7 @@ auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
 
 // Moves towards the given offset, updating pos to the new postion and returning
 // true if the position has changed
-auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
+auto move_offset(level& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
 {
     glm::ivec2 start_pos = pos;
 
@@ -111,7 +111,7 @@ auto move_offset(world& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto is_surrounded(const world& w, glm::ivec2 pos) -> bool
+auto is_surrounded(const level& w, glm::ivec2 pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
         if (w.pixels.valid(pos + offset)) {
@@ -130,7 +130,7 @@ auto sign(float f) -> int
     return 0;
 }
 
-inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
+inline auto update_pixel_position(level& pixels, glm::ivec2& pos) -> void
 {
     const auto start_pos = pos;
 
@@ -183,7 +183,7 @@ inline auto update_pixel_position(world& pixels, glm::ivec2& pos) -> void
 
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
-auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
+auto should_get_powered(const level& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
     const auto& src = w.pixels[pos + offset];
     const auto& dst = w.pixels[pos];
@@ -218,7 +218,7 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
 }
 
 // Update logic for single pixels depending on properties only
-inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_attributes(level& w, glm::ivec2 pos) -> void
 {
     auto& pixel = w.pixels[pos];
     const auto& props = properties(pixel);
@@ -306,7 +306,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 }
 
-inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_neighbours(level& w, glm::ivec2 pos) -> void
 {
     auto& pixel = w.pixels[pos];
     const auto& props = properties(pixel);
@@ -353,7 +353,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
     }
 }
 
-auto update_pixel(world& pixels, glm::ivec2 pos) -> void
+auto update_pixel(level& pixels, glm::ivec2 pos) -> void
 {
     if (pixels.pixels[pos].type == pixel_type::none || pixels.pixels[pos].flags[is_updated]) {
         return;
@@ -368,7 +368,7 @@ auto update_pixel(world& pixels, glm::ivec2 pos) -> void
 
 }
 
-auto update(world& w) -> void
+auto update(level& w) -> void
 {
     for (auto& pixel : w.pixels) {
         pixel.flags[is_updated] = false;
