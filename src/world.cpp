@@ -404,13 +404,6 @@ level::level(std::size_t width, std::size_t height, const std::vector<pixel>& da
 {
 }
 
-level::level(std::size_t width, std::size_t height)
-    : pixels{width, height}
-    , spawn_point{width / 2, height / 2}
-    , player{pixels.physics(), 5}
-{
-}
-
 auto world::wake_all() -> void
 {
     for (auto& c : d_chunks) { c.should_step_next = true; }

@@ -48,19 +48,6 @@ public:
         d_chunks.resize(width_chunks * height_chunks);
     }
 
-    world(std::size_t width, std::size_t height)
-        : d_physics{{config::gravity.x, config::gravity.y}}
-        , d_pixels{width * height, pixel::air()}
-        , d_width{width}
-        , d_height{height}
-    {
-        assert(width % config::chunk_size == 0);
-        assert(height % config::chunk_size == 0);
-        const auto width_chunks = width / config::chunk_size;
-        const auto height_chunks = height / config::chunk_size;
-        d_chunks.resize(width_chunks * height_chunks);
-    }
-
     auto step() -> void;
 
     auto physics() -> b2World& { return d_physics; }
@@ -88,7 +75,6 @@ struct level
     player_controller  player;
 
     level(std::size_t width, std::size_t height, const std::vector<pixel>& pixels);
-    level(std::size_t width, std::size_t height);
     level(const level&) = delete;
     level& operator=(const level&) = delete;
 };

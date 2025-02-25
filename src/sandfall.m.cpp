@@ -76,9 +76,12 @@ auto load_world(const std::string& file_path) -> std::unique_ptr<sand::level>
 
 auto new_world(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
 {
+    const auto width = sand::config::chunk_size * chunks_width;
+    const auto height = sand::config::chunk_size * chunks_height;
     return std::make_unique<sand::level>(
-        sand::config::chunk_size * chunks_width,
-        sand::config::chunk_size * chunks_height
+        width,
+        height,
+        std::vector<sand::pixel>(width * height, sand::pixel::air())
     );
 }
 
@@ -128,7 +131,7 @@ auto main() -> int
         }
     });
 
-    auto world           = std::make_unique<sand::level>(256, 256);
+    auto world           = new_world(4, 4);
     auto world_renderer  = sand::renderer{world->pixels.width(), world->pixels.height()};
     auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
