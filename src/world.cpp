@@ -14,18 +14,18 @@ static const auto default_pixel = pixel::air();
 
 }
 
-auto pixel_world::valid(glm::ivec2 pos) const -> bool
+auto world::valid(glm::ivec2 pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto pixel_world::operator[](glm::ivec2 pos) -> pixel&
+auto world::operator[](glm::ivec2 pos) -> pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto pixel_world::operator[](glm::ivec2 pos) const -> const pixel&
+auto world::operator[](glm::ivec2 pos) const -> const pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];

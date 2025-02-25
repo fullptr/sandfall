@@ -27,14 +27,14 @@ class level;
 auto get_chunk_index(const level& w, glm::ivec2 chunk) -> std::size_t;
 auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2;
 
-class pixel_world
+class world
 {
     std::vector<pixel> d_pixels;
     std::size_t        d_width;
     std::size_t        d_height;
 
 public:
-    pixel_world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
+    world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
         : d_pixels{pixels}
         , d_width{width}
         , d_height{height}
@@ -42,7 +42,7 @@ public:
         assert(pixels.size() == width * height);
     }
 
-    pixel_world(std::size_t width, std::size_t height)
+    world(std::size_t width, std::size_t height)
         : d_pixels{width * height, pixel::air()}
         , d_width{width}
         , d_height{height}
@@ -64,7 +64,7 @@ public:
 struct level
 {
     b2World            physics;
-    pixel_world        pixels;
+    world        pixels;
     std::vector<chunk> chunks;
     glm::ivec2         spawn_point;
     player_controller  player;
