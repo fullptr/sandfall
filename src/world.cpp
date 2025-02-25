@@ -12,11 +12,6 @@
 namespace sand {
 namespace {
 
-static const auto default_pixel = pixel::air();
-
-
-namespace {
-
 static constexpr auto neighbour_offsets = std::array{
     glm::ivec2{1, 0},
     glm::ivec2{-1, 0},
@@ -134,18 +129,18 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
     // Pixels that don't move have their is_falling flag set to false at the end
     const auto after_position_update = scope_exit{[&] {
         if (pos != start_pos) {
-            w.visit(pos, [&](pixel& p) { p.flags[is_falling] = true; });
+            w.visit(pos, [&](pixel& p) { p.flags[is_falling] = false; });
         }
         if (pos == start_pos && properties(w[pos]).gravity_factor) {
             // will always try to move at least one block
-            w.visit(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
+            w.visit_no_wake(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
         }
     }};
 
     // Apply gravity
     if (props.gravity_factor) {
         const auto gravity_factor = props.gravity_factor;
-        w.visit(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
+        w.visit_no_wake(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
         if (move_offset(w, pos, data.velocity)) return;
     }
 
@@ -359,11 +354,21 @@ auto update_pixel(world& w, glm::ivec2 pos) -> void
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
 
-    w.visit_no_wake(pos, [&](pixel& p) { p.flags[is_updated] = true; });
+    w.visit_no_wake(pos, [&](pixel& p) { p.flags[is_updated] = true; }); // always no wake
 }
 
 }
 
+auto get_chunk_index(std::size_t width, glm::ivec2 chunk) -> std::size_t
+{
+    const auto width_chunks = width / config::chunk_size;
+    return width_chunks * chunk.y + chunk.x;
+}
+
+auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
+{
+    const auto width_chunks = width / config::chunk_size;
+    return {index % width_chunks, index / width_chunks};
 }
 
 auto world::at(glm::ivec2 pos) -> pixel&
@@ -375,6 +380,12 @@ auto world::at(glm::ivec2 pos) -> pixel&
 auto world::valid(glm::ivec2 pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
+}
+
+auto world::chunk_valid(glm::ivec2 pos) const -> bool
+{
+    const auto chunk = pos / sand::config::chunk_size;
+    return get_chunk_index(d_width, chunk) < d_chunks.size();
 }
 
 auto world::set(glm::ivec2 pos, const pixel& p) -> void
@@ -395,18 +406,6 @@ auto world::operator[](glm::ivec2 pos) const -> const pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
-}
-
-auto get_chunk_index(std::size_t width, glm::ivec2 chunk) -> std::size_t
-{
-    const auto width_chunks = width / config::chunk_size;
-    return width_chunks * chunk.y + chunk.x;
-}
-
-auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
-{
-    const auto width_chunks = width / config::chunk_size;
-    return {index % width_chunks, index / width_chunks};
 }
 
 level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
@@ -431,28 +430,28 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     if (pixel.x != width_pixels - 1 && (pixel.x + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{1, 0};
-        if (valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
+        if (chunk_valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
     }
 
     // Wake left
     if (pixel.x != 0 && (pixel.x - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{1, 0};
-        if (valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
+        if (chunk_valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
     }
 
     // Wake down
     if (pixel.y != width_pixels - 1 && (pixel.y + 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk + glm::ivec2{0, 1};
-        if (valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
+        if (chunk_valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
     }
 
     // Wake up
     if (pixel.y != 0 && (pixel.y - 1) % sand::config::chunk_size == 0)
     {
         const auto neighbour = chunk - glm::ivec2{0, 1};
-        if (valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
+        if (chunk_valid(neighbour)) { d_chunks[get_chunk_index(d_width, neighbour)].should_step_next = true; }
     }
 }
 

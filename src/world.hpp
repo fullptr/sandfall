@@ -57,6 +57,7 @@ public:
     auto wake_all() -> void;
 
     auto valid(glm::ivec2 pos) const -> bool;
+    auto chunk_valid(glm::ivec2 pos) const -> bool;
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto swap(glm::ivec2 a, glm::ivec2 b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
