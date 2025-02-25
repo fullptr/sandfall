@@ -16,6 +16,8 @@
 
 namespace sand {
 
+auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2;
+
 struct chunk
 {
     bool    should_step      = true;
@@ -23,14 +25,11 @@ struct chunk
     b2Body* triangles        = nullptr;
 };
 
-class level;
-auto get_chunk_index(const level& w, glm::ivec2 chunk) -> std::size_t;
-auto get_chunk_pos(const level& w, std::size_t index) -> glm::ivec2;
-
 class world
 {
     b2World            d_physics;
     std::vector<pixel> d_pixels;
+    std::vector<chunk> d_chunks;
     std::size_t        d_width;
     std::size_t        d_height;
 
@@ -42,6 +41,11 @@ public:
         , d_height{height}
     {
         assert(pixels.size() == width * height);
+        assert(width % config::chunk_size == 0);
+        assert(height % config::chunk_size == 0);
+        const auto width_chunks = width / config::chunk_size;
+        const auto height_chunks = height / config::chunk_size;
+        d_chunks.resize(width_chunks * height_chunks);
     }
 
     world(std::size_t width, std::size_t height)
@@ -49,9 +53,19 @@ public:
         , d_pixels{width * height, pixel::air()}
         , d_width{width}
         , d_height{height}
-    {}
+    {
+        assert(width % config::chunk_size == 0);
+        assert(height % config::chunk_size == 0);
+        const auto width_chunks = width / config::chunk_size;
+        const auto height_chunks = height / config::chunk_size;
+        d_chunks.resize(width_chunks * height_chunks);
+    }
+
+    auto step() -> void;
 
     auto physics() -> b2World& { return d_physics; }
+    auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
+    auto wake_all() -> void;
 
     auto valid(glm::ivec2 pos) const -> bool;
     auto operator[](glm::ivec2 pos) -> pixel&;
@@ -64,12 +78,12 @@ public:
     inline auto height() const -> std::size_t { return d_height; }
 
     auto data() const -> const std::vector<pixel>& { return d_pixels; }
+    auto chunks() const -> const std::vector<chunk>& { return d_chunks; }
 };
 
 struct level
 {
     world              pixels;
-    std::vector<chunk> chunks;
     glm::ivec2         spawn_point;
     player_controller  player;
 
@@ -77,8 +91,6 @@ struct level
     level(std::size_t width, std::size_t height);
     level(const level&) = delete;
     level& operator=(const level&) = delete;
-    
-    auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
 };
 
 }

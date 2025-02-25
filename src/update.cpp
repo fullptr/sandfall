@@ -71,7 +71,7 @@ auto set_adjacent_free_falling(level& w, glm::ivec2 pos) -> void
             auto& px = w.pixels[x];
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
-                w.wake_chunk_with_pixel(l);
+                w.pixels.wake_chunk_with_pixel(l);
                 if (random_unit() > props.inertial_resistance) px.flags[is_falling] = true;
             }
         }
@@ -95,8 +95,8 @@ auto move_offset(level& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
             break;
         }
 
-        pixels.wake_chunk_with_pixel(pos);
-        pixels.wake_chunk_with_pixel(next_pos);
+        pixels.pixels.wake_chunk_with_pixel(pos);
+        pixels.pixels.wake_chunk_with_pixel(next_pos);
         std::swap(pixels.pixels[pos], pixels.pixels[next_pos]);
         pos = next_pos;
         set_adjacent_free_falling(pixels, pos);
@@ -104,7 +104,7 @@ auto move_offset(level& pixels, glm::ivec2& pos, glm::ivec2 offset) -> bool
 
     if (start_pos != pos) {
         pixels.pixels[pos].flags[is_falling] = true;
-        pixels.wake_chunk_with_pixel(pos);
+        pixels.pixels.wake_chunk_with_pixel(pos);
         return true;
     }
 
@@ -224,7 +224,7 @@ inline auto update_pixel_attributes(level& w, glm::ivec2 pos) -> void
     const auto& props = properties(pixel);
 
     if (pixel.flags[is_burning] || props.always_awake) {
-        w.wake_chunk_with_pixel(pos);
+        w.pixels.wake_chunk_with_pixel(pos);
     }
 
     // is_burning status
@@ -243,7 +243,7 @@ inline auto update_pixel_attributes(level& w, glm::ivec2 pos) -> void
 
         // See if it explodes
         if (random_unit() < props.explosion_chance) {
-            apply_explosion(w, pos, sand::explosion{
+            apply_explosion(w.pixels, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
@@ -272,7 +272,7 @@ inline auto update_pixel_attributes(level& w, glm::ivec2 pos) -> void
             }
 
             if (pixel.power > 0 && props.explodes_on_power) {
-                apply_explosion(w, pos, sand::explosion{
+                apply_explosion(w.pixels, pos, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
             }
@@ -298,7 +298,7 @@ inline auto update_pixel_attributes(level& w, glm::ivec2 pos) -> void
     }
 
     if (pixel.power > 0) {
-        w.wake_chunk_with_pixel(pos);
+        w.pixels.wake_chunk_with_pixel(pos);
     }
 
     if (random_unit() < props.spontaneous_destroy) {
@@ -338,7 +338,7 @@ inline auto update_pixel_neighbours(level& w, glm::ivec2 pos) -> void
         if (props.is_burn_source || pixel.flags[is_burning]) {
             if (random_unit() < properties(neighbour).flammability) {
                 neighbour.flags[is_burning] = true;
-                w.wake_chunk_with_pixel(neigh_pos);
+                w.pixels.wake_chunk_with_pixel(neigh_pos);
             }
         }
 
@@ -347,7 +347,7 @@ inline auto update_pixel_neighbours(level& w, glm::ivec2 pos) -> void
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
                 w.pixels[neigh_pos] = pixel::ember();
-                w.wake_chunk_with_pixel(neigh_pos);
+                w.pixels.wake_chunk_with_pixel(neigh_pos);
             }
         }
     }
@@ -366,39 +366,6 @@ auto update_pixel(level& pixels, glm::ivec2 pos) -> void
     pixels.pixels[pos].flags[is_updated] = true;
 }
 
-}
-
-auto update(level& w) -> void
-{
-    for (auto& pixel : w.pixels) {
-        pixel.flags[is_updated] = false;
-    }
-    
-    for (auto it = w.chunks.rbegin(); it != w.chunks.rend(); ++it) {
-        auto& chunk = *it;
-        chunk.should_step = std::exchange(chunk.should_step_next, false);
-        if (!chunk.should_step) continue;
-    
-        const auto index = w.chunks.size() - std::distance(w.chunks.rbegin(), it) - 1;
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(w, index);
-        for (int y = sand::config::chunk_size; y != 0; --y) {
-            if (coin_flip()) {
-                for (int x = 0; x != sand::config::chunk_size; ++x) {
-                    const auto pos = top_left + glm::ivec2{x, y - 1};
-                    update_pixel(w, pos);
-                }
-            }
-            else {
-                for (int x = sand::config::chunk_size; x != 0; --x) {
-                    const auto pos = top_left + glm::ivec2{x - 1, y - 1};
-                    update_pixel(w, pos);
-                }
-            }
-        }
-        create_chunk_triangles(w, chunk, top_left);
-    }
-    
-    w.pixels.physics().Step(sand::config::time_step, 8, 3);
 }
 
 }

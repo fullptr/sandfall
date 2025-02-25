@@ -3,8 +3,8 @@
 
 namespace sand {
 
-class level;
+class world;
 class chunk;
-auto create_chunk_triangles(level& w, chunk& c, glm::ivec2 top_left) -> void;
+auto create_chunk_triangles(world& w, chunk& c, glm::ivec2 top_left) -> void;
 
 }

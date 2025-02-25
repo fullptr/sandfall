@@ -155,7 +155,7 @@ auto main() -> int
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            sand::update(*world);
+            world->pixels.step();
             world->player.update(keyboard);
         }
 
@@ -166,7 +166,7 @@ auto main() -> int
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (world->pixels.valid(coord)) {
                         world->pixels[coord] = editor.get_pixel();
-                        world->wake_chunk_with_pixel(coord);
+                        world->pixels.wake_chunk_with_pixel(coord);
                         updated = true;
                     }
                 }
@@ -177,7 +177,7 @@ auto main() -> int
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
                             if (world->pixels.valid({x, y})) {
                                 world->pixels[{x, y}] = editor.get_pixel();
-                                world->wake_chunk_with_pixel({x, y});
+                                world->pixels.wake_chunk_with_pixel({x, y});
                                 updated = true;
                             }
                         }
@@ -185,7 +185,7 @@ auto main() -> int
                 }
             break; case 2:
                 if (mouse.is_down_this_frame(sand::mouse_button::left)) {
-                    sand::apply_explosion(*world, mouse_pos, sand::explosion{
+                    sand::apply_explosion(world->pixels, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
                     updated = true;
@@ -224,12 +224,12 @@ auto main() -> int
 
             ImGui::Text("Info");
             ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", std::count_if(world->chunks.begin(), world->chunks.end(), [](const sand::chunk& c) {
+            ImGui::Text("Awake chunks: %d", std::count_if(world->pixels.chunks().begin(), world->pixels.chunks().end(), [](const sand::chunk& c) {
                 return c.should_step;
             }));
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
-                for (auto& c : world->chunks) { c.should_step_next = true; }
+                world->pixels.wake_all();
                 std::fill(world->pixels.begin(), world->pixels.end(), sand::pixel::air());
             }
             ImGui::Separator();
@@ -283,7 +283,7 @@ auto main() -> int
         shape_renderer.draw_circle(world->player.centre(), {1.0, 1.0, 0.0, 1.0}, world->player.radius());
 
         if (show_triangles) {
-            for (const auto& chunk : world->chunks) {
+            for (const auto& chunk : world->pixels.chunks()) {
                 render_body_triangles(shape_renderer, chunk.triangles);
             }
         }
