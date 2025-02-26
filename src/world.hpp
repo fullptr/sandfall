@@ -34,13 +34,14 @@ class world
     std::size_t        d_height;
 
     auto at(glm::ivec2) -> pixel&;
-
-public:
+    auto wake_chunk(glm::ivec2 chunk_pos) -> void;
+    
+    public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
-        : d_physics{{config::gravity.x, config::gravity.y}}
-        , d_pixels{pixels}
-        , d_width{width}
-        , d_height{height}
+    : d_physics{{config::gravity.x, config::gravity.y}}
+    , d_pixels{pixels}
+    , d_width{width}
+    , d_height{height}
     {
         assert(pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
@@ -49,11 +50,11 @@ public:
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
-
+    
     auto step() -> void;
-
-    auto physics() -> b2World& { return d_physics; }
+    
     auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
+    auto physics() -> b2World& { return d_physics; }
     auto wake_all() -> void;
 
     auto valid(glm::ivec2 pos) const -> bool;
