@@ -32,9 +32,10 @@ class world
     std::vector<chunk> d_chunks;
     std::size_t        d_width;
     std::size_t        d_height;
-
+    
     auto at(glm::ivec2) -> pixel&;
     auto wake_chunk(glm::ivec2 chunk_pos) -> void;
+    auto chunk_valid(glm::ivec2 pos) const -> bool;
     
     public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
@@ -62,24 +63,20 @@ class world
     auto wake_all() -> void;
 
     auto valid(glm::ivec2 pos) const -> bool;
-    auto chunk_valid(glm::ivec2 pos) const -> bool;
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto swap(glm::ivec2 a, glm::ivec2 b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
 
-    auto visit(glm::ivec2 pos, auto&& updater) -> void
-    {
-        assert(valid(pos));
-        auto& pixel = d_pixels[pos.x + d_width * pos.y];
-        updater(pixel);
-        wake_chunk_with_pixel(pos);
-    }
-
     auto visit_no_wake(glm::ivec2 pos, auto&& updater) -> void
     {
         assert(valid(pos));
-        auto& pixel = d_pixels[pos.x + d_width * pos.y];
-        updater(pixel);
+        updater(d_pixels[pos.x + d_width * pos.y]);
+    }
+
+    auto visit(glm::ivec2 pos, auto&& updater) -> void
+    {
+        visit_no_wake(pos, std::forward<decltype(updater)>(updater));
+        wake_chunk_with_pixel(pos);
     }
 
     inline auto begin() { return d_pixels.begin(); }
