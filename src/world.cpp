@@ -177,8 +177,8 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 // offset must be a unit vector.
 auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
-    const auto& src = w[pos + offset];
-    const auto& dst = w[pos];
+    const auto& dst = w[pos + offset];
+    const auto& src = w[pos];
 
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
@@ -253,11 +253,9 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
             // maintain a current
             if (px.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    if (!w.valid(pos + offset)) continue;
-                    auto& neighbour = w[pos + offset];
-
-                    if (should_get_powered(w, pos, offset)) {
-                        w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
+                    const auto neighbour = pos + offset;
+                    if (w.valid(neighbour) && should_get_powered(w, pos, offset)) {
+                        w.visit(neighbour, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
                 }
@@ -344,17 +342,17 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
     }
 }
 
-auto update_pixel(world& w, glm::ivec2 pos) -> void
+auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
 {
     if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
-        return;
+        return pos;
     }
 
     update_pixel_position(w, pos);
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
 
-    w.visit_no_wake(pos, [&](pixel& p) { p.flags[is_updated] = true; }); // always no wake
+    return pos;
 }
 
 }
@@ -458,7 +456,7 @@ auto world::step() -> void
     for (auto& pixel : d_pixels) {
         pixel.flags[is_updated] = false;
     }
-    
+
     for (auto& chunk : d_chunks) {
         chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
@@ -473,13 +471,15 @@ auto world::step() -> void
             if (coin_flip()) {
                 for (int x = 0; x != sand::config::chunk_size; ++x) {
                     const auto pos = top_left + glm::ivec2{x, y - 1};
-                    update_pixel(*this, pos);
+                    const auto new_pos = update_pixel(*this, pos);
+                    at(new_pos).flags[is_updated] = true;
                 }
             }
             else {
                 for (int x = sand::config::chunk_size; x != 0; --x) {
                     const auto pos = top_left + glm::ivec2{x - 1, y - 1};
-                    update_pixel(*this, pos);
+                    const auto new_pos = update_pixel(*this, pos);
+                    at(new_pos).flags[is_updated] = true;
                 }
             }
         }
