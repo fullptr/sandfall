@@ -384,7 +384,7 @@ auto wake_pixel_chunk(world& w, glm::ivec2 pos) -> void
 
 auto world::wake_chunk(glm::ivec2 chunk_pos) -> void
 {
-    assert(chunk_pos(chunk_pos));
+    assert(chunk_valid(chunk_pos));
     d_chunks[get_chunk_index(d_width, chunk_pos)].should_step_next = true;
 }
 
