@@ -2,6 +2,7 @@
 #include "utility.hpp"
 #include "pixel.hpp"
 #include "camera.hpp"
+#include "world.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
@@ -103,7 +104,7 @@ auto renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto renderer::update(const world& world, bool show_chunks, const camera& camera) -> void
+auto renderer::update(const level& world, bool show_chunks, const camera& camera) -> void
 {
     if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
         resize(world.pixels.width(), world.pixels.height());
@@ -123,11 +124,11 @@ auto renderer::update(const world& world, bool show_chunks, const camera& camera
     const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
     d_shader.load_mat4("u_proj_matrix", projection);
 
-    const auto& chunks = world.chunks;
+    const auto& chunks = world.pixels.chunks();
     for (std::size_t index = 0; index != chunks.size(); ++index) {
         if (!chunks[index].should_step && !show_chunks) continue;
 
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(world, index);
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(world.pixels.width(), index);
         for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
             for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
                 const auto world_coord = top_left + glm::ivec2{x, y};

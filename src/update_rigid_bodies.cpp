@@ -15,13 +15,13 @@ using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config:
 
 auto is_static_pixel(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 pos) -> bool
 {
     if (!(top_left.x <= pos.x && pos.x < top_left.x + sand::config::chunk_size) || !(top_left.y <= pos.y && pos.y < top_left.y + sand::config::chunk_size)) return false;
     
-    if (!w.pixels.valid(pos)) return false;
-    const auto& pixel = w.pixels[pos];
+    if (!w.valid(pos)) return false;
+    const auto& pixel = w[pos];
     const auto& props = sand::properties(pixel);
     return pixel.type != sand::pixel_type::none
         && props.phase == sand::pixel_phase::solid
@@ -30,7 +30,7 @@ auto is_static_pixel(
 
 auto is_static_boundary(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 A, glm::ivec2 offset) -> bool
 {
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
@@ -41,7 +41,7 @@ auto is_static_boundary(
 
 auto is_along_boundary(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 curr, glm::ivec2 next) -> bool
 {
     const auto offset = next - curr;
@@ -55,7 +55,7 @@ auto is_along_boundary(
 
 auto is_boundary_cross(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 curr) -> bool
 {
     const auto tl = is_static_pixel(top_left, w, curr + left + up);
@@ -67,7 +67,7 @@ auto is_boundary_cross(
 
 auto is_valid_step(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 prev,
     glm::ivec2 curr,
     glm::ivec2 next) -> bool
@@ -93,7 +93,7 @@ auto is_valid_step(
 
 auto get_boundary(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 start) -> std::vector<glm::ivec2>
 {
     auto ret = std::vector<glm::ivec2>{};
@@ -179,7 +179,7 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
 
 auto calc_boundary(
     glm::ivec2 top_left,
-    const sand::world& w,
+    const world& w,
     glm::ivec2 start,
     float epsilon) -> std::vector<glm::ivec2>
 {
@@ -365,10 +365,10 @@ auto get_starting_pixel(const chunk_static_pixels& pixels) -> glm::ivec2
 auto create_chunk_triangles(world& w, chunk& c, glm::ivec2 top_left) -> void
 {
     if (c.triangles) {
-        w.physics.DestroyBody(c.triangles);
+        w.physics().DestroyBody(c.triangles);
     }
     
-    c.triangles = new_body(w.physics);
+    c.triangles = new_body(w.physics());
     
     auto chunk_pixels = chunk_static_pixels{};
     

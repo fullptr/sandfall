@@ -32,7 +32,7 @@ public:
 
     auto bind() const -> void;
 
-    auto update(const world& world, bool show_chunks, const camera& camera) -> void;
+    auto update(const level& world, bool show_chunks, const camera& camera) -> void;
 
     auto draw() const -> void;
 
