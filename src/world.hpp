@@ -38,10 +38,10 @@ class world
     
     public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
-    : d_physics{{config::gravity.x, config::gravity.y}}
-    , d_pixels{pixels}
-    , d_width{width}
-    , d_height{height}
+        : d_physics{{config::gravity.x, config::gravity.y}}
+        , d_pixels{pixels}
+        , d_width{width}
+        , d_height{height}
     {
         assert(pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
@@ -50,6 +50,10 @@ class world
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
+    world(const world&) = delete;
+    world(world&&) = delete;
+    world& operator=(const world&) = delete;
+    world& operator=(world&&) = delete;
     
     auto step() -> void;
     
@@ -95,8 +99,6 @@ struct level
     player_controller  player;
 
     level(std::size_t width, std::size_t height, const std::vector<pixel>& pixels);
-    level(const level&) = delete;
-    level& operator=(const level&) = delete;
 };
 
 }
