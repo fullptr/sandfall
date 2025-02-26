@@ -204,6 +204,8 @@ auto main() -> int
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
             ImGui::Text("Pixel: {%d, %d}", mouse.x, mouse.y);
+            const auto px = level->pixels[mouse];
+            ImGui::Text("  pixel power: %d", px.power);
             ImGui::Separator();
 
             ImGui::Text("Camera");

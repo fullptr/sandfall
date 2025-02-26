@@ -177,8 +177,8 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 // offset must be a unit vector.
 auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
 {
-    const auto& dst = w[pos + offset];
-    const auto& src = w[pos];
+    const auto& dst = w[pos];
+    const auto& src = w[pos + offset];
 
     // Prevents current from flowing from diode_out to diode_in
     if (dst.type == pixel_type::diode_in && src.type == pixel_type::diode_out) {
@@ -255,7 +255,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
                 for (const auto& offset : adjacent_offsets) {
                     const auto neighbour = pos + offset;
                     if (w.valid(neighbour) && should_get_powered(w, pos, offset)) {
-                        w.visit(neighbour, [&](pixel& p) { p.power = props.power_max; });
+                        w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
                 }
@@ -270,7 +270,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
 
         case pixel_power_type::source: {
             if (px.power < props.power_max) {
-                w.visit(pos, [&](pixel& p) { --p.power; });
+                w.visit(pos, [&](pixel& p) { ++p.power; });
             }
             for (const auto& offset : adjacent_offsets) {
                 if (!w.valid(pos + offset)) continue;
