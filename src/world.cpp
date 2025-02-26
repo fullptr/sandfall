@@ -447,7 +447,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     for (const auto offset : adjacent_offsets) {
         const auto neighbour = pixel + glm::ivec2{1, 0};
         const auto neighbour_chunk = get_chunk_from_pixel(neighbour);
-        if (chunk_valid(neighbour_chunk)) {
+        if (chunk_valid(neighbour)) {
             wake_chunk(neighbour_chunk);
         }
     }
@@ -459,9 +459,12 @@ auto world::step() -> void
         pixel.flags[is_updated] = false;
     }
     
+    for (auto& chunk : d_chunks) {
+        chunk.should_step = std::exchange(chunk.should_step_next, false);
+    }
+    
     for (auto it = d_chunks.rbegin(); it != d_chunks.rend(); ++it) {
         auto& chunk = *it;
-        chunk.should_step = std::exchange(chunk.should_step_next, false);
         if (!chunk.should_step) continue;
     
         const auto index = d_chunks.size() - std::distance(d_chunks.rbegin(), it) - 1;
