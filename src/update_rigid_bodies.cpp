@@ -212,6 +212,7 @@ auto add_triangles_to_body(b2Body& body, const std::vector<triangle>& triangles)
     b2PolygonShape polygonShape;
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &polygonShape;
+    fixtureDef.friction = 1;
 
     for (const triangle& t : triangles) {
         const auto vertices = {

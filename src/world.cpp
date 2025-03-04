@@ -425,13 +425,6 @@ auto world::operator[](glm::ivec2 pos) const -> const pixel&
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
-    : pixels{width, height, data}
-    , spawn_point{width / 2, height / 2}
-    , player{pixels.physics(), 5}
-{
-}
-
 auto world::wake_all() -> void
 {
     for (auto& c : d_chunks) { c.should_step_next = true; }
@@ -487,6 +480,13 @@ auto world::step() -> void
     }
     
     d_physics.Step(sand::config::time_step, 8, 3);
+}
+
+level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
+    : pixels{width, height, data}
+    , spawn_point{width / 2, height / 2}
+    , player{pixels.physics(), 5}
+{
 }
 
 }

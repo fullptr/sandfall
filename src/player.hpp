@@ -35,6 +35,7 @@ public:
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circle;
         fixtureDef.density = 1;
+        fixtureDef.friction = 1;
         d_body->CreateFixture(&fixtureDef);
     }
 
