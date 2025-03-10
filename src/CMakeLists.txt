@@ -32,7 +32,6 @@ add_executable(sandfall
 target_include_directories(sandfall PUBLIC .)
 
 target_link_libraries(sandfall PRIVATE
-    vendor
     glfw
     glad::glad
     glm::glm

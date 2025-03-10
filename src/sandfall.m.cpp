@@ -17,7 +17,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <box2d/box2d.h>
 #include <cereal/archives/binary.hpp>
 
