@@ -13,13 +13,16 @@
 #include "graphics/renderer.hpp"
 #include "graphics/shape_renderer.hpp"
 #include "graphics/window.hpp"
-#include "graphics/ui.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
-#include <imgui.h>
 #include <box2d/box2d.h>
 #include <cereal/archives/binary.hpp>
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui-SFML.h>
 
 #include <memory>
 #include <print>
@@ -129,7 +132,6 @@ auto main() -> int
 
     auto level           = new_level(4, 4);
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
-    auto ui              = sand::ui{window};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
@@ -138,6 +140,12 @@ auto main() -> int
 
     auto new_world_chunks_width  = 4;
     auto new_world_chunks_height = 4;
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window.native_handle(), true);
+    ImGui_ImplOpenGL3_Init("#version 410");
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -192,8 +200,10 @@ auto main() -> int
                 }
         }
         
-        // Renders the UI but doesn't yet draw on the screen
-        ui.begin_frame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
         const auto mouse_actual = mouse_pos_world_space(window, camera);
         const auto mouse = pixel_at_mouse(window, camera);
 
@@ -298,11 +308,16 @@ auto main() -> int
 
         shape_renderer.end_frame();
         
-        // Display the UI
-        ui.end_frame();
+        ImGui::EndFrame();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         window.swap_buffers();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     
     return 0;
 }

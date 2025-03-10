@@ -4,6 +4,7 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG )
@@ -23,7 +24,6 @@ add_executable(sandfall
     graphics/window.cpp
     graphics/shader.cpp
     graphics/texture.cpp
-    graphics/ui.cpp
 )
 
 target_include_directories(sandfall PUBLIC .)
@@ -33,6 +33,7 @@ target_link_libraries(sandfall PRIVATE
     glad::glad
     glm::glm
     imgui::imgui
+    ImGui-SFML::ImGui-SFML
     cereal::cereal
     box2d::box2d
     SFML::Network SFML::Graphics SFML::Window SFML::Audio SFML::System
