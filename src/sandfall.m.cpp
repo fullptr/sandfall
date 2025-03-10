@@ -128,11 +128,20 @@ auto main() -> int
         }
     });
 
+<<<<<<< HEAD
     auto level           = new_level(4, 4);
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
+=======
+    auto level          = new_level(4, 4);
+    auto world_renderer = sand::renderer{level->pixels.width(), level->pixels.height()};
+    auto ui             = sand::ui{window};
+    auto accumulator    = 0.0;
+    auto timer          = sand::timer{};
+    auto shape_renderer = sand::shape_renderer{};
+>>>>>>> 0d94837 (WIP)
     auto show_triangles = false;
     auto show_spawn     = false;
 

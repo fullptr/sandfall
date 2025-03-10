@@ -66,15 +66,21 @@ public:
             if (right_dot > 0.7) { can_move_right = false; }
         }
 
+        float force = 0;
+        const auto vel = d_body->GetLinearVelocity();
+        float desired_vel = 0;
+
         if (can_move_left && k.is_down(sand::keyboard_key::A)) {
-            const auto v = d_body->GetLinearVelocity();
-            d_body->SetLinearVelocity({-3.0f, v.y});
+            if (vel.x > -5) desired_vel -= 5;
         }
 
         if (can_move_right && k.is_down(sand::keyboard_key::D)) {
-            const auto v = d_body->GetLinearVelocity();
-            d_body->SetLinearVelocity({3.0f, v.y});
+            if (vel.x < 5) desired_vel += 5;
         }
+
+        float vel_change = desired_vel - vel.x;
+        float impulse = d_body->GetMass() * vel_change; //disregard time factor
+        d_body->ApplyLinearImpulse(b2Vec2(impulse, 0), d_body->GetWorldCenter(), true);
 
         if (on_ground) {
             d_double_jump = true;
