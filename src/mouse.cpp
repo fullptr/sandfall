@@ -15,10 +15,14 @@ auto mouse::on_event(const event& e) -> void
     else if (e.is<sand::mouse_released_event>()) {
         d_down[e.as<sand::mouse_released_event>().button] = false;
     }
+    else if (e.is<sand::mouse_moved_event>()) {
+        d_positiion_this_frame = e.as<sand::mouse_moved_event>().pos;
+    }
 }
 
 auto mouse::on_new_frame() -> void
 {
+    d_position_last_frame = d_positiion_this_frame;
     d_down_this_frame.reset();
 }
 
@@ -30,6 +34,11 @@ auto mouse::is_down(mouse_button button) const -> bool
 auto mouse::is_down_this_frame(mouse_button button) const -> bool
 {
     return d_down_this_frame.test(std::to_underlying(button));
+}
+
+auto mouse::offset() const -> glm::vec2
+{
+    return d_positiion_this_frame - d_position_last_frame;
 }
 
 

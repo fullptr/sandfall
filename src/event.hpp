@@ -48,7 +48,6 @@ struct mouse_released_event {
 
 struct mouse_moved_event {
 	glm::vec2 pos;
-	glm::vec2 offset;
 };
 
 struct mouse_scrolled_event {

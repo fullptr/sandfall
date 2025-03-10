@@ -113,11 +113,7 @@ auto main() -> int
         mouse.on_event(event);
         keyboard.on_event(event);
 
-        if (mouse.is_down(sand::mouse_button::right) && event.is<sand::mouse_moved_event>()) {
-            const auto& e = event.as<sand::mouse_moved_event>();
-            camera.top_left -= e.offset / camera.world_to_screen;
-        }
-        else if (event.is<sand::window_resize_event>()) {
+        if (event.is<sand::window_resize_event>()) {
             camera.screen_width = window.width();
             camera.screen_height = window.height();
         }
@@ -151,6 +147,10 @@ auto main() -> int
         
         window.poll_events();
         window.clear();
+
+        if (mouse.is_down(sand::mouse_button::right)) {
+            camera.top_left -= mouse.offset() / camera.world_to_screen;
+        }
 
         accumulator += dt;
         bool updated = false;
