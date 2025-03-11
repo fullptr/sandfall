@@ -123,9 +123,7 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<mouse_moved_event>(
-			glm::vec2{x_pos, y_pos}, glm::vec2{x_pos - data.mouse_pos.x, y_pos - data.mouse_pos.y}
-		);
+		auto event = make_event<mouse_moved_event>( glm::vec2{x_pos, y_pos} );
 		data.mouse_pos = {x_pos, y_pos};
 		data.callback(event);
 	});
