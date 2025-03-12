@@ -95,10 +95,28 @@ public:
 
     void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
+        assert(vertexCount > 1);
+        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
+            const auto p1 = sand::physics_to_pixel(vertices[i]);
+            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
+            d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+        }
+        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
+        const auto p2 = sand::physics_to_pixel(vertices[0]);
+        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
     }
     
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
+        assert(vertexCount > 1);
+        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
+            const auto p1 = sand::physics_to_pixel(vertices[i]);
+            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
+            d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+        }
+        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
+        const auto p2 = sand::physics_to_pixel(vertices[0]);
+        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
     }
     
     void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
@@ -120,8 +138,11 @@ public:
         );
     }
 
-	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override
+	void DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color) override
     {
+        const auto p1 = sand::physics_to_pixel(bp1);
+        const auto p2 = sand::physics_to_pixel(bp2);
+        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
     }
 
 	void DrawTransform(const b2Transform& xf) override
@@ -130,7 +151,11 @@ public:
 
 	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override
     {
-        
+        d_renderer->draw_circle(
+            sand::physics_to_pixel(p),
+            {color.r, color.g, color.b, 1.0},
+            2.0f
+        );
     }
 };
 
@@ -183,7 +208,7 @@ auto main() -> int
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_draw      = physics_debug_draw{&shape_renderer};
     debug_draw.SetFlags(b2Draw::e_shapeBit);
-    auto show_triangles = false;
+    auto show_physics = false;
     auto show_spawn     = false;
     level->pixels.physics().SetDebugDraw(&debug_draw);
 
@@ -276,7 +301,7 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::Checkbox("Show Triangles", &show_triangles);
+            ImGui::Checkbox("Show Physics", &show_physics);
             ImGui::Checkbox("Show Spawn", &show_spawn);
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
@@ -345,12 +370,12 @@ auto main() -> int
         world_renderer.draw();
 
         shape_renderer.begin_frame(camera);
-        level->pixels.physics().DebugDraw();
 
-        if (show_triangles) {
-            for (const auto& chunk : level->pixels.chunks()) {
-                render_body_triangles(shape_renderer, chunk.triangles);
-            }
+        // This overlaps with the physics def, but when we add more fixtures to the player, these will differ
+        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, level->player.radius());
+
+        if (show_physics) {
+            level->pixels.physics().DebugDraw();
         }
 
         if (show_spawn) {
