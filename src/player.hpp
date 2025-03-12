@@ -10,13 +10,17 @@ namespace sand {
 
 class player_controller : public b2ContactListener {
     b2World*   d_world;
-    b2Body*    d_body        = nullptr;
-    b2Fixture* d_fixture     = nullptr;
-    b2Fixture* d_footSensor  = nullptr;
-    bool       d_double_jump = false;
-    float      d_friction    = 1.0f;
+    b2Body*    d_body         = nullptr;
+    b2Fixture* d_fixture      = nullptr;
+    b2Fixture* d_footSensor   = nullptr;
+    b2Fixture* d_left_sensor  = nullptr;
+    b2Fixture* d_right_sensor = nullptr;
+    float      d_friction     = 1.0f;
 
-    int d_num_foot_contacts = 0;
+    bool d_double_jump        = false;
+    int  d_num_foot_contacts  = 0;
+    int  d_num_left_contacts  = 0;
+    int  d_num_right_contacts = 0;
 
 public:
     // width and height are in pixel space
@@ -60,6 +64,30 @@ public:
             d_footSensor = d_body->CreateFixture(&fixtureDef);
         }
 
+         // Set up left sensor
+         {
+            const auto half_extents = pixel_to_physics(glm::vec2{1.0f, 9.0f});
+            b2PolygonShape shape;
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{-5.0f, 0.0f}), 0);
+            
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shape;
+            fixtureDef.isSensor = true;
+            d_left_sensor = d_body->CreateFixture(&fixtureDef);
+        }
+
+        // Set up right sensor
+        {
+            const auto half_extents = pixel_to_physics(glm::vec2{1.0f, 9.0f});
+            b2PolygonShape shape;
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{5.0f, 0.0f}), 0);
+            
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shape;
+            fixtureDef.isSensor = true;
+            d_right_sensor = d_body->CreateFixture(&fixtureDef);
+        }
+
         d_world->SetContactListener(this);
     }
 
@@ -73,11 +101,23 @@ public:
         if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
             ++d_num_foot_contacts;
         }
+        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
+            ++d_num_left_contacts;
+        }
+        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
+            ++d_num_right_contacts;
+        }
     }
 
     void EndContact(b2Contact* contact) {
         if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
             --d_num_foot_contacts;
+        }
+        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
+            --d_num_left_contacts;
+        }
+        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
+            --d_num_right_contacts;
         }
     }
 
@@ -91,20 +131,8 @@ public:
     void update(const sand::keyboard& k)
     {
         const bool on_ground = d_num_foot_contacts > 0;
-        bool can_move_left = true;
-        bool can_move_right = true;
-
-        for (auto c = d_body->GetContactList(); c; c = c->next) {
-            if (!c->contact->IsTouching()) continue;
-
-            const auto normal = -c->other->GetWorldVector(c->contact->GetManifold()->localNormal);
-
-            const auto left_dot = b2Dot(normal, b2Vec2(-1.0, 0.0));
-            const auto right_dot = b2Dot(normal, b2Vec2(1.0, 0.0));
-
-            if (left_dot > 0.7) { can_move_left = false; }
-            if (right_dot > 0.7) { can_move_right = false; }
-        }
+        const bool can_move_left = d_num_left_contacts == 0;
+        const bool can_move_right = d_num_right_contacts == 0;
 
         float force = 0;
         const auto vel = d_body->GetLinearVelocity();
