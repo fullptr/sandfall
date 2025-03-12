@@ -15,7 +15,6 @@ class player_controller : public b2ContactListener {
     b2Fixture* d_footSensor   = nullptr;
     b2Fixture* d_left_sensor  = nullptr;
     b2Fixture* d_right_sensor = nullptr;
-    float      d_friction     = 1.0f;
 
     bool d_double_jump        = false;
     int  d_num_foot_contacts  = 0;
@@ -47,14 +46,14 @@ public:
     
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &shape;
-            fixtureDef.density = 1;
-            fixtureDef.friction = d_friction;
+            fixtureDef.density = 1.0f;
+            fixtureDef.friction = 1.0f;
             d_fixture = d_body->CreateFixture(&fixtureDef);
         }
         
         // Set up foot sensor
         {
-            const auto half_extents = pixel_to_physics(glm::vec2{4.0f, 4.0f});
+            const auto half_extents = pixel_to_physics(glm::vec2{2.0f, 4.0f});
             b2PolygonShape shape;
             shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{0.0f, 10.0f}), 0);
             
@@ -134,28 +133,28 @@ public:
         const bool can_move_left = d_num_left_contacts == 0;
         const bool can_move_right = d_num_right_contacts == 0;
 
-        float force = 0;
         const auto vel = d_body->GetLinearVelocity();
-        float desired_vel = 0;
-
+        
         const auto go_l = can_move_left && k.is_down(sand::keyboard_key::A);
         const auto go_r = can_move_right && k.is_down(sand::keyboard_key::D);
-        const auto go_none = !(go_l ^ go_r);
         
-        if (go_none) {
-            desired_vel = 0.f;
-        } else if (go_l) {
-            if (vel.x > -5) desired_vel = b2Max(vel.x - 0.5f, -5.0f);
-        } else if (go_r) {
-            if (vel.x < 5) desired_vel = b2Min(vel.x + 0.5f,  5.0f);;
+        auto direction = 0;
+        if (can_move_left && k.is_down(sand::keyboard_key::A)) {
+            direction -= 1;
+        }
+        if (can_move_right && k.is_down(sand::keyboard_key::D)) {
+            direction += 1;
+        }
+        
+        const auto max_vel = 5.0f;
+        auto desired_vel = 0.0f;
+        if (direction == -1) { // left
+            if (vel.x > -max_vel) desired_vel = b2Max(vel.x - max_vel, -max_vel);
+        } else if (direction == 1) { // right
+            if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
         }
 
-        if (desired_vel != 0) {
-            d_friction = 0.1f;
-        } else {
-            d_friction = 1.0f;
-        }
-        d_fixture->SetFriction(d_friction);
+        d_fixture->SetFriction(desired_vel != 0 ? 0.1f : 1.0f);
 
         float vel_change = desired_vel - vel.x;
         float impulse = d_body->GetMass() * vel_change;
