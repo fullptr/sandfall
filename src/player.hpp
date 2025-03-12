@@ -16,6 +16,8 @@ class player_controller : public b2ContactListener {
     bool       d_double_jump = false;
     float      d_friction    = 1.0f;
 
+    int d_num_foot_contacts = 0;
+
 public:
     // width and height are in pixel space
     player_controller(b2World& world)
@@ -67,6 +69,18 @@ public:
         }
     }
 
+    void BeginContact(b2Contact* contact) {
+        if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
+            ++d_num_foot_contacts;
+        }
+    }
+
+    void EndContact(b2Contact* contact) {
+        if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
+            --d_num_foot_contacts;
+        }
+    }
+
     auto set_position(glm::ivec2 pos) -> void
     {
         d_body->SetTransform(pixel_to_physics(pos), 0);
@@ -76,7 +90,7 @@ public:
 
     void update(const sand::keyboard& k)
     {
-        bool on_ground = false;
+        const bool on_ground = d_num_foot_contacts > 0;
         bool can_move_left = true;
         bool can_move_right = true;
 
@@ -85,11 +99,9 @@ public:
 
             const auto normal = -c->other->GetWorldVector(c->contact->GetManifold()->localNormal);
 
-            const auto up_dot = b2Dot(normal, b2Vec2(0.0, 1.0));
             const auto left_dot = b2Dot(normal, b2Vec2(-1.0, 0.0));
             const auto right_dot = b2Dot(normal, b2Vec2(1.0, 0.0));
 
-            if (up_dot > 0.7) { on_ground = true; }
             if (left_dot > 0.7) { can_move_left = false; }
             if (right_dot > 0.7) { can_move_right = false; }
         }

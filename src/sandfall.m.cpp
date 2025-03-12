@@ -99,11 +99,11 @@ public:
         for (std::size_t i = 0; i < vertexCount - 1; ++i) {
             const auto p1 = sand::physics_to_pixel(vertices[i]);
             const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
-            d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
         }
         const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
         const auto p2 = sand::physics_to_pixel(vertices[0]);
-        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
     }
     
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
@@ -112,11 +112,11 @@ public:
         for (std::size_t i = 0; i < vertexCount - 1; ++i) {
             const auto p1 = sand::physics_to_pixel(vertices[i]);
             const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
-            d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
         }
         const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
         const auto p2 = sand::physics_to_pixel(vertices[0]);
-        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
     }
     
     void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
@@ -142,7 +142,7 @@ public:
     {
         const auto p1 = sand::physics_to_pixel(bp1);
         const auto p2 = sand::physics_to_pixel(bp2);
-        d_renderer->draw_line(p1, p2, {1,0,0,1}, 1);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
     }
 
 	void DrawTransform(const b2Transform& xf) override
