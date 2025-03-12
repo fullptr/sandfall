@@ -9,18 +9,17 @@
 namespace sand {
 
 class player_controller : public b2ContactListener {
-    int        d_radius;
     b2World*   d_world;
     b2Body*    d_body        = nullptr;
     b2Fixture* d_fixture     = nullptr;
+    b2Fixture* d_footSensor  = nullptr;
     bool       d_double_jump = false;
     float      d_friction    = 1.0f;
 
 public:
     // width and height are in pixel space
-    player_controller(b2World& world, int radius)
-        : d_radius{radius}
-        , d_world{&world}
+    player_controller(b2World& world)
+        : d_world{&world}
     {
         // Create player body
         b2BodyDef bodyDef;
@@ -34,14 +33,31 @@ public:
         md.mass = 80;
         d_body->SetMassData(&md);
 
-        b2CircleShape circle;
-        circle.m_radius = pixel_to_physics(d_radius);
+        // Set up main body fixture
+        {
+            const auto half_extents = pixel_to_physics(glm::vec2{5.0f, 10.0f});
+            b2PolygonShape shape;
+            shape.SetAsBox(half_extents.x, half_extents.y);
+    
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shape;
+            fixtureDef.density = 1;
+            fixtureDef.friction = d_friction;
+            d_fixture = d_body->CreateFixture(&fixtureDef);
+        }
+        
+        // Set up foot sensor
+        {
+            const auto half_extents = pixel_to_physics(glm::vec2{4.0f, 4.0f});
+            b2PolygonShape shape;
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{0.0f, 10.0f}), 0);
+            
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shape;
+            fixtureDef.isSensor = true;
+            d_footSensor = d_body->CreateFixture(&fixtureDef);
+        }
 
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &circle;
-        fixtureDef.density = 1;
-        fixtureDef.friction = d_friction;
-        d_fixture = d_body->CreateFixture(&fixtureDef);
         d_world->SetContactListener(this);
     }
 
@@ -121,10 +137,6 @@ public:
 
     auto centre() const {
         return physics_to_pixel(d_body->GetPosition());
-    }
-
-    auto radius() const -> int {
-        return d_radius;
     }
 };
 

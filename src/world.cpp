@@ -485,7 +485,7 @@ auto world::step() -> void
 level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
     : pixels{width, height, data}
     , spawn_point{width / 2, height / 2}
-    , player{pixels.physics(), 5}
+    , player{pixels.physics()}
 {
 }
 

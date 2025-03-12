@@ -371,8 +371,8 @@ auto main() -> int
 
         shape_renderer.begin_frame(camera);
 
-        // This overlaps with the physics def, but when we add more fixtures to the player, these will differ
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, level->player.radius());
+        // TODO: Replace with actual sprite data
+        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (show_physics) {
             level->pixels.physics().DebugDraw();
