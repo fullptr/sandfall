@@ -8,11 +8,13 @@
 
 namespace sand {
 
-class player_controller {
-    int      d_radius;
-    b2World* d_world;
-    b2Body*  d_body        = nullptr;
-    bool     d_double_jump = false;
+class player_controller : public b2ContactListener {
+    int        d_radius;
+    b2World*   d_world;
+    b2Body*    d_body        = nullptr;
+    b2Fixture* d_fixture     = nullptr;
+    bool       d_double_jump = false;
+    float      d_friction    = 1.0f;
 
 public:
     // width and height are in pixel space
@@ -23,11 +25,14 @@ public:
         // Create player body
         b2BodyDef bodyDef;
         bodyDef.type = b2_dynamicBody;
+        bodyDef.fixedRotation = true;
+        bodyDef.linearDamping = 1.0f;
         const auto position = pixel_to_physics({200.0f, 100.0f});
         bodyDef.position.Set(position.x, position.y);
         d_body = world.CreateBody(&bodyDef);
-        d_body->SetFixedRotation(true);
-        d_body->SetLinearDamping(0.9f);
+        b2MassData md;
+        md.mass = 80;
+        d_body->SetMassData(&md);
 
         b2CircleShape circle;
         circle.m_radius = pixel_to_physics(d_radius);
@@ -35,8 +40,15 @@ public:
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circle;
         fixtureDef.density = 1;
-        fixtureDef.friction = 1;
-        d_body->CreateFixture(&fixtureDef);
+        fixtureDef.friction = d_friction;
+        d_fixture = d_body->CreateFixture(&fixtureDef);
+        d_world->SetContactListener(this);
+    }
+
+    void PreSolve(b2Contact* contact, const b2ContactImpulse* impulse) {
+        if (contact->GetFixtureA() == d_fixture || contact->GetFixtureB() == d_fixture) {
+            contact->ResetFriction();
+        }
     }
 
     auto set_position(glm::ivec2 pos) -> void
@@ -70,17 +82,28 @@ public:
         const auto vel = d_body->GetLinearVelocity();
         float desired_vel = 0;
 
-        if (can_move_left && k.is_down(sand::keyboard_key::A)) {
-            if (vel.x > -5) desired_vel -= 5;
+        const auto go_l = can_move_left && k.is_down(sand::keyboard_key::A);
+        const auto go_r = can_move_right && k.is_down(sand::keyboard_key::D);
+        const auto go_none = !(go_l ^ go_r);
+        
+        if (go_none) {
+            desired_vel = 0.f;
+        } else if (go_l) {
+            if (vel.x > -5) desired_vel = b2Max(vel.x - 0.5f, -5.0f);
+        } else if (go_r) {
+            if (vel.x < 5) desired_vel = b2Min(vel.x + 0.5f,  5.0f);;
         }
 
-        if (can_move_right && k.is_down(sand::keyboard_key::D)) {
-            if (vel.x < 5) desired_vel += 5;
+        if (desired_vel != 0) {
+            d_friction = 0.1f;
+        } else {
+            d_friction = 1.0f;
         }
+        d_fixture->SetFriction(d_friction);
 
         float vel_change = desired_vel - vel.x;
-        float impulse = d_body->GetMass() * vel_change; //disregard time factor
-        d_body->ApplyLinearImpulse(b2Vec2(impulse, 0), d_body->GetWorldCenter(), true);
+        float impulse = d_body->GetMass() * vel_change;
+        d_body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
 
         if (on_ground) {
             d_double_jump = true;
@@ -90,8 +113,8 @@ public:
                 if (!on_ground) {
                     d_double_jump = false;
                 }
-                const auto v = d_body->GetLinearVelocity();
-                d_body->SetLinearVelocity({v.x, -5.0f});
+                float impulse = d_body->GetMass() * 7;
+                d_body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
             }
         }
     }
