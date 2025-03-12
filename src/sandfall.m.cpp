@@ -86,6 +86,54 @@ auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::lev
     );
 }
 
+class physics_debug_draw : public b2Draw
+{
+    sand::shape_renderer* d_renderer;
+
+public:
+    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {}
+
+    void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
+    {
+    }
+    
+    void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
+    {
+    }
+    
+    void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
+    {
+        d_renderer->draw_annulus(
+            sand::physics_to_pixel(center),
+            {color.r, color.g, color.b, 1.0},
+            0.8f * sand::physics_to_pixel(radius),
+            sand::physics_to_pixel(radius)
+        );
+    }
+
+	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override
+    {
+        d_renderer->draw_circle(
+            sand::physics_to_pixel(center),
+            {color.r, color.g, color.b, 1.0},
+            sand::physics_to_pixel(radius)
+        );
+    }
+
+	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override
+    {
+    }
+
+	void DrawTransform(const b2Transform& xf) override
+    {
+    }
+
+	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override
+    {
+        
+    }
+};
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -133,8 +181,11 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
+    auto debug_draw      = physics_debug_draw{&shape_renderer};
+    debug_draw.SetFlags(b2Draw::e_shapeBit);
     auto show_triangles = false;
     auto show_spawn     = false;
+    level->pixels.physics().SetDebugDraw(&debug_draw);
 
     auto new_world_chunks_width  = 4;
     auto new_world_chunks_height = 4;
@@ -274,6 +325,9 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     level = load_level(filename);
+                    debug_draw = physics_debug_draw{&shape_renderer};
+                    debug_draw.SetFlags(b2Draw::e_shapeBit);
+                    level->pixels.physics().SetDebugDraw(&debug_draw);
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -291,8 +345,7 @@ auto main() -> int
         world_renderer.draw();
 
         shape_renderer.begin_frame(camera);
-
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, level->player.radius());
+        level->pixels.physics().DebugDraw();
 
         if (show_triangles) {
             for (const auto& chunk : level->pixels.chunks()) {
