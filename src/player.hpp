@@ -154,7 +154,7 @@ public:
             if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
         }
 
-        d_fixture->SetFriction(desired_vel != 0 ? 0.1f : 1.0f);
+        d_fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
 
         float vel_change = desired_vel - vel.x;
         float impulse = d_body->GetMass() * vel_change;
