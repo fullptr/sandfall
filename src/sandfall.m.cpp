@@ -86,6 +86,79 @@ auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::lev
     );
 }
 
+class physics_debug_draw : public b2Draw
+{
+    sand::shape_renderer* d_renderer;
+
+public:
+    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {}
+
+    void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
+    {
+        assert(vertexCount > 1);
+        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
+            const auto p1 = sand::physics_to_pixel(vertices[i]);
+            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
+            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+        }
+        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
+        const auto p2 = sand::physics_to_pixel(vertices[0]);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+    }
+    
+    void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
+    {
+        assert(vertexCount > 1);
+        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
+            const auto p1 = sand::physics_to_pixel(vertices[i]);
+            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
+            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+        }
+        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
+        const auto p2 = sand::physics_to_pixel(vertices[0]);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+    }
+    
+    void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
+    {
+        d_renderer->draw_annulus(
+            sand::physics_to_pixel(center),
+            {color.r, color.g, color.b, 1.0},
+            0.8f * sand::physics_to_pixel(radius),
+            sand::physics_to_pixel(radius)
+        );
+    }
+
+	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override
+    {
+        d_renderer->draw_circle(
+            sand::physics_to_pixel(center),
+            {color.r, color.g, color.b, 1.0},
+            sand::physics_to_pixel(radius)
+        );
+    }
+
+	void DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color) override
+    {
+        const auto p1 = sand::physics_to_pixel(bp1);
+        const auto p2 = sand::physics_to_pixel(bp2);
+        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+    }
+
+	void DrawTransform(const b2Transform& xf) override
+    {
+    }
+
+	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override
+    {
+        d_renderer->draw_circle(
+            sand::physics_to_pixel(p),
+            {color.r, color.g, color.b, 1.0},
+            2.0f
+        );
+    }
+};
+
 auto main() -> int
 {
     auto exe_path = sand::get_executable_filepath().parent_path();
@@ -133,8 +206,11 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    auto show_triangles = false;
+    auto debug_draw      = physics_debug_draw{&shape_renderer};
+    debug_draw.SetFlags(b2Draw::e_shapeBit);
+    auto show_physics = false;
     auto show_spawn     = false;
+    level->pixels.physics().SetDebugDraw(&debug_draw);
 
     auto new_world_chunks_width  = 4;
     auto new_world_chunks_height = 4;
@@ -216,6 +292,7 @@ auto main() -> int
                 const auto px = level->pixels[mouse];
                 ImGui::Text("  pixel power: %d", px.power);
             }
+            ImGui::Text("Number of Floors: %d", level->player.floors().size());
             ImGui::Separator();
 
             ImGui::Text("Camera");
@@ -225,7 +302,7 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::Checkbox("Show Triangles", &show_triangles);
+            ImGui::Checkbox("Show Physics", &show_physics);
             ImGui::Checkbox("Show Spawn", &show_spawn);
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
@@ -274,6 +351,9 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     level = load_level(filename);
+                    debug_draw = physics_debug_draw{&shape_renderer};
+                    debug_draw.SetFlags(b2Draw::e_shapeBit);
+                    level->pixels.physics().SetDebugDraw(&debug_draw);
                     updated = true;
                 }
                 ImGui::SameLine();
@@ -292,12 +372,11 @@ auto main() -> int
 
         shape_renderer.begin_frame(camera);
 
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, level->player.radius());
+        // TODO: Replace with actual sprite data
+        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
 
-        if (show_triangles) {
-            for (const auto& chunk : level->pixels.chunks()) {
-                render_body_triangles(shape_renderer, chunk.triangles);
-            }
+        if (show_physics) {
+            level->pixels.physics().DebugDraw();
         }
 
         if (show_spawn) {

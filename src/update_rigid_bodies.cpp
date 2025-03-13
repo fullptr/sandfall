@@ -192,135 +192,12 @@ auto calc_boundary(
     return simplified;
 }
 
-struct triangle
-{
-    glm::ivec2 a;
-    glm::ivec2 b;
-    glm::ivec2 c;
-};
-
 auto new_body(b2World& world) -> b2Body*
 {
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
     bodyDef.position.Set(0.0f, 0.0f);
     return world.CreateBody(&bodyDef);
-}
-
-auto add_triangles_to_body(b2Body& body, const std::vector<triangle>& triangles) -> void
-{
-    b2PolygonShape polygonShape;
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &polygonShape;
-
-    for (const triangle& t : triangles) {
-        const auto vertices = {
-            sand::pixel_to_physics(t.a),
-            sand::pixel_to_physics(t.b),
-            sand::pixel_to_physics(t.c)
-        };
-
-        polygonShape.Set(std::data(vertices), std::size(vertices)); 
-        body.CreateFixture(&fixtureDef);
-    }
-}
-
-auto triangles_to_rigid_bodies(b2World& world, const std::vector<triangle>& triangles) -> b2Body*
-{
-    b2Body* body = new_body(world);
-    add_triangles_to_body(*body, triangles);
-    return body;
-}
-
-inline auto are_collinear(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool
-{
-    return cross(b - a, c - a) == 0;
-}
-
-inline auto is_convex(glm::ivec2 a, glm::ivec2 b, glm::ivec2 c) -> bool {
-    return cross(b - a, c - a) > 0;  // Positive cross product means counter-clockwise turn (convex)
-}
-
-// Check if a point p is inside the triangle
-auto point_in_triangle(glm::ivec2 p, const triangle& t) -> bool
-{
-    const auto area_abc = (t.b.x - t.a.x) * (t.c.y - t.a.y) - (t.b.y - t.a.y) * (t.c.x - t.a.x);
-    const auto area_pab = (t.a.x -   p.x) * (t.b.y -   p.y) - (t.a.y -   p.y) * (t.b.x -   p.x);
-    const auto area_pbc = (t.b.x -   p.x) * (t.c.y -   p.y) - (t.b.y -   p.y) * (t.c.x -   p.x);
-    const auto area_pca = (t.c.x -   p.x) * (t.a.y -   p.y) - (t.c.y -   p.y) * (t.a.x -   p.x);
-
-    return (area_abc >= 0 && area_pab >= 0 && area_pbc >= 0 && area_pca >= 0) ||
-            (area_abc <= 0 && area_pab <= 0 && area_pbc <= 0 && area_pca <= 0);
-}
-
-// Check if a triangle is valid (no points inside it and not degenerate)
-auto is_valid_triangle(const triangle& t, std::span<const glm::ivec2> points) -> bool
-{
-    if (are_collinear(t.a, t.b, t.c)) {
-        return false;  // Collinear points cannot form a valid triangle
-    }
-
-    for (const auto& point : points) {
-        if (point != t.a && point != t.b && point != t.c) {
-            if (point_in_triangle(point, t)) {
-                return false;  // Point is inside the triangle, so it's not a valid triangle
-            }
-        }
-    }
-    return true;
-}
-
-auto remove_collinear_points(const std::vector<glm::ivec2>& points) -> std::vector<glm::ivec2>
-{
-    const auto n = points.size();
-    auto filtered_points = std::vector<glm::ivec2>{};
-
-    for (std::size_t curr = 0; curr != n; ++curr) {
-        const auto prev = (curr == 0) ? n - 1 : curr - 1;
-        const auto next = (curr == n - 1) ? 0 : curr + 1;
-        if (!are_collinear(points[prev], points[curr], points[next])) {
-            filtered_points.push_back(points[curr]);
-        }
-    }
-
-    return filtered_points;
-}
-
-auto triangulate(std::vector<glm::ivec2> vertices) -> std::vector<triangle>
-{
-    auto triangles = std::vector<triangle>{};
-    auto points = remove_collinear_points(vertices);  // Work on a copy of the vertices
-
-    while (points.size() > 3) {
-        bool earFound = false;
-
-        for (size_t curr = 0; curr < points.size(); ++curr) {
-            const auto prev = (curr == 0) ? points.size() - 1 : curr - 1;
-            const auto next = (curr == points.size() - 1) ? 0 : curr + 1;
-            const auto t = triangle{points[prev], points[curr], points[next]};
-
-            if (!is_convex(t.a, t.b, t.c)) {
-                continue;
-            }
-
-            if (is_valid_triangle(t, points)) {
-                triangles.push_back(t);
-                points.erase(points.begin() + curr);
-                earFound = true;
-                break;  // start over with the reduced polygon
-            }
-        }
-
-        if (!earFound) {
-            break;
-        }
-    }
-
-    if (points.size() == 3) {
-        triangles.push_back({points[0], points[1], points[2]});
-    }
-
-    return triangles;
 }
 
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 pos) -> void
@@ -381,14 +258,32 @@ auto create_chunk_triangles(world& w, chunk& c, glm::ivec2 top_left) -> void
             }
         }
     }
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.friction = 1;
+    
+    b2EdgeShape shape;
+    fixtureDef.shape = &shape;
     
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
     while (chunk_pixels.any()) {
         const auto pos = get_starting_pixel(chunk_pixels) + top_left;
         const auto boundary = calc_boundary(top_left, w, pos, 1.5f);
-        const auto triangles = triangulate(boundary);
-        add_triangles_to_body(*c.triangles, triangles);
+
+        if (boundary.size() > 3) { // If there's only a small group, dont bother
+            for (std::int64_t i = 0; i != boundary.size(); ++i) {
+                const auto v0 = pixel_to_physics(signed_index(boundary, i-1));
+                const auto v1 = pixel_to_physics(signed_index(boundary, i));
+                const auto v2 = pixel_to_physics(signed_index(boundary, i+1));
+                const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
+    
+                shape.SetOneSided(v0, v1, v2, v3);
+                c.triangles->CreateFixture(&fixtureDef);
+            }
+        }
+        //const auto triangles = triangulate(boundary);
+        //add_triangles_to_body(*c.triangles, triangles);
         flood_remove(chunk_pixels, pos - top_left);
     }
 }

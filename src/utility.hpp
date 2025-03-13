@@ -141,4 +141,12 @@ struct std::formatter<T> : std::formatter<std::string>
     }
 };
 
+template <typename T>
+const T& signed_index(const std::vector<T>& v, int index)
+{
+    while (index < 0) index += v.size();
+    while (index >= v.size()) index -= v.size();
+    return v[index];
+}
+
 }
