@@ -17,11 +17,14 @@ class player_controller : public b2ContactListener {
     b2Fixture* d_right_sensor = nullptr;
 
     bool d_double_jump        = false;
-    int  d_num_foot_contacts  = 0;
     int  d_num_left_contacts  = 0;
     int  d_num_right_contacts = 0;
 
+    std::unordered_set<b2Fixture*> d_floors;
+
 public:
+    auto floors() const -> const std::unordered_set<b2Fixture*>& { return d_floors; }
+    
     // width and height are in pixel space
     player_controller(b2World& world)
         : d_world{&world}
@@ -97,8 +100,11 @@ public:
     }
 
     void BeginContact(b2Contact* contact) {
-        if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
-            ++d_num_foot_contacts;
+        if (contact->GetFixtureA() == d_footSensor) {
+            d_floors.insert(contact->GetFixtureB());
+        }
+        if (contact->GetFixtureB() == d_footSensor) {
+            d_floors.insert(contact->GetFixtureA());
         }
         if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
             ++d_num_left_contacts;
@@ -109,8 +115,11 @@ public:
     }
 
     void EndContact(b2Contact* contact) {
-        if (contact->GetFixtureA() == d_footSensor || contact->GetFixtureB() == d_footSensor) {
-            --d_num_foot_contacts;
+        if (contact->GetFixtureA() == d_footSensor) {
+            d_floors.erase(contact->GetFixtureB());
+        }
+        if (contact->GetFixtureB() == d_footSensor) {
+            d_floors.erase(contact->GetFixtureA());
         }
         if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
             --d_num_left_contacts;
@@ -129,7 +138,7 @@ public:
 
     void update(const sand::keyboard& k)
     {
-        const bool on_ground = d_num_foot_contacts > 0;
+        const bool on_ground = !d_floors.empty();
         const bool can_move_left = d_num_left_contacts == 0;
         const bool can_move_right = d_num_right_contacts == 0;
 

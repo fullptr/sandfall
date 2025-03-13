@@ -292,6 +292,7 @@ auto main() -> int
                 const auto px = level->pixels[mouse];
                 ImGui::Text("  pixel power: %d", px.power);
             }
+            ImGui::Text("Number of Floors: %d", level->player.floors().size());
             ImGui::Separator();
 
             ImGui::Text("Camera");
