@@ -21,6 +21,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_stdlib.h>
 
 #include <memory>
 #include <print>
@@ -108,15 +109,7 @@ public:
     
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
-        assert(vertexCount > 1);
-        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
-            const auto p1 = sand::physics_to_pixel(vertices[i]);
-            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
-            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-        }
-        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
-        const auto p2 = sand::physics_to_pixel(vertices[0]);
-        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+        DrawPolygon(vertices, vertexCount, color);
     }
     
     void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
@@ -131,11 +124,7 @@ public:
 
 	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override
     {
-        d_renderer->draw_circle(
-            sand::physics_to_pixel(center),
-            {color.r, color.g, color.b, 1.0},
-            sand::physics_to_pixel(radius)
-        );
+        DrawCircle(center, radius, color);
     }
 
 	void DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color) override
@@ -210,7 +199,6 @@ auto main() -> int
     debug_draw.SetFlags(b2Draw::e_shapeBit);
     auto show_physics = false;
     auto show_spawn     = false;
-    level->pixels.physics().SetDebugDraw(&debug_draw);
 
     auto new_world_chunks_width  = 4;
     auto new_world_chunks_height = 4;
@@ -351,14 +339,24 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     level = load_level(filename);
-                    debug_draw = physics_debug_draw{&shape_renderer};
-                    debug_draw.SetFlags(b2Draw::e_shapeBit);
-                    level->pixels.physics().SetDebugDraw(&debug_draw);
                     updated = true;
                 }
                 ImGui::SameLine();
                 ImGui::Text("Save %d", i);
                 ImGui::PopID();
+            }
+            static std::string filepath;
+            ImGui::InputText("Load PNG", &filepath);
+            if (ImGui::Button("Try Load")) {
+                std::ifstream ifs{filepath, std::ios_base::in | std::ios_base::binary};
+                std::vector<char> buffer(
+                    (std::istreambuf_iterator<char>(ifs)),
+                    std::istreambuf_iterator<char>()
+                );
+                std::print("loaded a file containing {} bytes\n", buffer.size());
+                if (buffer.size() >= 8) {
+                    std::print("{} {} {} {} {} {} {} {}\n", (std::uint8_t)buffer[0], (int)buffer[1],(int)buffer[2],(int)buffer[3],(int)buffer[4],(int)buffer[5],(int)buffer[6],(int)buffer[7]);
+                }
             }
         }
         ImGui::End();
@@ -376,6 +374,7 @@ auto main() -> int
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (show_physics) {
+            level->pixels.physics().SetDebugDraw(&debug_draw);
             level->pixels.physics().DebugDraw();
         }
 
