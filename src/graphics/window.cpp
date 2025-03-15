@@ -95,16 +95,13 @@ window::window(const std::string& name, int width, int height)
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
 
-		double x, y;
-    	glfwGetCursorPos(data.native_window, &x, &y);
-
 		switch (action)
 		{
 		case GLFW_PRESS: {
-			data.events.emplace_back(mouse_pressed_event{button, mods, {x, y}});
+			data.events.emplace_back(mouse_pressed_event{button, mods});
 		} break;
 		case GLFW_RELEASE: {
-			data.events.emplace_back(mouse_released_event{button, mods, {x, y}});
+			data.events.emplace_back(mouse_released_event{button, mods});
 		} break;
 		}
 	});

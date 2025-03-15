@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 
-#include <any>
 #include <variant>
 #include <string>
 #include <cstdint>
@@ -35,13 +34,11 @@ struct keyboard_typed_event {
 struct mouse_pressed_event {
 	int button;
 	int mods;
-	glm::vec2 pos;
 };
 
 struct mouse_released_event {
 	int button;
 	int mods;
-	glm::vec2 pos;
 };
 
 struct mouse_moved_event {
