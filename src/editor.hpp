@@ -55,7 +55,10 @@ struct editor
     bool show_spawn   = false;
 
     int  zoom         = 256;
-    
+
+    int new_world_chunks_width  = 4;
+    int new_world_chunks_height = 4;
+
     auto get_pixel() -> sand::pixel
     {
         return pixel_makers[current].second();

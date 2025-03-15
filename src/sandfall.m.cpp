@@ -29,24 +29,6 @@
 #include <cmath>
 #include <span>
 
-auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> void
-{
-    if (!body) return;
-    for (auto fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
-        if (fixture->GetShape()->GetType() == b2Shape::Type::e_polygon) {
-            const auto* shape = static_cast<const b2PolygonShape*>(fixture->GetShape());
-            if (shape->m_count == 3) {
-                const auto p1 = sand::physics_to_pixel(shape->m_vertices[0]);
-                const auto p2 = sand::physics_to_pixel(shape->m_vertices[1]);
-                const auto p3 = sand::physics_to_pixel(shape->m_vertices[2]);
-                rend.draw_line(p1, p2, {1,0,0,1}, 1);
-                rend.draw_line(p2, p3, {1,0,0,1}, 1);
-                rend.draw_line(p3, p1, {1,0,0,1}, 1);
-            }
-        }
-    }
-}
-
 auto save_level(const std::string& file_path, const sand::level& w) -> void
 {
     auto file = std::ofstream{file_path, std::ios::binary};
@@ -92,7 +74,9 @@ class physics_debug_draw : public b2Draw
     sand::shape_renderer* d_renderer;
 
 public:
-    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {}
+    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {
+        SetFlags(b2Draw::e_shapeBit);
+    }
 
     void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
@@ -150,12 +134,16 @@ public:
 
 auto main() -> int
 {
-    auto exe_path = sand::get_executable_filepath().parent_path();
-    std::print("Executable directory: {}\n", exe_path.string());
-    auto window = sand::window{"sandfall", 1280, 720};
-    auto editor = sand::editor{};
-    auto mouse = sand::mouse{};
-    auto keyboard = sand::keyboard{};
+    auto window          = sand::window{"sandfall", 1280, 720};
+    auto editor          = sand::editor{};
+    auto mouse           = sand::mouse{};
+    auto keyboard        = sand::keyboard{};
+    auto level           = new_level(4, 4);
+    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
+    auto accumulator     = 0.0;
+    auto timer           = sand::timer{};
+    auto shape_renderer  = sand::shape_renderer{};
+    auto debug_draw      = physics_debug_draw{&shape_renderer};
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -163,17 +151,6 @@ auto main() -> int
         .screen_height = window.height(),
         .world_to_screen = 720.0f / 256.0f
     };
-
-    auto level           = new_level(4, 4);
-    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
-    auto accumulator     = 0.0;
-    auto timer           = sand::timer{};
-    auto shape_renderer  = sand::shape_renderer{};
-    auto debug_draw      = physics_debug_draw{&shape_renderer};
-    debug_draw.SetFlags(b2Draw::e_shapeBit);
-
-    auto new_world_chunks_width  = 4;
-    auto new_world_chunks_height = 4;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -317,10 +294,10 @@ auto main() -> int
                 }
             }
             ImGui::Separator();
-            ImGui::InputInt("chunk width", &new_world_chunks_width);
-            ImGui::InputInt("chunk height", &new_world_chunks_height);
+            ImGui::InputInt("chunk width", &editor.new_world_chunks_width);
+            ImGui::InputInt("chunk height", &editor.new_world_chunks_height);
             if (ImGui::Button("New World")) {
-                level = new_level(new_world_chunks_width, new_world_chunks_height);
+                level = new_level(editor.new_world_chunks_width, editor.new_world_chunks_height);
                 updated = true;
             }
             ImGui::Text("Levels");
