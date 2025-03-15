@@ -94,15 +94,14 @@ window::window(const std::string& name, int width, int height)
 	glfwSetMouseButtonCallback(native_window, [](GLFWwindow* window, int button, int action, int mods) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-
 		switch (action)
 		{
-		case GLFW_PRESS: {
-			data.events.emplace_back(mouse_pressed_event{button, mods});
-		} break;
-		case GLFW_RELEASE: {
-			data.events.emplace_back(mouse_released_event{button, mods});
-		} break;
+			case GLFW_PRESS: {
+				data.events.emplace_back(mouse_pressed_event{button, mods});
+			} break;
+			case GLFW_RELEASE: {
+				data.events.emplace_back(mouse_released_event{button, mods});
+			} break;
 		}
 	});
 
@@ -177,11 +176,6 @@ bool window::is_running() const
 glm::vec2 window::get_mouse_pos() const
 {
     return d_data.mouse_pos;
-}
-
-void window::set_name(const std::string& name)
-{
-    glfwSetWindowTitle(d_data.native_window, name.c_str());
 }
 
 auto window::width() const -> int

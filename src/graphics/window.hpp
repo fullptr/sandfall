@@ -54,8 +54,6 @@ public:
 
     auto get_mouse_pos() const -> glm::vec2;
 
-    auto set_name(const std::string& name) -> void;
-
     auto width() const -> int;
     auto height() const -> int;
 
