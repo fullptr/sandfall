@@ -61,19 +61,17 @@ window::window(const std::string& name, int width, int height)
 		glViewport(0, 0, width, height);
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<window_resize_event>(width, height);
 		data.width = width;
 		data.height = height;
-		data.events.push_back(event);
+		data.events.emplace_back(window_resize_event{width, height});
 	});
 
 	glfwSetWindowCloseCallback(native_window, [](GLFWwindow* window)
 	{
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<window_closed_event>();
 		data.running = false;
-		data.events.push_back(event);
+		data.events.emplace_back(window_closed_event{});
 	});
 
 	glfwSetKeyCallback(native_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -82,16 +80,13 @@ window::window(const std::string& name, int width, int height)
 		switch (action)
 		{
 			case GLFW_PRESS: {
-				auto event = make_event<keyboard_pressed_event>(key, scancode, mods);
-				data.events.push_back(event);
+				data.events.emplace_back(keyboard_pressed_event{key, scancode, mods});
 			} break;
 			case GLFW_RELEASE: {
-				auto event = make_event<keyboard_released_event>(key, scancode, mods);
-				data.events.push_back(event);
+				data.events.emplace_back(keyboard_released_event{key, scancode, mods});
 			} break;
 			case GLFW_REPEAT: {
-				auto event = make_event<keyboard_held_event>(key, scancode, mods);
-				data.events.push_back(event);
+				data.events.emplace_back(keyboard_held_event{key, scancode, mods});
 			} break;
 		}
 	});
@@ -106,16 +101,10 @@ window::window(const std::string& name, int width, int height)
 		switch (action)
 		{
 		case GLFW_PRESS: {
-			auto event = make_event<mouse_pressed_event>(
-				button, action, mods, glm::vec2{x, y}
-			);
-			data.events.push_back(event);
+			data.events.emplace_back(mouse_pressed_event{button, mods, {x, y}});
 		} break;
 		case GLFW_RELEASE: {
-			auto event = make_event<mouse_released_event>(
-				button, action, mods, glm::vec2{x, y}
-			);
-			data.events.push_back(event);
+			data.events.emplace_back(mouse_released_event{button, mods, {x, y}});
 		} break;
 		}
 	});
@@ -123,49 +112,39 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<mouse_moved_event>( glm::vec2{x_pos, y_pos} );
 		data.mouse_pos = {x_pos, y_pos};
-		data.events.push_back(event);
+		data.events.emplace_back(mouse_moved_event{data.mouse_pos});
 	});
 
 	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<mouse_scrolled_event>(glm::vec2{x_offset, y_offset});
-		data.events.push_back(event);
+		data.events.emplace_back(mouse_scrolled_event{{x_offset, y_offset}});
 	});
 
 	glfwSetWindowFocusCallback(native_window, [](GLFWwindow* window, int focused) {
 		auto& data = get_window_data(window);
+		data.focused = focused;
 		if (focused) {
-			auto event = make_event<window_got_focus_event>();
-			data.focused = true;
-			data.events.push_back(event);
-		}
-		else {
-			auto event = make_event<window_lost_focus_event>();
-			data.focused = false;
-			data.events.push_back(event);
+			data.events.emplace_back(window_got_focus_event{});
+		} else {
+			data.events.emplace_back(window_lost_focus_event{});
 		}
 	});
 
 	glfwSetWindowMaximizeCallback(native_window, [](GLFWwindow* window, int maximized) {
 		auto& data = get_window_data(window);
 		if (maximized) {
-			auto event = make_event<window_maximise_event>();
-			data.events.push_back(event);
-		}
-		else {
-			auto event = make_event<window_minimise_event>();
-			data.events.push_back(event);
+			data.events.emplace_back(window_maximise_event{});
+		} else {
+			data.events.emplace_back(window_minimise_event{});
 		}
 	});
 
 	glfwSetCharCallback(native_window, [](GLFWwindow* window, std::uint32_t key) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		auto event = make_event<keyboard_typed_event>(key);
-		data.events.push_back(event);
+		data.events.emplace_back(keyboard_typed_event{key});
 	});
 }
 

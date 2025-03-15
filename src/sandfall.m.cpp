@@ -326,9 +326,6 @@ auto main() -> int
                     std::istreambuf_iterator<char>()
                 );
                 std::print("loaded a file containing {} bytes\n", buffer.size());
-                if (buffer.size() >= 8) {
-                    std::print("{} {} {} {} {} {} {} {}\n", (std::uint8_t)buffer[0], (int)buffer[1],(int)buffer[2],(int)buffer[3],(int)buffer[4],(int)buffer[5],(int)buffer[6],(int)buffer[7]);
-                }
             }
         }
         ImGui::End();
