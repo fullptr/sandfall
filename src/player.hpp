@@ -144,9 +144,6 @@ public:
 
         const auto vel = d_body->GetLinearVelocity();
         
-        const auto go_l = can_move_left && k.is_down(sand::keyboard_key::A);
-        const auto go_r = can_move_right && k.is_down(sand::keyboard_key::D);
-        
         auto direction = 0;
         if (can_move_left && k.is_down(sand::keyboard_key::A)) {
             direction -= 1;

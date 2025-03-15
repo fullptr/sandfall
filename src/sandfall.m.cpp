@@ -199,8 +199,8 @@ auto main() -> int
             accumulator -= sand::config::time_step;
             updated = true;
             level->pixels.step();
-            level->player.update(keyboard);
         }
+        level->player.update(keyboard);
 
         const auto mouse_pos = pixel_at_mouse(window, camera);
         switch (editor.brush_type) {
@@ -252,6 +252,7 @@ auto main() -> int
                 ImGui::Text("  pixel power: %d", px.power);
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());
+            ImGui::Text("Events this frame: %zu", window.events().size());
             ImGui::Separator();
 
             ImGui::Text("Camera");
