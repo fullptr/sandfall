@@ -49,9 +49,12 @@ struct editor
         // 1 == square
         // 2 == explosion
         
-    bool show_chunks = false;
-    bool show_demo = true;
-    int zoom = 256;
+    bool show_chunks  = false;
+    bool show_demo    = true;
+    bool show_physics = false;
+    bool show_spawn   = false;
+
+    int  zoom         = 256;
     
     auto get_pixel() -> sand::pixel
     {

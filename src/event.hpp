@@ -100,7 +100,7 @@ public:
 	auto as() const -> const T& { return std::get<T>(d_event); }
 
 	template <typename T>
-	auto get_if() const -> const T* { return std::get_if<T>(d_event); }
+	auto get_if() const -> const T* { return std::get_if<T>(&d_event); }
 
 	template <typename Visitor>
 	auto visit(Visitor&& visitor) const { return std::visit(std::forward<Visitor>(visitor), d_event); }

@@ -159,8 +159,8 @@ auto main() -> int
 
     auto camera = sand::camera{
         .top_left = {0, 0},
-        .screen_width = static_cast<float>(window.width()),
-        .screen_height = static_cast<float>(window.height()),
+        .screen_width = window.width(),
+        .screen_height = window.height(),
         .world_to_screen = 720.0f / 256.0f
     };
 
@@ -171,8 +171,6 @@ auto main() -> int
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_draw      = physics_debug_draw{&shape_renderer};
     debug_draw.SetFlags(b2Draw::e_shapeBit);
-    auto show_physics = false;
-    auto show_spawn     = false;
 
     auto new_world_chunks_width  = 4;
     auto new_world_chunks_height = 4;
@@ -213,7 +211,6 @@ auto main() -> int
                 camera.top_left -= new_centre - old_centre;
             }
         }
-
 
         if (mouse.is_down(sand::mouse_button::right)) {
             camera.top_left -= mouse.offset() / camera.world_to_screen;
@@ -287,8 +284,8 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::Checkbox("Show Physics", &show_physics);
-            ImGui::Checkbox("Show Spawn", &show_spawn);
+            ImGui::Checkbox("Show Physics", &editor.show_physics);
+            ImGui::Checkbox("Show Spawn", &editor.show_spawn);
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
             if (ImGui::Button("Respawn")) {
@@ -370,12 +367,12 @@ auto main() -> int
         // TODO: Replace with actual sprite data
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
 
-        if (show_physics) {
+        if (editor.show_physics) {
             level->pixels.physics().SetDebugDraw(&debug_draw);
             level->pixels.physics().DebugDraw();
         }
 
-        if (show_spawn) {
+        if (editor.show_spawn) {
             shape_renderer.draw_circle(level->spawn_point, {0, 1, 0, 1}, 1.0);
         }
 
