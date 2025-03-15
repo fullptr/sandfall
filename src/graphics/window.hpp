@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <cstdint>
+#include <span>
 #include <functional>
 
 struct GLFWwindow;
@@ -27,7 +28,8 @@ struct window_data
 
     glm::vec2       mouse_pos     = {0.0, 0.0};
     GLFWwindow*     native_window = nullptr;
-    window_callback callback      = {};
+
+    std::vector<event> events;
 };
 
 class window
@@ -44,16 +46,15 @@ public:
     window(const std::string& name, int width, int height);
     ~window();
 
-    auto clear() const -> void;
-    auto swap_buffers() -> void;
-    auto poll_events() -> void;
+    auto begin_frame() -> void;
+    auto end_frame() -> void;
+    auto events() -> std::span<const event>;
 
     auto is_running() const -> bool;
 
     auto get_mouse_pos() const -> glm::vec2;
 
     auto set_name(const std::string& name) -> void;
-    auto set_callback(const window_callback& callback) -> void;
 
     auto width() const -> int;
     auto height() const -> int;

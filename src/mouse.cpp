@@ -6,17 +6,17 @@
 
 namespace sand {
 
-auto mouse::on_event(const event& e) -> void
+auto mouse::on_event(const event& event) -> void
 {
-    if (e.is<sand::mouse_pressed_event>()) {
-        d_down[e.as<sand::mouse_pressed_event>().button] = true;
-        d_down_this_frame[e.as<sand::mouse_pressed_event>().button] = true;
+    if (const auto e = event.get_if<sand::mouse_pressed_event>()) {
+        d_down[e->button] = true;
+        d_down_this_frame[e->button] = true;
     }
-    else if (e.is<sand::mouse_released_event>()) {
-        d_down[e.as<sand::mouse_released_event>().button] = false;
+    else if (const auto e = event.get_if<sand::mouse_released_event>()) {
+        d_down[e->button] = false;
     }
-    else if (e.is<sand::mouse_moved_event>()) {
-        d_positiion_this_frame = e.as<sand::mouse_moved_event>().pos;
+    else if (const auto e = event.get_if<sand::mouse_moved_event>()) {
+        d_positiion_this_frame = e->pos;
     }
 }
 
@@ -42,14 +42,14 @@ auto mouse::offset() const -> glm::vec2
 }
 
 
-auto keyboard::on_event(const event& e) -> void
+auto keyboard::on_event(const event& event) -> void
 {
-    if (e.is<sand::keyboard_pressed_event>()) {
-        d_down[e.as<sand::keyboard_pressed_event>().key] = true;
-        d_down_this_frame[e.as<sand::keyboard_pressed_event>().key] = true;
+    if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
+        d_down[e->key] = true;
+        d_down_this_frame[e->key] = true;
     }
-    else if (e.is<sand::keyboard_released_event>()) {
-        d_down[e.as<sand::keyboard_released_event>().key] = false;
+    else if (const auto e = event.get_if<sand::keyboard_released_event>()) {
+        d_down[e->key] = false;
     }
 }
 

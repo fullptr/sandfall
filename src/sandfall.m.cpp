@@ -164,32 +164,6 @@ auto main() -> int
         .world_to_screen = 720.0f / 256.0f
     };
 
-    window.set_callback([&](const sand::event& event) {
-        auto& io = ImGui::GetIO();
-        if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
-            return;
-        }
-        if (event.is_mount_event() && io.WantCaptureMouse) {
-            return;
-        }
-
-        mouse.on_event(event);
-        keyboard.on_event(event);
-
-        if (event.is<sand::window_resize_event>()) {
-            camera.screen_width = window.width();
-            camera.screen_height = window.height();
-        }
-        else if (event.is<sand::mouse_scrolled_event>()) {
-            const auto& e = event.as<sand::mouse_scrolled_event>();
-            const auto old_centre = mouse_pos_world_space(window, camera);
-            camera.world_to_screen += 0.1f * e.offset.y;
-            camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
-            const auto new_centre = mouse_pos_world_space(window, camera);
-            camera.top_left -= new_centre - old_centre;
-        }
-    });
-
     auto level           = new_level(4, 4);
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
@@ -211,12 +185,35 @@ auto main() -> int
 
     while (window.is_running()) {
         const double dt = timer.on_update();
-
+        window.begin_frame();
         mouse.on_new_frame();
         keyboard.on_new_frame();
-        
-        window.poll_events();
-        window.clear();
+
+        for (const auto event : window.events()) {
+            auto& io = ImGui::GetIO();
+            if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
+                continue;
+            }
+            if (event.is_mount_event() && io.WantCaptureMouse) {
+                continue;
+            }
+
+            mouse.on_event(event);
+            keyboard.on_event(event);
+
+            if (const auto e = event.get_if<sand::window_resize_event>()) {
+                camera.screen_width = e->width;
+                camera.screen_height = e->height;
+            }
+            else if (const auto e = event.get_if<sand::mouse_scrolled_event>()) {
+                const auto old_centre = mouse_pos_world_space(window, camera);
+                camera.world_to_screen += 0.1f * e->offset.y;
+                camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
+                const auto new_centre = mouse_pos_world_space(window, camera);
+                camera.top_left -= new_centre - old_centre;
+            }
+        }
+
 
         if (mouse.is_down(sand::mouse_button::right)) {
             camera.top_left -= mouse.offset() / camera.world_to_screen;
@@ -388,7 +385,7 @@ auto main() -> int
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        window.swap_buffers();
+        window.end_frame();
     }
 
     ImGui_ImplOpenGL3_Shutdown();

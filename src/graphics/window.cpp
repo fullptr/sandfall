@@ -64,7 +64,7 @@ window::window(const std::string& name, int width, int height)
 		auto event = make_event<window_resize_event>(width, height);
 		data.width = width;
 		data.height = height;
-		data.callback(event);
+		data.events.push_back(event);
 	});
 
 	glfwSetWindowCloseCallback(native_window, [](GLFWwindow* window)
@@ -73,7 +73,7 @@ window::window(const std::string& name, int width, int height)
 		if (!data.focused) return;
 		auto event = make_event<window_closed_event>();
 		data.running = false;
-		data.callback(event);
+		data.events.push_back(event);
 	});
 
 	glfwSetKeyCallback(native_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -83,15 +83,15 @@ window::window(const std::string& name, int width, int height)
 		{
 			case GLFW_PRESS: {
 				auto event = make_event<keyboard_pressed_event>(key, scancode, mods);
-				data.callback(event);
+				data.events.push_back(event);
 			} break;
 			case GLFW_RELEASE: {
 				auto event = make_event<keyboard_released_event>(key, scancode, mods);
-				data.callback(event);
+				data.events.push_back(event);
 			} break;
 			case GLFW_REPEAT: {
 				auto event = make_event<keyboard_held_event>(key, scancode, mods);
-				data.callback(event);
+				data.events.push_back(event);
 			} break;
 		}
 	});
@@ -109,13 +109,13 @@ window::window(const std::string& name, int width, int height)
 			auto event = make_event<mouse_pressed_event>(
 				button, action, mods, glm::vec2{x, y}
 			);
-			data.callback(event);
+			data.events.push_back(event);
 		} break;
 		case GLFW_RELEASE: {
 			auto event = make_event<mouse_released_event>(
 				button, action, mods, glm::vec2{x, y}
 			);
-			data.callback(event);
+			data.events.push_back(event);
 		} break;
 		}
 	});
@@ -125,14 +125,14 @@ window::window(const std::string& name, int width, int height)
 		if (!data.focused) return;
 		auto event = make_event<mouse_moved_event>( glm::vec2{x_pos, y_pos} );
 		data.mouse_pos = {x_pos, y_pos};
-		data.callback(event);
+		data.events.push_back(event);
 	});
 
 	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
 		auto event = make_event<mouse_scrolled_event>(glm::vec2{x_offset, y_offset});
-		data.callback(event);
+		data.events.push_back(event);
 	});
 
 	glfwSetWindowFocusCallback(native_window, [](GLFWwindow* window, int focused) {
@@ -140,12 +140,12 @@ window::window(const std::string& name, int width, int height)
 		if (focused) {
 			auto event = make_event<window_got_focus_event>();
 			data.focused = true;
-			data.callback(event);
+			data.events.push_back(event);
 		}
 		else {
 			auto event = make_event<window_lost_focus_event>();
 			data.focused = false;
-			data.callback(event);
+			data.events.push_back(event);
 		}
 	});
 
@@ -153,11 +153,11 @@ window::window(const std::string& name, int width, int height)
 		auto& data = get_window_data(window);
 		if (maximized) {
 			auto event = make_event<window_maximise_event>();
-			data.callback(event);
+			data.events.push_back(event);
 		}
 		else {
 			auto event = make_event<window_minimise_event>();
-			data.callback(event);
+			data.events.push_back(event);
 		}
 	});
 
@@ -165,7 +165,7 @@ window::window(const std::string& name, int width, int height)
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
 		auto event = make_event<keyboard_typed_event>(key);
-		data.callback(event);
+		data.events.push_back(event);
 	});
 }
 
@@ -175,20 +175,22 @@ window::~window()
 	glfwTerminate();
 }
 
-void window::clear() const
+auto window::begin_frame() -> void
 {
+	d_data.events.clear();
+	glfwPollEvents();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-void window::poll_events()
+auto window::end_frame() -> void
 {
-    glfwPollEvents();
+	glfwSwapBuffers(d_data.native_window);
 }
 
-void window::swap_buffers()
+auto window::events() -> std::span<const event>
 {
-    glfwSwapBuffers(d_data.native_window);
+	return d_data.events;
 }
 
 bool window::is_running() const
@@ -204,11 +206,6 @@ glm::vec2 window::get_mouse_pos() const
 void window::set_name(const std::string& name)
 {
     glfwSetWindowTitle(d_data.native_window, name.c_str());
-}
-
-void window::set_callback(const window_callback& callback)
-{
-    d_data.callback = callback;
 }
 
 auto window::width() const -> int
