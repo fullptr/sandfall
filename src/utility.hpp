@@ -11,7 +11,6 @@
 #include <box2d/box2d.h>
 
 #include "config.hpp"
-#include "mouse.hpp"
 
 namespace sand {
 
@@ -92,6 +91,7 @@ auto lerp(const T& a, const T& b, float t) -> T
 };
 
 struct camera;
+class mouse;
 auto mouse_pos_world_space(const mouse& m, const camera& c) -> glm::vec2;
 auto pixel_at_mouse(const mouse& m, const camera& c) -> glm::ivec2;
 
