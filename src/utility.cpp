@@ -1,5 +1,6 @@
 #include "utility.hpp"
 #include "camera.hpp"
+#include "mouse.hpp"
 #include "graphics/window.hpp"
 
 #include <array>
@@ -112,14 +113,14 @@ auto get_executable_filepath() -> std::filesystem::path
     }
 }
 
-auto mouse_pos_world_space(const sand::window& w, const sand::camera& c) -> glm::vec2
+auto mouse_pos_world_space(const mouse& m, const sand::camera& c) -> glm::vec2
 {
-    return w.get_mouse_pos() / c.world_to_screen + c.top_left;
+    return m.position() / c.world_to_screen + c.top_left;
 }
 
-auto pixel_at_mouse(const sand::window& w, const sand::camera& c) -> glm::ivec2
+auto pixel_at_mouse(const mouse& m, const sand::camera& c) -> glm::ivec2
 {
-    return glm::ivec2{mouse_pos_world_space(w, c)};
+    return glm::ivec2{mouse_pos_world_space(m, c)};
 }
 
 auto pixel_to_physics(glm::vec2 px) -> b2Vec2

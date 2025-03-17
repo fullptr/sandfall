@@ -41,6 +41,11 @@ auto mouse::offset() const -> glm::vec2
     return d_positiion_this_frame - d_position_last_frame;
 }
 
+auto mouse::position() const -> glm::vec2
+{
+    return d_positiion_this_frame;
+}
+
 
 auto keyboard::on_event(const event& event) -> void
 {

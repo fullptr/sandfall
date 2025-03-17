@@ -17,8 +17,6 @@ using window_callback = std::function<void(const event&)>;
 
 struct window_data
 {
-    std::string name;
-
     int width;
     int height;
 
@@ -26,15 +24,14 @@ struct window_data
     bool running;
     bool focused;
 
-    glm::vec2       mouse_pos     = {0.0, 0.0};
-    GLFWwindow*     native_window = nullptr;
+    GLFWwindow* native_window = nullptr;
 
     std::vector<event> events;
 };
 
 class window
 {
-    window_data d_data;
+   window_data d_data;
 
     window(const window&) = delete;
     window& operator=(const window&) = delete;
@@ -43,7 +40,7 @@ class window
     window& operator=(window&&) = delete;
 
 public:
-    window(const std::string& name, int width, int height);
+    window(const char* name, int width, int height);
     ~window();
 
     auto begin_frame() -> void;
@@ -51,8 +48,6 @@ public:
     auto events() -> std::span<const event>;
 
     auto is_running() const -> bool;
-
-    auto get_mouse_pos() const -> glm::vec2;
 
     auto width() const -> int;
     auto height() const -> int;

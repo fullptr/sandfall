@@ -181,10 +181,10 @@ auto main() -> int
                 camera.screen_height = e->height;
             }
             else if (const auto e = event.get_if<sand::mouse_scrolled_event>()) {
-                const auto old_centre = mouse_pos_world_space(window, camera);
+                const auto old_centre = mouse_pos_world_space(mouse, camera);
                 camera.world_to_screen += 0.1f * e->offset.y;
                 camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
-                const auto new_centre = mouse_pos_world_space(window, camera);
+                const auto new_centre = mouse_pos_world_space(mouse, camera);
                 camera.top_left -= new_centre - old_centre;
             }
         }
@@ -202,7 +202,7 @@ auto main() -> int
         }
         level->player.update(keyboard);
 
-        const auto mouse_pos = pixel_at_mouse(window, camera);
+        const auto mouse_pos = pixel_at_mouse(mouse, camera);
         switch (editor.brush_type) {
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
@@ -237,8 +237,8 @@ auto main() -> int
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        const auto mouse_actual = mouse_pos_world_space(window, camera);
-        const auto mouse = pixel_at_mouse(window, camera);
+        const auto mouse_actual = mouse_pos_world_space(mouse, camera);
+        const auto mouse_pixel = pixel_at_mouse(mouse, camera);
 
         ImGui::ShowDemoWindow(&editor.show_demo);
 
@@ -246,9 +246,9 @@ auto main() -> int
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
-            ImGui::Text("Pixel: {%d, %d}", mouse.x, mouse.y);
-            if (level->pixels.valid(mouse)) {
-                const auto px = level->pixels[mouse];
+            ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
+            if (level->pixels.valid(mouse_pixel)) {
+                const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());

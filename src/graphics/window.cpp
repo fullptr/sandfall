@@ -18,23 +18,19 @@ auto get_window_data(GLFWwindow* window) -> window_data&
 
 }
 
-window::window(const std::string& name, int width, int height)
-    : d_data({name, width, height, true, true, true})
+window::window(const char* name, int width, int height)
+    : d_data({width, height, true, true, true})
 {
     if (GLFW_TRUE != glfwInit()) {
 		std::print("FATAL: Failed to initialise GLFW\n");
 		std::exit(-1);
 	}
 
-	auto native_window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
+	auto native_window = glfwCreateWindow(width, height, name, nullptr, nullptr);
 	if (!native_window) {
 		std::print("FATAL: Failed to create window\n");
 		std::exit(-2);
 	}
-
-	double x = 0, y = 0;
-	glfwGetCursorPos(native_window, &x, &y);
-	d_data.mouse_pos = {x, y};
 
 	d_data.native_window = native_window;
 
@@ -108,8 +104,7 @@ window::window(const std::string& name, int width, int height)
 	glfwSetCursorPosCallback(native_window, [](GLFWwindow* window, double x_pos, double y_pos) {
 		auto& data = get_window_data(window);
 		if (!data.focused) return;
-		data.mouse_pos = {x_pos, y_pos};
-		data.events.emplace_back(mouse_moved_event{data.mouse_pos});
+		data.events.emplace_back(mouse_moved_event{{x_pos, y_pos}});
 	});
 
 	glfwSetScrollCallback(native_window, [](GLFWwindow* window, double x_offset, double y_offset) {
@@ -171,11 +166,6 @@ auto window::events() -> std::span<const event>
 bool window::is_running() const
 {
     return d_data.running;
-}
-
-glm::vec2 window::get_mouse_pos() const
-{
-    return d_data.mouse_pos;
 }
 
 auto window::width() const -> int
