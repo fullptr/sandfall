@@ -25,6 +25,7 @@ public:
     auto is_down(mouse_button button) const -> bool;
     auto is_down_this_frame(mouse_button button) const-> bool;
     auto offset() const -> glm::vec2;
+    auto position() const -> glm::vec2;
 };
 
 enum class keyboard_key

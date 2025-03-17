@@ -21,30 +21,13 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_stdlib.h>
 
 #include <memory>
 #include <print>
 #include <fstream>
 #include <cmath>
 #include <span>
-
-auto render_body_triangles(sand::shape_renderer& rend, const b2Body* body) -> void
-{
-    if (!body) return;
-    for (auto fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
-        if (fixture->GetShape()->GetType() == b2Shape::Type::e_polygon) {
-            const auto* shape = static_cast<const b2PolygonShape*>(fixture->GetShape());
-            if (shape->m_count == 3) {
-                const auto p1 = sand::physics_to_pixel(shape->m_vertices[0]);
-                const auto p2 = sand::physics_to_pixel(shape->m_vertices[1]);
-                const auto p3 = sand::physics_to_pixel(shape->m_vertices[2]);
-                rend.draw_line(p1, p2, {1,0,0,1}, 1);
-                rend.draw_line(p2, p3, {1,0,0,1}, 1);
-                rend.draw_line(p3, p1, {1,0,0,1}, 1);
-            }
-        }
-    }
-}
 
 auto save_level(const std::string& file_path, const sand::level& w) -> void
 {
@@ -91,7 +74,9 @@ class physics_debug_draw : public b2Draw
     sand::shape_renderer* d_renderer;
 
 public:
-    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {}
+    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {
+        SetFlags(b2Draw::e_shapeBit);
+    }
 
     void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
@@ -108,15 +93,7 @@ public:
     
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
     {
-        assert(vertexCount > 1);
-        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
-            const auto p1 = sand::physics_to_pixel(vertices[i]);
-            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
-            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-        }
-        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
-        const auto p2 = sand::physics_to_pixel(vertices[0]);
-        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
+        DrawPolygon(vertices, vertexCount, color);
     }
     
     void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
@@ -131,11 +108,7 @@ public:
 
 	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override
     {
-        d_renderer->draw_circle(
-            sand::physics_to_pixel(center),
-            {color.r, color.g, color.b, 1.0},
-            sand::physics_to_pixel(radius)
-        );
+        DrawCircle(center, radius, color);
     }
 
 	void DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color) override
@@ -161,59 +134,23 @@ public:
 
 auto main() -> int
 {
-    auto exe_path = sand::get_executable_filepath().parent_path();
-    std::print("Executable directory: {}\n", exe_path.string());
-    auto window = sand::window{"sandfall", 1280, 720};
-    auto editor = sand::editor{};
-    auto mouse = sand::mouse{};
-    auto keyboard = sand::keyboard{};
-
-    auto camera = sand::camera{
-        .top_left = {0, 0},
-        .screen_width = static_cast<float>(window.width()),
-        .screen_height = static_cast<float>(window.height()),
-        .world_to_screen = 720.0f / 256.0f
-    };
-
-    window.set_callback([&](const sand::event& event) {
-        auto& io = ImGui::GetIO();
-        if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
-            return;
-        }
-        if (event.is_mount_event() && io.WantCaptureMouse) {
-            return;
-        }
-
-        mouse.on_event(event);
-        keyboard.on_event(event);
-
-        if (event.is<sand::window_resize_event>()) {
-            camera.screen_width = window.width();
-            camera.screen_height = window.height();
-        }
-        else if (event.is<sand::mouse_scrolled_event>()) {
-            const auto& e = event.as<sand::mouse_scrolled_event>();
-            const auto old_centre = mouse_pos_world_space(window, camera);
-            camera.world_to_screen += 0.1f * e.offset.y;
-            camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
-            const auto new_centre = mouse_pos_world_space(window, camera);
-            camera.top_left -= new_centre - old_centre;
-        }
-    });
-
+    auto window          = sand::window{"sandfall", 1280, 720};
+    auto editor          = sand::editor{};
+    auto mouse           = sand::mouse{};
+    auto keyboard        = sand::keyboard{};
     auto level           = new_level(4, 4);
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_draw      = physics_debug_draw{&shape_renderer};
-    debug_draw.SetFlags(b2Draw::e_shapeBit);
-    auto show_physics = false;
-    auto show_spawn     = false;
-    level->pixels.physics().SetDebugDraw(&debug_draw);
 
-    auto new_world_chunks_width  = 4;
-    auto new_world_chunks_height = 4;
+    auto camera = sand::camera{
+        .top_left = {0, 0},
+        .screen_width = window.width(),
+        .screen_height = window.height(),
+        .world_to_screen = 720.0f / 256.0f
+    };
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -223,12 +160,34 @@ auto main() -> int
 
     while (window.is_running()) {
         const double dt = timer.on_update();
-
+        window.begin_frame();
         mouse.on_new_frame();
         keyboard.on_new_frame();
-        
-        window.poll_events();
-        window.clear();
+
+        for (const auto event : window.events()) {
+            auto& io = ImGui::GetIO();
+            if (event.is_keyboard_event() && io.WantCaptureKeyboard) {
+                continue;
+            }
+            if (event.is_mount_event() && io.WantCaptureMouse) {
+                continue;
+            }
+
+            mouse.on_event(event);
+            keyboard.on_event(event);
+
+            if (const auto e = event.get_if<sand::window_resize_event>()) {
+                camera.screen_width = e->width;
+                camera.screen_height = e->height;
+            }
+            else if (const auto e = event.get_if<sand::mouse_scrolled_event>()) {
+                const auto old_centre = mouse_pos_world_space(mouse, camera);
+                camera.world_to_screen += 0.1f * e->offset.y;
+                camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
+                const auto new_centre = mouse_pos_world_space(mouse, camera);
+                camera.top_left -= new_centre - old_centre;
+            }
+        }
 
         if (mouse.is_down(sand::mouse_button::right)) {
             camera.top_left -= mouse.offset() / camera.world_to_screen;
@@ -240,10 +199,10 @@ auto main() -> int
             accumulator -= sand::config::time_step;
             updated = true;
             level->pixels.step();
-            level->player.update(keyboard);
         }
+        level->player.update(keyboard);
 
-        const auto mouse_pos = pixel_at_mouse(window, camera);
+        const auto mouse_pos = pixel_at_mouse(mouse, camera);
         switch (editor.brush_type) {
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
@@ -278,8 +237,8 @@ auto main() -> int
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        const auto mouse_actual = mouse_pos_world_space(window, camera);
-        const auto mouse = pixel_at_mouse(window, camera);
+        const auto mouse_actual = mouse_pos_world_space(mouse, camera);
+        const auto mouse_pixel = pixel_at_mouse(mouse, camera);
 
         ImGui::ShowDemoWindow(&editor.show_demo);
 
@@ -287,12 +246,13 @@ auto main() -> int
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
-            ImGui::Text("Pixel: {%d, %d}", mouse.x, mouse.y);
-            if (level->pixels.valid(mouse)) {
-                const auto px = level->pixels[mouse];
+            ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
+            if (level->pixels.valid(mouse_pixel)) {
+                const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());
+            ImGui::Text("Events this frame: %zu", window.events().size());
             ImGui::Separator();
 
             ImGui::Text("Camera");
@@ -302,8 +262,8 @@ auto main() -> int
             ImGui::Text("Scale: %f", camera.world_to_screen);
 
             ImGui::Separator();
-            ImGui::Checkbox("Show Physics", &show_physics);
-            ImGui::Checkbox("Show Spawn", &show_spawn);
+            ImGui::Checkbox("Show Physics", &editor.show_physics);
+            ImGui::Checkbox("Show Spawn", &editor.show_spawn);
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
             if (ImGui::Button("Respawn")) {
@@ -335,10 +295,10 @@ auto main() -> int
                 }
             }
             ImGui::Separator();
-            ImGui::InputInt("chunk width", &new_world_chunks_width);
-            ImGui::InputInt("chunk height", &new_world_chunks_height);
+            ImGui::InputInt("chunk width", &editor.new_world_chunks_width);
+            ImGui::InputInt("chunk height", &editor.new_world_chunks_height);
             if (ImGui::Button("New World")) {
-                level = new_level(new_world_chunks_width, new_world_chunks_height);
+                level = new_level(editor.new_world_chunks_width, editor.new_world_chunks_height);
                 updated = true;
             }
             ImGui::Text("Levels");
@@ -351,14 +311,21 @@ auto main() -> int
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
                     level = load_level(filename);
-                    debug_draw = physics_debug_draw{&shape_renderer};
-                    debug_draw.SetFlags(b2Draw::e_shapeBit);
-                    level->pixels.physics().SetDebugDraw(&debug_draw);
                     updated = true;
                 }
                 ImGui::SameLine();
                 ImGui::Text("Save %d", i);
                 ImGui::PopID();
+            }
+            static std::string filepath;
+            ImGui::InputText("Load PNG", &filepath);
+            if (ImGui::Button("Try Load")) {
+                std::ifstream ifs{filepath, std::ios_base::in | std::ios_base::binary};
+                std::vector<char> buffer(
+                    (std::istreambuf_iterator<char>(ifs)),
+                    std::istreambuf_iterator<char>()
+                );
+                std::print("loaded a file containing {} bytes\n", buffer.size());
             }
         }
         ImGui::End();
@@ -375,11 +342,12 @@ auto main() -> int
         // TODO: Replace with actual sprite data
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
 
-        if (show_physics) {
+        if (editor.show_physics) {
+            level->pixels.physics().SetDebugDraw(&debug_draw);
             level->pixels.physics().DebugDraw();
         }
 
-        if (show_spawn) {
+        if (editor.show_spawn) {
             shape_renderer.draw_circle(level->spawn_point, {0, 1, 0, 1}, 1.0);
         }
 
@@ -389,7 +357,7 @@ auto main() -> int
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        window.swap_buffers();
+        window.end_frame();
     }
 
     ImGui_ImplOpenGL3_Shutdown();

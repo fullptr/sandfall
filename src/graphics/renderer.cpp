@@ -121,7 +121,9 @@ auto renderer::update(const level& world, bool show_chunks, const camera& camera
     d_shader.load_vec2("u_tex_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
 
-    const auto projection = glm::ortho(0.0f, camera.screen_width, camera.screen_height, 0.0f);
+    const auto projection = glm::ortho(
+        0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
+    );
     d_shader.load_mat4("u_proj_matrix", projection);
 
     const auto& chunks = world.pixels.chunks();

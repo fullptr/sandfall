@@ -90,10 +90,10 @@ auto lerp(const T& a, const T& b, float t) -> T
     return t * b + (1 - t) * a;
 };
 
-class window;
 struct camera;
-auto mouse_pos_world_space(const window& w, const camera& c) -> glm::vec2;
-auto pixel_at_mouse(const window& w, const camera& c) -> glm::ivec2;
+class mouse;
+auto mouse_pos_world_space(const mouse& m, const camera& c) -> glm::vec2;
+auto pixel_at_mouse(const mouse& m, const camera& c) -> glm::ivec2;
 
 auto pixel_to_physics(glm::vec2 px) -> b2Vec2;
 auto pixel_to_physics(float px) -> float;

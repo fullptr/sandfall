@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 
-#include <any>
 #include <variant>
 #include <string>
 #include <cstdint>
@@ -34,16 +33,12 @@ struct keyboard_typed_event {
 // MOUSE EVENTS
 struct mouse_pressed_event {
 	int button;
-	int action;
 	int mods;
-	glm::vec2 pos;
 };
 
 struct mouse_released_event {
 	int button;
-	int action;
 	int mods;
-	glm::vec2 pos;
 };
 
 struct mouse_moved_event {
@@ -88,10 +83,8 @@ class event
     event_variant d_event;
 
 public:
-	template <typename T, typename... Args>
-	explicit event(std::in_place_type_t<T>, Args&&... args)
-		: d_event(std::in_place_type<T>, std::forward<Args>(args)...)
-	{}
+	template <typename T>
+	explicit event(T&& t) : d_event{t} {}
 
 	template <typename T>
 	auto is() const noexcept -> bool { return std::holds_alternative<T>(d_event); }
@@ -99,19 +92,13 @@ public:
 	template <typename T>
 	auto as() const -> const T& { return std::get<T>(d_event); }
 
-	template <typename Visitor>
-	auto visit(Visitor&& visitor) const { return std::visit(std::forward<Visitor>(visitor), d_event); }
+	template <typename T>
+	auto get_if() const -> const T* { return std::get_if<T>(&d_event); }
 
 	auto is_keyboard_event() const -> bool;
 	auto is_mount_event() const -> bool;
 	auto is_window_event() const -> bool;
 };
-
-template <typename T, typename... Args>
-event make_event(Args&&... args)
-{
-	return event(std::in_place_type<T>, std::forward<Args>(args)...);
-}
 
 inline auto event::is_keyboard_event() const -> bool
 {

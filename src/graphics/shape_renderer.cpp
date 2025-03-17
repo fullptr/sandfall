@@ -48,8 +48,8 @@ in vec4  o_line_begin_colour;
 in vec4  o_line_end_colour;
 in float o_line_thickness;
 
-uniform float u_camera_width;
-uniform float u_camera_height;
+uniform int u_camera_width;
+uniform int u_camera_height;
 uniform vec2 u_camera_top_left;
 uniform float u_camera_world_to_screen;
 
@@ -137,8 +137,8 @@ in vec4  o_circle_begin_colour;
 in vec4  o_circle_end_colour;
 in float o_circle_angle;
 
-uniform float u_camera_width;
-uniform float u_camera_height;
+uniform int u_camera_width;
+uniform int u_camera_height;
 uniform vec2 u_camera_top_left;
 uniform float u_camera_world_to_screen;
 
@@ -321,14 +321,14 @@ void shape_renderer::begin_frame(const camera& c)
     d_quads.clear();
 
     d_line_shader.bind();
-    d_line_shader.load_float("u_camera_width", c.screen_width);
-    d_line_shader.load_float("u_camera_height", c.screen_height);
+    d_line_shader.load_int("u_camera_width", c.screen_width);
+    d_line_shader.load_int("u_camera_height", c.screen_height);
     d_line_shader.load_vec2("u_camera_top_left", c.top_left);
     d_line_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
 
     d_circle_shader.bind();
-    d_circle_shader.load_float("u_camera_width", c.screen_width);
-    d_circle_shader.load_float("u_camera_height", c.screen_height);
+    d_circle_shader.load_int("u_camera_width", c.screen_width);
+    d_circle_shader.load_int("u_camera_height", c.screen_height);
     d_circle_shader.load_vec2("u_camera_top_left", c.top_left);
     d_circle_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
 
