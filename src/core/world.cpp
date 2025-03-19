@@ -173,7 +173,7 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
 
     // diode_out can *only* be powered by diode_in and itself
     if (dst.type == pixel_type::diode_out && src.type != pixel_type::diode_in
-                                            && src.type != pixel_type::diode_out) {
+                                          && src.type != pixel_type::diode_out) {
         return false;
     }
 
