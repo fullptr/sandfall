@@ -209,6 +209,7 @@ auto main() -> int
             if (level->pixels.valid(mouse_pixel)) {
                 const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
+                ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());
             ImGui::Text("Events this frame: %zu", window.events().size());
