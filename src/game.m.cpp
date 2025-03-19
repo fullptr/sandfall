@@ -19,7 +19,7 @@ auto main() -> int
     auto window          = sand::window{"sandfall", 1280, 720};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
-    auto level           = sand::load_level("save1.bin");
+    auto level           = sand::load_level("save0.bin");
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
