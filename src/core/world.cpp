@@ -436,7 +436,7 @@ auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
     wake_chunk(chunk_pos);
 
     for (const auto offset : adjacent_offsets) {
-        const auto neighbour = pixel + glm::ivec2{1, 0};
+        const auto neighbour = pixel + offset;
         const auto neighbour_chunk = get_chunk_from_pixel(neighbour);
         if (chunk_valid(neighbour)) {
             wake_chunk(neighbour_chunk);

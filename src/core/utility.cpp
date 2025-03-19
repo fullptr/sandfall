@@ -1,7 +1,7 @@
 #include "utility.hpp"
 #include "camera.hpp"
 #include "mouse.hpp"
-#include "graphics/window.hpp"
+#include "window.hpp"
 
 #include <array>
 #include <random>

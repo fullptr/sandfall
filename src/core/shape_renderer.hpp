@@ -1,6 +1,6 @@
 #pragma once
-#include "graphics/buffer.hpp"
-#include "graphics/shader.hpp"
+#include "buffer.hpp"
+#include "shader.hpp"
 #include "camera.hpp"
 
 #include <glm/glm.hpp>

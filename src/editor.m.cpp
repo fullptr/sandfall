@@ -9,15 +9,14 @@
 #include "mouse.hpp"
 #include "player.hpp"
 #include "world_save.hpp"
-
-#include "graphics/renderer.hpp"
-#include "graphics/shape_renderer.hpp"
-#include "graphics/window.hpp"
+#include "renderer.hpp"
+#include "shape_renderer.hpp"
+#include "window.hpp"
+#include "serialisation.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include <box2d/box2d.h>
-#include <cereal/archives/binary.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -28,46 +27,6 @@
 #include <fstream>
 #include <cmath>
 #include <span>
-
-auto save_level(const std::string& file_path, const sand::level& w) -> void
-{
-    auto file = std::ofstream{file_path, std::ios::binary};
-    auto archive = cereal::BinaryOutputArchive{file};
-
-    auto save = sand::world_save{
-        .pixels = w.pixels.pixels(),
-        .width = w.pixels.width(),
-        .height = w.pixels.height(),
-        .spawn_point = w.spawn_point
-    };
-
-    archive(save);
-}
-
-auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
-{
-    auto file = std::ifstream{file_path, std::ios::binary};
-    auto archive = cereal::BinaryInputArchive{file};
-
-    auto save = sand::world_save{};
-    archive(save);
-
-    auto w = std::make_unique<sand::level>(save.width, save.height, save.pixels);
-    w->spawn_point = save.spawn_point;
-    w->player.set_position(save.spawn_point);
-    return w;
-}
-
-auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
-{
-    const auto width = sand::config::chunk_size * chunks_width;
-    const auto height = sand::config::chunk_size * chunks_height;
-    return std::make_unique<sand::level>(
-        width,
-        height,
-        std::vector<sand::pixel>(width * height, sand::pixel::air())
-    );
-}
 
 class physics_debug_draw : public b2Draw
 {
@@ -138,7 +97,7 @@ auto main() -> int
     auto editor          = sand::editor{};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
-    auto level           = new_level(4, 4);
+    auto level           = sand::new_level(4, 4);
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
@@ -245,11 +204,14 @@ auto main() -> int
         if (ImGui::Begin("Editor")) {
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
-            ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
             ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
             if (level->pixels.valid(mouse_pixel)) {
                 const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
+                ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");
+            } else {
+                ImGui::Text("  pixel power: n/a");
+                ImGui::Text("  is_falling: n/a");
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());
             ImGui::Text("Events this frame: %zu", window.events().size());
@@ -298,7 +260,7 @@ auto main() -> int
             ImGui::InputInt("chunk width", &editor.new_world_chunks_width);
             ImGui::InputInt("chunk height", &editor.new_world_chunks_height);
             if (ImGui::Button("New World")) {
-                level = new_level(editor.new_world_chunks_width, editor.new_world_chunks_height);
+                level = sand::new_level(editor.new_world_chunks_width, editor.new_world_chunks_height);
                 updated = true;
             }
             ImGui::Text("Levels");
@@ -310,7 +272,7 @@ auto main() -> int
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Load")) {
-                    level = load_level(filename);
+                    level = sand::load_level(filename);
                     updated = true;
                 }
                 ImGui::SameLine();

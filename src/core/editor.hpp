@@ -3,7 +3,7 @@
 #include "world.hpp"
 #include "utility.hpp"
 #include "player.hpp"
-#include "graphics/window.hpp"
+#include "window.hpp"
 
 #include <box2d/box2d.h>
 
