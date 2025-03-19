@@ -49,7 +49,12 @@ auto main() -> int
             }
         }
 
-        camera.top_left = level->player.centre() - glm::vec2{camera.screen_width, camera.screen_height} / (2.0f * camera.world_to_screen);
+        const auto desired_top_left = level->player.centre() - glm::vec2{camera.screen_width, camera.screen_height} / (2.0f * camera.world_to_screen);
+
+        if (desired_top_left != camera.top_left) {
+            const auto diff = desired_top_left - camera.top_left;
+            camera.top_left += 0.05f * diff;
+        }
 
         accumulator += dt;
         bool updated = false;
