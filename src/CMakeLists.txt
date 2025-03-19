@@ -9,11 +9,25 @@ find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
-add_executable(sandfall sandfall.m.cpp)
+add_executable(game game.m.cpp)
 
-target_include_directories(sandfall PUBLIC .)
+target_include_directories(game PUBLIC .)
 
-target_link_libraries(sandfall PRIVATE
+target_link_libraries(game PRIVATE
+    core-graphics
+    glfw
+    glad::glad
+    glm::glm
+    imgui::imgui
+    cereal::cereal
+    box2d::box2d
+)
+
+add_executable(editor game.m.cpp)
+
+target_include_directories(editor PUBLIC .)
+
+target_link_libraries(editor PRIVATE
     core-graphics
     glfw
     glad::glad
