@@ -121,27 +121,14 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 {
-    const auto start_pos = pos;
-
-    const auto& data = w[pos];
-    const auto& props = properties(data);
-
-    // Pixels that don't move have their is_falling flag set to false at the end
-    const auto after_position_update = scope_exit{[&] {
-        if (pos != start_pos) {
-            w.visit(pos, [&](pixel& p) { p.flags[is_falling] = false; });
-        }
-        if (pos == start_pos && properties(w[pos]).gravity_factor) {
-            // will always try to move at least one block
-            w.visit_no_wake(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
-        }
-    }};
+    const auto& props = properties(w[pos]);
 
     // Apply gravity
     if (props.gravity_factor) {
+        const auto velocity = w[pos].velocity;
         const auto gravity_factor = props.gravity_factor;
         w.visit_no_wake(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
-        if (move_offset(w, pos, data.velocity)) return;
+        if (move_offset(w, pos, velocity)) return;
     }
 
     // If we have resistance to moving and we are not, then we are not moving
@@ -162,7 +149,6 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 
     // Attempts to disperse outwards according to the dispersion rate
     if (props.dispersion_rate) {
-
         const auto dr = props.dispersion_rate;
         auto offsets = std::array{glm::ivec2{-dr, 0}, glm::ivec2{dr, 0}};
         if (coin_flip()) std::swap(offsets[0], offsets[1]);
@@ -348,7 +334,18 @@ auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
         return pos;
     }
 
+    const auto start_pos = pos;
     update_pixel_position(w, pos);
+
+    // Pixels that don't move have their is_falling flag set to false
+    if (pos == start_pos) {
+        w.visit(pos, [&](pixel& p) { p.flags[is_falling] = false; });
+    }
+    if (pos == start_pos && properties(w[pos]).gravity_factor) {
+        // will always try to move at least one block
+        w.visit_no_wake(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
+    }
+
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
 
