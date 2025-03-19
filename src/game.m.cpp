@@ -27,7 +27,7 @@ auto main() -> int
     auto window          = sand::window{"sandfall", 1280, 720};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
-    auto level           = sand::new_level(4, 4);
+    auto level           = sand::load_level("save1.bin");
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
@@ -37,7 +37,7 @@ auto main() -> int
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .world_to_screen = 720.0f / 256.0f
+        .world_to_screen = window.height() / 128.0f
     };
 
     while (window.is_running()) {
@@ -53,19 +53,11 @@ auto main() -> int
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
-            }
-            else if (const auto e = event.get_if<sand::mouse_scrolled_event>()) {
-                const auto old_centre = mouse_pos_world_space(mouse, camera);
-                camera.world_to_screen += 0.1f * e->offset.y;
-                camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
-                const auto new_centre = mouse_pos_world_space(mouse, camera);
-                camera.top_left -= new_centre - old_centre;
+                camera.world_to_screen = e->height / 128.0f;
             }
         }
 
-        if (mouse.is_down(sand::mouse_button::right)) {
-            camera.top_left -= mouse.offset() / camera.world_to_screen;
-        }
+        camera.top_left = level->player.centre() - glm::vec2{camera.screen_width, camera.screen_height} / (2.0f * camera.world_to_screen);
 
         accumulator += dt;
         bool updated = false;
