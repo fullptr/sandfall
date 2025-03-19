@@ -15,11 +15,7 @@ target_include_directories(game PUBLIC .)
 
 target_link_libraries(game PRIVATE
     core
-    glfw
-    glad::glad
     glm::glm
-    cereal::cereal
-    box2d::box2d
 )
 
 add_executable(editor editor.m.cpp)

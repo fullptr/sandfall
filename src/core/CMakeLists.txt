@@ -20,6 +20,7 @@ add_library(core STATIC
     pixel.cpp
     explosion.cpp
     update_rigid_bodies.cpp
+    serialisation.cpp
 )
 
 target_include_directories(core PUBLIC .)
