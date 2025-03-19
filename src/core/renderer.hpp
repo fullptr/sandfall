@@ -1,6 +1,6 @@
 #pragma once
-#include "graphics/texture.hpp"
-#include "graphics/shader.hpp"
+#include "texture.hpp"
+#include "shader.hpp"
 #include "world.hpp"
 #include "camera.hpp"
 

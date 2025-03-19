@@ -1,4 +1,4 @@
-#include "graphics/buffer.hpp"
+#include "buffer.hpp"
 
 #include <glad/glad.h>
 

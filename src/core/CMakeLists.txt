@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_subdirectory(core)
-
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -9,12 +7,24 @@ find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
-add_executable(sandfall sandfall.m.cpp)
+add_library(core-graphics STATIC
+    buffer.cpp
+    renderer.cpp
+    shape_renderer.cpp
+    window.cpp
+    shader.cpp
+    texture.cpp
+    utility.cpp
+    mouse.cpp
+    world.cpp
+    pixel.cpp
+    explosion.cpp
+    update_rigid_bodies.cpp
+)
 
-target_include_directories(sandfall PUBLIC .)
+target_include_directories(core-graphics PUBLIC .)
 
-target_link_libraries(sandfall PRIVATE
-    core-graphics
+target_link_libraries(core-graphics PRIVATE
     glfw
     glad::glad
     glm::glm

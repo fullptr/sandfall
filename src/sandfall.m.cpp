@@ -9,10 +9,9 @@
 #include "mouse.hpp"
 #include "player.hpp"
 #include "world_save.hpp"
-
-#include "graphics/renderer.hpp"
-#include "graphics/shape_renderer.hpp"
-#include "graphics/window.hpp"
+#include "renderer.hpp"
+#include "shape_renderer.hpp"
+#include "window.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
