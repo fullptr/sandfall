@@ -1,26 +1,18 @@
-#include "world.hpp"
-#include "pixel.hpp"
 #include "config.hpp"
-#include "utility.hpp"
-#include "camera.hpp"
-#include "update_rigid_bodies.hpp"
-#include "explosion.hpp"
+#include "world.hpp"
 #include "mouse.hpp"
-#include "player.hpp"
-#include "world_save.hpp"
+#include "window.hpp"
+#include "camera.hpp"
+#include "serialisation.hpp"
+#include "utility.hpp"
 #include "renderer.hpp"
 #include "shape_renderer.hpp"
-#include "window.hpp"
-#include "serialisation.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
 #include <memory>
 #include <print>
-#include <fstream>
-#include <cmath>
-#include <span>
 
 auto main() -> int
 {
@@ -68,24 +60,17 @@ auto main() -> int
         }
         level->player.update(keyboard);
 
-        const auto mouse_actual = mouse_pos_world_space(mouse, camera);
-        const auto mouse_pixel = pixel_at_mouse(mouse, camera);
-
-        // Render and display the world
         world_renderer.bind();
         if (updated) {
             world_renderer.update(*level, false, camera);
         }
         world_renderer.draw();
 
-        shape_renderer.begin_frame(camera);
-
         // TODO: Replace with actual sprite data
+        shape_renderer.begin_frame(camera);        
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
-
         shape_renderer.end_frame();
         
-
         window.end_frame();
     }
     
