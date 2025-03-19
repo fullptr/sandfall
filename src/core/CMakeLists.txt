@@ -7,7 +7,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
-add_library(core-graphics STATIC
+add_library(core STATIC
     buffer.cpp
     renderer.cpp
     shape_renderer.cpp
@@ -22,9 +22,9 @@ add_library(core-graphics STATIC
     update_rigid_bodies.cpp
 )
 
-target_include_directories(core-graphics PUBLIC .)
+target_include_directories(core PUBLIC .)
 
-target_link_libraries(core-graphics PRIVATE
+target_link_libraries(core PRIVATE
     glfw
     glad::glad
     glm::glm

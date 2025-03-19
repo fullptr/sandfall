@@ -14,21 +14,20 @@ add_executable(game game.m.cpp)
 target_include_directories(game PUBLIC .)
 
 target_link_libraries(game PRIVATE
-    core-graphics
+    core
     glfw
     glad::glad
     glm::glm
-    imgui::imgui
     cereal::cereal
     box2d::box2d
 )
 
-add_executable(editor game.m.cpp)
+add_executable(editor editor.m.cpp)
 
 target_include_directories(editor PUBLIC .)
 
 target_link_libraries(editor PRIVATE
-    core-graphics
+    core
     glfw
     glad::glad
     glm::glm
