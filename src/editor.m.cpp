@@ -204,12 +204,14 @@ auto main() -> int
         if (ImGui::Begin("Editor")) {
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
-            ImGui::Text("Position: {%d, %d}", (int)std::round(mouse_actual.x), (int)std::round(mouse_actual.y));
             ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
             if (level->pixels.valid(mouse_pixel)) {
                 const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
                 ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");
+            } else {
+                ImGui::Text("  pixel power: n/a");
+                ImGui::Text("  is_falling: n/a");
             }
             ImGui::Text("Number of Floors: %d", level->player.floors().size());
             ImGui::Text("Events this frame: %zu", window.events().size());
