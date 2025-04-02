@@ -339,16 +339,16 @@ auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
 
     // Pixels that don't move have their is_falling flag set to false
     if (pos == start_pos) {
-        w.visit(pos, [&](pixel& p) { p.flags[is_falling] = false; });
-    }
-    if (pos == start_pos && properties(w[pos]).gravity_factor) {
-        // will always try to move at least one block
-        w.visit_no_wake(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
+        w.visit_no_wake(pos, [&](pixel& p) {
+            p.flags[is_falling] = false;
+            if (properties(p).gravity_factor) {
+                p.velocity = glm::ivec2{0, 1};
+            }
+        });
     }
 
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
-
     return pos;
 }
 
