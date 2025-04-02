@@ -19,7 +19,7 @@ auto main() -> int
     auto window          = sand::window{"sandfall", 1280, 720};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
-    auto level           = sand::load_level("save0.bin");
+    auto level           = sand::load_level("save4.bin");
     auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
@@ -29,7 +29,7 @@ auto main() -> int
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .world_to_screen = window.height() / 128.0f
+        .world_to_screen = window.height() / 182.0f
     };
 
     while (window.is_running()) {
@@ -45,20 +45,21 @@ auto main() -> int
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
-                camera.world_to_screen = e->height / 128.0f;
+                camera.world_to_screen = e->height / 182.0f;
             }
-        }
-
-        const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
-        if (desired_top_left != camera.top_left) {
-            const auto diff = desired_top_left - camera.top_left;
-            camera.top_left += 0.05f * diff;
         }
 
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
+            
+            const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
+            if (desired_top_left != camera.top_left) {
+                const auto diff = desired_top_left - camera.top_left;
+                camera.top_left += 0.05f * diff;
+            }
+            
             updated = true;
             level->pixels.step();
         }
