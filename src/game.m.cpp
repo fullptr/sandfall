@@ -74,6 +74,11 @@ auto main() -> int
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(camera);        
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
+
+        //const auto world_dimensions = sand::dimensions(camera) / camera.world_to_screen;
+        //shape_renderer.draw_circle(camera.top_left + glm::vec2{0, world_dimensions.y/2.0}, {1.0, 0.0, 1.0, 1.0}, 10);
+        //shape_renderer.draw_circle(camera.top_left + glm::vec2{world_dimensions.x, world_dimensions.y/2.0}, {1.0, 0.0, 1.0, 1.0}, 10);
+
         shape_renderer.end_frame();
         
         window.end_frame();
