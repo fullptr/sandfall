@@ -451,31 +451,33 @@ auto world::step() -> void
         chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
 
-    const auto width_chunks = d_width / config::chunk_size;
-    const auto height_chunks = d_height / config::chunk_size;
-
-    for (auto it = d_chunks.rbegin(); it != d_chunks.rend(); ++it) {
-        auto& chunk = *it;
-        if (!chunk.should_step) continue;
-    
-        const auto index = d_chunks.size() - std::distance(d_chunks.rbegin(), it) - 1;
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(d_width, index);
-        for (int y = sand::config::chunk_size; y != 0; --y) {
-            if (coin_flip()) {
-                for (int x = 0; x != sand::config::chunk_size; ++x) {
-                    const auto pos = top_left + glm::ivec2{x, y - 1};
-                    const auto new_pos = update_pixel(*this, pos);
-                    at(new_pos).flags[is_updated] = true;
-                }
-            }
-            else {
-                for (int x = sand::config::chunk_size; x != 0; --x) {
-                    const auto pos = top_left + glm::ivec2{x - 1, y - 1};
-                    const auto new_pos = update_pixel(*this, pos);
-                    at(new_pos).flags[is_updated] = true;
-                }
+    for (int y = d_height - 1; y >= 0; --y) {
+        if (coin_flip()) {
+            for (int x = 0; x != d_width; ++x) {
+                const auto chunk_pos = get_chunk_from_pixel({x, y});
+                const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
+                if (!chunk.should_step) continue;
+                const auto pos = glm::ivec2{x, y};
+                const auto new_pos = update_pixel(*this, pos);
+                at(new_pos).flags[is_updated] = true;
             }
         }
+        else {
+            for (int x = d_width - 1; x >= 0; --x) {
+                const auto chunk_pos = get_chunk_from_pixel({x, y});
+                const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
+                if (!chunk.should_step) continue;
+                const auto pos = glm::ivec2{x, y};
+                const auto new_pos = update_pixel(*this, pos);
+                at(new_pos).flags[is_updated] = true;
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i != d_chunks.size(); ++i) {
+        auto& chunk = d_chunks[i];
+        if (!chunk.should_step) continue;
+        const auto top_left = sand::config::chunk_size * get_chunk_pos(d_width, i);
         create_chunk_triangles(*this, chunk, top_left);
     }
     
