@@ -402,10 +402,10 @@ auto world::chunk_valid(glm::ivec2 pos) const -> bool
     return get_chunk_index(d_width, chunk) < d_chunks.size();
 }
 
-auto world::get_chunk(glm::ivec2 pos) -> chunk&
+auto world::get_chunk(pixel_pos pos) -> chunk&
 {
     assert(chunk_valid(pos));
-    const auto chunk_pos = get_chunk_from_pixel({pos.x, pos.y});
+    const auto chunk_pos = get_chunk_from_pixel(pos);
     const auto width_chunks = d_width / config::chunk_size;
     const auto index = width_chunks * chunk_pos.y + chunk_pos.x;
     return d_chunks[index];

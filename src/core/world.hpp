@@ -36,7 +36,7 @@ class world
     auto at(glm::ivec2) -> pixel&;
     auto wake_chunk(chunk_pos pos) -> void;
     auto chunk_valid(glm::ivec2 pos) const -> bool;
-    auto get_chunk(glm::ivec2 pos) -> chunk&;
+    auto get_chunk(pixel_pos pos) -> chunk&;
     
 public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
