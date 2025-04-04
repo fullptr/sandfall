@@ -33,7 +33,7 @@ class world
     std::size_t        d_width;
     std::size_t        d_height;
     
-    auto at(glm::ivec2) -> pixel&;
+    auto at(pixel_pos pos) -> pixel&;
     auto wake_chunk(chunk_pos pos) -> void;
     auto chunk_valid(pixel_pos pos) const -> bool;
     auto chunk_valid(chunk_pos pos) const -> bool;
@@ -66,7 +66,7 @@ public:
 
     auto valid(glm::ivec2 pos) const -> bool;
     auto set(glm::ivec2 pos, const pixel& p) -> void;
-    auto swap(glm::ivec2 a, glm::ivec2 b) -> void;
+    auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
 
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void

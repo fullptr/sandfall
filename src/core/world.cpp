@@ -87,7 +87,7 @@ auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
             break;
         }
 
-        w.swap(pos, next_pos);
+        w.swap({pos.x, pos.y}, {next_pos.x, next_pos.y});
         pos = next_pos;
         set_adjacent_free_falling(w, pos);
     }
@@ -328,10 +328,10 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
     }
 }
 
-auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
+auto update_pixel(world& w, glm::ivec2 pos) -> pixel_pos
 {
     if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
-        return pos;
+        return {pos.x, pos.y};
     }
 
     const auto start_pos = pos;
@@ -349,7 +349,7 @@ auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
 
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
-    return pos;
+    return {pos.x, pos.y};
 }
 
 }
@@ -385,7 +385,7 @@ auto world::wake_chunk(chunk_pos pos) -> void
     d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
 }
 
-auto world::at(glm::ivec2 pos) -> pixel&
+auto world::at(pixel_pos pos) -> pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
@@ -419,15 +419,15 @@ auto world::get_chunk(pixel_pos pos) -> chunk&
 auto world::set(glm::ivec2 pos, const pixel& p) -> void
 {
     assert(valid(pos));
-    at(pos) = p;
+    at({pos.x, pos.y}) = p;
     wake_chunk_with_pixel({pos.x, pos.y});
 }
 
-auto world::swap(glm::ivec2 a, glm::ivec2 b) -> void
+auto world::swap(pixel_pos a, pixel_pos b) -> void
 {
     std::swap(at(a), at(b));
-    wake_chunk_with_pixel({a.x, a.y});
-    wake_chunk_with_pixel({b.x, b.y});
+    wake_chunk_with_pixel(a);
+    wake_chunk_with_pixel(b);
 }
 
 auto world::operator[](glm::ivec2 pos) const -> const pixel&
