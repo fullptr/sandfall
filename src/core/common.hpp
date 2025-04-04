@@ -14,4 +14,17 @@ static constexpr int chunk_size = 64;
 static constexpr int pixels_per_meter = 16;
 
 }
+
+struct pixel_pos
+{
+    int x;
+    int y;
+};
+
+struct chunk_pos
+{
+    int x;
+    int y;
+};
+
 }
