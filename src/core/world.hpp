@@ -69,7 +69,7 @@ public:
     auto swap(glm::ivec2 a, glm::ivec2 b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;
 
-    auto visit_no_wake(glm::ivec2 pos, auto&& updater) -> void
+    auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
         assert(valid(pos));
         updater(d_pixels[pos.x + d_width * pos.y]);
@@ -77,7 +77,7 @@ public:
 
     auto visit(glm::ivec2 pos, auto&& updater) -> void
     {
-        visit_no_wake(pos, std::forward<decltype(updater)>(updater));
+        visit_no_wake({pos.x, pos.y}, std::forward<decltype(updater)>(updater));
         wake_chunk_with_pixel({pos.x, pos.y});
     }
 

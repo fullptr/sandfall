@@ -127,7 +127,7 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
     if (props.gravity_factor) {
         const auto velocity = w[pos].velocity;
         const auto gravity_factor = props.gravity_factor;
-        w.visit_no_wake(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
+        w.visit_no_wake({pos.x, pos.y}, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
         if (move_offset(w, pos, velocity)) return;
     }
 
@@ -339,7 +339,7 @@ auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
 
     // Pixels that don't move have their is_falling flag set to false
     if (pos == start_pos) {
-        w.visit_no_wake(pos, [&](pixel& p) {
+        w.visit_no_wake({pos.x, pos.y}, [&](pixel& p) {
             p.flags[is_falling] = false;
             if (properties(p).gravity_factor) {
                 p.velocity = glm::ivec2{0, 1};
