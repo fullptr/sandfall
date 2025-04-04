@@ -450,7 +450,10 @@ auto world::step() -> void
     for (auto& chunk : d_chunks) {
         chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
-    
+
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto height_chunks = d_height / config::chunk_size;
+
     for (auto it = d_chunks.rbegin(); it != d_chunks.rend(); ++it) {
         auto& chunk = *it;
         if (!chunk.should_step) continue;

@@ -104,6 +104,9 @@ auto main() -> int
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_draw      = physics_debug_draw{&shape_renderer};
 
+    auto update_window_half_width = 2 + sand::config::chunk_size;
+    auto update_window_half_height = 2 + sand::config::chunk_size;
+
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = window.width(),

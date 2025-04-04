@@ -58,6 +58,11 @@ auto main() -> int
             if (desired_top_left != camera.top_left) {
                 const auto diff = desired_top_left - camera.top_left;
                 camera.top_left += 0.05f * diff;
+
+                // Clamp the camera to the world, don't allow players to see the void
+                const auto camera_dimensions_world_space = sand::dimensions(camera) / camera.world_to_screen;
+                camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width() - camera_dimensions_world_space.x);
+                camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height() - camera_dimensions_world_space.y);
             }
             
             updated = true;
