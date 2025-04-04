@@ -59,7 +59,7 @@ public:
     
     auto step() -> void;
     
-    auto wake_chunk_with_pixel(glm::ivec2 pixel) -> void;
+    auto wake_chunk_with_pixel(pixel_pos pixel) -> void;
     auto physics() -> b2World& { return d_physics; }
     auto wake_all() -> void;
 
@@ -77,7 +77,7 @@ public:
     auto visit(glm::ivec2 pos, auto&& updater) -> void
     {
         visit_no_wake(pos, std::forward<decltype(updater)>(updater));
-        wake_chunk_with_pixel(pos);
+        wake_chunk_with_pixel({pos.x, pos.y});
     }
 
     inline auto begin() { return d_pixels.begin(); }

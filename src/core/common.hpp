@@ -21,6 +21,11 @@ struct pixel_pos
     int y;
 };
 
+inline auto operator+(pixel_pos pos, glm::ivec2 offset) -> pixel_pos
+{
+    return {pos.x + offset.x, pos.y + offset.y};
+}
+
 struct chunk_pos
 {
     int x;

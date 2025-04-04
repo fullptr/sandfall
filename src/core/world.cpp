@@ -202,7 +202,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     const auto& props = properties(px);
 
     if (props.always_awake) {
-        w.wake_chunk_with_pixel(pos);
+        w.wake_chunk_with_pixel({pos.x, pos.y});
     }
 
     // is_burning status
@@ -274,7 +274,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 
     if (px.power > 0) {
-        w.wake_chunk_with_pixel(pos);
+        w.wake_chunk_with_pixel({pos.x, pos.y});
     }
 
     if (random_unit() < props.spontaneous_destroy) {
@@ -415,14 +415,14 @@ auto world::set(glm::ivec2 pos, const pixel& p) -> void
 {
     assert(valid(pos));
     at(pos) = p;
-    wake_chunk_with_pixel(pos);
+    wake_chunk_with_pixel({pos.x, pos.y});
 }
 
 auto world::swap(glm::ivec2 a, glm::ivec2 b) -> void
 {
     std::swap(at(a), at(b));
-    wake_chunk_with_pixel(a);
-    wake_chunk_with_pixel(b);
+    wake_chunk_with_pixel({a.x, a.y});
+    wake_chunk_with_pixel({b.x, b.y});
 }
 
 auto world::operator[](glm::ivec2 pos) const -> const pixel&
@@ -436,15 +436,15 @@ auto world::wake_all() -> void
     for (auto& c : d_chunks) { c.should_step_next = true; }
 }
 
-auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
+auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
 {
-    const auto chunk_pos = get_chunk_from_pixel({pixel.x, pixel.y});
+    const auto chunk_pos = get_chunk_from_pixel(pos);
     wake_chunk(chunk_pos);
 
     for (const auto offset : adjacent_offsets) {
-        const auto neighbour = pixel + offset;
+        const auto neighbour = pos + offset;
         const auto neighbour_chunk = get_chunk_from_pixel({neighbour.x, neighbour.y});
-        if (chunk_valid(neighbour)) {
+        if (chunk_valid({neighbour.x, neighbour.y})) {
             wake_chunk(neighbour_chunk);
         }
     }
