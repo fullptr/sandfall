@@ -486,14 +486,17 @@ auto world::step() -> void
             }
         }
     }
+    
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto height_chunks = d_height / config::chunk_size;
 
-    for (std::size_t i = 0; i != d_chunks.size(); ++i) {
-        auto& chunk = d_chunks[i];
-        if (!chunk.should_step) continue;
-        const auto width_chunks = d_width / config::chunk_size;
-        const auto chunk_pos = glm::ivec2{i % width_chunks, i / width_chunks};
-        const auto top_left = sand::config::chunk_size * chunk_pos;
-        create_chunk_triangles(*this, chunk, top_left);
+    for (int x = 0; x != width_chunks; ++x) {
+        for (int y = 0; y != height_chunks; ++y) {
+            auto& chunk = d_chunks[y * width_chunks + x];
+            if (!chunk.should_step) continue;
+            const auto top_left = config::chunk_size * glm::ivec2{x, y};
+            create_chunk_triangles(*this, chunk, top_left);
+        }
     }
     
     d_physics.Step(sand::config::time_step, 8, 3);
