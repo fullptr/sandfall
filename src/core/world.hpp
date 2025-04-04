@@ -34,7 +34,7 @@ class world
     std::size_t        d_height;
     
     auto at(glm::ivec2) -> pixel&;
-    auto wake_chunk(glm::ivec2 chunk_pos) -> void;
+    auto wake_chunk(chunk_pos pos) -> void;
     auto chunk_valid(glm::ivec2 pos) const -> bool;
     auto get_chunk(glm::ivec2 pos) -> chunk&;
     
