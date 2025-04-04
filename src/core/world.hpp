@@ -35,7 +35,8 @@ class world
     
     auto at(glm::ivec2) -> pixel&;
     auto wake_chunk(chunk_pos pos) -> void;
-    auto chunk_valid(glm::ivec2 pos) const -> bool;
+    auto chunk_valid(pixel_pos pos) const -> bool;
+    auto chunk_valid(chunk_pos pos) const -> bool;
     auto get_chunk(pixel_pos pos) -> chunk&;
     
 public:

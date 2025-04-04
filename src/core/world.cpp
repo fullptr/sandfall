@@ -381,7 +381,7 @@ auto wake_pixel_chunk(world& w, glm::ivec2 pos) -> void
 
 auto world::wake_chunk(chunk_pos pos) -> void
 {
-    //TODO: fix - assert(chunk_valid(chunk_pos));
+    assert(chunk_valid(chunk_pos));
     d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
 }
 
@@ -396,10 +396,15 @@ auto world::valid(glm::ivec2 pos) const -> bool
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto world::chunk_valid(glm::ivec2 pos) const -> bool
+auto world::chunk_valid(pixel_pos pos) const -> bool
 {
     const auto chunk = chunk_pos{pos.x / sand::config::chunk_size, pos.y / sand::config::chunk_size};
     return get_chunk_index(d_width, chunk) < d_chunks.size();
+}
+
+auto world::chunk_valid(chunk_pos pos) const -> bool
+{
+    return get_chunk_index(d_width, pos) < d_chunks.size();
 }
 
 auto world::get_chunk(pixel_pos pos) -> chunk&
@@ -444,7 +449,7 @@ auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
     for (const auto offset : adjacent_offsets) {
         const auto neighbour = pos + offset;
         const auto neighbour_chunk = get_chunk_from_pixel({neighbour.x, neighbour.y});
-        if (chunk_valid({neighbour.x, neighbour.y})) {
+        if (chunk_valid(neighbour)) {
             wake_chunk(neighbour_chunk);
         }
     }
