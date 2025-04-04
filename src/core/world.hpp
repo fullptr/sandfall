@@ -36,8 +36,9 @@ class world
     auto at(glm::ivec2) -> pixel&;
     auto wake_chunk(glm::ivec2 chunk_pos) -> void;
     auto chunk_valid(glm::ivec2 pos) const -> bool;
+    auto get_chunk(glm::ivec2 pos) -> chunk&;
     
-    public:
+public:
     world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
         : d_physics{{config::gravity.x, config::gravity.y}}
         , d_pixels{pixels}

@@ -402,6 +402,15 @@ auto world::chunk_valid(glm::ivec2 pos) const -> bool
     return get_chunk_index(d_width, chunk) < d_chunks.size();
 }
 
+auto world::get_chunk(glm::ivec2 pos) -> chunk&
+{
+    assert(chunk_valid(pos));
+    const auto chunk_pos = get_chunk_from_pixel(pos);
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto index = width_chunks * chunk_pos.y + chunk_pos.x;
+    return d_chunks[index];
+}
+
 auto world::set(glm::ivec2 pos, const pixel& p) -> void
 {
     assert(valid(pos));
@@ -454,8 +463,7 @@ auto world::step() -> void
     for (int y = d_height - 1; y >= 0; --y) {
         if (coin_flip()) {
             for (int x = 0; x != d_width; x += config::chunk_size) {
-                const auto chunk_pos = get_chunk_from_pixel({x, y});
-                const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
+                const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
                     for (int dx = 0; dx != config::chunk_size; ++dx) {
                         const auto pos = glm::ivec2{x + dx, y};
@@ -467,8 +475,7 @@ auto world::step() -> void
         }
         else {
             for (int x = d_width - 1; x >= 0; x -= config::chunk_size) {
-                const auto chunk_pos = get_chunk_from_pixel({x, y});
-                const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
+                const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
                     for (int dx = 0; dx != config::chunk_size; ++dx) {
                         const auto pos = glm::ivec2{x - dx, y};
@@ -483,7 +490,9 @@ auto world::step() -> void
     for (std::size_t i = 0; i != d_chunks.size(); ++i) {
         auto& chunk = d_chunks[i];
         if (!chunk.should_step) continue;
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(d_width, i);
+        const auto width_chunks = d_width / config::chunk_size;
+        const auto chunk_pos = glm::ivec2{i % width_chunks, i / width_chunks};
+        const auto top_left = sand::config::chunk_size * chunk_pos;
         create_chunk_triangles(*this, chunk, top_left);
     }
     
