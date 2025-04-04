@@ -1,7 +1,7 @@
 #pragma once
 #include "pixel.hpp"
 #include "serialise.hpp"
-#include "config.hpp"
+#include "common.hpp"
 #include "world_save.hpp"
 #include "player.hpp"
 

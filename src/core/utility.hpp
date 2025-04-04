@@ -10,7 +10,7 @@
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
-#include "config.hpp"
+#include "common.hpp"
 
 namespace sand {
 

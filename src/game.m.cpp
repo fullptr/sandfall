@@ -1,4 +1,4 @@
-#include "config.hpp"
+#include "common.hpp"
 #include "world.hpp"
 #include "mouse.hpp"
 #include "window.hpp"

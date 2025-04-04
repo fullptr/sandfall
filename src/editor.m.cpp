@@ -1,6 +1,6 @@
 #include "world.hpp"
 #include "pixel.hpp"
-#include "config.hpp"
+#include "common.hpp"
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"

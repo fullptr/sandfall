@@ -1,5 +1,5 @@
 #include "update_rigid_bodies.hpp"
-#include "config.hpp"
+#include "common.hpp"
 #include "world.hpp"
 #include "utility.hpp"
 
