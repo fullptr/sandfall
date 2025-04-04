@@ -453,23 +453,29 @@ auto world::step() -> void
 
     for (int y = d_height - 1; y >= 0; --y) {
         if (coin_flip()) {
-            for (int x = 0; x != d_width; ++x) {
+            for (int x = 0; x != d_width; x += config::chunk_size) {
                 const auto chunk_pos = get_chunk_from_pixel({x, y});
                 const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
-                if (!chunk.should_step) continue;
-                const auto pos = glm::ivec2{x, y};
-                const auto new_pos = update_pixel(*this, pos);
-                at(new_pos).flags[is_updated] = true;
+                if (chunk.should_step) {
+                    for (int dx = 0; dx != config::chunk_size; ++dx) {
+                        const auto pos = glm::ivec2{x + dx, y};
+                        const auto new_pos = update_pixel(*this, pos);
+                        at(new_pos).flags[is_updated] = true;
+                    }
+                }
             }
         }
         else {
-            for (int x = d_width - 1; x >= 0; --x) {
+            for (int x = d_width - 1; x >= 0; x -= config::chunk_size) {
                 const auto chunk_pos = get_chunk_from_pixel({x, y});
                 const auto chunk = d_chunks[get_chunk_index(d_width, chunk_pos)];
-                if (!chunk.should_step) continue;
-                const auto pos = glm::ivec2{x, y};
-                const auto new_pos = update_pixel(*this, pos);
-                at(new_pos).flags[is_updated] = true;
+                if (chunk.should_step) {
+                    for (int dx = 0; dx != config::chunk_size; ++dx) {
+                        const auto pos = glm::ivec2{x - dx, y};
+                        const auto new_pos = update_pixel(*this, pos);
+                        at(new_pos).flags[is_updated] = true;
+                    }
+                }
             }
         }
     }
