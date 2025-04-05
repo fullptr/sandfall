@@ -19,7 +19,7 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
     while (w.valid({static_cast<int>(curr.x), static_cast<int>(curr.y)}) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
-        if (w[curr].type == pixel_type::titanium) {
+        if (w[{static_cast<int>(curr.x), static_cast<int>(curr.y)}].type == pixel_type::titanium) {
             break;
         }
         w.set({static_cast<int>(curr.x), static_cast<int>(curr.y)}, random_unit() < 0.05f ? pixel::ember() : pixel::air());
@@ -28,14 +28,14 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
     
     // Try to catch light to the first scorched pixel
     if (w.valid({static_cast<int>(curr.x), static_cast<int>(curr.y)})) {
-        if (random_unit() < properties(w[curr]).flammability) {
+        if (random_unit() < properties(w[{static_cast<int>(curr.x), static_cast<int>(curr.y)}]).flammability) {
             w.visit({static_cast<int>(curr.x), static_cast<int>(curr.y)}, [&](pixel& p) { p.flags[is_burning] = true; });
         }
     }
 
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
     while (w.valid({static_cast<int>(curr.x), static_cast<int>(curr.y)}) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
-        if (properties(w[curr]).phase == pixel_phase::solid) {
+        if (properties(w[{static_cast<int>(curr.x), static_cast<int>(curr.y)}]).phase == pixel_phase::solid) {
             w.visit({static_cast<int>(curr.x), static_cast<int>(curr.y)}, [&](pixel& p) { p.colour *= 0.8f; });
         }
         curr += step;

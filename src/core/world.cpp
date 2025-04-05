@@ -30,9 +30,9 @@ static constexpr auto adjacent_offsets = std::array{
     glm::ivec2{0, -1}
 };
 
-auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
+auto can_pixel_move_to(const world& w, pixel_pos src_pos, pixel_pos dst_pos) -> bool
 {
-    if (!w.valid({src_pos.x, src_pos.y}) || !w.valid({dst_pos.x, dst_pos.y})) { return false; }
+    if (!w.valid(src_pos) || !w.valid(dst_pos)) { return false; }
 
     // If the destination is empty, we can always move there
     if (w[dst_pos].type == pixel_type::none) { return true; }
@@ -72,9 +72,9 @@ auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
 
 // Moves towards the given offset, updating pos to the new postion and returning
 // true if the position has changed
-auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
+auto move_offset(world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
 {
-    glm::ivec2 start_pos = pos;
+    const auto start_pos = pos;
 
     const auto a = pos;
     const auto b = pos + offset;
@@ -120,15 +120,15 @@ auto sign(float f) -> int
     return 0;
 }
 
-inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
+inline auto update_pixel_position(world& w, pixel_pos& pos) -> void
 {
-    const auto& props = properties(w[pos]);
+    const auto& props = properties(w[{pos.x, pos.y}]);
 
     // Apply gravity
     if (props.gravity_factor) {
-        const auto velocity = w[pos].velocity;
+        const auto velocity = w[{pos.x, pos.y}].velocity;
         const auto gravity_factor = props.gravity_factor;
-        w.visit_no_wake({pos.x, pos.y}, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
+        w.visit_no_wake(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
         if (move_offset(w, pos, velocity)) return;
     }
 
@@ -162,7 +162,7 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
-auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
+auto should_get_powered(const world& w, pixel_pos pos, glm::ivec2 offset) -> bool
 {
     const auto& dst = w[pos];
     const auto& src = w[pos + offset];
@@ -197,32 +197,32 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
 }
 
 // Update logic for single pixels depending on properties only
-inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
 {
     const auto& px = w[pos];
     const auto& props = properties(px);
 
     if (props.always_awake) {
-        w.wake_chunk_with_pixel({pos.x, pos.y});
+        w.wake_chunk_with_pixel(pos);
     }
 
     // is_burning status
     if (px.flags[is_burning]) {
 
         // See if it can be put out
-        const auto put_out = is_surrounded(w, {pos.x, pos.y}) ? props.put_out_surrounded : props.put_out;
+        const auto put_out = is_surrounded(w, pos) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
-            w.visit({pos.x, pos.y}, [&](pixel& p) { p.flags[is_burning] = false; });
+            w.visit(pos, [&](pixel& p) { p.flags[is_burning] = false; });
         }
 
         // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
-            w.set({pos.x, pos.y}, pixel::air());
+            w.set(pos, pixel::air());
         }
 
         // See if it explodes
         if (random_unit() < props.explosion_chance) {
-            apply_explosion(w, pos, sand::explosion{
+            apply_explosion(w, {pos.x, pos.y}, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
@@ -249,7 +249,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
             }
 
             if (px.power > 0 && props.explodes_on_power) {
-                apply_explosion(w, pos, sand::explosion{
+                apply_explosion(w, {pos.x, pos.y}, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
             }
@@ -284,17 +284,17 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 }
 
-inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
 {
-    auto& px = w[pos];
+    auto& px = w[{pos.x, pos.y}];
     const auto& props = properties(px);
 
     // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
         const auto neigh_pos = pos + offset;
-        if (!w.valid({neigh_pos.x, neigh_pos.y})) continue;   
+        if (!w.valid(neigh_pos)) continue;   
 
-        const auto& neighbour = w[neigh_pos];
+        const auto& neighbour = w[{neigh_pos.x, neigh_pos.y}];
 
         // Boil water
         if (props.can_boil_water) {
@@ -308,7 +308,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
             if (random_unit() > properties(neighbour).corrosion_resist) {
                 w.set({neigh_pos.x, neigh_pos.y}, pixel::air());
                 if (random_unit() > 0.9f) {
-                    w.set({pos.x, pos.y}, pixel::air());
+                    w.set(pos, pixel::air());
                 }
             }
         }
@@ -316,7 +316,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         // Spread fire
         if (props.is_burn_source || px.flags[is_burning]) {
             if (random_unit() < properties(neighbour).flammability) {
-                w.visit({neigh_pos.x, neigh_pos.y}, [&](pixel& p) { p.flags[is_burning] = true; });
+                w.visit(neigh_pos, [&](pixel& p) { p.flags[is_burning] = true; });
             }
         }
 
@@ -324,16 +324,16 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         const bool can_produce_embers = props.is_ember_source || px.flags[is_burning];
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
-                w.set({neigh_pos.x, neigh_pos.y}, pixel::ember());
+                w.set(neigh_pos, pixel::ember());
             }
         }
     }
 }
 
-auto update_pixel(world& w, glm::ivec2 pos) -> pixel_pos
+auto update_pixel(world& w, pixel_pos pos) -> pixel_pos
 {
-    if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
-        return {pos.x, pos.y};
+    if (w[{pos.x, pos.y}].type == pixel_type::none || w[{pos.x, pos.y}].flags[is_updated]) {
+        return pos;
     }
 
     const auto start_pos = pos;
@@ -341,7 +341,7 @@ auto update_pixel(world& w, glm::ivec2 pos) -> pixel_pos
 
     // Pixels that don't move have their is_falling flag set to false
     if (pos == start_pos) {
-        w.visit_no_wake({pos.x, pos.y}, [&](pixel& p) {
+        w.visit_no_wake(pos, [&](pixel& p) {
             p.flags[is_falling] = false;
             if (properties(p).gravity_factor) {
                 p.velocity = glm::ivec2{0, 1};
@@ -351,7 +351,7 @@ auto update_pixel(world& w, glm::ivec2 pos) -> pixel_pos
 
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
-    return {pos.x, pos.y};
+    return pos;
 }
 
 }
@@ -432,7 +432,7 @@ auto world::swap(pixel_pos a, pixel_pos b) -> void
     wake_chunk_with_pixel(b);
 }
 
-auto world::operator[](glm::ivec2 pos) const -> const pixel&
+auto world::operator[](pixel_pos pos) const -> const pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
@@ -473,8 +473,7 @@ auto world::step() -> void
                 const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
                     for (int dx = 0; dx != config::chunk_size; ++dx) {
-                        const auto pos = glm::ivec2{x + dx, y};
-                        const auto new_pos = update_pixel(*this, pos);
+                        const auto new_pos = update_pixel(*this, {x + dx, y});
                         at(new_pos).flags[is_updated] = true;
                     }
                 }
@@ -485,8 +484,7 @@ auto world::step() -> void
                 const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
                     for (int dx = 0; dx != config::chunk_size; ++dx) {
-                        const auto pos = glm::ivec2{x - dx, y};
-                        const auto new_pos = update_pixel(*this, pos);
+                        const auto new_pos = update_pixel(*this, {x - dx, y});
                         at(new_pos).flags[is_updated] = true;
                     }
                 }
