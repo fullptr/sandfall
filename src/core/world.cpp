@@ -393,15 +393,9 @@ auto world::is_valid_pixel(pixel_pos pos) const -> bool
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto world::chunk_valid(pixel_pos pos) const -> bool
+auto world::is_valid_chunk(chunk_pos pos) const -> bool
 {
-    const auto chunk = chunk_pos{pos.x / sand::config::chunk_size, pos.y / sand::config::chunk_size};
-    return get_chunk_index(d_width, chunk) < d_chunks.size();
-}
-
-auto world::chunk_valid(chunk_pos pos) const -> bool
-{
-    return get_chunk_index(d_width, pos) < d_chunks.size();
+    return 0 <= pos.x && pos.x < width_in_chunks() && 0 <= pos.y && pos.y < height_in_chunks();
 }
 
 auto world::operator[](chunk_pos pos) const -> const chunk&
@@ -410,11 +404,6 @@ auto world::operator[](chunk_pos pos) const -> const chunk&
     const auto width_chunks = d_width / config::chunk_size;
     const auto index = width_chunks * pos.y + pos.x;
     return d_chunks[index];
-}
-
-auto world::is_valid_chunk(chunk_pos pos) const -> bool
-{
-    return (0 <= pos.x && pos.x < width_in_chunks()) && (0 <= pos.y && pos.y < height_in_chunks());
 }
 
 auto world::set(pixel_pos pos, const pixel& p) -> void
@@ -448,9 +437,8 @@ auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
     wake_chunk(chunk_pos);
 
     for (const auto offset : adjacent_offsets) {
-        const auto neighbour = pos + offset;
-        const auto neighbour_chunk = get_chunk_from_pixel({neighbour.x, neighbour.y});
-        if (chunk_valid(neighbour)) {
+        const auto neighbour_chunk = get_chunk_from_pixel(pos + offset);
+        if (is_valid_chunk(neighbour_chunk)) {
             wake_chunk(neighbour_chunk);
         }
     }

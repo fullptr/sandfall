@@ -36,8 +36,6 @@ class world
     
     auto at(pixel_pos pos) -> pixel&;
     auto wake_chunk(chunk_pos pos) -> void;
-    auto chunk_valid(pixel_pos pos) const -> bool;
-    auto chunk_valid(chunk_pos pos) const -> bool;
     auto get_chunk(pixel_pos pos) -> chunk&;
     
     public:
@@ -66,6 +64,7 @@ class world
     auto wake_all() -> void;
     
     auto is_valid_pixel(pixel_pos pos) const -> bool;
+    auto is_valid_chunk(chunk_pos pos) const -> bool;
     auto set(pixel_pos pos, const pixel& p) -> void;
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](pixel_pos pos) const -> const pixel&;
@@ -82,8 +81,6 @@ class world
         visit_no_wake(pos, std::forward<decltype(updater)>(updater));
         wake_chunk_with_pixel(pos);
     }
-    
-    auto is_valid_chunk(chunk_pos) const -> bool;
 
     inline auto width_in_pixels() const -> i32 { return d_width; }
     inline auto height_in_pixels() const -> i32 { return d_height; }
