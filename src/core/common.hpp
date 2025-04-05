@@ -19,6 +19,8 @@ struct pixel_pos
 {
     int x;
     int y;
+
+    auto operator<=>(const pixel_pos&) const = default;
 };
 
 inline auto operator+(pixel_pos pos, glm::ivec2 offset) -> pixel_pos
@@ -26,10 +28,17 @@ inline auto operator+(pixel_pos pos, glm::ivec2 offset) -> pixel_pos
     return {pos.x + offset.x, pos.y + offset.y};
 }
 
+inline auto operator-(pixel_pos a, pixel_pos b) -> glm::ivec2
+{
+    return {a.x - b.x, a.y - b.y};
+}
+
 struct chunk_pos
 {
     int x;
     int y;
+
+    auto operator<=>(const chunk_pos&) const = default;
 };
 
 }
