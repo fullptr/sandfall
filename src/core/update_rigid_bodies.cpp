@@ -14,9 +14,9 @@ namespace sand {
 using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config::chunk_size>;
 
 auto is_static_pixel(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 pos) -> bool
+    pixel_pos pos) -> bool
 {
     if (!(top_left.x <= pos.x && pos.x < top_left.x + sand::config::chunk_size) || !(top_left.y <= pos.y && pos.y < top_left.y + sand::config::chunk_size)) return false;
     
@@ -29,9 +29,9 @@ auto is_static_pixel(
 }
 
 auto is_static_boundary(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 A, glm::ivec2 offset) -> bool
+    pixel_pos A, glm::ivec2 offset) -> bool
 {
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
     const auto static_a = is_static_pixel(top_left, w, A);
@@ -40,9 +40,9 @@ auto is_static_boundary(
 }
 
 auto is_along_boundary(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 curr, glm::ivec2 next) -> bool
+    pixel_pos curr, pixel_pos next) -> bool
 {
     const auto offset = next - curr;
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
@@ -54,9 +54,9 @@ auto is_along_boundary(
 }
 
 auto is_boundary_cross(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 curr) -> bool
+    pixel_pos curr) -> bool
 {
     const auto tl = is_static_pixel(top_left, w, curr + left + up);
     const auto tr = is_static_pixel(top_left, w, curr + up);
@@ -66,11 +66,11 @@ auto is_boundary_cross(
 }
 
 auto is_valid_step(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 prev,
-    glm::ivec2 curr,
-    glm::ivec2 next) -> bool
+    pixel_pos prev,
+    pixel_pos curr,
+    pixel_pos next) -> bool
 {
     if (!is_along_boundary(top_left, w, curr, next)) return false;
     if (prev.x == 0 && prev.y == 0) return true;
@@ -84,7 +84,7 @@ auto is_valid_step(
     }
 
     // curving through the cross must go round an actual pixel
-    const auto pixel = glm::ivec2{
+    const auto pixel = pixel_pos{
         std::min({prev.x, curr.x, next.x}),
         std::min({prev.y, curr.y, next.y})
     };
@@ -92,13 +92,13 @@ auto is_valid_step(
 }
 
 auto get_boundary(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 start) -> std::vector<glm::ivec2>
+    pixel_pos start) -> std::vector<pixel_pos>
 {
-    auto ret = std::vector<glm::ivec2>{};
+    auto ret = std::vector<pixel_pos>{};
     auto current = start;
-    while (is_static_pixel(top_left, w, current + up)) { current += up; }
+    while (is_static_pixel(top_left, w, current + up)) { current = current + up; }
     ret.push_back(current);
     
     // Find second point
@@ -141,7 +141,7 @@ auto cross(glm::ivec2 a, glm::ivec2 b) -> float
     return a.x * b.y - a.y * b.x;
 }
 
-auto perpendicular_distance(glm::ivec2 p, glm::ivec2 a, glm::ivec2 b) -> float
+auto perpendicular_distance(pixel_pos p, pixel_pos a, pixel_pos b) -> float
 {
     if (a == b) { a.x++; } // little hack to avoid dividing by zero
 
@@ -150,7 +150,7 @@ auto perpendicular_distance(glm::ivec2 p, glm::ivec2 a, glm::ivec2 b) -> float
     return glm::abs(cross(ab, ap)) / glm::length(ab);
 }
 
-auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, std::vector<glm::ivec2>& out) -> void
+auto ramer_douglas_puecker(std::span<const pixel_pos> points, float epsilon, std::vector<pixel_pos>& out) -> void
 {
     if (points.size() < 3) {
         out.insert(out.end(), points.begin(), points.end());
@@ -178,16 +178,16 @@ auto ramer_douglas_puecker(std::span<const glm::ivec2> points, float epsilon, st
 }
 
 auto calc_boundary(
-    glm::ivec2 top_left,
+    pixel_pos top_left,
     const world& w,
-    glm::ivec2 start,
-    float epsilon) -> std::vector<glm::ivec2>
+    pixel_pos start,
+    float epsilon) -> std::vector<pixel_pos>
 {
     const auto points = get_boundary(top_left, w, start);
     if (epsilon == 0.0f) {
         return points;
     }
-    auto simplified = std::vector<glm::ivec2>{};
+    auto simplified = std::vector<pixel_pos>{};
     ramer_douglas_puecker(points, epsilon, simplified);
     return simplified;
 }
@@ -255,7 +255,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(tl, w, tl + glm::ivec2{x, y})) {
+            if (is_static_pixel(top_left, w, top_left + glm::ivec2{x, y})) {
                 chunk_pixels.set(index);
             }
         }
@@ -271,15 +271,15 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     // triangles, then flood remove the pixels
     while (chunk_pixels.any()) {
         const auto offset = get_starting_pixel(chunk_pixels);
-        const auto pos = tl + offset;
-        const auto boundary = calc_boundary(tl, w, pos, 1.5f);
+        const auto boundary = calc_boundary(top_left, w, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
             for (std::int64_t i = 0; i != boundary.size(); ++i) {
-                const auto v0 = pixel_to_physics(signed_index(boundary, i-1));
-                const auto v1 = pixel_to_physics(signed_index(boundary, i));
-                const auto v2 = pixel_to_physics(signed_index(boundary, i+1));
-                const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
+                const auto tmp_convert = [](pixel_pos x) { return glm::vec2{x.x, x.y}; };
+                const auto v0 = pixel_to_physics(tmp_convert(signed_index(boundary, i-1)));
+                const auto v1 = pixel_to_physics(tmp_convert(signed_index(boundary, i)));
+                const auto v2 = pixel_to_physics(tmp_convert(signed_index(boundary, i+1)));
+                const auto v3 = pixel_to_physics(tmp_convert(signed_index(boundary, i+2)));
     
                 shape.SetOneSided(v0, v1, v2, v3);
                 c.triangles->CreateFixture(&fixtureDef);
