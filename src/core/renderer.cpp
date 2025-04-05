@@ -133,15 +133,13 @@ auto renderer::update(const level& world, const camera& camera) -> void
             if (!chunk.should_step) continue;
             
             const auto top_left = get_chunk_top_left(cpos);
-            for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
-                for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
+            for (i32 x = 0; x != config::chunk_size; ++x) {
+                for (i32 y = 0; y != config::chunk_size; ++y) {
                     const auto world_coord = top_left + glm::ivec2{x, y};
-    
-                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
-    
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
-    
+                    
+                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
                     if (pixel.flags[is_burning]) {
                         colour = sand::random_element(fire_colours);
                     }
