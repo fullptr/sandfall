@@ -93,9 +93,9 @@ public:
 
 struct level
 {
-    world              pixels;
-    glm::ivec2         spawn_point;
-    player_controller  player;
+    world             pixels;
+    pixel_pos         spawn_point;
+    player_controller player;
 
     level(std::size_t width, std::size_t height, const std::vector<pixel>& pixels);
 };

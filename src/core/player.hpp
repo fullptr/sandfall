@@ -129,9 +129,9 @@ public:
         }
     }
 
-    auto set_position(glm::ivec2 pos) -> void
+    auto set_position(pixel_pos pos) -> void
     {
-        d_body->SetTransform(pixel_to_physics(pos), 0);
+        d_body->SetTransform(pixel_to_physics({pos.x, pos.y}), 0);
         d_body->SetLinearVelocity({0, 0});
         d_body->SetAwake(true);
     }

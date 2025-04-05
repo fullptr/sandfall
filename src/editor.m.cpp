@@ -313,7 +313,8 @@ auto main() -> int
         }
 
         if (editor.show_spawn) {
-            shape_renderer.draw_circle(level->spawn_point, {0, 1, 0, 1}, 1.0);
+            const auto p = glm::ivec2{level->spawn_point.x, level->spawn_point.y};
+            shape_renderer.draw_circle(p, {0, 1, 0, 1}, 1.0);
         }
 
         shape_renderer.end_frame();
