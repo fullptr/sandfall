@@ -195,8 +195,8 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (level->pixels.is_valid_pixel({coord.x, coord.y})) {
-                        level->pixels.set({coord.x, coord.y}, editor.get_pixel());
+                    if (level->pixels.is_valid_pixel(coord)) {
+                        level->pixels.set(coord, editor.get_pixel());
                         updated = true;
                     }
                 }
