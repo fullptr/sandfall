@@ -318,6 +318,19 @@ auto main() -> int
             shape_renderer.draw_circle(p, {0, 1, 0, 1}, 1.0);
         }
 
+        if (editor.show_chunks) {
+            for (i32 cx = 0; cx != level->pixels.width_in_chunks(); ++cx) {
+                for (i32 cy = 0; cy != level->pixels.height_in_chunks(); ++cy) {
+                    const auto cpos = chunk_pos{cx, cy};
+                    const auto top_left = get_chunk_top_left(cpos);
+                    const auto chunk = level->pixels.get_chunk(cpos);
+                    if (chunk.should_step) {
+                        shape_renderer.draw_quad({top_left.x + config::chunk_size/2, top_left.y + config::chunk_size/2}, config::chunk_size, config::chunk_size, 0, {1, 1, 1, 0.1});
+                    }
+                }
+            }
+        }
+
         shape_renderer.end_frame();
         
         ImGui::EndFrame();

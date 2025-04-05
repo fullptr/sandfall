@@ -126,7 +126,6 @@ auto renderer::update(const level& world, const camera& camera) -> void
     );
     d_shader.load_mat4("u_proj_matrix", projection);
 
-    const auto& chunks = world.pixels.chunks();
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
