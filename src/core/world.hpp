@@ -72,7 +72,7 @@ public:
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
         assert(valid(pos));
-        updater(d_pixels[pos.x + d_width * pos.y]);
+        updater(at(pos));
     }
 
     auto visit(pixel_pos pos, auto&& updater) -> void
