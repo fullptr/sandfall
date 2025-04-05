@@ -299,7 +299,7 @@ auto main() -> int
         // Render and display the world
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, editor.show_chunks, camera);
+            world_renderer.update(*level, camera);
         }
         world_renderer.draw();
 

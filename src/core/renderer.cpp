@@ -104,7 +104,7 @@ auto renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto renderer::update(const level& world, bool show_chunks, const camera& camera) -> void
+auto renderer::update(const level& world, const camera& camera) -> void
 {
     if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
         resize(world.pixels.width(), world.pixels.height());
@@ -131,7 +131,8 @@ auto renderer::update(const level& world, bool show_chunks, const camera& camera
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
             const auto chunk = world.pixels.get_chunk(cpos);
-            if (!chunk.should_step && !show_chunks) continue;
+            if (!chunk.should_step) continue;
+            
             const auto top_left = get_chunk_top_left(cpos);
             for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
                 for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
@@ -159,10 +160,6 @@ auto renderer::update(const level& world, bool show_chunks, const camera& camera
                     }
                     else {
                         colour = pixel.colour;
-                    }
-    
-                    if (show_chunks && chunk.should_step) {
-                        colour += glm::vec4{0.05, 0.05, 0.05, 0};
                     }
                 }
             }

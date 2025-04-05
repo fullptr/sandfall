@@ -74,7 +74,7 @@ auto main() -> int
 
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, false, camera);
+            world_renderer.update(*level, camera);
         }
         world_renderer.draw();
 
