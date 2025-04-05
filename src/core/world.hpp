@@ -57,10 +57,11 @@ class world
     world& operator=(const world&) = delete;
     world& operator=(world&&) = delete;
     
-    auto step() -> void;
-    
-    auto wake_chunk_with_pixel(pixel_pos pixel) -> void;
     auto physics() -> b2World& { return d_physics; }
+    
+    auto step() -> void;
+
+    auto wake_chunk_with_pixel(pixel_pos pixel) -> void;
     auto wake_all() -> void;
     
     auto is_valid_pixel(pixel_pos pos) const -> bool;

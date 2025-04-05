@@ -378,7 +378,7 @@ auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 
 auto world::wake_chunk(chunk_pos pos) -> void
 {
-    assert(is_chunk_valid(chunk_pos));
+    assert(is_valid_chunk(pos));
     d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
 }
 
@@ -390,7 +390,7 @@ auto world::at(pixel_pos pos) -> pixel&
 
 auto world::at(chunk_pos pos) -> chunk&
 {
-    assert(is_chunk_valid(pos));
+    assert(is_valid_chunk(pos));
     return d_chunks[pos.x + width_in_chunks() * pos.y];
 }
 
@@ -406,7 +406,7 @@ auto world::is_valid_chunk(chunk_pos pos) const -> bool
 
 auto world::operator[](chunk_pos pos) const -> const chunk&
 {
-    assert(is_chunk_valid(pos));
+    assert(is_valid_chunk(pos));
     const auto width_chunks = d_width / config::chunk_size;
     const auto index = width_chunks * pos.y + pos.x;
     return d_chunks[index];
