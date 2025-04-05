@@ -217,7 +217,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
 
         // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
-            w.set(pos, pixel::air());
+            w.set({pos.x, pos.y}, pixel::air());
         }
 
         // See if it explodes
@@ -280,7 +280,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 
     if (random_unit() < props.spontaneous_destroy) {
-        w.set(pos, pixel::air());
+        w.set({pos.x, pos.y}, pixel::air());
     }
 }
 
@@ -299,16 +299,16 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         // Boil water
         if (props.can_boil_water) {
             if (neighbour.type == pixel_type::water) {
-                w.set(neigh_pos, pixel::steam());
+                w.set({neigh_pos.x, neigh_pos.y}, pixel::steam());
             }
         }
 
         // Corrode neighbours
         if (props.is_corrosion_source) {
             if (random_unit() > properties(neighbour).corrosion_resist) {
-                w.set(neigh_pos, pixel::air());
+                w.set({neigh_pos.x, neigh_pos.y}, pixel::air());
                 if (random_unit() > 0.9f) {
-                    w.set(pos, pixel::air());
+                    w.set({pos.x, pos.y}, pixel::air());
                 }
             }
         }
@@ -324,7 +324,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         const bool can_produce_embers = props.is_ember_source || px.flags[is_burning];
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
-                w.set(neigh_pos, pixel::ember());
+                w.set({neigh_pos.x, neigh_pos.y}, pixel::ember());
             }
         }
     }
@@ -418,11 +418,11 @@ auto world::get_chunk(pixel_pos pos) -> chunk&
     return d_chunks[index];
 }
 
-auto world::set(glm::ivec2 pos, const pixel& p) -> void
+auto world::set(pixel_pos pos, const pixel& p) -> void
 {
     assert(valid(pos));
-    at({pos.x, pos.y}) = p;
-    wake_chunk_with_pixel({pos.x, pos.y});
+    at(pos) = p;
+    wake_chunk_with_pixel(pos);
 }
 
 auto world::swap(pixel_pos a, pixel_pos b) -> void

@@ -22,7 +22,7 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
         if (w[curr].type == pixel_type::titanium) {
             break;
         }
-        w.set(curr, random_unit() < 0.05f ? pixel::ember() : pixel::air());
+        w.set({static_cast<int>(curr.x), static_cast<int>(curr.y)}, random_unit() < 0.05f ? pixel::ember() : pixel::air());
         curr += step;
     }
     

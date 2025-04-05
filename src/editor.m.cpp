@@ -170,7 +170,7 @@ auto main() -> int
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (level->pixels.valid({coord.x, coord.y})) {
-                        level->pixels.set(coord, editor.get_pixel());
+                        level->pixels.set({coord.x, coord.y}, editor.get_pixel());
                         updated = true;
                     }
                 }
