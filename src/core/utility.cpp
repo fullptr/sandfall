@@ -118,9 +118,10 @@ auto mouse_pos_world_space(const mouse& m, const sand::camera& c) -> glm::vec2
     return m.position() / c.world_to_screen + c.top_left;
 }
 
-auto pixel_at_mouse(const mouse& m, const sand::camera& c) -> glm::ivec2
+auto pixel_at_mouse(const mouse& m, const sand::camera& c) -> pixel_pos
 {
-    return glm::ivec2{mouse_pos_world_space(m, c)};
+    const auto p = glm::ivec2{mouse_pos_world_space(m, c)};
+    return {p.x, p.y};
 }
 
 auto pixel_to_physics(glm::vec2 px) -> b2Vec2
