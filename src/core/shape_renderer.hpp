@@ -66,6 +66,13 @@ public:
     void begin_frame(const camera& c);
     void end_frame();
 
+    void draw_rect(
+        const glm::vec2& top_left,
+        const float      width,
+        const float      height,
+        const glm::vec4& colour
+    );
+
     void draw_quad(
         const glm::vec2& centre,
         const float      width,

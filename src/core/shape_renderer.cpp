@@ -362,6 +362,15 @@ void shape_renderer::end_frame()
     glDisable(GL_BLEND);
 }
 
+void shape_renderer::draw_rect(
+    const glm::vec2& top_left,
+    const float      width,
+    const float      height,
+    const glm::vec4& colour)
+{
+    d_quads.emplace_back(top_left + glm::vec2{width/2, height/2}, width, height, 0.0f, colour);
+}
+
 void shape_renderer::draw_quad(
     const glm::vec2& centre,
     const float      width,

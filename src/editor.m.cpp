@@ -325,7 +325,7 @@ auto main() -> int
                     const auto top_left = get_chunk_top_left(cpos);
                     const auto chunk = level->pixels.get_chunk(cpos);
                     if (chunk.should_step) {
-                        shape_renderer.draw_quad({top_left.x + config::chunk_size/2, top_left.y + config::chunk_size/2}, config::chunk_size, config::chunk_size, 0, {1, 1, 1, 0.1});
+                        shape_renderer.draw_rect(glm::ivec2{top_left}, config::chunk_size, config::chunk_size, {1, 1, 1, 0.1});
                     }
                 }
             }
