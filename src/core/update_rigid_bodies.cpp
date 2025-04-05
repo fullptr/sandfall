@@ -275,11 +275,10 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
             for (std::int64_t i = 0; i != boundary.size(); ++i) {
-                const auto tmp_convert = [](pixel_pos x) { return glm::vec2{x.x, x.y}; };
-                const auto v0 = pixel_to_physics(tmp_convert(signed_index(boundary, i-1)));
-                const auto v1 = pixel_to_physics(tmp_convert(signed_index(boundary, i)));
-                const auto v2 = pixel_to_physics(tmp_convert(signed_index(boundary, i+1)));
-                const auto v3 = pixel_to_physics(tmp_convert(signed_index(boundary, i+2)));
+                const auto v0 = pixel_to_physics(signed_index(boundary, i-1));
+                const auto v1 = pixel_to_physics(signed_index(boundary, i));
+                const auto v2 = pixel_to_physics(signed_index(boundary, i+1));
+                const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
     
                 shape.SetOneSided(v0, v1, v2, v3);
                 c.triangles->CreateFixture(&fixtureDef);
