@@ -1,5 +1,6 @@
 #pragma once
 #include "world.hpp"
+#include "common.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,6 +17,6 @@ struct explosion
     float scorch;
 };
 
-auto apply_explosion(world& w, glm::vec2 pos, const explosion& info) -> void;
+auto apply_explosion(world& w, pixel_pos pos, const explosion& info) -> void;
 
 }
