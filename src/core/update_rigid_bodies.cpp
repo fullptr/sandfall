@@ -200,7 +200,7 @@ auto new_body(b2World& world) -> b2Body*
     return world.CreateBody(&bodyDef);
 }
 
-auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 pos) -> void
+auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void
 {
     const auto is_valid = [](const glm::ivec2 p) {
         return 0 <= p.x && p.x < sand::config::chunk_size && 0 <= p.y && p.y < sand::config::chunk_size;
@@ -211,7 +211,7 @@ auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 pos) -> void
     };
 
     std::vector<glm::ivec2> to_visit;
-    to_visit.push_back(pos);
+    to_visit.push_back(offset);
     while (!to_visit.empty()) {
         const auto curr = to_visit.back();
         to_visit.pop_back();
@@ -225,7 +225,7 @@ auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 pos) -> void
     }
 }
 
-auto get_starting_pixel(const chunk_static_pixels& pixels) -> glm::ivec2
+auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
 {
     assert(pixels.any());
     for (int x = 0; x != sand::config::chunk_size; ++x) {
@@ -270,7 +270,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
     while (chunk_pixels.any()) {
-        const auto offset = get_starting_pixel(chunk_pixels);
+        const auto offset = get_start_pixel_offset(chunk_pixels);
         const auto boundary = calc_boundary(top_left, w, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
