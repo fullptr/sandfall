@@ -91,6 +91,31 @@ public:
     }
 };
 
+auto num_awake_chunks(const sand::world& w) -> sand::u64
+{
+    auto count = 0;
+    for (sand::i32 x = 0; x != w.width_in_chunks(); ++x) {
+        for (sand::i32 y = 0; y != w.height_in_chunks(); ++y) {
+            if (w[sand::chunk_pos{x, y}].should_step) {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+auto clear_world(sand::world& w) -> void
+{
+    w.wake_all();
+    for (sand::i32 x = 0; x != w.width_in_pixels(); ++x) {
+        for (sand::i32 y = 0; y != w.height_in_pixels(); ++y) {
+            w.visit_no_wake({x, y}, [](sand::pixel& p) {
+                p = sand::pixel::air();
+            });
+        }
+    }
+}
+
 auto main() -> int
 {
     using namespace sand;
@@ -99,7 +124,7 @@ auto main() -> int
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
     auto level           = sand::new_level(4, 4);
-    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width()), static_cast<u32>(level->pixels.height())};
+    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
@@ -170,8 +195,8 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (level->pixels.valid({coord.x, coord.y})) {
-                        level->pixels.set({coord.x, coord.y}, editor.get_pixel());
+                    if (level->pixels.is_valid_pixel(coord)) {
+                        level->pixels.set(coord, editor.get_pixel());
                         updated = true;
                     }
                 }
@@ -180,7 +205,7 @@ auto main() -> int
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
-                            if (level->pixels.valid({x, y})) {
+                            if (level->pixels.is_valid_pixel({x, y})) {
                                 level->pixels.set({x, y}, editor.get_pixel());
                                 updated = true;
                             }
@@ -209,8 +234,8 @@ auto main() -> int
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
-            if (level->pixels.valid(mouse_pixel)) {
-                const auto px = level->pixels[{mouse_pixel.x, mouse_pixel.y}];
+            if (level->pixels.is_valid_pixel(mouse_pixel)) {
+                const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
                 ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");
             } else {
@@ -230,8 +255,8 @@ auto main() -> int
             ImGui::Separator();
             ImGui::Checkbox("Show Physics", &editor.show_physics);
             ImGui::Checkbox("Show Spawn", &editor.show_spawn);
-            ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width());
-            ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height());
+            ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width_in_pixels());
+            ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height_in_pixels());
             if (ImGui::Button("Respawn")) {
                 level->player.set_position(level->spawn_point);
             }
@@ -239,13 +264,10 @@ auto main() -> int
 
             ImGui::Text("Info");
             ImGui::Text("FPS: %d", timer.frame_rate());
-            ImGui::Text("Awake chunks: %d", std::count_if(level->pixels.chunks().begin(), level->pixels.chunks().end(), [](const sand::chunk& c) {
-                return c.should_step;
-            }));
+            ImGui::Text("Awake chunks: %d", num_awake_chunks(level->pixels));
             ImGui::Checkbox("Show chunks", &editor.show_chunks);
             if (ImGui::Button("Clear")) {
-                level->pixels.wake_all();
-                std::fill(level->pixels.begin(), level->pixels.end(), sand::pixel::air());
+                clear_world(level->pixels);
             }
             ImGui::Separator();
 
@@ -323,7 +345,7 @@ auto main() -> int
                 for (i32 cy = 0; cy != level->pixels.height_in_chunks(); ++cy) {
                     const auto cpos = chunk_pos{cx, cy};
                     const auto top_left = get_chunk_top_left(cpos);
-                    const auto chunk = level->pixels.get_chunk(cpos);
+                    const auto chunk = level->pixels[cpos];
                     if (chunk.should_step) {
                         shape_renderer.draw_rect(glm::ivec2{top_left}, config::chunk_size, config::chunk_size, {1, 1, 1, 0.1});
                     }

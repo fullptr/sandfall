@@ -32,7 +32,7 @@ static constexpr auto adjacent_offsets = std::array{
 
 auto can_pixel_move_to(const world& w, pixel_pos src_pos, pixel_pos dst_pos) -> bool
 {
-    if (!w.valid(src_pos) || !w.valid(dst_pos)) { return false; }
+    if (!w.is_valid_pixel(src_pos) || !w.is_valid_pixel(dst_pos)) { return false; }
 
     // If the destination is empty, we can always move there
     if (w[dst_pos].type == pixel_type::none) { return true; }
@@ -60,7 +60,7 @@ auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
     const auto r = pos + glm::ivec2{1, 0};
 
     for (const auto x : {l, r}) {
-        if (w.valid(x)) {
+        if (w.is_valid_pixel(x)) {
             const auto& px = w[x];
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
@@ -104,8 +104,8 @@ auto is_surrounded(const world& w, pixel_pos pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
         const auto n = pos + offset;
-        if (w.valid({n.x, n.y})) {
-            if (w[{n.x, n.y}].type == pixel_type::none) {
+        if (w.is_valid_pixel(n)) {
+            if (w[n].type == pixel_type::none) {
                 return false;
             }
         }
@@ -182,7 +182,7 @@ auto should_get_powered(const world& w, pixel_pos pos, glm::ivec2 offset) -> boo
     // other side.
     if (src.type == pixel_type::relay) {
         auto new_pos = pos + 2 * offset;
-        if (!w.valid({new_pos.x, new_pos.y})) return false;
+        if (!w.is_valid_pixel({new_pos.x, new_pos.y})) return false;
         const auto& new_src = w[new_pos];
         const auto& props = properties(new_src);
         return is_active_power_source(new_src)
@@ -240,7 +240,7 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
             // maintain a current
             if (px.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    if (w.valid(pos + offset) && should_get_powered(w, pos, offset)) {
+                    if (w.is_valid_pixel(pos + offset) && should_get_powered(w, pos, offset)) {
                         w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
@@ -259,7 +259,7 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
                 w.visit(pos, [&](pixel& p) { ++p.power; });
             }
             for (const auto& offset : adjacent_offsets) {
-                if (!w.valid(pos + offset)) continue;
+                if (!w.is_valid_pixel(pos + offset)) continue;
                 auto& neighbour = w[pos + offset];
 
                 // Powered diode_offs disable power sources
@@ -290,7 +290,7 @@ inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
     // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
         const auto neigh_pos = pos + offset;
-        if (!w.valid(neigh_pos)) continue;   
+        if (!w.is_valid_pixel(neigh_pos)) continue;   
 
         const auto& neighbour = w[neigh_pos];
 
@@ -352,18 +352,11 @@ auto update_pixel(world& w, pixel_pos pos) -> pixel_pos
     return pos;
 }
 
+auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
+{
+    return {pos.x / config::chunk_size, pos.y / config::chunk_size};
 }
 
-auto get_chunk_index(std::size_t width, chunk_pos chunk) -> std::size_t
-{
-    const auto width_chunks = width / config::chunk_size;
-    return width_chunks * chunk.y + chunk.x;
-}
-
-auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
-{
-    const auto width_chunks = width / config::chunk_size;
-    return {index % width_chunks, index / width_chunks};
 }
 
 auto get_chunk_top_left(chunk_pos pos) -> pixel_pos
@@ -371,63 +364,45 @@ auto get_chunk_top_left(chunk_pos pos) -> pixel_pos
     return {pos.x * config::chunk_size, pos.y * config::chunk_size};
 }
 
-auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
-{
-    return {pos.x / config::chunk_size, pos.y / config::chunk_size};
-}
-
 auto world::wake_chunk(chunk_pos pos) -> void
 {
-    assert(chunk_valid(chunk_pos));
-    d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
+    assert(is_valid_chunk(pos));
+    at(pos).should_step_next = true;
 }
 
 auto world::at(pixel_pos pos) -> pixel&
 {
-    assert(valid(pos));
+    assert(is_valid_pixel(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto world::valid(pixel_pos pos) const -> bool
+auto world::at(chunk_pos pos) -> chunk&
+{
+    assert(is_valid_chunk(pos));
+    return d_chunks[pos.x + width_in_chunks() * pos.y];
+}
+
+auto world::is_valid_pixel(pixel_pos pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto world::chunk_valid(pixel_pos pos) const -> bool
-{
-    const auto chunk = chunk_pos{pos.x / sand::config::chunk_size, pos.y / sand::config::chunk_size};
-    return get_chunk_index(d_width, chunk) < d_chunks.size();
-}
-
-auto world::chunk_valid(chunk_pos pos) const -> bool
-{
-    return get_chunk_index(d_width, pos) < d_chunks.size();
-}
-
-auto world::get_chunk(pixel_pos pos) -> chunk&
-{
-    assert(chunk_valid(pos));
-    const auto chunk_pos = get_chunk_from_pixel(pos);
-    const auto width_chunks = d_width / config::chunk_size;
-    const auto index = width_chunks * chunk_pos.y + chunk_pos.x;
-    return d_chunks[index];
-}
-
 auto world::is_valid_chunk(chunk_pos pos) const -> bool
 {
-    return (0 <= pos.x && pos.x < width_in_chunks()) && (0 <= pos.y && pos.y < height_in_chunks());
+    return 0 <= pos.x && pos.x < width_in_chunks() && 0 <= pos.y && pos.y < height_in_chunks();
 }
 
-auto world::get_chunk(chunk_pos pos) const -> const chunk&
+auto world::operator[](chunk_pos pos) const -> const chunk&
 {
     assert(is_valid_chunk(pos));
-    const auto index = width_in_chunks() * pos.y + pos.x;
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto index = width_chunks * pos.y + pos.x;
     return d_chunks[index];
 }
 
 auto world::set(pixel_pos pos, const pixel& p) -> void
 {
-    assert(valid(pos));
+    assert(is_valid_pixel(pos));
     at(pos) = p;
     wake_chunk_with_pixel(pos);
 }
@@ -441,7 +416,7 @@ auto world::swap(pixel_pos a, pixel_pos b) -> void
 
 auto world::operator[](pixel_pos pos) const -> const pixel&
 {
-    assert(valid(pos));
+    assert(is_valid_pixel(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
@@ -456,9 +431,8 @@ auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
     wake_chunk(chunk_pos);
 
     for (const auto offset : adjacent_offsets) {
-        const auto neighbour = pos + offset;
-        const auto neighbour_chunk = get_chunk_from_pixel({neighbour.x, neighbour.y});
-        if (chunk_valid(neighbour)) {
+        const auto neighbour_chunk = get_chunk_from_pixel(pos + offset);
+        if (is_valid_chunk(neighbour_chunk)) {
             wake_chunk(neighbour_chunk);
         }
     }
@@ -477,7 +451,7 @@ auto world::step() -> void
     for (i32 y = d_height - 1; y >= 0; --y) {
         if (coin_flip()) {
             for (i32 x = 0; x != d_width; x += config::chunk_size) {
-                const auto chunk = get_chunk({x, y});
+                const auto chunk = at(get_chunk_from_pixel({x, y}));
                 if (chunk.should_step) {
                     for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x + dx, y});
@@ -488,7 +462,7 @@ auto world::step() -> void
         }
         else {
             for (i32 x = d_width - 1; x >= 0; x -= config::chunk_size) {
-                const auto chunk = get_chunk({x, y});
+                const auto chunk = at(get_chunk_from_pixel({x, y}));
                 if (chunk.should_step) {
                     for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x - dx, y});

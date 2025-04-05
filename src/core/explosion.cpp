@@ -23,7 +23,7 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
     auto curr = start;
 
     const auto blast_limit = random_from_range(info.min_radius, info.max_radius);
-    while (w.valid(nearest_pixel(curr)) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
+    while (w.is_valid_pixel(nearest_pixel(curr)) && glm::length2(curr - start) < glm::pow(blast_limit, 2)) {
         if (w[nearest_pixel(curr)].type == pixel_type::titanium) {
             break;
         }
@@ -32,14 +32,14 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
     }
     
     // Try to catch light to the first scorched pixel
-    if (w.valid(nearest_pixel(curr))) {
+    if (w.is_valid_pixel(nearest_pixel(curr))) {
         if (random_unit() < properties(w[nearest_pixel(curr)]).flammability) {
             w.visit(nearest_pixel(curr), [&](pixel& p) { p.flags[is_burning] = true; });
         }
     }
 
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
-    while (w.valid(nearest_pixel(curr)) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
+    while (w.is_valid_pixel(nearest_pixel(curr)) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(w[nearest_pixel(curr)]).phase == pixel_phase::solid) {
             w.visit(nearest_pixel(curr), [&](pixel& p) { p.colour *= 0.8f; });
         }
