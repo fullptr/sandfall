@@ -241,8 +241,6 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
 
 auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
 {
-    const auto tl = glm::ivec2{top_left.x, top_left.y};
-
     if (c.triangles) {
         w.physics().DestroyBody(c.triangles);
     }
