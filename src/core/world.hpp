@@ -17,6 +17,7 @@
 namespace sand {
 
 auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2;
+auto get_chunk_top_left(chunk_pos pos) -> pixel_pos;
 
 struct chunk
 {
@@ -39,12 +40,12 @@ class world
     auto chunk_valid(chunk_pos pos) const -> bool;
     auto get_chunk(pixel_pos pos) -> chunk&;
     
-public:
+    public:
     world(i32 width, i32 height, const std::vector<pixel>& pixels)
-        : d_physics{{config::gravity.x, config::gravity.y}}
-        , d_pixels{pixels}
-        , d_width{width}
-        , d_height{height}
+    : d_physics{{config::gravity.x, config::gravity.y}}
+    , d_pixels{pixels}
+    , d_width{width}
+    , d_height{height}
     {
         assert(pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
@@ -63,30 +64,32 @@ public:
     auto wake_chunk_with_pixel(pixel_pos pixel) -> void;
     auto physics() -> b2World& { return d_physics; }
     auto wake_all() -> void;
-
+    
     auto valid(pixel_pos pos) const -> bool;
     auto set(pixel_pos pos, const pixel& p) -> void;
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](pixel_pos pos) const -> const pixel&;
-
+    
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
         assert(valid(pos));
         updater(at(pos));
     }
-
+    
     auto visit(pixel_pos pos, auto&& updater) -> void
     {
         visit_no_wake(pos, std::forward<decltype(updater)>(updater));
         wake_chunk_with_pixel(pos);
     }
-
+    
     inline auto begin() { return d_pixels.begin(); }
     inline auto end() { return d_pixels.end(); }
-
+    
     inline auto width() const -> i32 { return d_width; }
     inline auto height() const -> i32 { return d_height; }
-
+    
+    auto is_valid_chunk(chunk_pos) const -> bool;
+    auto get_chunk(chunk_pos pos) const -> const chunk&;
     inline auto width_in_chunks() const -> i32 { return d_width / config::chunk_size; }
     inline auto height_in_chunks() const -> i32 { return d_height / config::chunk_size; }
 

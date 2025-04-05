@@ -366,6 +366,11 @@ auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
     return {index % width_chunks, index / width_chunks};
 }
 
+auto get_chunk_top_left(chunk_pos pos) -> pixel_pos
+{
+    return {pos.x * config::chunk_size, pos.y * config::chunk_size};
+}
+
 auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 {
     return {pos.x / config::chunk_size, pos.y / config::chunk_size};
@@ -405,6 +410,18 @@ auto world::get_chunk(pixel_pos pos) -> chunk&
     const auto chunk_pos = get_chunk_from_pixel(pos);
     const auto width_chunks = d_width / config::chunk_size;
     const auto index = width_chunks * chunk_pos.y + chunk_pos.x;
+    return d_chunks[index];
+}
+
+auto world::is_valid_chunk(chunk_pos pos) const -> bool
+{
+    return (0 <= pos.x && pos.x < width_in_chunks()) && (0 <= pos.y && pos.y < height_in_chunks());
+}
+
+auto world::get_chunk(chunk_pos pos) const -> const chunk&
+{
+    assert(is_valid_chunk(pos));
+    const auto index = width_in_chunks() * pos.y + pos.x;
     return d_chunks[index];
 }
 

@@ -127,40 +127,43 @@ auto renderer::update(const level& world, bool show_chunks, const camera& camera
     d_shader.load_mat4("u_proj_matrix", projection);
 
     const auto& chunks = world.pixels.chunks();
-    for (std::size_t index = 0; index != chunks.size(); ++index) {
-        if (!chunks[index].should_step && !show_chunks) continue;
-
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(world.pixels.width(), index);
-        for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
-            for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
-                const auto world_coord = top_left + glm::ivec2{x, y};
-
-                auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
-
-                const auto& pixel = world.pixels[{world_coord.x, world_coord.y}];
-                const auto& props = properties(pixel);
-
-                if (pixel.flags[is_burning]) {
-                    colour = sand::random_element(fire_colours);
-                }
-                else if (props.power_type == pixel_power_type::source) {
-                    const auto a = from_hex(0x000000); // black
-                    const auto b = pixel.colour;
-                    const auto t = static_cast<float>(pixel.power) / props.power_max;
-                    colour = sand::lerp(a, b, t);
-                }
-                else if (props.power_type == pixel_power_type::conductor) {
-                    const auto a = pixel.colour;
-                    const auto b = sand::random_element(electricity_colours);
-                    const auto t = static_cast<float>(pixel.power) / props.power_max;
-                    colour = sand::lerp(a, b, t);
-                }
-                else {
-                    colour = pixel.colour;
-                }
-
-                if (show_chunks && chunks[index].should_step) {
-                    colour += glm::vec4{0.05, 0.05, 0.05, 0};
+    for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
+        for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
+            const auto cpos = chunk_pos{cx, cy};
+            const auto chunk = world.pixels.get_chunk(cpos);
+            if (!chunk.should_step && !show_chunks) continue;
+            const auto top_left = get_chunk_top_left(cpos);
+            for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
+                for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
+                    const auto world_coord = top_left + glm::ivec2{x, y};
+    
+                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
+    
+                    const auto& pixel = world.pixels[{world_coord.x, world_coord.y}];
+                    const auto& props = properties(pixel);
+    
+                    if (pixel.flags[is_burning]) {
+                        colour = sand::random_element(fire_colours);
+                    }
+                    else if (props.power_type == pixel_power_type::source) {
+                        const auto a = from_hex(0x000000); // black
+                        const auto b = pixel.colour;
+                        const auto t = static_cast<float>(pixel.power) / props.power_max;
+                        colour = sand::lerp(a, b, t);
+                    }
+                    else if (props.power_type == pixel_power_type::conductor) {
+                        const auto a = pixel.colour;
+                        const auto b = sand::random_element(electricity_colours);
+                        const auto t = static_cast<float>(pixel.power) / props.power_max;
+                        colour = sand::lerp(a, b, t);
+                    }
+                    else {
+                        colour = pixel.colour;
+                    }
+    
+                    if (show_chunks && chunk.should_step) {
+                        colour += glm::vec4{0.05, 0.05, 0.05, 0};
+                    }
                 }
             }
         }
