@@ -378,7 +378,7 @@ auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 
 auto world::wake_chunk(chunk_pos pos) -> void
 {
-    assert(chunk_valid(chunk_pos));
+    assert(is_chunk_valid(chunk_pos));
     d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
 }
 
@@ -386,6 +386,12 @@ auto world::at(pixel_pos pos) -> pixel&
 {
     assert(is_valid_pixel(pos));
     return d_pixels[pos.x + d_width * pos.y];
+}
+
+auto world::at(chunk_pos pos) -> chunk&
+{
+    assert(is_chunk_valid(pos));
+    return d_chunks[pos.x + width_in_chunks() * pos.y];
 }
 
 auto world::is_valid_pixel(pixel_pos pos) const -> bool
@@ -444,12 +450,6 @@ auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
     }
 }
 
-auto world::get_chunk(pixel_pos pos) -> chunk&
-{
-    const auto chunk_pos = get_chunk_from_pixel(pos);
-    return d_chunks[chunk_pos.y * config::chunk_size + chunk_pos.x];
-}
-
 auto world::step() -> void
 {
     for (auto& pixel : d_pixels) {
@@ -463,7 +463,7 @@ auto world::step() -> void
     for (i32 y = d_height - 1; y >= 0; --y) {
         if (coin_flip()) {
             for (i32 x = 0; x != d_width; x += config::chunk_size) {
-                const auto chunk = get_chunk({x, y});
+                const auto chunk = at(get_chunk_from_pixel({x, y}));
                 if (chunk.should_step) {
                     for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x + dx, y});
@@ -474,7 +474,7 @@ auto world::step() -> void
         }
         else {
             for (i32 x = d_width - 1; x >= 0; x -= config::chunk_size) {
-                const auto chunk = get_chunk({x, y});
+                const auto chunk = at(get_chunk_from_pixel({x, y}));
                 if (chunk.should_step) {
                     for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x - dx, y});

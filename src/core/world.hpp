@@ -16,7 +16,6 @@
 
 namespace sand {
 
-auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2;
 auto get_chunk_top_left(chunk_pos pos) -> pixel_pos;
 
 struct chunk
@@ -35,15 +34,16 @@ class world
     i32                d_height;
     
     auto at(pixel_pos pos) -> pixel&;
+    auto at(chunk_pos pos) -> chunk&;
+
     auto wake_chunk(chunk_pos pos) -> void;
-    auto get_chunk(pixel_pos pos) -> chunk&;
     
     public:
     world(i32 width, i32 height, const std::vector<pixel>& pixels)
-    : d_physics{{config::gravity.x, config::gravity.y}}
-    , d_pixels{pixels}
-    , d_width{width}
-    , d_height{height}
+        : d_physics{{config::gravity.x, config::gravity.y}}
+        , d_pixels{pixels}
+        , d_width{width}
+        , d_height{height}
     {
         assert(pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
