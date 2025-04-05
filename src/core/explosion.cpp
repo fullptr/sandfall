@@ -29,14 +29,14 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
     // Try to catch light to the first scorched pixel
     if (w.valid(curr)) {
         if (random_unit() < properties(w[curr]).flammability) {
-            w.visit(curr, [&](pixel& p) { p.flags[is_burning] = true; });
+            w.visit({static_cast<int>(curr.x), static_cast<int>(curr.y)}, [&](pixel& p) { p.flags[is_burning] = true; });
         }
     }
 
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
     while (w.valid(curr) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(w[curr]).phase == pixel_phase::solid) {
-            w.visit(curr, [&](pixel& p) { p.colour *= 0.8f; });
+            w.visit({static_cast<int>(curr.x), static_cast<int>(curr.y)}, [&](pixel& p) { p.colour *= 0.8f; });
         }
         curr += step;
     }

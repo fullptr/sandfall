@@ -64,7 +64,7 @@ auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
             const auto& px = w[x];
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
-                w.visit(x, [&](pixel& p) { p.flags[is_falling] = true; });
+                w.visit({x.x, x.y}, [&](pixel& p) { p.flags[is_falling] = true; });
             }
         }
     }
@@ -93,7 +93,7 @@ auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
     }
 
     if (start_pos != pos) {
-        w.visit(pos, [&](pixel& p) { p.flags[is_falling] = true; });
+        w.visit({pos.x, pos.y}, [&](pixel& p) { p.flags[is_falling] = true; });
         return true;
     }
 
@@ -212,7 +212,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
         // See if it can be put out
         const auto put_out = is_surrounded(w, {pos.x, pos.y}) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
-            w.visit(pos, [&](pixel& p) { p.flags[is_burning] = false; });
+            w.visit({pos.x, pos.y}, [&](pixel& p) { p.flags[is_burning] = false; });
         }
 
         // See if it gets destroyed
@@ -233,7 +233,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     switch (props.power_type) {
         case pixel_power_type::conductor: {
             if (px.power > 0) {
-                w.visit(pos, [&](pixel& p) { --p.power; });
+                w.visit({pos.x, pos.y}, [&](pixel& p) { --p.power; });
             }
 
             // Check to see if we should power up just before we hit zero in order to
@@ -242,7 +242,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
                 for (const auto& offset : adjacent_offsets) {
                     const auto neighbour = pos + offset;
                     if (w.valid(neighbour) && should_get_powered(w, pos, offset)) {
-                        w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
+                        w.visit({pos.x, pos.y}, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
                 }
@@ -257,7 +257,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
 
         case pixel_power_type::source: {
             if (px.power < props.power_max) {
-                w.visit(pos, [&](pixel& p) { ++p.power; });
+                w.visit({pos.x, pos.y}, [&](pixel& p) { ++p.power; });
             }
             for (const auto& offset : adjacent_offsets) {
                 if (!w.valid(pos + offset)) continue;
@@ -265,7 +265,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
 
                 // Powered diode_offs disable power sources
                 if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
-                    w.visit(pos, [&](pixel& p) { p.power = 0; });
+                    w.visit({pos.x, pos.y}, [&](pixel& p) { p.power = 0; });
                     break;
                 }
             }
@@ -315,7 +315,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
         // Spread fire
         if (props.is_burn_source || px.flags[is_burning]) {
             if (random_unit() < properties(neighbour).flammability) {
-                w.visit(neigh_pos, [&](pixel& p) { p.flags[is_burning] = true; });
+                w.visit({neigh_pos.x, neigh_pos.y}, [&](pixel& p) { p.flags[is_burning] = true; });
             }
         }
 

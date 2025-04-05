@@ -75,10 +75,10 @@ public:
         updater(d_pixels[pos.x + d_width * pos.y]);
     }
 
-    auto visit(glm::ivec2 pos, auto&& updater) -> void
+    auto visit(pixel_pos pos, auto&& updater) -> void
     {
-        visit_no_wake({pos.x, pos.y}, std::forward<decltype(updater)>(updater));
-        wake_chunk_with_pixel({pos.x, pos.y});
+        visit_no_wake(pos, std::forward<decltype(updater)>(updater));
+        wake_chunk_with_pixel(pos);
     }
 
     inline auto begin() { return d_pixels.begin(); }
