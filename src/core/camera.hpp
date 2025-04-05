@@ -5,9 +5,9 @@ namespace sand {
 
 struct camera
 {
-    glm::vec2 top_left;
-    int screen_width;
-    int screen_height;
+    glm::vec2 top_left;    // world space (screen space would just be {0, 0})
+    int screen_width;      // screen space
+    int screen_height;     // screen space
     float world_to_screen; // the number of screen pixels per world pixel, multiplying by it takes you from world space to screen space
 };
 

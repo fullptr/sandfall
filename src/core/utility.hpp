@@ -10,7 +10,7 @@
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
-#include "config.hpp"
+#include "common.hpp"
 
 namespace sand {
 
@@ -77,9 +77,9 @@ auto lerp(const T& a, const T& b, float t) -> T
 struct camera;
 class mouse;
 auto mouse_pos_world_space(const mouse& m, const camera& c) -> glm::vec2;
-auto pixel_at_mouse(const mouse& m, const camera& c) -> glm::ivec2;
+auto pixel_at_mouse(const mouse& m, const camera& c) -> pixel_pos;
 
-auto pixel_to_physics(glm::vec2 px) -> b2Vec2;
+auto pixel_to_physics(pixel_pos px) -> b2Vec2;
 auto pixel_to_physics(float px) -> float;
 
 // Converts a point in world space to pixel space

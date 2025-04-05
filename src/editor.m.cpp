@@ -1,6 +1,6 @@
 #include "world.hpp"
 #include "pixel.hpp"
-#include "config.hpp"
+#include "common.hpp"
 #include "utility.hpp"
 #include "editor.hpp"
 #include "camera.hpp"
@@ -93,16 +93,20 @@ public:
 
 auto main() -> int
 {
+    using namespace sand;
     auto window          = sand::window{"sandfall", 1280, 720};
     auto editor          = sand::editor{};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
     auto level           = sand::new_level(4, 4);
-    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
+    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width()), static_cast<u32>(level->pixels.height())};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_draw      = physics_debug_draw{&shape_renderer};
+
+    auto update_window_half_width = 2 + sand::config::chunk_size;
+    auto update_window_half_height = 2 + sand::config::chunk_size;
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -166,8 +170,8 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (level->pixels.valid(coord)) {
-                        level->pixels.set(coord, editor.get_pixel());
+                    if (level->pixels.valid({coord.x, coord.y})) {
+                        level->pixels.set({coord.x, coord.y}, editor.get_pixel());
                         updated = true;
                     }
                 }
@@ -206,7 +210,7 @@ auto main() -> int
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
             if (level->pixels.valid(mouse_pixel)) {
-                const auto px = level->pixels[mouse_pixel];
+                const auto px = level->pixels[{mouse_pixel.x, mouse_pixel.y}];
                 ImGui::Text("  pixel power: %d", px.power);
                 ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");
             } else {
@@ -295,7 +299,7 @@ auto main() -> int
         // Render and display the world
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, editor.show_chunks, camera);
+            world_renderer.update(*level, camera);
         }
         world_renderer.draw();
 
@@ -310,7 +314,21 @@ auto main() -> int
         }
 
         if (editor.show_spawn) {
-            shape_renderer.draw_circle(level->spawn_point, {0, 1, 0, 1}, 1.0);
+            const auto p = glm::ivec2{level->spawn_point.x, level->spawn_point.y};
+            shape_renderer.draw_circle(p, {0, 1, 0, 1}, 1.0);
+        }
+
+        if (editor.show_chunks) {
+            for (i32 cx = 0; cx != level->pixels.width_in_chunks(); ++cx) {
+                for (i32 cy = 0; cy != level->pixels.height_in_chunks(); ++cy) {
+                    const auto cpos = chunk_pos{cx, cy};
+                    const auto top_left = get_chunk_top_left(cpos);
+                    const auto chunk = level->pixels.get_chunk(cpos);
+                    if (chunk.should_step) {
+                        shape_renderer.draw_rect(glm::ivec2{top_left}, config::chunk_size, config::chunk_size, {1, 1, 1, 0.1});
+                    }
+                }
+            }
         }
 
         shape_renderer.end_frame();

@@ -30,7 +30,7 @@ static constexpr auto adjacent_offsets = std::array{
     glm::ivec2{0, -1}
 };
 
-auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
+auto can_pixel_move_to(const world& w, pixel_pos src_pos, pixel_pos dst_pos) -> bool
 {
     if (!w.valid(src_pos) || !w.valid(dst_pos)) { return false; }
 
@@ -54,7 +54,7 @@ auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -
     }
 }
 
-auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
+auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
@@ -72,9 +72,9 @@ auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
 
 // Moves towards the given offset, updating pos to the new postion and returning
 // true if the position has changed
-auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
+auto move_offset(world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
 {
-    glm::ivec2 start_pos = pos;
+    const auto start_pos = pos;
 
     const auto a = pos;
     const auto b = pos + offset;
@@ -100,11 +100,12 @@ auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto is_surrounded(const world& w, glm::ivec2 pos) -> bool
+auto is_surrounded(const world& w, pixel_pos pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
-        if (w.valid(pos + offset)) {
-            if (w[pos + offset].type == pixel_type::none) {
+        const auto n = pos + offset;
+        if (w.valid({n.x, n.y})) {
+            if (w[{n.x, n.y}].type == pixel_type::none) {
                 return false;
             }
         }
@@ -119,7 +120,7 @@ auto sign(float f) -> int
     return 0;
 }
 
-inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
+inline auto update_pixel_position(world& w, pixel_pos& pos) -> void
 {
     const auto& props = properties(w[pos]);
 
@@ -161,7 +162,7 @@ inline auto update_pixel_position(world& w, glm::ivec2& pos) -> void
 
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
-auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bool
+auto should_get_powered(const world& w, pixel_pos pos, glm::ivec2 offset) -> bool
 {
     const auto& dst = w[pos];
     const auto& src = w[pos + offset];
@@ -181,7 +182,7 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
     // other side.
     if (src.type == pixel_type::relay) {
         auto new_pos = pos + 2 * offset;
-        if (!w.valid(new_pos)) return false;
+        if (!w.valid({new_pos.x, new_pos.y})) return false;
         const auto& new_src = w[new_pos];
         const auto& props = properties(new_src);
         return is_active_power_source(new_src)
@@ -196,7 +197,7 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
 }
 
 // Update logic for single pixels depending on properties only
-inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
 {
     const auto& px = w[pos];
     const auto& props = properties(px);
@@ -239,8 +240,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
             // maintain a current
             if (px.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    const auto neighbour = pos + offset;
-                    if (w.valid(neighbour) && should_get_powered(w, pos, offset)) {
+                    if (w.valid(pos + offset) && should_get_powered(w, pos, offset)) {
                         w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
@@ -282,7 +282,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     }
 }
 
-inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
+inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
 {
     auto& px = w[pos];
     const auto& props = properties(px);
@@ -328,7 +328,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
     }
 }
 
-auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
+auto update_pixel(world& w, pixel_pos pos) -> pixel_pos
 {
     if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
         return pos;
@@ -339,22 +339,22 @@ auto update_pixel(world& w, glm::ivec2 pos) -> glm::ivec2
 
     // Pixels that don't move have their is_falling flag set to false
     if (pos == start_pos) {
-        w.visit(pos, [&](pixel& p) { p.flags[is_falling] = false; });
-    }
-    if (pos == start_pos && properties(w[pos]).gravity_factor) {
-        // will always try to move at least one block
-        w.visit_no_wake(pos, [&](pixel& p) { p.velocity = glm::ivec2{0, 1}; });
+        w.visit_no_wake(pos, [&](pixel& p) {
+            p.flags[is_falling] = false;
+            if (properties(p).gravity_factor) {
+                p.velocity = glm::ivec2{0, 1};
+            }
+        });
     }
 
     update_pixel_neighbours(w, pos);
     update_pixel_attributes(w, pos);
-
     return pos;
 }
 
 }
 
-auto get_chunk_index(std::size_t width, glm::ivec2 chunk) -> std::size_t
+auto get_chunk_index(std::size_t width, chunk_pos chunk) -> std::size_t
 {
     const auto width_chunks = width / config::chunk_size;
     return width_chunks * chunk.y + chunk.x;
@@ -366,57 +366,80 @@ auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
     return {index % width_chunks, index / width_chunks};
 }
 
-auto get_chunk_from_pixel(glm::ivec2 px) -> glm::ivec2
+auto get_chunk_top_left(chunk_pos pos) -> pixel_pos
 {
-    return px / config::chunk_size;
+    return {pos.x * config::chunk_size, pos.y * config::chunk_size};
 }
 
-auto wake_pixel_chunk(world& w, glm::ivec2 pos) -> void
+auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 {
-    if (w.valid(pos)) {
-        const auto chunk_pos = get_chunk_from_pixel(pos);
-
-    }
+    return {pos.x / config::chunk_size, pos.y / config::chunk_size};
 }
 
-auto world::wake_chunk(glm::ivec2 chunk_pos) -> void
+auto world::wake_chunk(chunk_pos pos) -> void
 {
     assert(chunk_valid(chunk_pos));
-    d_chunks[get_chunk_index(d_width, chunk_pos)].should_step_next = true;
+    d_chunks[get_chunk_index(d_width, pos)].should_step_next = true;
 }
 
-auto world::at(glm::ivec2 pos) -> pixel&
+auto world::at(pixel_pos pos) -> pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto world::valid(glm::ivec2 pos) const -> bool
+auto world::valid(pixel_pos pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto world::chunk_valid(glm::ivec2 pos) const -> bool
+auto world::chunk_valid(pixel_pos pos) const -> bool
 {
-    const auto chunk = pos / sand::config::chunk_size;
+    const auto chunk = chunk_pos{pos.x / sand::config::chunk_size, pos.y / sand::config::chunk_size};
     return get_chunk_index(d_width, chunk) < d_chunks.size();
 }
 
-auto world::set(glm::ivec2 pos, const pixel& p) -> void
+auto world::chunk_valid(chunk_pos pos) const -> bool
+{
+    return get_chunk_index(d_width, pos) < d_chunks.size();
+}
+
+auto world::get_chunk(pixel_pos pos) -> chunk&
+{
+    assert(chunk_valid(pos));
+    const auto chunk_pos = get_chunk_from_pixel(pos);
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto index = width_chunks * chunk_pos.y + chunk_pos.x;
+    return d_chunks[index];
+}
+
+auto world::is_valid_chunk(chunk_pos pos) const -> bool
+{
+    return (0 <= pos.x && pos.x < width_in_chunks()) && (0 <= pos.y && pos.y < height_in_chunks());
+}
+
+auto world::get_chunk(chunk_pos pos) const -> const chunk&
+{
+    assert(is_valid_chunk(pos));
+    const auto index = width_in_chunks() * pos.y + pos.x;
+    return d_chunks[index];
+}
+
+auto world::set(pixel_pos pos, const pixel& p) -> void
 {
     assert(valid(pos));
     at(pos) = p;
     wake_chunk_with_pixel(pos);
 }
 
-auto world::swap(glm::ivec2 a, glm::ivec2 b) -> void
+auto world::swap(pixel_pos a, pixel_pos b) -> void
 {
     std::swap(at(a), at(b));
     wake_chunk_with_pixel(a);
     wake_chunk_with_pixel(b);
 }
 
-auto world::operator[](glm::ivec2 pos) const -> const pixel&
+auto world::operator[](pixel_pos pos) const -> const pixel&
 {
     assert(valid(pos));
     return d_pixels[pos.x + d_width * pos.y];
@@ -427,14 +450,14 @@ auto world::wake_all() -> void
     for (auto& c : d_chunks) { c.should_step_next = true; }
 }
 
-auto world::wake_chunk_with_pixel(glm::ivec2 pixel) -> void
+auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
 {
-    const auto chunk_pos = get_chunk_from_pixel(pixel);
+    const auto chunk_pos = get_chunk_from_pixel(pos);
     wake_chunk(chunk_pos);
 
     for (const auto offset : adjacent_offsets) {
-        const auto neighbour = pixel + offset;
-        const auto neighbour_chunk = get_chunk_from_pixel(neighbour);
+        const auto neighbour = pos + offset;
+        const auto neighbour_chunk = get_chunk_from_pixel({neighbour.x, neighbour.y});
         if (chunk_valid(neighbour)) {
             wake_chunk(neighbour_chunk);
         }
@@ -450,36 +473,49 @@ auto world::step() -> void
     for (auto& chunk : d_chunks) {
         chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
-    
-    for (auto it = d_chunks.rbegin(); it != d_chunks.rend(); ++it) {
-        auto& chunk = *it;
-        if (!chunk.should_step) continue;
-    
-        const auto index = d_chunks.size() - std::distance(d_chunks.rbegin(), it) - 1;
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(d_width, index);
-        for (int y = sand::config::chunk_size; y != 0; --y) {
-            if (coin_flip()) {
-                for (int x = 0; x != sand::config::chunk_size; ++x) {
-                    const auto pos = top_left + glm::ivec2{x, y - 1};
-                    const auto new_pos = update_pixel(*this, pos);
-                    at(new_pos).flags[is_updated] = true;
-                }
-            }
-            else {
-                for (int x = sand::config::chunk_size; x != 0; --x) {
-                    const auto pos = top_left + glm::ivec2{x - 1, y - 1};
-                    const auto new_pos = update_pixel(*this, pos);
-                    at(new_pos).flags[is_updated] = true;
+
+    for (i32 y = d_height - 1; y >= 0; --y) {
+        if (coin_flip()) {
+            for (i32 x = 0; x != d_width; x += config::chunk_size) {
+                const auto chunk = get_chunk({x, y});
+                if (chunk.should_step) {
+                    for (i32 dx = 0; dx != config::chunk_size; ++dx) {
+                        const auto new_pos = update_pixel(*this, {x + dx, y});
+                        at(new_pos).flags[is_updated] = true;
+                    }
                 }
             }
         }
-        create_chunk_triangles(*this, chunk, top_left);
+        else {
+            for (i32 x = d_width - 1; x >= 0; x -= config::chunk_size) {
+                const auto chunk = get_chunk({x, y});
+                if (chunk.should_step) {
+                    for (i32 dx = 0; dx != config::chunk_size; ++dx) {
+                        const auto new_pos = update_pixel(*this, {x - dx, y});
+                        at(new_pos).flags[is_updated] = true;
+                    }
+                }
+            }
+        }
+    }
+    
+    const auto width_chunks = d_width / config::chunk_size;
+    const auto height_chunks = d_height / config::chunk_size;
+
+    for (i32 x = 0; x != width_chunks; ++x) {
+        for (i32 y = 0; y != height_chunks; ++y) {
+            auto& chunk = d_chunks[y * width_chunks + x];
+            if (!chunk.should_step) continue;
+            const auto top_left = config::chunk_size * glm::ivec2{x, y};
+            const auto tl = pixel_pos{top_left.x, top_left.y};
+            create_chunk_triangles(*this, chunk, tl);
+        }
     }
     
     d_physics.Step(sand::config::time_step, 8, 3);
 }
 
-level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
+level::level(i32 width, i32 height, const std::vector<pixel>& data)
     : pixels{width, height, data}
     , spawn_point{width / 2, height / 2}
     , player{pixels.physics()}

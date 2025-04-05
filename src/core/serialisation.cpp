@@ -29,9 +29,9 @@ auto save_level(const std::string& file_path, const sand::level& w) -> void
 
     auto save = sand::world_save{
         .pixels = w.pixels.pixels(),
-        .width = w.pixels.width(),
-        .height = w.pixels.height(),
-        .spawn_point = w.spawn_point
+        .width = static_cast<std::size_t>(w.pixels.width()),
+        .height = static_cast<std::size_t>(w.pixels.height()),
+        .spawn_point = {w.spawn_point.x, w.spawn_point.y}
     };
 
     archive(save);
@@ -45,9 +45,10 @@ auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
     auto save = sand::world_save{};
     archive(save);
 
-    auto w = std::make_unique<sand::level>(save.width, save.height, save.pixels);
-    w->spawn_point = save.spawn_point;
-    w->player.set_position(save.spawn_point);
+    // TODO: Store the sizes as u32's in the file
+    auto w = std::make_unique<sand::level>(static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels);
+    w->spawn_point = {save.spawn_point.x, save.spawn_point.y};
+    w->player.set_position(w->spawn_point);
     return w;
 }
 

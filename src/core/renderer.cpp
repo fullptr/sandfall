@@ -60,7 +60,7 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(std::size_t width, std::size_t height)
+renderer::renderer(u32 width, u32 height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
@@ -68,8 +68,8 @@ renderer::renderer(std::size_t width, std::size_t height)
     , d_texture_data{}
     , d_shader{vertex_shader, fragment_shader}
 {
-    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
+    const f32 vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+    const u32 indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
     glBindVertexArray(d_vao);
@@ -104,7 +104,7 @@ auto renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto renderer::update(const level& world, bool show_chunks, const camera& camera) -> void
+auto renderer::update(const level& world, const camera& camera) -> void
 {
     if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
         resize(world.pixels.width(), world.pixels.height());
@@ -126,41 +126,40 @@ auto renderer::update(const level& world, bool show_chunks, const camera& camera
     );
     d_shader.load_mat4("u_proj_matrix", projection);
 
-    const auto& chunks = world.pixels.chunks();
-    for (std::size_t index = 0; index != chunks.size(); ++index) {
-        if (!chunks[index].should_step && !show_chunks) continue;
-
-        const auto top_left = sand::config::chunk_size * get_chunk_pos(world.pixels.width(), index);
-        for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
-            for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
-                const auto world_coord = top_left + glm::ivec2{x, y};
-
-                auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
-
-                const auto& pixel = world.pixels[world_coord];
-                const auto& props = properties(pixel);
-
-                if (pixel.flags[is_burning]) {
-                    colour = sand::random_element(fire_colours);
-                }
-                else if (props.power_type == pixel_power_type::source) {
-                    const auto a = from_hex(0x000000); // black
-                    const auto b = pixel.colour;
-                    const auto t = static_cast<float>(pixel.power) / props.power_max;
-                    colour = sand::lerp(a, b, t);
-                }
-                else if (props.power_type == pixel_power_type::conductor) {
-                    const auto a = pixel.colour;
-                    const auto b = sand::random_element(electricity_colours);
-                    const auto t = static_cast<float>(pixel.power) / props.power_max;
-                    colour = sand::lerp(a, b, t);
-                }
-                else {
-                    colour = pixel.colour;
-                }
-
-                if (show_chunks && chunks[index].should_step) {
-                    colour += glm::vec4{0.05, 0.05, 0.05, 0};
+    for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
+        for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
+            const auto cpos = chunk_pos{cx, cy};
+            const auto chunk = world.pixels.get_chunk(cpos);
+            if (!chunk.should_step) continue;
+            
+            const auto top_left = get_chunk_top_left(cpos);
+            for (std::size_t x = 0; x != sand::config::chunk_size; ++x) {
+                for (std::size_t y = 0; y != sand::config::chunk_size; ++y) {
+                    const auto world_coord = top_left + glm::ivec2{x, y};
+    
+                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
+    
+                    const auto& pixel = world.pixels[{world_coord.x, world_coord.y}];
+                    const auto& props = properties(pixel);
+    
+                    if (pixel.flags[is_burning]) {
+                        colour = sand::random_element(fire_colours);
+                    }
+                    else if (props.power_type == pixel_power_type::source) {
+                        const auto a = from_hex(0x000000); // black
+                        const auto b = pixel.colour;
+                        const auto t = static_cast<float>(pixel.power) / props.power_max;
+                        colour = sand::lerp(a, b, t);
+                    }
+                    else if (props.power_type == pixel_power_type::conductor) {
+                        const auto a = pixel.colour;
+                        const auto b = sand::random_element(electricity_colours);
+                        const auto t = static_cast<float>(pixel.power) / props.power_max;
+                        colour = sand::lerp(a, b, t);
+                    }
+                    else {
+                        colour = pixel.colour;
+                    }
                 }
             }
         }
@@ -174,7 +173,7 @@ auto renderer::draw() const -> void
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
-auto renderer::resize(std::size_t width, std::size_t height) -> void
+auto renderer::resize(u32 width, u32 height) -> void
 {
     d_texture.resize(width, height);
     d_texture_data.resize(width * height);

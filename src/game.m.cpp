@@ -1,4 +1,4 @@
-#include "config.hpp"
+#include "common.hpp"
 #include "world.hpp"
 #include "mouse.hpp"
 #include "window.hpp"
@@ -16,11 +16,13 @@
 
 auto main() -> int
 {
+    using namespace sand;
+
     auto window          = sand::window{"sandfall", 1280, 720};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
-    auto level           = sand::load_level("save0.bin");
-    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
+    auto level           = sand::load_level("save4.bin");
+    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width()), static_cast<u32>(level->pixels.height())};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
@@ -29,7 +31,7 @@ auto main() -> int
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .world_to_screen = window.height() / 128.0f
+        .world_to_screen = window.height() / 182.0f
     };
 
     while (window.is_running()) {
@@ -45,20 +47,26 @@ auto main() -> int
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
-                camera.world_to_screen = e->height / 128.0f;
+                camera.world_to_screen = e->height / 182.0f;
             }
-        }
-
-        const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
-        if (desired_top_left != camera.top_left) {
-            const auto diff = desired_top_left - camera.top_left;
-            camera.top_left += 0.05f * diff;
         }
 
         accumulator += dt;
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
+            
+            const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
+            if (desired_top_left != camera.top_left) {
+                const auto diff = desired_top_left - camera.top_left;
+                camera.top_left += 0.05f * diff;
+
+                // Clamp the camera to the world, don't allow players to see the void
+                const auto camera_dimensions_world_space = sand::dimensions(camera) / camera.world_to_screen;
+                camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width() - camera_dimensions_world_space.x);
+                camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height() - camera_dimensions_world_space.y);
+            }
+            
             updated = true;
             level->pixels.step();
         }
@@ -66,7 +74,7 @@ auto main() -> int
 
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, false, camera);
+            world_renderer.update(*level, camera);
         }
         world_renderer.draw();
 

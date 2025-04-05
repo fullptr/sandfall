@@ -1,4 +1,6 @@
 #pragma once
+#include "common.hpp"
+
 #include <cstdint>
 #include <span>
 
@@ -8,25 +10,25 @@ namespace sand {
 
 class texture
 {
-    std::uint32_t d_texture;
-    std::uint32_t d_width;
-    std::uint32_t d_height;
+    u32 d_texture;
+    u32 d_width;
+    u32 d_height;
 
     texture(const texture&) = delete;
     texture& operator=(const texture&) = delete;
 
 public:
     texture();
-    texture(std::uint32_t width, std::uint32_t height);
+    texture(u32 width, u32 height);
     ~texture();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
     auto bind() const -> void;
 
-    auto resize(std::uint32_t width, std::uint32_t height) -> void;
+    auto resize(u32 width, u32 height) -> void;
 
-    auto width() const -> std::uint32_t { return d_width; }
-    auto height() const -> std::uint32_t { return d_height; }
+    auto width() const -> u32 { return d_width; }
+    auto height() const -> u32 { return d_height; }
 };
 
 }
