@@ -34,7 +34,7 @@ public:
         bodyDef.type = b2_dynamicBody;
         bodyDef.fixedRotation = true;
         bodyDef.linearDamping = 1.0f;
-        const auto position = pixel_to_physics({200.0f, 100.0f});
+        const auto position = pixel_to_physics({200, 100});
         bodyDef.position.Set(position.x, position.y);
         d_body = world.CreateBody(&bodyDef);
         b2MassData md;
@@ -43,7 +43,7 @@ public:
 
         // Set up main body fixture
         {
-            const auto half_extents = pixel_to_physics(glm::vec2{5.0f, 10.0f});
+            const auto half_extents = pixel_to_physics({5, 10});
             b2PolygonShape shape;
             shape.SetAsBox(half_extents.x, half_extents.y);
     
@@ -56,9 +56,9 @@ public:
         
         // Set up foot sensor
         {
-            const auto half_extents = pixel_to_physics(glm::vec2{2.0f, 4.0f});
+            const auto half_extents = pixel_to_physics({2, 4});
             b2PolygonShape shape;
-            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{0.0f, 10.0f}), 0);
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({0, 10}), 0);
             
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &shape;
@@ -68,9 +68,9 @@ public:
 
          // Set up left sensor
          {
-            const auto half_extents = pixel_to_physics(glm::vec2{1.0f, 9.0f});
+            const auto half_extents = pixel_to_physics({1, 9});
             b2PolygonShape shape;
-            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{-5.0f, 0.0f}), 0);
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({-5, 0}), 0);
             
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &shape;
@@ -80,9 +80,9 @@ public:
 
         // Set up right sensor
         {
-            const auto half_extents = pixel_to_physics(glm::vec2{1.0f, 9.0f});
+            const auto half_extents = pixel_to_physics({1, 9});
             b2PolygonShape shape;
-            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(glm::vec2{5.0f, 0.0f}), 0);
+            shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({5, 0}), 0);
             
             b2FixtureDef fixtureDef;
             fixtureDef.shape = &shape;
