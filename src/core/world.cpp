@@ -87,13 +87,13 @@ auto move_offset(world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
             break;
         }
 
-        w.swap({pos.x, pos.y}, {next_pos.x, next_pos.y});
+        w.swap(pos, next_pos);
         pos = next_pos;
-        set_adjacent_free_falling(w, {pos.x, pos.y});
+        set_adjacent_free_falling(w, pos);
     }
 
     if (start_pos != pos) {
-        w.visit({pos.x, pos.y}, [&](pixel& p) { p.flags[is_falling] = true; });
+        w.visit(pos, [&](pixel& p) { p.flags[is_falling] = true; });
         return true;
     }
 
@@ -122,11 +122,11 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(world& w, pixel_pos& pos) -> void
 {
-    const auto& props = properties(w[{pos.x, pos.y}]);
+    const auto& props = properties(w[pos]);
 
     // Apply gravity
     if (props.gravity_factor) {
-        const auto velocity = w[{pos.x, pos.y}].velocity;
+        const auto velocity = w[pos].velocity;
         const auto gravity_factor = props.gravity_factor;
         w.visit_no_wake(pos, [&](pixel& p) { p.velocity += gravity_factor * config::gravity * config::time_step; });
         if (move_offset(w, pos, velocity)) return;
@@ -222,7 +222,7 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
 
         // See if it explodes
         if (random_unit() < props.explosion_chance) {
-            apply_explosion(w, {pos.x, pos.y}, sand::explosion{
+            apply_explosion(w, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
         }
@@ -233,23 +233,22 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
     switch (props.power_type) {
         case pixel_power_type::conductor: {
             if (px.power > 0) {
-                w.visit({pos.x, pos.y}, [&](pixel& p) { --p.power; });
+                w.visit(pos, [&](pixel& p) { --p.power; });
             }
 
             // Check to see if we should power up just before we hit zero in order to
             // maintain a current
             if (px.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    const auto n = pos + offset;
-                    if (w.valid({n.x, n.y}) && should_get_powered(w, pos, offset)) {
-                        w.visit({pos.x, pos.y}, [&](pixel& p) { p.power = props.power_max; });
+                    if (w.valid(pos + offset) && should_get_powered(w, pos, offset)) {
+                        w.visit(pos, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
                 }
             }
 
             if (px.power > 0 && props.explodes_on_power) {
-                apply_explosion(w, {pos.x, pos.y}, sand::explosion{
+                apply_explosion(w, pos, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
             }
@@ -257,16 +256,15 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
 
         case pixel_power_type::source: {
             if (px.power < props.power_max) {
-                w.visit({pos.x, pos.y}, [&](pixel& p) { ++p.power; });
+                w.visit(pos, [&](pixel& p) { ++p.power; });
             }
             for (const auto& offset : adjacent_offsets) {
-                const auto n = pos + offset;
-                if (!w.valid({n.x, n.y})) continue;
+                if (!w.valid(pos + offset)) continue;
                 auto& neighbour = w[pos + offset];
 
                 // Powered diode_offs disable power sources
                 if (neighbour.type == pixel_type::diode_out && neighbour.power > 0) {
-                    w.visit({pos.x, pos.y}, [&](pixel& p) { p.power = 0; });
+                    w.visit(pos, [&](pixel& p) { p.power = 0; });
                     break;
                 }
             }
@@ -276,17 +274,17 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
     }
 
     if (px.power > 0) {
-        w.wake_chunk_with_pixel({pos.x, pos.y});
+        w.wake_chunk_with_pixel(pos);
     }
 
     if (random_unit() < props.spontaneous_destroy) {
-        w.set({pos.x, pos.y}, pixel::air());
+        w.set(pos, pixel::air());
     }
 }
 
 inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
 {
-    auto& px = w[{pos.x, pos.y}];
+    auto& px = w[pos];
     const auto& props = properties(px);
 
     // Affect adjacent neighbours as well as diagonals
@@ -294,19 +292,19 @@ inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
         const auto neigh_pos = pos + offset;
         if (!w.valid(neigh_pos)) continue;   
 
-        const auto& neighbour = w[{neigh_pos.x, neigh_pos.y}];
+        const auto& neighbour = w[neigh_pos];
 
         // Boil water
         if (props.can_boil_water) {
             if (neighbour.type == pixel_type::water) {
-                w.set({neigh_pos.x, neigh_pos.y}, pixel::steam());
+                w.set(neigh_pos, pixel::steam());
             }
         }
 
         // Corrode neighbours
         if (props.is_corrosion_source) {
             if (random_unit() > properties(neighbour).corrosion_resist) {
-                w.set({neigh_pos.x, neigh_pos.y}, pixel::air());
+                w.set(neigh_pos, pixel::air());
                 if (random_unit() > 0.9f) {
                     w.set(pos, pixel::air());
                 }
@@ -332,7 +330,7 @@ inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
 
 auto update_pixel(world& w, pixel_pos pos) -> pixel_pos
 {
-    if (w[{pos.x, pos.y}].type == pixel_type::none || w[{pos.x, pos.y}].flags[is_updated]) {
+    if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
         return pos;
     }
 
@@ -371,14 +369,6 @@ auto get_chunk_pos(std::size_t width, std::size_t index) -> glm::ivec2
 auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 {
     return {pos.x / config::chunk_size, pos.y / config::chunk_size};
-}
-
-auto wake_pixel_chunk(world& w, glm::ivec2 pos) -> void
-{
-    if (w.valid({pos.x, pos.y})) {
-        const auto chunk_pos = get_chunk_from_pixel({pos.x, pos.y});
-
-    }
 }
 
 auto world::wake_chunk(chunk_pos pos) -> void

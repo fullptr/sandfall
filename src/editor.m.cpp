@@ -188,7 +188,7 @@ auto main() -> int
                 }
             break; case 2:
                 if (mouse.is_down_this_frame(sand::mouse_button::left)) {
-                    sand::apply_explosion(level->pixels, {mouse_pos.x, mouse_pos.y}, sand::explosion{
+                    sand::apply_explosion(level->pixels, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
                     updated = true;
