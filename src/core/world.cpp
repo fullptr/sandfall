@@ -61,7 +61,7 @@ auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
 
     for (const auto x : {l, r}) {
         if (w.valid(x)) {
-            const auto& px = w[{x.x, x.y}];
+            const auto& px = w[x];
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
                 w.visit(x, [&](pixel& p) { p.flags[is_falling] = true; });
@@ -457,12 +457,12 @@ auto world::step() -> void
         chunk.should_step = std::exchange(chunk.should_step_next, false);
     }
 
-    for (int y = d_height - 1; y >= 0; --y) {
+    for (i32 y = d_height - 1; y >= 0; --y) {
         if (coin_flip()) {
-            for (int x = 0; x != d_width; x += config::chunk_size) {
+            for (i32 x = 0; x != d_width; x += config::chunk_size) {
                 const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
-                    for (int dx = 0; dx != config::chunk_size; ++dx) {
+                    for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x + dx, y});
                         at(new_pos).flags[is_updated] = true;
                     }
@@ -470,10 +470,10 @@ auto world::step() -> void
             }
         }
         else {
-            for (int x = d_width - 1; x >= 0; x -= config::chunk_size) {
+            for (i32 x = d_width - 1; x >= 0; x -= config::chunk_size) {
                 const auto chunk = get_chunk({x, y});
                 if (chunk.should_step) {
-                    for (int dx = 0; dx != config::chunk_size; ++dx) {
+                    for (i32 dx = 0; dx != config::chunk_size; ++dx) {
                         const auto new_pos = update_pixel(*this, {x - dx, y});
                         at(new_pos).flags[is_updated] = true;
                     }
@@ -485,8 +485,8 @@ auto world::step() -> void
     const auto width_chunks = d_width / config::chunk_size;
     const auto height_chunks = d_height / config::chunk_size;
 
-    for (int x = 0; x != width_chunks; ++x) {
-        for (int y = 0; y != height_chunks; ++y) {
+    for (i32 x = 0; x != width_chunks; ++x) {
+        for (i32 y = 0; y != height_chunks; ++y) {
             auto& chunk = d_chunks[y * width_chunks + x];
             if (!chunk.should_step) continue;
             const auto top_left = config::chunk_size * glm::ivec2{x, y};
@@ -498,9 +498,9 @@ auto world::step() -> void
     d_physics.Step(sand::config::time_step, 8, 3);
 }
 
-level::level(std::size_t width, std::size_t height, const std::vector<pixel>& data)
+level::level(i32 width, i32 height, const std::vector<pixel>& data)
     : pixels{width, height, data}
-    , spawn_point{static_cast<int>(width) / 2, static_cast<int>(height) / 2}
+    , spawn_point{width / 2, height / 2}
     , player{pixels.physics()}
 {
 }

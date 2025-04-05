@@ -16,11 +16,13 @@
 
 auto main() -> int
 {
+    using namespace sand;
+
     auto window          = sand::window{"sandfall", 1280, 720};
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
     auto level           = sand::load_level("save4.bin");
-    auto world_renderer  = sand::renderer{level->pixels.width(), level->pixels.height()};
+    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width()), static_cast<u32>(level->pixels.height())};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};

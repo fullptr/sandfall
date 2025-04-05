@@ -1,7 +1,7 @@
 #pragma once
+#include "common.hpp"
 #include "pixel.hpp"
 #include "serialise.hpp"
-#include "common.hpp"
 #include "world_save.hpp"
 #include "player.hpp"
 
@@ -30,8 +30,8 @@ class world
     b2World            d_physics;
     std::vector<pixel> d_pixels;
     std::vector<chunk> d_chunks;
-    std::size_t        d_width;
-    std::size_t        d_height;
+    i32                d_width;
+    i32                d_height;
     
     auto at(pixel_pos pos) -> pixel&;
     auto wake_chunk(chunk_pos pos) -> void;
@@ -40,7 +40,7 @@ class world
     auto get_chunk(pixel_pos pos) -> chunk&;
     
 public:
-    world(std::size_t width, std::size_t height, const std::vector<pixel>& pixels)
+    world(i32 width, i32 height, const std::vector<pixel>& pixels)
         : d_physics{{config::gravity.x, config::gravity.y}}
         , d_pixels{pixels}
         , d_width{width}
@@ -84,8 +84,11 @@ public:
     inline auto begin() { return d_pixels.begin(); }
     inline auto end() { return d_pixels.end(); }
 
-    inline auto width() const -> std::size_t { return d_width; }
-    inline auto height() const -> std::size_t { return d_height; }
+    inline auto width() const -> i32 { return d_width; }
+    inline auto height() const -> i32 { return d_height; }
+
+    inline auto width_in_chunks() const -> i32 { return d_width / config::chunk_size; }
+    inline auto height_in_chunks() const -> i32 { return d_height / config::chunk_size; }
 
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
     auto chunks() const -> const std::vector<chunk>& { return d_chunks; }
@@ -97,7 +100,7 @@ struct level
     pixel_pos         spawn_point;
     player_controller player;
 
-    level(std::size_t width, std::size_t height, const std::vector<pixel>& pixels);
+    level(i32 width, i32 height, const std::vector<pixel>& pixels);
 };
 
 }

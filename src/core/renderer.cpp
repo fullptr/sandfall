@@ -60,7 +60,7 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(std::size_t width, std::size_t height)
+renderer::renderer(u32 width, u32 height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
@@ -68,8 +68,8 @@ renderer::renderer(std::size_t width, std::size_t height)
     , d_texture_data{}
     , d_shader{vertex_shader, fragment_shader}
 {
-    const float vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
+    const f32 vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+    const u32 indices[] = {0, 1, 2, 0, 2, 3};
 
     glGenVertexArrays(1, &d_vao);
     glBindVertexArray(d_vao);
@@ -174,7 +174,7 @@ auto renderer::draw() const -> void
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
-auto renderer::resize(std::size_t width, std::size_t height) -> void
+auto renderer::resize(u32 width, u32 height) -> void
 {
     d_texture.resize(width, height);
     d_texture_data.resize(width * height);

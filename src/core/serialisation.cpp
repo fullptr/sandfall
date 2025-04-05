@@ -29,8 +29,8 @@ auto save_level(const std::string& file_path, const sand::level& w) -> void
 
     auto save = sand::world_save{
         .pixels = w.pixels.pixels(),
-        .width = w.pixels.width(),
-        .height = w.pixels.height(),
+        .width = static_cast<std::size_t>(w.pixels.width()),
+        .height = static_cast<std::size_t>(w.pixels.height()),
         .spawn_point = {w.spawn_point.x, w.spawn_point.y}
     };
 
