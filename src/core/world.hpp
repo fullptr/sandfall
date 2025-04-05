@@ -64,7 +64,7 @@ public:
     auto physics() -> b2World& { return d_physics; }
     auto wake_all() -> void;
 
-    auto valid(glm::ivec2 pos) const -> bool;
+    auto valid(pixel_pos pos) const -> bool;
     auto set(glm::ivec2 pos, const pixel& p) -> void;
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](glm::ivec2 pos) const -> const pixel&;

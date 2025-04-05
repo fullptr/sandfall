@@ -169,7 +169,7 @@ auto main() -> int
             break; case 0:
                 if (mouse.is_down(sand::mouse_button::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
-                    if (level->pixels.valid(coord)) {
+                    if (level->pixels.valid({coord.x, coord.y})) {
                         level->pixels.set(coord, editor.get_pixel());
                         updated = true;
                     }
@@ -208,7 +208,7 @@ auto main() -> int
             ImGui::Text("Mouse");
             ImGui::Text("Position: {%.2f, %.2f}", mouse_actual.x, mouse_actual.y);
             ImGui::Text("Pixel: {%d, %d}", mouse_pixel.x, mouse_pixel.y);
-            if (level->pixels.valid(mouse_pixel)) {
+            if (level->pixels.valid({mouse_pixel.x, mouse_pixel.y})) {
                 const auto px = level->pixels[mouse_pixel];
                 ImGui::Text("  pixel power: %d", px.power);
                 ImGui::Text("  is_falling: %s", px.flags[sand::pixel_flags::is_falling] ? "true" : "false");

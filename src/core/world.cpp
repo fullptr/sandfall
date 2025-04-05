@@ -32,7 +32,7 @@ static constexpr auto adjacent_offsets = std::array{
 
 auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -> bool
 {
-    if (!w.valid(src_pos) || !w.valid(dst_pos)) { return false; }
+    if (!w.valid({src_pos.x, src_pos.y}) || !w.valid({dst_pos.x, dst_pos.y})) { return false; }
 
     // If the destination is empty, we can always move there
     if (w[dst_pos].type == pixel_type::none) { return true; }
@@ -54,17 +54,17 @@ auto can_pixel_move_to(const world& w, glm::ivec2 src_pos, glm::ivec2 dst_pos) -
     }
 }
 
-auto set_adjacent_free_falling(world& w, glm::ivec2 pos) -> void
+auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
 
     for (const auto x : {l, r}) {
         if (w.valid(x)) {
-            const auto& px = w[x];
+            const auto& px = w[{x.x, x.y}];
             const auto& props = properties(px);
             if (props.gravity_factor != 0.0f) {
-                w.visit({x.x, x.y}, [&](pixel& p) { p.flags[is_falling] = true; });
+                w.visit(x, [&](pixel& p) { p.flags[is_falling] = true; });
             }
         }
     }
@@ -89,7 +89,7 @@ auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
 
         w.swap({pos.x, pos.y}, {next_pos.x, next_pos.y});
         pos = next_pos;
-        set_adjacent_free_falling(w, pos);
+        set_adjacent_free_falling(w, {pos.x, pos.y});
     }
 
     if (start_pos != pos) {
@@ -182,7 +182,7 @@ auto should_get_powered(const world& w, glm::ivec2 pos, glm::ivec2 offset) -> bo
     // other side.
     if (src.type == pixel_type::relay) {
         auto new_pos = pos + 2 * offset;
-        if (!w.valid(new_pos)) return false;
+        if (!w.valid({new_pos.x, new_pos.y})) return false;
         const auto& new_src = w[new_pos];
         const auto& props = properties(new_src);
         return is_active_power_source(new_src)
@@ -240,8 +240,8 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
             // maintain a current
             if (px.power <= 1) {
                 for (const auto& offset : adjacent_offsets) {
-                    const auto neighbour = pos + offset;
-                    if (w.valid(neighbour) && should_get_powered(w, pos, offset)) {
+                    const auto n = pos + offset;
+                    if (w.valid({n.x, n.y}) && should_get_powered(w, pos, offset)) {
                         w.visit({pos.x, pos.y}, [&](pixel& p) { p.power = props.power_max; });
                         break;
                     }
@@ -260,7 +260,8 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
                 w.visit({pos.x, pos.y}, [&](pixel& p) { ++p.power; });
             }
             for (const auto& offset : adjacent_offsets) {
-                if (!w.valid(pos + offset)) continue;
+                const auto n = pos + offset;
+                if (!w.valid({n.x, n.y})) continue;
                 auto& neighbour = w[pos + offset];
 
                 // Powered diode_offs disable power sources
@@ -291,7 +292,7 @@ inline auto update_pixel_neighbours(world& w, glm::ivec2 pos) -> void
     // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
         const auto neigh_pos = pos + offset;
-        if (!w.valid(neigh_pos)) continue;   
+        if (!w.valid({neigh_pos.x, neigh_pos.y})) continue;   
 
         const auto& neighbour = w[neigh_pos];
 
@@ -374,7 +375,7 @@ auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
 
 auto wake_pixel_chunk(world& w, glm::ivec2 pos) -> void
 {
-    if (w.valid(pos)) {
+    if (w.valid({pos.x, pos.y})) {
         const auto chunk_pos = get_chunk_from_pixel({pos.x, pos.y});
 
     }
@@ -392,7 +393,7 @@ auto world::at(pixel_pos pos) -> pixel&
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto world::valid(glm::ivec2 pos) const -> bool
+auto world::valid(pixel_pos pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
