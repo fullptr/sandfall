@@ -100,11 +100,12 @@ auto move_offset(world& w, glm::ivec2& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto is_surrounded(const world& w, glm::ivec2 pos) -> bool
+auto is_surrounded(const world& w, pixel_pos pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
-        if (w.valid(pos + offset)) {
-            if (w[pos + offset].type == pixel_type::none) {
+        const auto n = pos + offset;
+        if (w.valid({n.x, n.y})) {
+            if (w[{n.x, n.y}].type == pixel_type::none) {
                 return false;
             }
         }
@@ -209,7 +210,7 @@ inline auto update_pixel_attributes(world& w, glm::ivec2 pos) -> void
     if (px.flags[is_burning]) {
 
         // See if it can be put out
-        const auto put_out = is_surrounded(w, pos) ? props.put_out_surrounded : props.put_out;
+        const auto put_out = is_surrounded(w, {pos.x, pos.y}) ? props.put_out_surrounded : props.put_out;
         if (random_unit() < put_out) {
             w.visit(pos, [&](pixel& p) { p.flags[is_burning] = false; });
         }
