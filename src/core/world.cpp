@@ -490,7 +490,8 @@ auto world::step() -> void
             auto& chunk = d_chunks[y * width_chunks + x];
             if (!chunk.should_step) continue;
             const auto top_left = config::chunk_size * glm::ivec2{x, y};
-            create_chunk_triangles(*this, chunk, top_left);
+            const auto tl = pixel_pos{top_left.x, top_left.y};
+            create_chunk_triangles(*this, chunk, tl);
         }
     }
     
