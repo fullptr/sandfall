@@ -22,7 +22,7 @@ auto main() -> int
     auto mouse           = sand::mouse{};
     auto keyboard        = sand::keyboard{};
     auto level           = sand::load_level("save4.bin");
-    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width()), static_cast<u32>(level->pixels.height())};
+    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
@@ -63,8 +63,8 @@ auto main() -> int
 
                 // Clamp the camera to the world, don't allow players to see the void
                 const auto camera_dimensions_world_space = sand::dimensions(camera) / camera.world_to_screen;
-                camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width() - camera_dimensions_world_space.x);
-                camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height() - camera_dimensions_world_space.y);
+                camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width_in_pixels() - camera_dimensions_world_space.x);
+                camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
             }
             
             updated = true;

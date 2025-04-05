@@ -65,14 +65,15 @@ class world
     auto physics() -> b2World& { return d_physics; }
     auto wake_all() -> void;
     
-    auto valid(pixel_pos pos) const -> bool;
+    auto is_valid_pixel(pixel_pos pos) const -> bool;
     auto set(pixel_pos pos, const pixel& p) -> void;
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](pixel_pos pos) const -> const pixel&;
+    auto operator[](chunk_pos pos) const -> const chunk&;
     
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
-        assert(valid(pos));
+        assert(is_valid_pixel(pos));
         updater(at(pos));
     }
     
@@ -82,19 +83,15 @@ class world
         wake_chunk_with_pixel(pos);
     }
     
-    inline auto begin() { return d_pixels.begin(); }
-    inline auto end() { return d_pixels.end(); }
-    
-    inline auto width() const -> i32 { return d_width; }
-    inline auto height() const -> i32 { return d_height; }
-    
     auto is_valid_chunk(chunk_pos) const -> bool;
-    auto get_chunk(chunk_pos pos) const -> const chunk&;
+
+    inline auto width_in_pixels() const -> i32 { return d_width; }
+    inline auto height_in_pixels() const -> i32 { return d_height; }
     inline auto width_in_chunks() const -> i32 { return d_width / config::chunk_size; }
     inline auto height_in_chunks() const -> i32 { return d_height / config::chunk_size; }
 
+    // Exposed for serialisation
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
-    auto chunks() const -> const std::vector<chunk>& { return d_chunks; }
 };
 
 struct level

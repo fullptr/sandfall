@@ -106,8 +106,8 @@ auto renderer::bind() const -> void
 
 auto renderer::update(const level& world, const camera& camera) -> void
 {
-    if (d_texture.width() != world.pixels.width() || d_texture.height() != world.pixels.height()) {
-        resize(world.pixels.width(), world.pixels.height());
+    if (d_texture.width() != world.pixels.width_in_pixels() || d_texture.height() != world.pixels.height_in_pixels()) {
+        resize(world.pixels.width_in_pixels(), world.pixels.height_in_pixels());
     }
 
     static const auto fire_colours = std::array{
@@ -129,7 +129,7 @@ auto renderer::update(const level& world, const camera& camera) -> void
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
-            const auto chunk = world.pixels.get_chunk(cpos);
+            const auto chunk = world.pixels[cpos];
             if (!chunk.should_step) continue;
             
             const auto top_left = get_chunk_top_left(cpos);
@@ -139,7 +139,7 @@ auto renderer::update(const level& world, const camera& camera) -> void
     
                     auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
     
-                    const auto& pixel = world.pixels[{world_coord.x, world_coord.y}];
+                    const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
     
                     if (pixel.flags[is_burning]) {
