@@ -9,20 +9,20 @@
 
 namespace sand {
 
-class world;
+class level;
 class contact_listener : public b2ContactListener
 {
-    world* d_world;
+    level* d_level;
 
 public:
-    contact_listener(world* w) : d_world{w} {}
+    contact_listener(level* l) : d_level{l} {}
 
     void PreSolve(b2Contact* contact, const b2Manifold* impulse) override;
     void BeginContact(b2Contact* contact) override;
     void EndContact(b2Contact* contact) override;
 };
 
-class player_controller : public b2ContactListener {
+struct player_controller {
     b2World*   d_world;
     b2Body*    d_body         = nullptr;
     b2Fixture* d_fixture      = nullptr;
@@ -102,44 +102,6 @@ public:
             fixtureDef.shape = &shape;
             fixtureDef.isSensor = true;
             d_right_sensor = d_body->CreateFixture(&fixtureDef);
-        }
-
-        d_world->SetContactListener(this);
-    }
-
-    void PreSolve(b2Contact* contact, const b2Manifold* impulse) override {
-        if (contact->GetFixtureA() == d_fixture || contact->GetFixtureB() == d_fixture) {
-            contact->ResetFriction();
-        }
-    }
-
-    void BeginContact(b2Contact* contact) override {
-        if (contact->GetFixtureA() == d_footSensor) {
-            d_floors.insert(contact->GetFixtureB());
-        }
-        if (contact->GetFixtureB() == d_footSensor) {
-            d_floors.insert(contact->GetFixtureA());
-        }
-        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
-            ++d_num_left_contacts;
-        }
-        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
-            ++d_num_right_contacts;
-        }
-    }
-
-    void EndContact(b2Contact* contact) override {
-        if (contact->GetFixtureA() == d_footSensor) {
-            d_floors.erase(contact->GetFixtureB());
-        }
-        if (contact->GetFixtureB() == d_footSensor) {
-            d_floors.erase(contact->GetFixtureA());
-        }
-        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
-            --d_num_left_contacts;
-        }
-        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
-            --d_num_right_contacts;
         }
     }
 
