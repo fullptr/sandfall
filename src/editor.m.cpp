@@ -188,7 +188,11 @@ auto main() -> int
             updated = true;
             level->pixels.step();
         }
-        level->player.update(keyboard);
+
+        update_entity(level->player, keyboard);
+        for (auto& e: level->entities) {
+            update_entity(e, keyboard);
+        }
 
         const auto mouse_pos = pixel_at_mouse(mouse, camera);
         switch (editor.brush_type) {
@@ -242,7 +246,7 @@ auto main() -> int
                 ImGui::Text("  pixel power: n/a");
                 ImGui::Text("  is_falling: n/a");
             }
-            ImGui::Text("Number of Floors: %d", level->player.floors().size());
+            ImGui::Text("Number of Floors: %d", level->player.floors.size());
             ImGui::Text("Events this frame: %zu", window.events().size());
             ImGui::Separator();
 
@@ -258,7 +262,7 @@ auto main() -> int
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width_in_pixels());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height_in_pixels());
             if (ImGui::Button("Respawn")) {
-                level->player.set_position(level->spawn_point);
+                respawn_entity(level->player);
             }
             ImGui::Separator();
 
@@ -328,7 +332,7 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         // TODO: Replace with actual sprite data
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.draw_circle(entity_centre(level->player), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (editor.show_physics) {
             level->pixels.physics().SetDebugDraw(&debug_draw);

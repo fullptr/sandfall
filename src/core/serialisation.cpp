@@ -18,7 +18,8 @@ auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::lev
     return std::make_unique<sand::level>(
         width,
         height,
-        std::vector<sand::pixel>(width * height, sand::pixel::air())
+        std::vector<sand::pixel>(width * height, sand::pixel::air()),
+        pixel_pos{width/2, height/2}
     );
 }
 
@@ -46,9 +47,8 @@ auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
     archive(save);
 
     // TODO: Store the sizes as u32's in the file
-    auto w = std::make_unique<sand::level>(static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels);
-    w->spawn_point = {save.spawn_point.x, save.spawn_point.y};
-    w->player.set_position(w->spawn_point);
+    const auto spawn = pixel_pos{save.spawn_point.x, save.spawn_point.y};
+    auto w = std::make_unique<sand::level>(static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels, spawn);
     return w;
 }
 

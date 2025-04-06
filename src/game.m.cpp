@@ -27,10 +27,6 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    auto enemy           = sand::enemy_controller(level->pixels.physics());
-
-    auto enemy_pos = glm::ivec2{level->player.centre() + glm::vec2{50.0, 0.0}};
-    enemy.set_position({ enemy_pos.x, enemy_pos.y });
 
     auto camera = sand::camera{
         .top_left = {0, 0},
@@ -61,7 +57,7 @@ auto main() -> int
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             
-            const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
+            const auto desired_top_left = entity_centre(level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
             if (desired_top_left != camera.top_left) {
                 const auto diff = desired_top_left - camera.top_left;
                 camera.top_left += 0.05f * diff;
@@ -75,8 +71,11 @@ auto main() -> int
             updated = true;
             level->pixels.step();
         }
-        enemy.update(keyboard);
-        level->player.update(keyboard);
+
+        update_entity(level->player, keyboard);
+        for (auto& e : level->entities) {
+            update_entity(e, keyboard);
+        }
 
         world_renderer.bind();
         if (updated) {
@@ -85,9 +84,11 @@ auto main() -> int
         world_renderer.draw();
 
         // TODO: Replace with actual sprite data
-        shape_renderer.begin_frame(camera);        
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
-        shape_renderer.draw_circle(enemy.centre(), {0.5, 1.0, 0.5, 1.0}, 2.5);
+        shape_renderer.begin_frame(camera);      
+        shape_renderer.draw_circle(entity_centre(level->player), {1.0, 1.0, 0.0, 1.0}, 3);
+        for (const auto& e : level->entities) {
+            shape_renderer.draw_circle(entity_centre(e), {0.5, 1.0, 0.5, 1.0}, 2.5);
+        }  
         shape_renderer.end_frame();
         
         window.end_frame();
