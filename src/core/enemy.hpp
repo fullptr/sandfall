@@ -1,6 +1,5 @@
 #pragma once
 #include <print>
-#include <unordered_set>
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
@@ -9,20 +8,7 @@
 
 namespace sand {
 
-class world;
-class contact_listener : public b2ContactListener
-{
-    world* d_world;
-
-public:
-    contact_listener(world* w) : d_world{w} {}
-
-    void PreSolve(b2Contact* contact, const b2Manifold* impulse) override;
-    void BeginContact(b2Contact* contact) override;
-    void EndContact(b2Contact* contact) override;
-};
-
-class player_controller : public b2ContactListener {
+class enemy_controller {
     b2World*   d_world;
     b2Body*    d_body         = nullptr;
     b2Fixture* d_fixture      = nullptr;
@@ -40,7 +26,7 @@ public:
     auto floors() const -> const std::unordered_set<b2Fixture*>& { return d_floors; }
     
     // width and height are in pixel space
-    player_controller(b2World& world)
+    enemy_controller(b2World& world)
         : d_world{&world}
     {
         // Create player body
@@ -102,44 +88,6 @@ public:
             fixtureDef.shape = &shape;
             fixtureDef.isSensor = true;
             d_right_sensor = d_body->CreateFixture(&fixtureDef);
-        }
-
-        d_world->SetContactListener(this);
-    }
-
-    void PreSolve(b2Contact* contact, const b2Manifold* impulse) override {
-        if (contact->GetFixtureA() == d_fixture || contact->GetFixtureB() == d_fixture) {
-            contact->ResetFriction();
-        }
-    }
-
-    void BeginContact(b2Contact* contact) override {
-        if (contact->GetFixtureA() == d_footSensor) {
-            d_floors.insert(contact->GetFixtureB());
-        }
-        if (contact->GetFixtureB() == d_footSensor) {
-            d_floors.insert(contact->GetFixtureA());
-        }
-        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
-            ++d_num_left_contacts;
-        }
-        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
-            ++d_num_right_contacts;
-        }
-    }
-
-    void EndContact(b2Contact* contact) override {
-        if (contact->GetFixtureA() == d_footSensor) {
-            d_floors.erase(contact->GetFixtureB());
-        }
-        if (contact->GetFixtureB() == d_footSensor) {
-            d_floors.erase(contact->GetFixtureA());
-        }
-        if (contact->GetFixtureA() == d_left_sensor || contact->GetFixtureB() == d_left_sensor) {
-            --d_num_left_contacts;
-        }
-        if (contact->GetFixtureA() == d_right_sensor || contact->GetFixtureB() == d_right_sensor) {
-            --d_num_right_contacts;
         }
     }
 

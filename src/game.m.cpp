@@ -7,6 +7,7 @@
 #include "utility.hpp"
 #include "renderer.hpp"
 #include "shape_renderer.hpp"
+#include "enemy.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
@@ -26,12 +27,16 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
+    auto enemy           = sand::enemy_controller(level->pixels.physics());
+
+    auto enemy_pos = glm::ivec2{level->player.centre() + glm::vec2{50.0, 0.0}};
+    enemy.set_position({ enemy_pos.x, enemy_pos.y });
 
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .world_to_screen = window.height() / 182.0f
+        .world_to_screen = window.height() / 210.0f
     };
 
     while (window.is_running()) {
@@ -47,7 +52,7 @@ auto main() -> int
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
-                camera.world_to_screen = e->height / 182.0f;
+                camera.world_to_screen = e->height / 210.0f;
             }
         }
 
@@ -70,6 +75,7 @@ auto main() -> int
             updated = true;
             level->pixels.step();
         }
+        enemy.update(keyboard);
         level->player.update(keyboard);
 
         world_renderer.bind();
@@ -81,6 +87,7 @@ auto main() -> int
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(camera);        
         shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.draw_circle(enemy.centre(), {0.5, 1.0, 0.5, 1.0}, 2.5);
         shape_renderer.end_frame();
         
         window.end_frame();

@@ -12,6 +12,7 @@ add_library(core STATIC
     renderer.cpp
     shape_renderer.cpp
     window.cpp
+    player.cpp
     shader.cpp
     texture.cpp
     utility.cpp
