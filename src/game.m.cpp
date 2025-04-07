@@ -92,9 +92,8 @@ auto main() -> int
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_renderer  = physics_debug_draw{&shape_renderer};
 
-    const auto player_pos = entity_centre(level->player) + glm::vec2{200, 0};
-    auto other_entity = make_player(level->pixels.physics(), {(int)player_pos.x, (int)player_pos.y});
-    other_entity.is_player = false;
+    const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
+    auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     level->entities.push_back(other_entity);
 
     auto camera = sand::camera{

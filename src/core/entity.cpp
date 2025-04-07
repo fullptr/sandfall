@@ -130,10 +130,80 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     return e;
 }
 
+auto make_enemy(b2World& world, pixel_pos position) -> entity
+{
+    entity e;
+    e.spawn_point = position;
+    e.is_player = false;
+
+    // Create player body
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.fixedRotation = true;
+    bodyDef.linearDamping = 1.0f;
+    const auto pos = pixel_to_physics(position);
+    bodyDef.position.Set(pos.x, pos.y);
+    e.body = world.CreateBody(&bodyDef);
+    b2MassData md;
+    md.mass = 80;
+    e.body->SetMassData(&md);
+
+    // Set up main body fixture
+    {
+        const auto half_extents = pixel_to_physics({5, 10});
+        b2PolygonShape shape;
+        shape.SetAsBox(half_extents.x, half_extents.y);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &shape;
+        fixtureDef.density = 1.0f;
+        fixtureDef.friction = 1.0f;
+        e.fixture = e.body->CreateFixture(&fixtureDef);
+    }
+    
+    // Set up foot sensor
+    {
+        const auto half_extents = pixel_to_physics({2, 4});
+        b2PolygonShape shape;
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({0, 10}), 0);
+        
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &shape;
+        fixtureDef.isSensor = true;
+        e.footSensor = e.body->CreateFixture(&fixtureDef);
+    }
+
+     // Set up left sensor
+     {
+        const auto half_extents = pixel_to_physics({1, 9});
+        b2PolygonShape shape;
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({-5, 0}), 0);
+        
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &shape;
+        fixtureDef.isSensor = true;
+        e.left_sensor = e.body->CreateFixture(&fixtureDef);
+    }
+
+    // Set up right sensor
+    {
+        const auto half_extents = pixel_to_physics({1, 9});
+        b2PolygonShape shape;
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({5, 0}), 0);
+        
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &shape;
+        fixtureDef.isSensor = true;
+        e.right_sensor = e.body->CreateFixture(&fixtureDef);
+    }
+
+    return e;
+}
+
 auto update_entity(entity& e, const keyboard& k) -> void
 {
     if (!e.is_player) return;
-    
+
     const bool on_ground = !e.floors.empty();
     const bool can_move_left = e.num_left_contacts == 0;
     const bool can_move_right = e.num_right_contacts == 0;
