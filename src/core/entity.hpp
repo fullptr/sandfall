@@ -22,10 +22,15 @@ public:
     void EndContact(b2Contact* contact) override;
 };
 
+struct entity;
+using entity_update_function = auto(*) (entity&, const keyboard&) -> void;
+
 // Possibly will replace with an entity component system in the future,
 // but for now just a big bag of data will suffice
 struct entity
 {
+    entity_update_function update = [](entity& e, const keyboard& k) {};
+
     pixel_pos  spawn_point  = {0, 0};
     bool       is_player    = false;
 
@@ -40,6 +45,7 @@ struct entity
     int  num_right_contacts = 0;
 
     std::unordered_set<b2Fixture*> floors;
+
 };
 
 auto make_player(b2World& world, pixel_pos position) -> entity;

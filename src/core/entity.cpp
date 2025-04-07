@@ -2,6 +2,57 @@
 #include "world.hpp"
 
 namespace sand {
+namespace {
+
+auto update_player(entity& e, const keyboard& k) -> void
+{
+    const bool on_ground = !e.floors.empty();
+    const bool can_move_left = e.num_left_contacts == 0;
+    const bool can_move_right = e.num_right_contacts == 0;
+
+    const auto vel = e.body->GetLinearVelocity();
+    
+    auto direction = 0;
+    if (can_move_left && k.is_down(sand::keyboard_key::A)) {
+        direction -= 1;
+    }
+    if (can_move_right && k.is_down(sand::keyboard_key::D)) {
+        direction += 1;
+    }
+    
+    const auto max_vel = 5.0f;
+    auto desired_vel = 0.0f;
+    if (direction == -1) { // left
+        if (vel.x > -max_vel) desired_vel = b2Max(vel.x - max_vel, -max_vel);
+    } else if (direction == 1) { // right
+        if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
+    }
+
+    e.fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
+
+    float vel_change = desired_vel - vel.x;
+    float impulse = e.body->GetMass() * vel_change;
+    e.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
+
+    if (on_ground) {
+        e.double_jump = true;
+    }
+    if (k.is_down_this_frame(sand::keyboard_key::W)) {
+        if (on_ground || e.double_jump) {
+            if (!on_ground) {
+                e.double_jump = false;
+            }
+            float impulse = e.body->GetMass() * 7;
+            e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+        }
+    }
+}
+
+auto update_enemy(entity& e, const keyboard& k) -> void
+{
+}
+
+}
 
 void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)  {
     const auto func = [&](entity& e) {
@@ -63,6 +114,7 @@ void contact_listener::EndContact(b2Contact* contact) {
 auto make_player(b2World& world, pixel_pos position) -> entity
 {
     entity e;
+    e.update = update_player;
     e.spawn_point = position;
     e.is_player = true;
 
@@ -133,6 +185,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
 auto make_enemy(b2World& world, pixel_pos position) -> entity
 {
     entity e;
+    e.update = update_enemy;
     e.spawn_point = position;
     e.is_player = false;
 
@@ -202,48 +255,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
 
 auto update_entity(entity& e, const keyboard& k) -> void
 {
-    if (!e.is_player) return;
-
-    const bool on_ground = !e.floors.empty();
-    const bool can_move_left = e.num_left_contacts == 0;
-    const bool can_move_right = e.num_right_contacts == 0;
-
-    const auto vel = e.body->GetLinearVelocity();
-    
-    auto direction = 0;
-    if (can_move_left && k.is_down(sand::keyboard_key::A)) {
-        direction -= 1;
-    }
-    if (can_move_right && k.is_down(sand::keyboard_key::D)) {
-        direction += 1;
-    }
-    
-    const auto max_vel = 5.0f;
-    auto desired_vel = 0.0f;
-    if (direction == -1) { // left
-        if (vel.x > -max_vel) desired_vel = b2Max(vel.x - max_vel, -max_vel);
-    } else if (direction == 1) { // right
-        if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
-    }
-
-    e.fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
-
-    float vel_change = desired_vel - vel.x;
-    float impulse = e.body->GetMass() * vel_change;
-    e.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
-
-    if (on_ground) {
-        e.double_jump = true;
-    }
-    if (k.is_down_this_frame(sand::keyboard_key::W)) {
-        if (on_ground || e.double_jump) {
-            if (!on_ground) {
-                e.double_jump = false;
-            }
-            float impulse = e.body->GetMass() * 7;
-            e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
-        }
-    }
+    e.update(e, k);
 }
 
 auto respawn_entity(entity& e) -> void
