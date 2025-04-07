@@ -1,4 +1,4 @@
-#include "player.hpp"
+#include "entity.hpp"
 #include "world.hpp"
 
 namespace sand {

@@ -3,7 +3,7 @@
 #include "pixel.hpp"
 #include "serialise.hpp"
 #include "world_save.hpp"
-#include "player.hpp"
+#include "entity.hpp"
 
 #include <cstdint>
 #include <unordered_set>

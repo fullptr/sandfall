@@ -2,7 +2,7 @@
 #include "pixel.hpp"
 #include "world.hpp"
 #include "utility.hpp"
-#include "player.hpp"
+#include "entity.hpp"
 #include "window.hpp"
 
 #include <box2d/box2d.h>

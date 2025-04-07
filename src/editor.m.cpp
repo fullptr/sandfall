@@ -7,7 +7,7 @@
 #include "update_rigid_bodies.hpp"
 #include "explosion.hpp"
 #include "mouse.hpp"
-#include "player.hpp"
+#include "entity.hpp"
 #include "world_save.hpp"
 #include "renderer.hpp"
 #include "shape_renderer.hpp"
