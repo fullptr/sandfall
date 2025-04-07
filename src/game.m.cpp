@@ -28,6 +28,11 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
 
+    const auto player_pos = entity_centre(level->player);
+    auto other_entity = make_player(level->pixels.physics(), {(int)player_pos.x, (int)player_pos.y});
+    other_entity.is_player = false;
+    level->entities.push_back(other_entity);
+
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = window.width(),
