@@ -132,6 +132,8 @@ auto make_player(b2World& world, pixel_pos position) -> entity
 
 auto update_entity(entity& e, const keyboard& k) -> void
 {
+    if (!e.is_player) return;
+    
     const bool on_ground = !e.floors.empty();
     const bool can_move_left = e.num_left_contacts == 0;
     const bool can_move_right = e.num_right_contacts == 0;
