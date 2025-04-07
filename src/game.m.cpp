@@ -7,7 +7,6 @@
 #include "utility.hpp"
 #include "renderer.hpp"
 #include "shape_renderer.hpp"
-#include "enemy.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
