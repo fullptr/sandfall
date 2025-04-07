@@ -22,7 +22,8 @@ public:
     void EndContact(b2Contact* contact) override;
 };
 
-// Temporary type and in a temporary place, will move this out when generalising
+// Possibly will replace with an entity component system in the future,
+// but for now just a big bag of data will suffice
 struct entity
 {
     pixel_pos  spawn_point  = {0, 0};
