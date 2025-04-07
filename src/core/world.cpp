@@ -489,11 +489,13 @@ auto world::step() -> void
     d_physics.Step(sand::config::time_step, 8, 3);
 }
 
-level::level(i32 width, i32 height, const std::vector<pixel>& data)
+level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
     : pixels{width, height, data}
-    , spawn_point{width / 2, height / 2}
-    , player{pixels.physics()}
+    , spawn_point{spawn}
+    , player{make_player(pixels.physics(), spawn)}
+    , listener{this}
 {
+    pixels.physics().SetContactListener(&listener);
 }
 
 }

@@ -3,7 +3,7 @@
 #include "pixel.hpp"
 #include "serialise.hpp"
 #include "world_save.hpp"
-#include "player.hpp"
+#include "entity.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -94,11 +94,15 @@ class world
 
 struct level
 {
-    world             pixels;
-    pixel_pos         spawn_point;
-    player_controller player;
+    world               pixels;
+    pixel_pos           spawn_point;
 
-    level(i32 width, i32 height, const std::vector<pixel>& pixels);
+    entity              player;
+    std::vector<entity> entities;
+    
+    contact_listener    listener;
+
+    level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };
 
 }

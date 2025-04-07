@@ -27,11 +27,16 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
 
+    const auto player_pos = entity_centre(level->player);
+    auto other_entity = make_player(level->pixels.physics(), {(int)player_pos.x, (int)player_pos.y});
+    other_entity.is_player = false;
+    level->entities.push_back(other_entity);
+
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
-        .world_to_screen = window.height() / 182.0f
+        .world_to_screen = window.height() / 210.0f
     };
 
     while (window.is_running()) {
@@ -47,7 +52,7 @@ auto main() -> int
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
-                camera.world_to_screen = e->height / 182.0f;
+                camera.world_to_screen = e->height / 210.0f;
             }
         }
 
@@ -56,7 +61,7 @@ auto main() -> int
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             
-            const auto desired_top_left = level->player.centre() - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
+            const auto desired_top_left = entity_centre(level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
             if (desired_top_left != camera.top_left) {
                 const auto diff = desired_top_left - camera.top_left;
                 camera.top_left += 0.05f * diff;
@@ -70,7 +75,11 @@ auto main() -> int
             updated = true;
             level->pixels.step();
         }
-        level->player.update(keyboard);
+
+        update_entity(level->player, keyboard);
+        for (auto& e : level->entities) {
+            update_entity(e, keyboard);
+        }
 
         world_renderer.bind();
         if (updated) {
@@ -79,8 +88,11 @@ auto main() -> int
         world_renderer.draw();
 
         // TODO: Replace with actual sprite data
-        shape_renderer.begin_frame(camera);        
-        shape_renderer.draw_circle(level->player.centre(), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.begin_frame(camera);      
+        shape_renderer.draw_circle(entity_centre(level->player), {1.0, 1.0, 0.0, 1.0}, 3);
+        for (const auto& e : level->entities) {
+            shape_renderer.draw_circle(entity_centre(e), {0.5, 1.0, 0.5, 1.0}, 2.5);
+        }  
         shape_renderer.end_frame();
         
         window.end_frame();
