@@ -44,11 +44,12 @@ public:
     
     void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
     {
+        const auto r = sand::physics_to_pixel(radius);
         d_renderer->draw_annulus(
             sand::physics_to_pixel(center),
             {color.r, color.g, color.b, 1.0},
-            0.8f * sand::physics_to_pixel(radius),
-            sand::physics_to_pixel(radius)
+            r - 1.0f,
+            r
         );
     }
 

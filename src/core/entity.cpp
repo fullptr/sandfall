@@ -1,6 +1,8 @@
 #include "entity.hpp"
 #include "world.hpp"
 
+#include <box2d/b2_body.h>
+
 namespace sand {
 namespace {
 
@@ -50,6 +52,15 @@ auto update_player(entity& e, const keyboard& k) -> void
 
 auto update_enemy(entity& e, const keyboard& k) -> void
 {
+    for (const auto curr : e.nearby_entities) {
+        const auto user_data = curr->GetUserData();
+        if (user_data.pointer != 0) {
+            const auto pos = physics_to_pixel(curr->GetPosition());
+            const auto self_pos = entity_centre(e);
+            const auto dir = glm::normalize(pos - self_pos);
+            e.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
+        }
+    }
 }
 
 }
@@ -71,23 +82,31 @@ void contact_listener::BeginContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
         const auto a = contact->GetFixtureA();
         const auto b = contact->GetFixtureB();
-        if (a == e.foot_sensor && !b->IsSensor()) {
-            e.floors.insert(b);
+        if (e.foot_sensor) {
+            if (a == e.foot_sensor && !b->IsSensor()) {
+                e.floors.insert(b);
+            }
+            if (b == e.foot_sensor && !a->IsSensor()) {
+                e.floors.insert(a);
+            }
         }
-        if (b == e.foot_sensor && !a->IsSensor()) {
-            e.floors.insert(a);
+        if (e.left_sensor) {
+            if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
+                ++e.num_left_contacts;
+            }
         }
-        if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
-            ++e.num_left_contacts;
+        if (e.right_sensor) {
+            if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
+                ++e.num_right_contacts;
+            }
         }
-        if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
-            ++e.num_right_contacts;
-        }
-        if (a == e.proximity_sensor) {
-            e.nearby_entities.insert(b->GetBody());
-        }
-        if (b == e.proximity_sensor) {
-            e.nearby_entities.insert(a->GetBody());
+        if (e.proximity_sensor) {
+            if (a == e.proximity_sensor) {
+                e.nearby_entities.insert(b->GetBody());
+            }
+            if (b == e.proximity_sensor) {
+                e.nearby_entities.insert(a->GetBody());
+            }
         }
     };
     
@@ -101,23 +120,31 @@ void contact_listener::EndContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
         const auto a = contact->GetFixtureA();
         const auto b = contact->GetFixtureB();
-        if (a == e.foot_sensor && !b->IsSensor()) {
-            e.floors.erase(b);
+        if (e.foot_sensor) {
+            if (a == e.foot_sensor && !b->IsSensor()) {
+                e.floors.erase(b);
+            }
+            if (b == e.foot_sensor && !a->IsSensor()) {
+                e.floors.erase(a);
+            }
         }
-        if (b == e.foot_sensor && !a->IsSensor()) {
-            e.floors.erase(a);
+        if (e.left_sensor) {
+            if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
+                --e.num_left_contacts;
+            }
         }
-        if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
-            --e.num_left_contacts;
+        if (e.right_sensor) {
+            if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
+                --e.num_right_contacts;
+            }
         }
-        if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
-            --e.num_right_contacts;
-        }
-        if (a == e.proximity_sensor) {
-            e.nearby_entities.erase(b->GetBody());
-        }
-        if (b == e.proximity_sensor) {
-            e.nearby_entities.erase(a->GetBody());
+        if (e.proximity_sensor) {
+            if (a == e.proximity_sensor) {
+                e.nearby_entities.erase(b->GetBody());
+            }
+            if (b == e.proximity_sensor) {
+                e.nearby_entities.erase(a->GetBody());
+            }
         }
     };
 
@@ -144,10 +171,11 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     b2MassData md;
     md.mass = 80;
     e.body->SetMassData(&md);
+    e.body->GetUserData().pointer = 1;
 
     // Set up main body fixture
     {
-        const auto half_extents = pixel_to_physics({5, 10});
+        const auto half_extents = pixel_to_physics(pixel_pos{5, 10});
         b2PolygonShape shape;
         shape.SetAsBox(half_extents.x, half_extents.y);
 
@@ -160,9 +188,9 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     
     // Set up foot sensor
     {
-        const auto half_extents = pixel_to_physics({2, 4});
+        const auto half_extents = pixel_to_physics(pixel_pos{2, 4});
         b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({0, 10}), 0);
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{0, 10}), 0);
         
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
@@ -172,9 +200,9 @@ auto make_player(b2World& world, pixel_pos position) -> entity
 
      // Set up left sensor
      {
-        const auto half_extents = pixel_to_physics({1, 9});
+        const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
         b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({-5, 0}), 0);
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{-5, 0}), 0);
         
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
@@ -184,9 +212,9 @@ auto make_player(b2World& world, pixel_pos position) -> entity
 
     // Set up right sensor
     {
-        const auto half_extents = pixel_to_physics({1, 9});
+        const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
         b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({5, 0}), 0);
+        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{5, 0}), 0);
         
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
@@ -205,6 +233,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
 
     // Create player body
     b2BodyDef bodyDef;
+    bodyDef.allowSleep = false;
     bodyDef.gravityScale = 0.0f;
     bodyDef.type = b2_dynamicBody;
     bodyDef.fixedRotation = true;
@@ -215,6 +244,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     b2MassData md;
     md.mass = 10;
     e.body->SetMassData(&md);
+    e.body->GetUserData().pointer = 0;
 
     // Set up main body fixture
     {
@@ -236,7 +266,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circleShape;
         fixtureDef.isSensor = true;
-        e.right_sensor = e.body->CreateFixture(&fixtureDef);
+        e.proximity_sensor = e.body->CreateFixture(&fixtureDef);
     }
 
     return e;

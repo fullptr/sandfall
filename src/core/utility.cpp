@@ -124,6 +124,12 @@ auto pixel_at_mouse(const mouse& m, const sand::camera& c) -> pixel_pos
     return {p.x, p.y};
 }
 
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2
+{
+    b2Vec2 pos(static_cast<float>(px.x) / sand::config::pixels_per_meter, static_cast<float>(px.y) / sand::config::pixels_per_meter);
+    return pos;
+}
+
 auto pixel_to_physics(pixel_pos px) -> b2Vec2
 {
     b2Vec2 pos(static_cast<float>(px.x) / sand::config::pixels_per_meter, static_cast<float>(px.y) / sand::config::pixels_per_meter);
