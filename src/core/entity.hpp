@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
+#include "apecs.hpp"
 #include "utility.hpp"
 #include "mouse.hpp"
 
@@ -33,9 +34,7 @@ enum class entity_type
 struct entity
 {
     entity_type type;
-
     pixel_pos  spawn_point  = {0, 0};
-    bool       is_player    = false;
 
     b2Body*    body         = nullptr;
     b2Fixture* body_fixture = nullptr;
@@ -44,14 +43,14 @@ struct entity
     b2Fixture* right_sensor = nullptr;
 
     // Used by the enemy AI to detect the player
-    b2Fixture* proximity_sensor = nullptr;
+    b2Fixture*                  proximity_sensor = nullptr;
+    std::unordered_set<b2Body*> nearby_entities;
 
     bool double_jump        = false;
     int  num_left_contacts  = 0;
     int  num_right_contacts = 0;
 
     std::unordered_set<b2Fixture*> floors;
-
 };
 
 auto make_player(b2World& world, pixel_pos position) -> entity;

@@ -83,6 +83,12 @@ void contact_listener::BeginContact(b2Contact* contact) {
         if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
             ++e.num_right_contacts;
         }
+        if (a == e.proximity_sensor) {
+            e.nearby_entities.insert(b->GetBody());
+        }
+        if (b == e.proximity_sensor) {
+            e.nearby_entities.insert(a->GetBody());
+        }
     };
     
     func(d_level->player);
@@ -107,6 +113,12 @@ void contact_listener::EndContact(b2Contact* contact) {
         if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
             --e.num_right_contacts;
         }
+        if (a == e.proximity_sensor) {
+            e.nearby_entities.erase(b->GetBody());
+        }
+        if (b == e.proximity_sensor) {
+            e.nearby_entities.erase(a->GetBody());
+        }
     };
 
     func(d_level->player);
@@ -120,7 +132,6 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     entity e;
     e.type = entity_type::player;
     e.spawn_point = position;
-    e.is_player = true;
 
     // Create player body
     b2BodyDef bodyDef;
@@ -191,10 +202,10 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     entity e;
     e.type = entity_type::enemy;
     e.spawn_point = position;
-    e.is_player = false;
 
     // Create player body
     b2BodyDef bodyDef;
+    bodyDef.gravityScale = 0.0f;
     bodyDef.type = b2_dynamicBody;
     bodyDef.fixedRotation = true;
     bodyDef.linearDamping = 1.0f;
@@ -220,7 +231,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     // Set up proximity sensor
     {
         b2CircleShape circleShape;
-        circleShape.m_radius = pixel_to_physics(30.0f);
+        circleShape.m_radius = pixel_to_physics(100.0f);
         
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circleShape;
