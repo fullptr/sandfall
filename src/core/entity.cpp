@@ -28,7 +28,7 @@ auto update_player(entity& e, const keyboard& k) -> void
         if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
     }
 
-    e.fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
+    e.body_fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
 
     float vel_change = desired_vel - vel.x;
     float impulse = e.body->GetMass() * vel_change;
@@ -56,7 +56,7 @@ auto update_enemy(entity& e, const keyboard& k) -> void
 
 void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)  {
     const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.fixture || contact->GetFixtureB() == e.fixture) {
+        if (contact->GetFixtureA() == e.body_fixture || contact->GetFixtureB() == e.body_fixture) {
             contact->ResetFriction();
         }
     };
@@ -69,10 +69,10 @@ void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)  
 
 void contact_listener::BeginContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.footSensor) {
+        if (contact->GetFixtureA() == e.foot_sensor) {
             e.floors.insert(contact->GetFixtureB());
         }
-        if (contact->GetFixtureB() == e.footSensor) {
+        if (contact->GetFixtureB() == e.foot_sensor) {
             e.floors.insert(contact->GetFixtureA());
         }
         if (contact->GetFixtureA() == e.left_sensor || contact->GetFixtureB() == e.left_sensor) {
@@ -91,10 +91,10 @@ void contact_listener::BeginContact(b2Contact* contact) {
 
 void contact_listener::EndContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.footSensor) {
+        if (contact->GetFixtureA() == e.foot_sensor) {
             e.floors.erase(contact->GetFixtureB());
         }
-        if (contact->GetFixtureB() == e.footSensor) {
+        if (contact->GetFixtureB() == e.foot_sensor) {
             e.floors.erase(contact->GetFixtureA());
         }
         if (contact->GetFixtureA() == e.left_sensor || contact->GetFixtureB() == e.left_sensor) {
@@ -114,7 +114,7 @@ void contact_listener::EndContact(b2Contact* contact) {
 auto make_player(b2World& world, pixel_pos position) -> entity
 {
     entity e;
-    e.update = update_player;
+    e.type = entity_type::player;
     e.spawn_point = position;
     e.is_player = true;
 
@@ -140,7 +140,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         fixtureDef.shape = &shape;
         fixtureDef.density = 1.0f;
         fixtureDef.friction = 1.0f;
-        e.fixture = e.body->CreateFixture(&fixtureDef);
+        e.body_fixture = e.body->CreateFixture(&fixtureDef);
     }
     
     // Set up foot sensor
@@ -152,7 +152,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
         fixtureDef.isSensor = true;
-        e.footSensor = e.body->CreateFixture(&fixtureDef);
+        e.foot_sensor = e.body->CreateFixture(&fixtureDef);
     }
 
      // Set up left sensor
@@ -185,7 +185,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
 auto make_enemy(b2World& world, pixel_pos position) -> entity
 {
     entity e;
-    e.update = update_enemy;
+    e.type = entity_type::enemy;
     e.spawn_point = position;
     e.is_player = false;
 
@@ -198,54 +198,28 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     bodyDef.position.Set(pos.x, pos.y);
     e.body = world.CreateBody(&bodyDef);
     b2MassData md;
-    md.mass = 80;
+    md.mass = 10;
     e.body->SetMassData(&md);
 
     // Set up main body fixture
     {
-        const auto half_extents = pixel_to_physics({5, 10});
-        b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y);
+        b2CircleShape circleShape;
+        circleShape.m_radius = pixel_to_physics(4.0f);
 
         b2FixtureDef fixtureDef;
-        fixtureDef.shape = &shape;
+        fixtureDef.shape = &circleShape;
         fixtureDef.density = 1.0f;
-        fixtureDef.friction = 1.0f;
-        e.fixture = e.body->CreateFixture(&fixtureDef);
-    }
-    
-    // Set up foot sensor
-    {
-        const auto half_extents = pixel_to_physics({2, 4});
-        b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({0, 10}), 0);
-        
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &shape;
-        fixtureDef.isSensor = true;
-        e.footSensor = e.body->CreateFixture(&fixtureDef);
+        fixtureDef.friction = 0.5f;
+        e.body_fixture = e.body->CreateFixture(&fixtureDef);
     }
 
-     // Set up left sensor
-     {
-        const auto half_extents = pixel_to_physics({1, 9});
-        b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({-5, 0}), 0);
-        
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &shape;
-        fixtureDef.isSensor = true;
-        e.left_sensor = e.body->CreateFixture(&fixtureDef);
-    }
-
-    // Set up right sensor
+    // Set up proximity sensor
     {
-        const auto half_extents = pixel_to_physics({1, 9});
-        b2PolygonShape shape;
-        shape.SetAsBox(half_extents.x, half_extents.y, pixel_to_physics({5, 0}), 0);
+        b2CircleShape circleShape;
+        circleShape.m_radius = pixel_to_physics(30.0f);
         
         b2FixtureDef fixtureDef;
-        fixtureDef.shape = &shape;
+        fixtureDef.shape = &circleShape;
         fixtureDef.isSensor = true;
         e.right_sensor = e.body->CreateFixture(&fixtureDef);
     }
@@ -255,7 +229,14 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
 
 auto update_entity(entity& e, const keyboard& k) -> void
 {
-    e.update(e, k);
+    switch (e.type) {
+        case entity_type::player: {
+            update_player(e, k);
+        } break;
+        case entity_type::enemy: {
+            update_enemy(e, k);
+        } break;
+    }
 }
 
 auto respawn_entity(entity& e) -> void
