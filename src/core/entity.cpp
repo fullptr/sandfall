@@ -69,16 +69,18 @@ void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)  
 
 void contact_listener::BeginContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.foot_sensor) {
-            e.floors.insert(contact->GetFixtureB());
+        const auto a = contact->GetFixtureA();
+        const auto b = contact->GetFixtureB();
+        if (a == e.foot_sensor && !b->IsSensor()) {
+            e.floors.insert(b);
         }
-        if (contact->GetFixtureB() == e.foot_sensor) {
-            e.floors.insert(contact->GetFixtureA());
+        if (b == e.foot_sensor && !a->IsSensor()) {
+            e.floors.insert(a);
         }
-        if (contact->GetFixtureA() == e.left_sensor || contact->GetFixtureB() == e.left_sensor) {
+        if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
             ++e.num_left_contacts;
         }
-        if (contact->GetFixtureA() == e.right_sensor || contact->GetFixtureB() == e.right_sensor) {
+        if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
             ++e.num_right_contacts;
         }
     };
@@ -91,16 +93,18 @@ void contact_listener::BeginContact(b2Contact* contact) {
 
 void contact_listener::EndContact(b2Contact* contact) {
     const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.foot_sensor) {
-            e.floors.erase(contact->GetFixtureB());
+        const auto a = contact->GetFixtureA();
+        const auto b = contact->GetFixtureB();
+        if (a == e.foot_sensor && !b->IsSensor()) {
+            e.floors.erase(b);
         }
-        if (contact->GetFixtureB() == e.foot_sensor) {
-            e.floors.erase(contact->GetFixtureA());
+        if (b == e.foot_sensor && !a->IsSensor()) {
+            e.floors.erase(a);
         }
-        if (contact->GetFixtureA() == e.left_sensor || contact->GetFixtureB() == e.left_sensor) {
+        if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
             --e.num_left_contacts;
         }
-        if (contact->GetFixtureA() == e.right_sensor || contact->GetFixtureB() == e.right_sensor) {
+        if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
             --e.num_right_contacts;
         }
     };
