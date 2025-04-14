@@ -13,6 +13,7 @@
 #include "shape_renderer.hpp"
 #include "window.hpp"
 #include "serialisation.hpp"
+#include "debug.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
@@ -27,69 +28,6 @@
 #include <fstream>
 #include <cmath>
 #include <span>
-
-class physics_debug_draw : public b2Draw
-{
-    sand::shape_renderer* d_renderer;
-
-public:
-    physics_debug_draw(sand::shape_renderer* s) : d_renderer{s} {
-        SetFlags(b2Draw::e_shapeBit);
-    }
-
-    void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
-    {
-        assert(vertexCount > 1);
-        for (std::size_t i = 0; i < vertexCount - 1; ++i) {
-            const auto p1 = sand::physics_to_pixel(vertices[i]);
-            const auto p2 = sand::physics_to_pixel(vertices[i + 1]);
-            d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-        }
-        const auto p1 = sand::physics_to_pixel(vertices[vertexCount - 1]);
-        const auto p2 = sand::physics_to_pixel(vertices[0]);
-        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-    }
-    
-    void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) override
-    {
-        DrawPolygon(vertices, vertexCount, color);
-    }
-    
-    void DrawCircle(const b2Vec2& center, float radius, const b2Color& color) override
-    {
-        d_renderer->draw_annulus(
-            sand::physics_to_pixel(center),
-            {color.r, color.g, color.b, 1.0},
-            0.8f * sand::physics_to_pixel(radius),
-            sand::physics_to_pixel(radius)
-        );
-    }
-
-	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override
-    {
-        DrawCircle(center, radius, color);
-    }
-
-	void DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color) override
-    {
-        const auto p1 = sand::physics_to_pixel(bp1);
-        const auto p2 = sand::physics_to_pixel(bp2);
-        d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-    }
-
-	void DrawTransform(const b2Transform& xf) override
-    {
-    }
-
-	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override
-    {
-        d_renderer->draw_circle(
-            sand::physics_to_pixel(p),
-            {color.r, color.g, color.b, 1.0},
-            2.0f
-        );
-    }
-};
 
 auto num_awake_chunks(const sand::world& w) -> sand::u64
 {
@@ -128,7 +66,7 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    auto debug_draw      = physics_debug_draw{&shape_renderer};
+    auto debug_draw      = sand::physics_debug_draw{&shape_renderer};
 
     auto update_window_half_width = 2 + sand::config::chunk_size;
     auto update_window_half_height = 2 + sand::config::chunk_size;
