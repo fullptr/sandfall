@@ -9,11 +9,11 @@ namespace sand {
 auto mouse::on_event(const event& event) -> void
 {
     if (const auto e = event.get_if<sand::mouse_pressed_event>()) {
-        d_down[e->button] = true;
-        d_down_this_frame[e->button] = true;
+        d_down[std::to_underlying(e->button)] = true;
+        d_down_this_frame[std::to_underlying(e->button)] = true;
     }
     else if (const auto e = event.get_if<sand::mouse_released_event>()) {
-        d_down[e->button] = false;
+        d_down[std::to_underlying(e->button)] = false;
     }
     else if (const auto e = event.get_if<sand::mouse_moved_event>()) {
         d_positiion_this_frame = e->pos;
@@ -50,11 +50,11 @@ auto mouse::position() const -> glm::vec2
 auto keyboard::on_event(const event& event) -> void
 {
     if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
-        d_down[e->key] = true;
-        d_down_this_frame[e->key] = true;
+        d_down[std::to_underlying(e->key)] = true;
+        d_down_this_frame[std::to_underlying(e->key)] = true;
     }
     else if (const auto e = event.get_if<sand::keyboard_released_event>()) {
-        d_down[e->key] = false;
+        d_down[std::to_underlying(e->key)] = false;
     }
 }
 

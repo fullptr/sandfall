@@ -76,13 +76,13 @@ window::window(const char* name, int width, int height)
         switch (action)
         {
             case GLFW_PRESS: {
-                data.events.emplace_back(keyboard_pressed_event{key, scancode, mods});
+                data.events.emplace_back(keyboard_pressed_event{keyboard_key{key}, scancode, mods});
             } break;
             case GLFW_RELEASE: {
-                data.events.emplace_back(keyboard_released_event{key, scancode, mods});
+                data.events.emplace_back(keyboard_released_event{keyboard_key{key}, scancode, mods});
             } break;
             case GLFW_REPEAT: {
-                data.events.emplace_back(keyboard_held_event{key, scancode, mods});
+                data.events.emplace_back(keyboard_held_event{keyboard_key{key}, scancode, mods});
             } break;
         }
     });
@@ -93,10 +93,10 @@ window::window(const char* name, int width, int height)
         switch (action)
         {
             case GLFW_PRESS: {
-                data.events.emplace_back(mouse_pressed_event{button, mods});
+                data.events.emplace_back(mouse_pressed_event{mouse_button{button}, mods});
             } break;
             case GLFW_RELEASE: {
-                data.events.emplace_back(mouse_released_event{button, mods});
+                data.events.emplace_back(mouse_released_event{mouse_button{button}, mods});
             } break;
         }
     });

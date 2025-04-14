@@ -5,12 +5,6 @@
 
 namespace sand {
 
-enum class mouse_button
-{
-    left,
-    right,
-};
-
 class mouse
 {
     std::bitset<8> d_down;
@@ -26,16 +20,6 @@ public:
     auto is_down_this_frame(mouse_button button) const-> bool;
     auto offset() const -> glm::vec2;
     auto position() const -> glm::vec2;
-};
-
-enum keyboard_key // TODO: Make enum class
-{
-    A = 65,
-    D = 68,
-    E = 69,
-    Q = 81,
-    S = 83,
-    W = 87,
 };
 
 class keyboard
