@@ -80,6 +80,7 @@ auto mouse_pos_world_space(const mouse& m, const camera& c) -> glm::vec2;
 auto pixel_at_mouse(const mouse& m, const camera& c) -> pixel_pos;
 
 auto pixel_to_physics(pixel_pos px) -> b2Vec2;
+auto pixel_to_physics(glm::vec2 px) -> b2Vec2;
 auto pixel_to_physics(float px) -> float;
 
 // Converts a point in world space to pixel space

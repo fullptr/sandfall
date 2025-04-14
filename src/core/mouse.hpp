@@ -28,7 +28,7 @@ public:
     auto position() const -> glm::vec2;
 };
 
-enum class keyboard_key
+enum keyboard_key // TODO: Make enum class
 {
     A = 65,
     D = 68,

@@ -36,6 +36,7 @@ struct pixel_pos
 
     auto operator<=>(const pixel_pos&) const = default;
     explicit operator glm::ivec2() const { return {x, y}; }
+    static auto from_ivec2(glm::ivec2 v) -> pixel_pos { return {v.x, v.y}; }
 };
 
 inline auto operator+(pixel_pos pos, glm::ivec2 offset) -> pixel_pos

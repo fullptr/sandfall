@@ -11,6 +11,7 @@ add_library(core STATIC
     buffer.cpp
     renderer.cpp
     shape_renderer.cpp
+    debug.cpp
     window.cpp
     entity.cpp
     shader.cpp

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <box2d/box2d.h>
 
+#include "apecs.hpp"
 #include "utility.hpp"
 #include "mouse.hpp"
 
@@ -22,18 +23,28 @@ public:
     void EndContact(b2Contact* contact) override;
 };
 
+enum class entity_type
+{
+    player,
+    enemy,
+};
+
 // Possibly will replace with an entity component system in the future,
 // but for now just a big bag of data will suffice
 struct entity
 {
+    entity_type type;
     pixel_pos  spawn_point  = {0, 0};
-    bool       is_player    = false;
 
     b2Body*    body         = nullptr;
-    b2Fixture* fixture      = nullptr;
-    b2Fixture* footSensor   = nullptr;
+    b2Fixture* body_fixture = nullptr;
+    b2Fixture* foot_sensor  = nullptr;
     b2Fixture* left_sensor  = nullptr;
     b2Fixture* right_sensor = nullptr;
+
+    // Used by the enemy AI to detect the player
+    b2Fixture*                  proximity_sensor = nullptr;
+    std::unordered_set<b2Body*> nearby_entities;
 
     bool double_jump        = false;
     int  num_left_contacts  = 0;
@@ -43,6 +54,7 @@ struct entity
 };
 
 auto make_player(b2World& world, pixel_pos position) -> entity;
+auto make_enemy(b2World& world, pixel_pos position) -> entity;
 auto update_entity(entity& e, const keyboard& k) -> void;
 auto respawn_entity(entity& e) -> void;
 auto entity_centre(const entity& e) -> glm::vec2;

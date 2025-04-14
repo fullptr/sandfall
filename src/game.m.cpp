@@ -6,6 +6,7 @@
 #include "serialisation.hpp"
 #include "utility.hpp"
 #include "renderer.hpp"
+#include "debug.hpp"
 #include "shape_renderer.hpp"
 
 #include <glm/glm.hpp>
@@ -26,10 +27,10 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
+    auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
 
-    const auto player_pos = entity_centre(level->player);
-    auto other_entity = make_player(level->pixels.physics(), {(int)player_pos.x, (int)player_pos.y});
-    other_entity.is_player = false;
+    const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
+    auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     level->entities.push_back(other_entity);
 
     auto camera = sand::camera{
@@ -93,7 +94,10 @@ auto main() -> int
         for (const auto& e : level->entities) {
             shape_renderer.draw_circle(entity_centre(e), {0.5, 1.0, 0.5, 1.0}, 2.5);
         }  
+        level->pixels.physics().SetDebugDraw(&debug_renderer);
+        level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
+
         
         window.end_frame();
     }
