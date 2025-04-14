@@ -6,6 +6,9 @@
 namespace sand {
 namespace {
 
+static constexpr auto player_id = 1;
+static constexpr auto enemy_id = 2;
+
 auto update_player(entity& e, const keyboard& k) -> void
 {
     const bool on_ground = !e.floors.empty();
@@ -54,7 +57,7 @@ auto update_enemy(entity& e, const keyboard& k) -> void
 {
     for (const auto curr : e.nearby_entities) {
         const auto user_data = curr->GetUserData();
-        if (user_data.pointer != 0) {
+        if (user_data.pointer == player_id) {
             const auto pos = physics_to_pixel(curr->GetPosition());
             const auto self_pos = entity_centre(e);
             const auto dir = glm::normalize(pos - self_pos);
@@ -65,20 +68,15 @@ auto update_enemy(entity& e, const keyboard& k) -> void
 
 }
 
-void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)  {
-    const auto func = [&](entity& e) {
-        if (contact->GetFixtureA() == e.body_fixture || contact->GetFixtureB() == e.body_fixture) {
-            contact->ResetFriction();
-        }
-    };
-
-    func(d_level->player);
-    for (auto & e : d_level->entities) {
-        func(e);
+void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse) 
+{
+    if (contact->GetFixtureA()->GetUserData().pointer == player_id || contact->GetFixtureB()->GetUserData().pointer == player_id) {
+        contact->ResetFriction();
     }
 }
 
-void contact_listener::BeginContact(b2Contact* contact) {
+void contact_listener::BeginContact(b2Contact* contact)
+{
     const auto func = [&](entity& e) {
         const auto a = contact->GetFixtureA();
         const auto b = contact->GetFixtureB();
@@ -171,7 +169,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     b2MassData md;
     md.mass = 80;
     e.body->SetMassData(&md);
-    e.body->GetUserData().pointer = 1;
+    e.body->GetUserData().pointer = player_id;
 
     // Set up main body fixture
     {
@@ -244,7 +242,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     b2MassData md;
     md.mass = 10;
     e.body->SetMassData(&md);
-    e.body->GetUserData().pointer = 0;
+    e.body->GetUserData().pointer = enemy_id;
 
     // Set up main body fixture
     {
