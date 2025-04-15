@@ -34,12 +34,12 @@ auto input::on_new_frame() -> void
     d_position_last_frame = d_positiion_this_frame;
 }
 
-auto input::is_down(mouse_button button) const -> bool
+auto input::is_down(mouse button) const -> bool
 {
     return d_mouse_down.test(std::to_underlying(button));
 }
 
-auto input::is_down_this_frame(mouse_button button) const -> bool
+auto input::is_down_this_frame(mouse button) const -> bool
 {
     return d_mouse_down_this_frame.test(std::to_underlying(button));
 }
@@ -54,12 +54,12 @@ auto input::position() const -> glm::vec2
     return d_positiion_this_frame;
 }
 
-auto input::is_down(keyboard_key key) const -> bool
+auto input::is_down(keyboard key) const -> bool
 {
     return d_keyboard_down.test(std::to_underlying(key));
 }
 
-auto input::is_down_this_frame(keyboard_key key) const -> bool
+auto input::is_down_this_frame(keyboard key) const -> bool
 {
     return d_keyboard_down_this_frame.test(std::to_underlying(key));
 }

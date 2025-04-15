@@ -7,31 +7,31 @@
 
 namespace sand {
 
-enum class mouse_button
+enum class mouse
 {
 	left, right, middle,
 };
 
-enum class keyboard_key
+enum class keyboard
 {
 	A = 65, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 };
 
 // KEYBOARD EVENTS 
 struct keyboard_pressed_event {
-	keyboard_key key;
+	keyboard key;
 	int scancode;
 	int mods;
 };
 
 struct keyboard_released_event {
-	keyboard_key key;
+	keyboard key;
 	int scancode;
 	int mods;
 };
 
 struct keyboard_held_event {
-	keyboard_key key;
+	keyboard key;
 	int scancode;
 	int mods;
 };
@@ -42,12 +42,12 @@ struct keyboard_typed_event {
 
 // MOUSE EVENTS
 struct mouse_pressed_event {
-	mouse_button button;
+	mouse button;
 	int mods;
 };
 
 struct mouse_released_event {
-	mouse_button button;
+	mouse button;
 	int mods;
 };
 

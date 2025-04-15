@@ -18,10 +18,10 @@ auto update_player(entity& e, const input& in) -> void
     const auto vel = e.body->GetLinearVelocity();
     
     auto direction = 0;
-    if (can_move_left && in.is_down(keyboard_key::A)) {
+    if (can_move_left && in.is_down(keyboard::A)) {
         direction -= 1;
     }
-    if (can_move_right && in.is_down(keyboard_key::D)) {
+    if (can_move_right && in.is_down(keyboard::D)) {
         direction += 1;
     }
     
@@ -42,7 +42,7 @@ auto update_player(entity& e, const input& in) -> void
     if (on_ground) {
         e.double_jump = true;
     }
-    if (in.is_down_this_frame(keyboard_key::W)) {
+    if (in.is_down_this_frame(keyboard::W)) {
         if (on_ground || e.double_jump) {
             if (!on_ground) {
                 e.double_jump = false;
