@@ -6,7 +6,7 @@
 #include "camera.hpp"
 #include "update_rigid_bodies.hpp"
 #include "explosion.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 #include "entity.hpp"
 #include "world_save.hpp"
 #include "renderer.hpp"
@@ -112,7 +112,7 @@ auto main() -> int
             }
         }
 
-        if (input.is_down(sand::mouse::right)) {
+        if (input.is_down(mouse::right)) {
             camera.top_left -= input.offset() / camera.world_to_screen;
         }
 
@@ -132,7 +132,7 @@ auto main() -> int
         const auto mouse_pos = pixel_at_mouse(input, camera);
         switch (editor.brush_type) {
             break; case 0:
-                if (input.is_down(sand::mouse::left)) {
+                if (input.is_down(mouse::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (level->pixels.is_valid_pixel(coord)) {
                         level->pixels.set(coord, editor.get_pixel());
@@ -140,7 +140,7 @@ auto main() -> int
                     }
                 }
             break; case 1:
-                if (input.is_down(sand::mouse::left)) {
+                if (input.is_down(mouse::left)) {
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
@@ -152,7 +152,7 @@ auto main() -> int
                     }
                 }
             break; case 2:
-                if (input.is_down_this_frame(sand::mouse::left)) {
+                if (input.is_down_this_frame(mouse::left)) {
                     sand::apply_explosion(level->pixels, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });

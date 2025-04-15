@@ -6,7 +6,7 @@
 
 #include "apecs.hpp"
 #include "utility.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 
 namespace sand {
 

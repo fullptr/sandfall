@@ -1,6 +1,6 @@
 #include "utility.hpp"
 #include "camera.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 #include "window.hpp"
 
 #include <array>

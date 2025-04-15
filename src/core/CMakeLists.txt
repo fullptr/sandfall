@@ -17,7 +17,7 @@ add_library(core STATIC
     shader.cpp
     texture.cpp
     utility.cpp
-    mouse.cpp
+    input.cpp
     world.cpp
     pixel.cpp
     explosion.cpp

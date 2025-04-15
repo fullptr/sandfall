@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "world.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 #include "window.hpp"
 #include "camera.hpp"
 #include "serialisation.hpp"
