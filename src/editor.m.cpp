@@ -6,7 +6,7 @@
 #include "camera.hpp"
 #include "update_rigid_bodies.hpp"
 #include "explosion.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 #include "entity.hpp"
 #include "world_save.hpp"
 #include "renderer.hpp"
@@ -59,8 +59,7 @@ auto main() -> int
     using namespace sand;
     auto window          = sand::window{"sandfall", 1280, 720};
     auto editor          = sand::editor{};
-    auto mouse           = sand::mouse{};
-    auto keyboard        = sand::keyboard{};
+    auto input           = sand::input{};
     auto level           = sand::new_level(4, 4);
     auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
     auto accumulator     = 0.0;
@@ -87,8 +86,7 @@ auto main() -> int
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.begin_frame();
-        mouse.on_new_frame();
-        keyboard.on_new_frame();
+        input.on_new_frame();
 
         for (const auto event : window.events()) {
             auto& io = ImGui::GetIO();
@@ -99,24 +97,23 @@ auto main() -> int
                 continue;
             }
 
-            mouse.on_event(event);
-            keyboard.on_event(event);
+            input.on_event(event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
             }
             else if (const auto e = event.get_if<sand::mouse_scrolled_event>()) {
-                const auto old_centre = mouse_pos_world_space(mouse, camera);
+                const auto old_centre = mouse_pos_world_space(input, camera);
                 camera.world_to_screen += 0.1f * e->offset.y;
                 camera.world_to_screen = std::clamp(camera.world_to_screen, 1.0f, 100.0f);
-                const auto new_centre = mouse_pos_world_space(mouse, camera);
+                const auto new_centre = mouse_pos_world_space(input, camera);
                 camera.top_left -= new_centre - old_centre;
             }
         }
 
-        if (mouse.is_down(sand::mouse_button::right)) {
-            camera.top_left -= mouse.offset() / camera.world_to_screen;
+        if (input.is_down(mouse::right)) {
+            camera.top_left -= input.offset() / camera.world_to_screen;
         }
 
         accumulator += dt;
@@ -127,15 +124,15 @@ auto main() -> int
             level->pixels.step();
         }
 
-        update_entity(level->player, keyboard);
+        update_entity(level->player, input);
         for (auto& e: level->entities) {
-            update_entity(e, keyboard);
+            update_entity(e, input);
         }
 
-        const auto mouse_pos = pixel_at_mouse(mouse, camera);
+        const auto mouse_pos = pixel_at_mouse(input, camera);
         switch (editor.brush_type) {
             break; case 0:
-                if (mouse.is_down(sand::mouse_button::left)) {
+                if (input.is_down(mouse::left)) {
                     const auto coord = mouse_pos + sand::random_from_circle(editor.brush_size);
                     if (level->pixels.is_valid_pixel(coord)) {
                         level->pixels.set(coord, editor.get_pixel());
@@ -143,7 +140,7 @@ auto main() -> int
                     }
                 }
             break; case 1:
-                if (mouse.is_down(sand::mouse_button::left)) {
+                if (input.is_down(mouse::left)) {
                     const auto half_extent = (int)(editor.brush_size / 2);
                     for (int x = mouse_pos.x - half_extent; x != mouse_pos.x + half_extent + 1; ++x) {
                         for (int y = mouse_pos.y - half_extent; y != mouse_pos.y + half_extent + 1; ++y) {
@@ -155,7 +152,7 @@ auto main() -> int
                     }
                 }
             break; case 2:
-                if (mouse.is_down_this_frame(sand::mouse_button::left)) {
+                if (input.is_down_this_frame(mouse::left)) {
                     sand::apply_explosion(level->pixels, mouse_pos, sand::explosion{
                         .min_radius = 40.0f, .max_radius = 45.0f, .scorch = 10.0f
                     });
@@ -167,8 +164,8 @@ auto main() -> int
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        const auto mouse_actual = mouse_pos_world_space(mouse, camera);
-        const auto mouse_pixel = pixel_at_mouse(mouse, camera);
+        const auto mouse_actual = mouse_pos_world_space(input, camera);
+        const auto mouse_pixel = pixel_at_mouse(input, camera);
 
         ImGui::ShowDemoWindow(&editor.show_demo);
 

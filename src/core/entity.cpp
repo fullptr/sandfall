@@ -9,7 +9,7 @@ namespace {
 static constexpr auto player_id = 1;
 static constexpr auto enemy_id = 2;
 
-auto update_player(entity& e, const keyboard& k) -> void
+auto update_player(entity& e, const input& in) -> void
 {
     const bool on_ground = !e.floors.empty();
     const bool can_move_left = e.num_left_contacts == 0;
@@ -18,10 +18,10 @@ auto update_player(entity& e, const keyboard& k) -> void
     const auto vel = e.body->GetLinearVelocity();
     
     auto direction = 0;
-    if (can_move_left && k.is_down(sand::keyboard_key::A)) {
+    if (can_move_left && in.is_down(keyboard::A)) {
         direction -= 1;
     }
-    if (can_move_right && k.is_down(sand::keyboard_key::D)) {
+    if (can_move_right && in.is_down(keyboard::D)) {
         direction += 1;
     }
     
@@ -42,7 +42,7 @@ auto update_player(entity& e, const keyboard& k) -> void
     if (on_ground) {
         e.double_jump = true;
     }
-    if (k.is_down_this_frame(sand::keyboard_key::W)) {
+    if (in.is_down_this_frame(keyboard::W)) {
         if (on_ground || e.double_jump) {
             if (!on_ground) {
                 e.double_jump = false;
@@ -53,7 +53,7 @@ auto update_player(entity& e, const keyboard& k) -> void
     }
 }
 
-auto update_enemy(entity& e, const keyboard& k) -> void
+auto update_enemy(entity& e, const input& in) -> void
 {
     for (const auto curr : e.nearby_entities) {
         const auto user_data = curr->GetUserData();
@@ -270,14 +270,14 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     return e;
 }
 
-auto update_entity(entity& e, const keyboard& k) -> void
+auto update_entity(entity& e, const input& in) -> void
 {
     switch (e.type) {
         case entity_type::player: {
-            update_player(e, k);
+            update_player(e, in);
         } break;
         case entity_type::enemy: {
-            update_enemy(e, k);
+            update_enemy(e, in);
         } break;
     }
 }

@@ -6,7 +6,7 @@
 
 #include "apecs.hpp"
 #include "utility.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 
 namespace sand {
 
@@ -55,7 +55,7 @@ struct entity
 
 auto make_player(b2World& world, pixel_pos position) -> entity;
 auto make_enemy(b2World& world, pixel_pos position) -> entity;
-auto update_entity(entity& e, const keyboard& k) -> void;
+auto update_entity(entity& e, const input& in) -> void;
 auto respawn_entity(entity& e) -> void;
 auto entity_centre(const entity& e) -> glm::vec2;
 

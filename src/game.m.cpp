@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "world.hpp"
-#include "mouse.hpp"
+#include "input.hpp"
 #include "window.hpp"
 #include "camera.hpp"
 #include "serialisation.hpp"
@@ -20,8 +20,7 @@ auto main() -> int
     using namespace sand;
 
     auto window          = sand::window{"sandfall", 1280, 720};
-    auto mouse           = sand::mouse{};
-    auto keyboard        = sand::keyboard{};
+    auto input           = sand::input{};
     auto level           = sand::load_level("save4.bin");
     auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
     auto accumulator     = 0.0;
@@ -43,12 +42,10 @@ auto main() -> int
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.begin_frame();
-        mouse.on_new_frame();
-        keyboard.on_new_frame();
+        input.on_new_frame();
 
         for (const auto event : window.events()) {
-            mouse.on_event(event);
-            keyboard.on_event(event);
+            input.on_event(event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -77,9 +74,9 @@ auto main() -> int
             level->pixels.step();
         }
 
-        update_entity(level->player, keyboard);
+        update_entity(level->player, input);
         for (auto& e : level->entities) {
-            update_entity(e, keyboard);
+            update_entity(e, input);
         }
 
         world_renderer.bind();
