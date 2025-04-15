@@ -9,18 +9,12 @@ namespace sand {
 
 enum class mouse_button
 {
-	left,
-	right,
+	left, right, middle,
 };
 
-enum class keyboard_key // TODO: Make enum class
+enum class keyboard_key
 {
-	A = 65,
-	D = 68,
-	E = 69,
-	Q = 81,
-	S = 83,
-	W = 87,
+	A = 65, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 };
 
 // KEYBOARD EVENTS 

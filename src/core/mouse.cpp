@@ -6,71 +6,62 @@
 
 namespace sand {
 
-auto mouse::on_event(const event& event) -> void
+auto input::on_event(const event& event) -> void
 {
     if (const auto e = event.get_if<sand::mouse_pressed_event>()) {
-        d_down[std::to_underlying(e->button)] = true;
-        d_down_this_frame[std::to_underlying(e->button)] = true;
+        d_mouse_down[std::to_underlying(e->button)] = true;
+        d_mouse_down_this_frame[std::to_underlying(e->button)] = true;
     }
     else if (const auto e = event.get_if<sand::mouse_released_event>()) {
-        d_down[std::to_underlying(e->button)] = false;
+        d_mouse_down[std::to_underlying(e->button)] = false;
     }
     else if (const auto e = event.get_if<sand::mouse_moved_event>()) {
         d_positiion_this_frame = e->pos;
     }
+    else if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
+        d_keyboard_down[std::to_underlying(e->key)] = true;
+        d_keyboard_down_this_frame[std::to_underlying(e->key)] = true;
+    }
+    else if (const auto e = event.get_if<sand::keyboard_released_event>()) {
+        d_keyboard_down[std::to_underlying(e->key)] = false;
+    }
 }
 
-auto mouse::on_new_frame() -> void
+auto input::on_new_frame() -> void
 {
+    d_keyboard_down_this_frame.reset();
+    d_mouse_down_this_frame.reset();
     d_position_last_frame = d_positiion_this_frame;
-    d_down_this_frame.reset();
 }
 
-auto mouse::is_down(mouse_button button) const -> bool
+auto input::is_down(mouse_button button) const -> bool
 {
-    return d_down.test(std::to_underlying(button));
+    return d_mouse_down.test(std::to_underlying(button));
 }
 
-auto mouse::is_down_this_frame(mouse_button button) const -> bool
+auto input::is_down_this_frame(mouse_button button) const -> bool
 {
-    return d_down_this_frame.test(std::to_underlying(button));
+    return d_mouse_down_this_frame.test(std::to_underlying(button));
 }
 
-auto mouse::offset() const -> glm::vec2
+auto input::offset() const -> glm::vec2
 {
     return d_positiion_this_frame - d_position_last_frame;
 }
 
-auto mouse::position() const -> glm::vec2
+auto input::position() const -> glm::vec2
 {
     return d_positiion_this_frame;
 }
 
-
-auto keyboard::on_event(const event& event) -> void
+auto input::is_down(keyboard_key key) const -> bool
 {
-    if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
-        d_down[std::to_underlying(e->key)] = true;
-        d_down_this_frame[std::to_underlying(e->key)] = true;
-    }
-    else if (const auto e = event.get_if<sand::keyboard_released_event>()) {
-        d_down[std::to_underlying(e->key)] = false;
-    }
+    return d_keyboard_down.test(std::to_underlying(key));
 }
 
-auto keyboard::on_new_frame() -> void
+auto input::is_down_this_frame(keyboard_key key) const -> bool
 {
-    d_down_this_frame.reset();
-}
-
-auto keyboard::is_down(keyboard_key key) const -> bool
-{
-    return d_down.test(std::to_underlying(key));
-}
-
-auto keyboard::is_down_this_frame(keyboard_key key) const -> bool
-{
-    return d_down_this_frame.test(std::to_underlying(key));
+    return d_keyboard_down_this_frame.test(std::to_underlying(key));
 }
 
 }
