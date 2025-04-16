@@ -112,10 +112,12 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
     d_dt = dt;
     d_hovered = false;
     for (const auto& quad : d_quads) {
+        d_times[quad.hash()].clicked_this_frame = false;
         if (is_in_region(d_mouse_pos, quad)) {
             d_hovered = true;
             if (d_clicked) {
                 d_clicked_quad = quad.hash();
+                d_times[quad.hash()].clicked_this_frame = true;
                 d_times[quad.hash()].clicked_time = d_dt;
             }
         }
@@ -176,7 +178,7 @@ bool ui_engine::button(glm::vec2 pos, float width, float height)
         quad.colour = {1, 1, 0, 1};
     }
     d_quads.emplace_back(quad);
-    return quad.hash() == d_clicked_quad;
+    return d_times[quad.hash()].clicked_this_frame;
 }
 
 }

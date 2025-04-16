@@ -35,9 +35,12 @@ struct ui_quad
 struct ui_quad_times
 {
     f64 hovered_time   = 0.0;
-    f64 unhovered_time  = 0.0;
     f64 clicked_time   = 0.0;
+    
+    f64 unhovered_time  = 0.0;
     f64 unclicked_time = 0.0;
+
+    bool clicked_this_frame = false;
 };
 
 class ui_engine
