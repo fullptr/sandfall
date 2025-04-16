@@ -23,6 +23,7 @@ add_library(core STATIC
     explosion.cpp
     update_rigid_bodies.cpp
     serialisation.cpp
+    ui.cpp
 )
 
 target_include_directories(core PUBLIC .)
