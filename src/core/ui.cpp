@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <ranges>
+#include <print>
 
 namespace sand {
 namespace {
@@ -109,25 +110,44 @@ static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
 
 void ui_engine::draw_frame(const camera& c, f64 dt)
 {
-    d_dt = dt;
     d_hovered = false;
     for (const auto& quad : d_quads) {
-        d_times[quad.hash()].clicked_this_frame = false;
+        auto& data = d_times[quad.hash()];
+        data.hovered_this_frame = false;
+        data.clicked_this_frame = false;
+        data.unhovered_this_frame = true;
+        data.unclicked_this_frame = true;
+
+        if (d_unclicked && data.is_clicked()) {
+            data.unclicked_this_frame = true;
+            data.unclicked_time = d_time;
+        }
         if (is_in_region(d_mouse_pos, quad)) {
+            if (!data.is_hovered()) {
+                data.hovered_this_frame = true;
+                data.hovered_time = d_time;
+            }
             d_hovered = true;
             if (d_clicked) {
-                d_clicked_quad = quad.hash();
-                d_times[quad.hash()].clicked_this_frame = true;
-                d_times[quad.hash()].clicked_time = d_dt;
+                data.clicked_this_frame = true;
+                data.clicked_time = d_time;
+            }
+        } else {
+            if (data.is_hovered()) {
+                data.unhovered_this_frame = true;
+                data.unhovered_time = d_time;
             }
         }
     }
-    if (d_unclicked && d_clicked_quad != u64_max) {
-        d_times[d_clicked_quad].unclicked_time = d_dt;
-        d_clicked_quad = u64_max;
-    }
-    d_unclicked = false;
+
+    // Clean out any elements no longer around
+    std::erase_if(d_times, [&](auto& elem) {
+        return !elem.second.active;
+    });
+
+    d_time += dt;
     d_clicked = false;
+    d_unclicked = false;
     
     glBindVertexArray(d_vao);
 
@@ -168,17 +188,18 @@ bool ui_engine::on_event(const event& event)
 bool ui_engine::button(glm::vec2 pos, float width, float height)
 {
     auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
-    if (is_in_region(d_mouse_pos, quad)) {
-        quad.colour = {0, 1, 0, 1};
-        d_times[quad.hash()].hovered_time = d_dt;
-    } else {
-        d_times[quad.hash()].unhovered_time = d_dt;
-    }
-    if (quad.hash() == d_clicked_quad) {
+    auto& data = d_times[quad.hash()];
+    data.active = true; // keep this alive
+    
+    if (data.is_clicked()) {
         quad.colour = {1, 1, 0, 1};
     }
+    else if (data.is_hovered()) {
+        quad.colour = {0, 1, 0, 1};
+    }
+
     d_quads.emplace_back(quad);
-    return d_times[quad.hash()].clicked_this_frame;
+    return data.clicked_this_frame;
 }
 
 }
