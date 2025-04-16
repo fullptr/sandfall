@@ -6,6 +6,8 @@
 #include "event.hpp"
 #include "common.hpp"
 
+#include <unordered_map>
+
 #include <glm/glm.hpp>
 
 namespace sand {
@@ -30,6 +32,14 @@ struct ui_quad
     }
 };
 
+struct ui_quad_times
+{
+    f64 hovered_time   = 0.0;
+    f64 unhovered_time  = 0.0;
+    f64 clicked_time   = 0.0;
+    f64 unclicked_time = 0.0;
+};
+
 class ui_engine
 {
     std::uint32_t d_vao;
@@ -45,8 +55,12 @@ class ui_engine
     glm::vec2 d_mouse_pos = {0, 0};
     bool      d_hovered   = false;
     bool      d_clicked   = false;
+    bool      d_unclicked = false;
 
     u64 d_clicked_quad = u64_max;
+    f64 d_dt = 0.0;
+
+    std::unordered_map<u64, ui_quad_times> d_times;
 
     ui_engine(const ui_engine&) = delete;
     ui_engine& operator=(const ui_engine&) = delete;
@@ -62,7 +76,7 @@ public:
     bool button(glm::vec2 pos, float width, float height);
     
     // Step 3: draw
-    void draw_frame(const camera& c);
+    void draw_frame(const camera& c, f64 dt);
 };
 
 }

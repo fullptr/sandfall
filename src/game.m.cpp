@@ -103,7 +103,7 @@ auto main() -> int
             std::print("button pressed!\n");
         }
         
-        ui.draw_frame(camera);
+        ui.draw_frame(camera, dt);
         window.end_frame();
     }
     

@@ -107,18 +107,24 @@ static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
         && (quad.centre.y - quad.height / 2) <= pos.y && pos.y < (quad.centre.y + quad.height / 2);
 }
 
-void ui_engine::draw_frame(const camera& c)
+void ui_engine::draw_frame(const camera& c, f64 dt)
 {
+    d_dt = dt;
     d_hovered = false;
-    d_clicked_quad = u64_max;
     for (const auto& quad : d_quads) {
         if (is_in_region(d_mouse_pos, quad)) {
             d_hovered = true;
             if (d_clicked) {
                 d_clicked_quad = quad.hash();
+                d_times[quad.hash()].clicked_time = d_dt;
             }
         }
     }
+    if (d_unclicked && d_clicked_quad != u64_max) {
+        d_times[d_clicked_quad].unclicked_time = d_dt;
+        d_clicked_quad = u64_max;
+    }
+    d_unclicked = false;
     d_clicked = false;
     
     glBindVertexArray(d_vao);
@@ -151,6 +157,9 @@ bool ui_engine::on_event(const event& event)
             return true;
         }
     }
+    else if (const auto e = event.get_if<mouse_released_event>()) {
+        d_unclicked = true;
+    }
     return false;
 }
 
@@ -159,6 +168,12 @@ bool ui_engine::button(glm::vec2 pos, float width, float height)
     auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
     if (is_in_region(d_mouse_pos, quad)) {
         quad.colour = {0, 1, 0, 1};
+        d_times[quad.hash()].hovered_time = d_dt;
+    } else {
+        d_times[quad.hash()].unhovered_time = d_dt;
+    }
+    if (quad.hash() == d_clicked_quad) {
+        quad.colour = {1, 1, 0, 1};
     }
     d_quads.emplace_back(quad);
     return quad.hash() == d_clicked_quad;
