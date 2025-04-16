@@ -8,6 +8,7 @@
 #include "renderer.hpp"
 #include "debug.hpp"
 #include "shape_renderer.hpp"
+#include "ui.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
@@ -27,6 +28,7 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
+    auto ui              = sand::ui_engine{};
 
     const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
     auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
@@ -95,6 +97,9 @@ auto main() -> int
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
 
+        ui.start_frame(camera);
+        ui.button({100, 100}, 100, 100);
+        ui.end_frame();
         
         window.end_frame();
     }

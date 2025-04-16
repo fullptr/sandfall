@@ -72,7 +72,7 @@ void ui_quad::set_buffer_attributes(std::uint32_t vbo)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-ui::ui()
+ui_engine::ui_engine()
     : d_shader(quad_vertex, quad_fragment)
 {
     const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
@@ -93,32 +93,26 @@ ui::ui()
     glEnableVertexAttribArray(0);
 }
 
-ui::~ui()
+ui_engine::~ui_engine()
 {
     glDeleteBuffers(1, &d_ebo);
     glDeleteBuffers(1, &d_vbo);
     glDeleteVertexArrays(1, &d_vao);
 }
 
-void ui::start_frame(const camera& c)
+void ui_engine::start_frame(const camera& c)
 {
     glBindVertexArray(d_vao);
     d_quads.clear();
 
-    d_shader.bind();
-    d_shader.load_int("u_camera_width", c.screen_width);
-    d_shader.load_int("u_camera_height", c.screen_height);
-    d_shader.load_vec2("u_camera_top_left", c.top_left);
-    d_shader.load_float("u_camera_world_to_screen", c.world_to_screen);
-
-    const auto dimensions = glm::vec2{c.screen_width, c.screen_height} / c.world_to_screen;
+    const auto dimensions = glm::vec2{c.screen_width, c.screen_height};
     const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
-
+    
     d_shader.bind();
-    d_shader.load_mat4("u_proj_matrix", glm::translate(projection, glm::vec3{-c.top_left, 0.0f}));
+    d_shader.load_mat4("u_proj_matrix", projection);
 }
 
-void ui::end_frame()
+void ui_engine::end_frame()
 {
     glBindVertexArray(d_vao);
 
@@ -133,10 +127,10 @@ void ui::end_frame()
     glDisable(GL_BLEND);
 }
 
-bool ui::button(glm::vec2 pos, float width, float height)
+bool ui_engine::button(glm::vec2 pos, float width, float height)
 {
     d_quads.emplace_back(pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1});
-    return true;
+    return false;
 }
 
 }

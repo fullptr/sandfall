@@ -23,7 +23,7 @@ struct ui_quad
     static void set_buffer_attributes(std::uint32_t vbo);
 };
 
-class ui
+class ui_engine
 {
     std::uint32_t d_vao;
     std::uint32_t d_vbo;
@@ -35,12 +35,12 @@ class ui
 
     vertex_buffer d_instances;
 
-    ui(const ui&) = delete;
-    ui& operator=(const ui&) = delete;
+    ui_engine(const ui_engine&) = delete;
+    ui_engine& operator=(const ui_engine&) = delete;
 
 public:
-    ui();
-    ~ui();
+    ui_engine();
+    ~ui_engine();
 
     void start_frame(const camera& c);
     void end_frame();
