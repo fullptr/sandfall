@@ -103,10 +103,10 @@ ui_engine::~ui_engine()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
+static auto is_in_region(glm::vec2 pos, glm::vec2 centre, f32 width, f32 height) -> bool
 {
-    return (quad.centre.x - quad.width / 2) <= pos.x && pos.x < (quad.centre.x + quad.width / 2)
-        && (quad.centre.y - quad.height / 2) <= pos.y && pos.y < (quad.centre.y + quad.height / 2);
+    return (centre.x - width / 2) <= pos.x && pos.x < (centre.x + width / 2)
+        && (centre.y - height / 2) <= pos.y && pos.y < (centre.y + height / 2);
 }
 
 void ui_engine::draw_frame(const camera& c, f64 dt)
@@ -131,7 +131,7 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
             data.unclicked_time = d_time;
         }
         
-        if (is_in_region(d_mouse_pos, data.quad)) {
+        if (is_in_region(d_mouse_pos, data.centre, data.width, data.height)) {
             d_capture_mouse = true;
 
             if (!data.is_hovered()) {
@@ -187,27 +187,34 @@ bool ui_engine::on_event(const event& event)
     return false;
 }
 
-bool ui_engine::button(std::string_view name, glm::vec2 pos, float width, float height)
+bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 height)
 {
-    auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
     auto& data = get_data(name);
-    data.quad = quad;
+    data.centre = pos + glm::vec2{width / 2, height / 2};
+    data.width = width;
+    data.height = height;
     
     const auto hovered_colour = glm::vec4{1, 0, 1, 1};
     const auto unhovered_colour = glm::vec4{1, 0, 0, 1};
-
+    
+    auto colour = glm::vec4{1, 0, 0, 1};
+    auto extra_width = 0.0f;
     if (data.is_clicked()) {
-        quad.colour = {1, 1, 0, 1};
+        colour = {1, 1, 0, 1};
+        extra_width = 10.0f;
     }
     else if (data.is_hovered()) {
         const auto t = std::min(1.0, data.time_hovered(d_time) / 0.2);
-        quad.colour = sand::lerp(unhovered_colour, hovered_colour, t);;
+        colour = sand::lerp(unhovered_colour, hovered_colour, t);
+        extra_width = sand::lerp(0.0f, 10.0f, t);
     }
     else {
         const auto t = std::min(1.0, data.time_unhovered(d_time) / 0.2);
-        quad.colour = sand::lerp(hovered_colour, unhovered_colour, t);;
+        colour = sand::lerp(hovered_colour, unhovered_colour, t);
+        extra_width = sand::lerp(10.0f, 0.0f, t);
     }
-
+    
+    const auto quad = ui_quad{data.centre, width + extra_width, height, 0.0f, colour};
     d_quads.emplace_back(quad);
     return data.clicked_this_frame;
 }

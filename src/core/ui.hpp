@@ -34,8 +34,10 @@ struct ui_quad
 
 struct ui_quad_data
 {
-    ui_quad quad = {};
-    bool active = false;
+    glm::vec2 centre = {0, 0};
+    f32       width = 0;
+    f32       height = 0;
+    bool      active = false;
     
     f64 hovered_time   = 0.0;
     f64 clicked_time   = 0.0;
