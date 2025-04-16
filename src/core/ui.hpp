@@ -55,17 +55,14 @@ public:
     ui_engine();
     ~ui_engine();
 
-    // Step 1: start new frame
-    void start_frame();
-
-    // Step 2: process events
+    // Step 1: process events
     bool on_event(const event& e);
 
-    // Step 3: setup ui elements    
+    // Step 2: setup ui elements    
     bool button(glm::vec2 pos, float width, float height);
     
-    // Step 4: complete frame
-    void end_frame(const camera& c);
+    // Step 3: draw
+    void draw_frame(const camera& c);
 };
 
 }

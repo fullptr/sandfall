@@ -42,7 +42,7 @@ auto update_player(entity& e, const input& in) -> void
     if (on_ground) {
         e.double_jump = true;
     }
-    if (in.is_down_this_frame(keyboard::W)) {
+    if (in.is_down_this_frame(keyboard::W) || in.is_down_this_frame(mouse::left)) {
         if (on_ground || e.double_jump) {
             if (!on_ground) {
                 e.double_jump = false;

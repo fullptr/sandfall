@@ -101,18 +101,13 @@ ui_engine::~ui_engine()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-void ui_engine::start_frame()
-{
-    d_quads.clear();
-}
-
 static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
 {
     return (quad.centre.x - quad.width / 2) <= pos.x && pos.x < (quad.centre.x + quad.width / 2)
         && (quad.centre.y - quad.height / 2) <= pos.y && pos.y < (quad.centre.y + quad.height / 2);
 }
 
-void ui_engine::end_frame(const camera& c)
+void ui_engine::draw_frame(const camera& c)
 {
     d_hovered = false;
     d_clicked_quad = u64_max;
@@ -141,6 +136,8 @@ void ui_engine::end_frame(const camera& c)
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size());
 
     glDisable(GL_BLEND);
+
+    d_quads.clear();
 }
 
 bool ui_engine::on_event(const event& event)

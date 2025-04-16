@@ -45,7 +45,6 @@ auto main() -> int
         const double dt = timer.on_update();
         window.begin_frame();
         input.on_new_frame();
-        ui.start_frame();
 
         for (const auto event : window.events()) {
             if (ui.on_event(event)) { continue; }
@@ -103,8 +102,8 @@ auto main() -> int
         if (ui.button({100, 100}, 100, 100)) {
             std::print("button pressed!\n");
         }
-        ui.end_frame(camera);
         
+        ui.draw_frame(camera);
         window.end_frame();
     }
     
