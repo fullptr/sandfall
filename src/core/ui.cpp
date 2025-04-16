@@ -110,9 +110,15 @@ static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
 
 void ui_engine::draw_frame(const camera& c, f64 dt)
 {
+    // Clean out any elements no longer around
+    std::erase_if(d_data, [&](auto& elem) {
+        return !elem.second.active;
+    });
+
     d_hovered = false;
     for (const auto& quad : d_quads) {
-        auto& data = d_times[quad.hash()];
+        auto& data = d_data[quad.hash()];
+        data.active = false; // if made next frame, it will activate again
         data.hovered_this_frame = false;
         data.clicked_this_frame = false;
         data.unhovered_this_frame = true;
@@ -139,11 +145,6 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
             }
         }
     }
-
-    // Clean out any elements no longer around
-    std::erase_if(d_times, [&](auto& elem) {
-        return !elem.second.active;
-    });
 
     d_time += dt;
     d_clicked = false;
@@ -188,8 +189,7 @@ bool ui_engine::on_event(const event& event)
 bool ui_engine::button(glm::vec2 pos, float width, float height)
 {
     auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
-    auto& data = d_times[quad.hash()];
-    data.active = true; // keep this alive
+    auto& data = get_data(quad);
     
     if (data.is_clicked()) {
         quad.colour = {1, 1, 0, 1};

@@ -100,7 +100,11 @@ auto main() -> int
         shape_renderer.end_frame();
 
         if (ui.button({100, 100}, 100, 100)) {
-            std::print("button pressed!\n");
+            std::print("button 1 pressed!\n");
+        }
+
+        if (ui.button({250, 100}, 100, 100)) {
+            std::print("button 2 pressed!\n");
         }
         
         ui.draw_frame(camera, dt);

@@ -70,7 +70,13 @@ class ui_engine
     bool      d_clicked   = false;
     bool      d_unclicked = false;
 
-    std::unordered_map<u64, ui_quad_data> d_times;
+    std::unordered_map<u64, ui_quad_data> d_data;
+
+    ui_quad_data& get_data(const ui_quad& quad) { 
+        auto& data = d_data[quad.hash()];
+        data.active = true; // keep this alive
+        return data;
+    }
 
     ui_engine(const ui_engine&) = delete;
     ui_engine& operator=(const ui_engine&) = delete;
