@@ -1,5 +1,6 @@
 #include "ui.hpp"
 #include "common.hpp"
+#include "utility.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -115,7 +116,9 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
         return !elem.second.active;
     });
 
-    d_hovered = false;
+    d_time += dt;
+    d_capture_mouse = false;
+    
     for (const auto& quad : d_quads) {
         auto& data = d_data[quad.hash()];
         data.active = false; // if made next frame, it will activate again
@@ -123,32 +126,31 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
         data.clicked_this_frame = false;
         data.unhovered_this_frame = true;
         data.unclicked_this_frame = true;
-
-        if (d_unclicked && data.is_clicked()) {
+        
+        if (d_unclicked_this_frame && data.is_clicked()) {
             data.unclicked_this_frame = true;
             data.unclicked_time = d_time;
         }
+        
         if (is_in_region(d_mouse_pos, quad)) {
+            d_capture_mouse = true;
+
             if (!data.is_hovered()) {
                 data.hovered_this_frame = true;
                 data.hovered_time = d_time;
             }
-            d_hovered = true;
-            if (d_clicked) {
+            if (d_clicked_this_frame) {
                 data.clicked_this_frame = true;
                 data.clicked_time = d_time;
             }
-        } else {
-            if (data.is_hovered()) {
-                data.unhovered_this_frame = true;
-                data.unhovered_time = d_time;
-            }
+        } else if (data.is_hovered()) {
+            data.unhovered_this_frame = true;
+            data.unhovered_time = d_time;
         }
     }
-
-    d_time += dt;
-    d_clicked = false;
-    d_unclicked = false;
+    
+    d_clicked_this_frame = false;
+    d_unclicked_this_frame = false;
     
     glBindVertexArray(d_vao);
 
@@ -175,13 +177,13 @@ bool ui_engine::on_event(const event& event)
         d_mouse_pos = e->pos;
     }
     else if (const auto e = event.get_if<mouse_pressed_event>()) {
-        if (e->button == mouse::left && d_hovered) {
-            d_clicked = true;
+        if (e->button == mouse::left && d_capture_mouse) {
+            d_clicked_this_frame = true;
             return true;
         }
     }
     else if (const auto e = event.get_if<mouse_released_event>()) {
-        d_unclicked = true;
+        d_unclicked_this_frame = true;
     }
     return false;
 }
@@ -191,11 +193,19 @@ bool ui_engine::button(glm::vec2 pos, float width, float height)
     auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
     auto& data = get_data(quad);
     
+    const auto hovered_colour = glm::vec4{1, 0, 1, 1};
+    const auto unhovered_colour = glm::vec4{1, 0, 0, 1};
+
     if (data.is_clicked()) {
         quad.colour = {1, 1, 0, 1};
     }
     else if (data.is_hovered()) {
-        quad.colour = {0, 1, 0, 1};
+        const auto t = std::min(1.0, data.time_hovered(d_time) / 0.2);
+        quad.colour = sand::lerp(unhovered_colour, hovered_colour, t);;
+    }
+    else {
+        const auto t = std::min(1.0, data.time_unhovered(d_time) / 0.2);
+        quad.colour = sand::lerp(hovered_colour, unhovered_colour, t);;
     }
 
     d_quads.emplace_back(quad);

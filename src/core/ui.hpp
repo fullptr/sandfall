@@ -34,22 +34,25 @@ struct ui_quad
 
 struct ui_quad_data
 {
+    bool active = false;
+    
     f64 hovered_time   = 0.0;
     f64 clicked_time   = 0.0;
-    
     f64 unhovered_time = 0.0;
     f64 unclicked_time = 0.0;
 
     bool hovered_this_frame = false;
     bool clicked_this_frame = false;
-
     bool unhovered_this_frame = false;
     bool unclicked_this_frame = false;
 
-    bool active = false;
-
     auto is_hovered() const -> bool { return hovered_time > unhovered_time; }
     auto is_clicked() const -> bool { return clicked_time > unclicked_time; }
+
+    auto time_hovered(f64 now) const -> f64 { return glm::max(0.0, now - hovered_time); }
+    auto time_clicked(f64 now) const -> f64 { return glm::max(0.0, now - clicked_time); }
+    auto time_unhovered(f64 now) const -> f64 { return glm::max(0.0, now - unhovered_time); }
+    auto time_unclicked(f64 now) const -> f64 { return glm::max(0.0, now - unclicked_time); }
 };
 
 class ui_engine
@@ -64,11 +67,14 @@ class ui_engine
 
     vertex_buffer d_instances;
 
-    glm::vec2 d_mouse_pos = {0, 0};
-    f64       d_time      = 0.0;
-    bool      d_hovered   = false;
-    bool      d_clicked   = false;
-    bool      d_unclicked = false;
+    // Data from events
+    glm::vec2 d_mouse_pos            = {0, 0};
+    bool      d_clicked_this_frame   = false;
+    bool      d_unclicked_this_frame = false;
+    
+    // Data from update
+    f64       d_time                 = 0.0;
+    bool      d_capture_mouse        = false;
 
     std::unordered_map<u64, ui_quad_data> d_data;
 
