@@ -3,6 +3,8 @@
 #include "shader.hpp"
 #include "texture.hpp"
 #include "camera.hpp"
+#include "event.hpp"
+#include "common.hpp"
 
 #include <glm/glm.hpp>
 
@@ -21,6 +23,11 @@ struct ui_quad
     glm::vec4 colour;
 
     static void set_buffer_attributes(std::uint32_t vbo);
+
+    auto hash() const -> u64 {
+        static constexpr auto h = std::hash<f32>{};
+        return h(centre.x) ^ h(centre.y) ^ h(width) ^ h(height);
+    }
 };
 
 class ui_engine
@@ -35,6 +42,12 @@ class ui_engine
 
     vertex_buffer d_instances;
 
+    glm::vec2 d_mouse_pos = {0, 0};
+    bool      d_hovered   = false;
+    bool      d_clicked   = false;
+
+    u64 d_clicked_quad = u64_max;
+
     ui_engine(const ui_engine&) = delete;
     ui_engine& operator=(const ui_engine&) = delete;
 
@@ -42,10 +55,17 @@ public:
     ui_engine();
     ~ui_engine();
 
-    void start_frame(const camera& c);
-    void end_frame();
+    // Step 1: start new frame
+    void start_frame();
 
+    // Step 2: process events
+    bool on_event(const event& e);
+
+    // Step 3: setup ui elements    
     bool button(glm::vec2 pos, float width, float height);
+    
+    // Step 4: complete frame
+    void end_frame(const camera& c);
 };
 
 }

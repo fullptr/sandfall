@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "common.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -100,37 +101,67 @@ ui_engine::~ui_engine()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-void ui_engine::start_frame(const camera& c)
+void ui_engine::start_frame()
 {
-    glBindVertexArray(d_vao);
     d_quads.clear();
-
-    const auto dimensions = glm::vec2{c.screen_width, c.screen_height};
-    const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
-    
-    d_shader.bind();
-    d_shader.load_mat4("u_proj_matrix", projection);
+    d_clicked = false;
 }
 
-void ui_engine::end_frame()
+static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
 {
+    return (quad.centre.x - quad.width / 2) <= pos.x && pos.x < (quad.centre.x + quad.width / 2)
+        && (quad.centre.y - quad.height / 2) <= pos.y && pos.y < (quad.centre.y + quad.height / 2);
+}
+
+void ui_engine::end_frame(const camera& c)
+{
+    d_hovered = false;
+    d_clicked_quad = u64_max;
+    for (const auto& quad : d_quads) {
+        if (is_in_region(d_mouse_pos, quad)) {
+            d_hovered = true;
+            if (d_clicked) {
+                d_clicked_quad = quad.hash();
+            }
+        }
+    }
+    
     glBindVertexArray(d_vao);
 
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    const auto dimensions = glm::vec2{c.screen_width, c.screen_height};
+    const auto projection = glm::ortho(0.0f, dimensions.x, dimensions.y, 0.0f);
+    
     d_shader.bind();
+    d_shader.load_mat4("u_proj_matrix", projection);
     d_instances.bind<ui_quad>(d_quads);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size());
 
     glDisable(GL_BLEND);
 }
 
+bool ui_engine::on_event(const event& event)
+{
+    if (const auto e = event.get_if<mouse_moved_event>()) {
+        d_mouse_pos = e->pos;
+    }
+    else if (const auto e = event.get_if<mouse_pressed_event>()) {
+        if (e->button == mouse::left && d_hovered) {
+            d_clicked = true;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ui_engine::button(glm::vec2 pos, float width, float height)
 {
-    d_quads.emplace_back(pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1});
-    return false;
+    const auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
+    d_quads.emplace_back(quad);
+    return quad.hash() == d_clicked_quad;
 }
 
 }

@@ -1,4 +1,6 @@
 #pragma once
+#include <limits>
+
 #include <glm/glm.hpp>
 
 namespace sand {
@@ -15,6 +17,8 @@ using u64 = std::uint64_t;
 
 using f32 = float;
 using f64 = double;
+
+static constexpr u64 u64_max = std::numeric_limits<u64>::max();
 
 namespace config {
 
