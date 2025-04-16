@@ -104,7 +104,6 @@ ui_engine::~ui_engine()
 void ui_engine::start_frame()
 {
     d_quads.clear();
-    d_clicked = false;
 }
 
 static auto is_in_region(glm::vec2 pos, const ui_quad& quad) -> bool
@@ -125,6 +124,7 @@ void ui_engine::end_frame(const camera& c)
             }
         }
     }
+    d_clicked = false;
     
     glBindVertexArray(d_vao);
 
@@ -159,7 +159,10 @@ bool ui_engine::on_event(const event& event)
 
 bool ui_engine::button(glm::vec2 pos, float width, float height)
 {
-    const auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
+    auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
+    if (is_in_region(d_mouse_pos, quad)) {
+        quad.colour = {0, 1, 0, 1};
+    }
     d_quads.emplace_back(quad);
     return quad.hash() == d_clicked_quad;
 }
