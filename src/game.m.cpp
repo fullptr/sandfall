@@ -99,11 +99,11 @@ auto main() -> int
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
 
-        if (ui.button({100, 100}, 100, 100)) {
+        if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("button 1 pressed!\n");
         }
 
-        if (ui.button({250, 100}, 100, 100)) {
+        if (ui.button("button2", {250, 100}, 100, 100)) {
             std::print("button 2 pressed!\n");
         }
         

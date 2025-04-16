@@ -34,6 +34,7 @@ struct ui_quad
 
 struct ui_quad_data
 {
+    ui_quad quad = {};
     bool active = false;
     
     f64 hovered_time   = 0.0;
@@ -76,10 +77,10 @@ class ui_engine
     f64       d_time                 = 0.0;
     bool      d_capture_mouse        = false;
 
-    std::unordered_map<u64, ui_quad_data> d_data;
+    std::unordered_map<std::string_view, ui_quad_data> d_data;
 
-    ui_quad_data& get_data(const ui_quad& quad) { 
-        auto& data = d_data[quad.hash()];
+    ui_quad_data& get_data(std::string_view name) { 
+        auto& data = d_data[name];
         data.active = true; // keep this alive
         return data;
     }
@@ -95,7 +96,7 @@ public:
     bool on_event(const event& e);
 
     // Step 2: setup ui elements    
-    bool button(glm::vec2 pos, float width, float height);
+    bool button(std::string_view name, glm::vec2 pos, float width, float height);
     
     // Step 3: draw
     void draw_frame(const camera& c, f64 dt);

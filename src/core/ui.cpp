@@ -119,8 +119,7 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
     d_time += dt;
     d_capture_mouse = false;
     
-    for (const auto& quad : d_quads) {
-        auto& data = d_data[quad.hash()];
+    for (auto& [hash, data] : d_data) {
         data.active = false; // if made next frame, it will activate again
         data.hovered_this_frame = false;
         data.clicked_this_frame = false;
@@ -132,7 +131,7 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
             data.unclicked_time = d_time;
         }
         
-        if (is_in_region(d_mouse_pos, quad)) {
+        if (is_in_region(d_mouse_pos, data.quad)) {
             d_capture_mouse = true;
 
             if (!data.is_hovered()) {
@@ -188,10 +187,11 @@ bool ui_engine::on_event(const event& event)
     return false;
 }
 
-bool ui_engine::button(glm::vec2 pos, float width, float height)
+bool ui_engine::button(std::string_view name, glm::vec2 pos, float width, float height)
 {
     auto quad = ui_quad{pos + glm::vec2{width/2, height/2}, width, height, 0.0f, glm::vec4{1, 0, 0, 1}};
-    auto& data = get_data(quad);
+    auto& data = get_data(name);
+    data.quad = quad;
     
     const auto hovered_colour = glm::vec4{1, 0, 1, 1};
     const auto unhovered_colour = glm::vec4{1, 0, 0, 1};
