@@ -60,18 +60,18 @@ constexpr auto quad_fragment = R"SHADER(
 
 }
 
-void ui_quad::set_buffer_attributes(std::uint32_t vbo)
+void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     for (int i = 1; i != 6; ++i) {
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ui_quad), (void*)offsetof(ui_quad, centre));
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ui_quad), (void*)offsetof(ui_quad, width));
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_quad), (void*)offsetof(ui_quad, height));
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_quad), (void*)offsetof(ui_quad, angle));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_quad), (void*)offsetof(ui_quad, colour));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, centre));
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, width));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -162,7 +162,7 @@ void ui_engine::draw_frame(const camera& c, f64 dt)
     
     d_shader.bind();
     d_shader.load_mat4("u_proj_matrix", projection);
-    d_instances.bind<ui_quad>(d_quads);
+    d_instances.bind<ui_graphics_quad>(d_quads);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, (int)d_quads.size());
 
     glDisable(GL_BLEND);
@@ -189,10 +189,7 @@ bool ui_engine::on_event(const event& event)
 
 bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 height)
 {
-    auto& data = get_data(name);
-    data.centre = pos + glm::vec2{width / 2, height / 2};
-    data.width = width;
-    data.height = height;
+    auto& data = get_data(name, pos, width, height);
     
     const auto hovered_colour = glm::vec4{1, 0, 1, 1};
     const auto unhovered_colour = glm::vec4{1, 0, 0, 1};
@@ -204,17 +201,17 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
         extra_width = 10.0f;
     }
     else if (data.is_hovered()) {
-        const auto t = std::min(1.0, data.time_hovered(d_time) / 0.2);
+        const auto t = std::clamp(data.time_hovered(d_time) / 0.2, 0.0, 1.0);
         colour = sand::lerp(unhovered_colour, hovered_colour, t);
         extra_width = sand::lerp(0.0f, 10.0f, t);
     }
-    else {
-        const auto t = std::min(1.0, data.time_unhovered(d_time) / 0.2);
+    else if (d_time > 0.2) { // Don't start the game looking hovered
+        const auto t = std::clamp(data.time_unhovered(d_time) / 0.2, 0.0, 1.0);
         colour = sand::lerp(hovered_colour, unhovered_colour, t);
         extra_width = sand::lerp(10.0f, 0.0f, t);
     }
     
-    const auto quad = ui_quad{data.centre, width + extra_width, height, 0.0f, colour};
+    const auto quad = ui_graphics_quad{data.centre, width + extra_width, height, 0.0f, colour};
     d_quads.emplace_back(quad);
     return data.clicked_this_frame;
 }

@@ -16,7 +16,7 @@ namespace sand {
 // we combine these? I'm just making a copy now since I am assuming both will
 // iterate in different directions and I don't necessarily want them tied
 // together, but I still feel conflicted.
-struct ui_quad
+struct ui_graphics_quad
 {
     glm::vec2 centre;
     float     width;
@@ -25,14 +25,9 @@ struct ui_quad
     glm::vec4 colour;
 
     static void set_buffer_attributes(std::uint32_t vbo);
-
-    auto hash() const -> u64 {
-        static constexpr auto h = std::hash<f32>{};
-        return h(centre.x) ^ h(centre.y) ^ h(width) ^ h(height);
-    }
 };
 
-struct ui_quad_data
+struct ui_logic_quad
 {
     glm::vec2 centre = {0, 0};
     f32       width = 0;
@@ -60,11 +55,11 @@ struct ui_quad_data
 
 class ui_engine
 {
-    std::uint32_t d_vao;
-    std::uint32_t d_vbo;
-    std::uint32_t d_ebo;
+    u32 d_vao;
+    u32 d_vbo;
+    u32 d_ebo;
 
-    std::vector<ui_quad> d_quads;
+    std::vector<ui_graphics_quad> d_quads;
 
     shader d_shader;
 
@@ -79,11 +74,14 @@ class ui_engine
     f64       d_time                 = 0.0;
     bool      d_capture_mouse        = false;
 
-    std::unordered_map<std::string_view, ui_quad_data> d_data;
+    std::unordered_map<std::string_view, ui_logic_quad> d_data;
 
-    ui_quad_data& get_data(std::string_view name) { 
+    ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
         auto& data = d_data[name];
         data.active = true; // keep this alive
+        data.centre = pos + glm::vec2{width/2, height/2};
+        data.width = width;
+        data.height = height;
         return data;
     }
 
