@@ -38,12 +38,13 @@ auto scene_main_menu(sand::window& window) -> next_state
         }
 
         if (ui.button("button1", {100, 100}, 100, 100)) {
-            std::print("button 1 pressed!\n");
+            std::print("loading level!\n");
             return next_state::level;
         }
 
         if (ui.button("button2", {250, 100}, 100, 100)) {
-            std::print("button 2 pressed!\n");
+            std::print("exiting!\n");
+            return next_state::exit;
         }
         
         ui.draw_frame(window.width(), window.height(), dt);
