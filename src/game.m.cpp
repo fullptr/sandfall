@@ -16,11 +16,42 @@
 #include <memory>
 #include <print>
 
-auto main() -> int
+enum class next_state
+{
+    main_menu,
+    level,
+};
+
+auto scene_main_menu(sand::window& window) -> void
 {
     using namespace sand;
+    auto timer           = sand::timer{};
+    auto ui              = sand::ui_engine{};
 
-    auto window          = sand::window{"sandfall", 1280, 720};
+    while (window.is_running()) {
+        const double dt = timer.on_update();
+        window.begin_frame();
+
+        for (const auto event : window.events()) {
+            if (ui.on_event(event)) { continue; }
+        }
+
+        if (ui.button("button1", {100, 100}, 100, 100)) {
+            std::print("button 1 pressed!\n");
+        }
+
+        if (ui.button("button2", {250, 100}, 100, 100)) {
+            std::print("button 2 pressed!\n");
+        }
+        
+        ui.draw_frame(window.width(), window.height(), dt);
+        window.end_frame();
+    }
+}
+
+auto scene_level(sand::window& window) -> void
+{
+    using namespace sand;
     auto input           = sand::input{};
     auto level           = sand::load_level("save4.bin");
     auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
@@ -107,8 +138,20 @@ auto main() -> int
             std::print("button 2 pressed!\n");
         }
         
-        ui.draw_frame(camera, dt);
+        ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
+    }
+}
+
+auto main() -> int
+{
+    using namespace sand;
+
+    auto window = sand::window{"sandfall", 1280, 720};
+    auto next   = next_state::main_menu;
+
+    while (window.is_running()) {
+        scene_main_menu(window);
     }
     
     return 0;

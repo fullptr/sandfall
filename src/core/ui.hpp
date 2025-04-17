@@ -2,7 +2,6 @@
 #include "buffer.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
-#include "camera.hpp"
 #include "event.hpp"
 #include "common.hpp"
 
@@ -99,7 +98,7 @@ public:
     bool button(std::string_view name, glm::vec2 pos, float width, float height);
     
     // Step 3: draw
-    void draw_frame(const camera& c, f64 dt);
+    void draw_frame(i32 screen_width, i32 screen_height, f64 dt);
 };
 
 }
