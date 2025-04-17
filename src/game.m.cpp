@@ -8,6 +8,7 @@
 #include "renderer.hpp"
 #include "debug.hpp"
 #include "shape_renderer.hpp"
+#include "ui.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
@@ -27,6 +28,7 @@ auto main() -> int
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
+    auto ui              = sand::ui_engine{};
 
     const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
     auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
@@ -45,6 +47,8 @@ auto main() -> int
         input.on_new_frame();
 
         for (const auto event : window.events()) {
+            if (ui.on_event(event)) { continue; }
+
             input.on_event(event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
@@ -95,7 +99,15 @@ auto main() -> int
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
 
+        if (ui.button("button1", {100, 100}, 100, 100)) {
+            std::print("button 1 pressed!\n");
+        }
+
+        if (ui.button("button2", {250, 100}, 100, 100)) {
+            std::print("button 2 pressed!\n");
+        }
         
+        ui.draw_frame(camera, dt);
         window.end_frame();
     }
     
