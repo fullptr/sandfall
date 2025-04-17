@@ -20,9 +20,10 @@ enum class next_state
 {
     main_menu,
     level,
+    exit,
 };
 
-auto scene_main_menu(sand::window& window) -> void
+auto scene_main_menu(sand::window& window) -> next_state
 {
     using namespace sand;
     auto timer           = sand::timer{};
@@ -33,11 +34,12 @@ auto scene_main_menu(sand::window& window) -> void
         window.begin_frame();
 
         for (const auto event : window.events()) {
-            if (ui.on_event(event)) { continue; }
+            ui.on_event(event);
         }
 
         if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("button 1 pressed!\n");
+            return next_state::level;
         }
 
         if (ui.button("button2", {250, 100}, 100, 100)) {
@@ -47,9 +49,11 @@ auto scene_main_menu(sand::window& window) -> void
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
+
+    return next_state::exit;
 }
 
-auto scene_level(sand::window& window) -> void
+auto scene_level(sand::window& window) -> next_state
 {
     using namespace sand;
     auto input           = sand::input{};
@@ -59,7 +63,6 @@ auto scene_level(sand::window& window) -> void
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
-    auto ui              = sand::ui_engine{};
 
     const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
     auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
@@ -78,8 +81,6 @@ auto scene_level(sand::window& window) -> void
         input.on_new_frame();
 
         for (const auto event : window.events()) {
-            if (ui.on_event(event)) { continue; }
-
             input.on_event(event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
@@ -87,6 +88,10 @@ auto scene_level(sand::window& window) -> void
                 camera.screen_height = e->height;
                 camera.world_to_screen = e->height / 210.0f;
             }
+        }
+
+        if (input.is_down_this_frame(keyboard::P)) {
+            return next_state::main_menu;
         }
 
         accumulator += dt;
@@ -130,17 +135,10 @@ auto scene_level(sand::window& window) -> void
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
 
-        if (ui.button("button1", {100, 100}, 100, 100)) {
-            std::print("button 1 pressed!\n");
-        }
-
-        if (ui.button("button2", {250, 100}, 100, 100)) {
-            std::print("button 2 pressed!\n");
-        }
-        
-        ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
+
+    return next_state::exit;
 }
 
 auto main() -> int
@@ -150,8 +148,21 @@ auto main() -> int
     auto window = sand::window{"sandfall", 1280, 720};
     auto next   = next_state::main_menu;
 
-    while (window.is_running()) {
-        scene_main_menu(window);
+    while (true) {
+        switch (next) {
+            case next_state::main_menu: {
+                next = scene_main_menu(window);
+            } break;
+            case next_state::level: {
+                next = scene_level(window);
+            } break;
+            case next_state::exit: {
+                return 1;
+            } break;
+            default: {
+                return 1; // TODO: Handle this better
+            }
+        }
     }
     
     return 0;
