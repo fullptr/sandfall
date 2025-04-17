@@ -24,18 +24,4 @@ public:
     }
 };
 
-class index_buffer
-{
-    std::uint32_t d_vbo;
-
-    index_buffer(const index_buffer&) = delete;
-    index_buffer& operator=(const index_buffer&) = delete;
-
-public:
-    index_buffer();
-    ~index_buffer();
-
-    void bind(std::span<const std::uint32_t> data) const;
-};
-
 }
