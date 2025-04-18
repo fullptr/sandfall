@@ -29,7 +29,7 @@ auto scene_main_menu(sand::window& window) -> next_state
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
 
-    const auto clear_colour = from_hex(0x303952);
+    constexpr auto clear_colour = from_hex(0x3d3d3d);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -44,7 +44,7 @@ auto scene_main_menu(sand::window& window) -> next_state
             return next_state::level;
         }
 
-        if (ui.button("button2", {250, 100}, 100, 100)) {
+        if (ui.button("button2", {100, 250}, 100, 100)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
