@@ -2,7 +2,6 @@
 #include "buffer.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
-#include "camera.hpp"
 #include "event.hpp"
 #include "common.hpp"
 
@@ -76,7 +75,7 @@ class ui_engine
 
     std::unordered_map<std::string_view, ui_logic_quad> d_data;
 
-    ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
+    const ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
         auto& data = d_data[name];
         data.active = true; // keep this alive
         data.centre = pos + glm::vec2{width/2, height/2};
@@ -99,7 +98,7 @@ public:
     bool button(std::string_view name, glm::vec2 pos, float width, float height);
     
     // Step 3: draw
-    void draw_frame(const camera& c, f64 dt);
+    void draw_frame(i32 screen_width, i32 screen_height, f64 dt);
 };
 
 }
