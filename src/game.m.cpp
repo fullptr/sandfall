@@ -93,7 +93,7 @@ auto scene_level(sand::window& window) -> next_state
             }
         }
 
-        if (input.is_down_this_frame(keyboard::P)) {
+        if (input.is_down_this_frame(keyboard::escape)) {
             return next_state::main_menu;
         }
 
