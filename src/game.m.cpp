@@ -49,6 +49,7 @@ auto scene_main_menu(sand::window& window) -> next_state
             return next_state::exit;
         }
         
+        ui.text("hello world");
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }

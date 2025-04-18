@@ -21,11 +21,13 @@ constexpr auto quad_vertex = R"SHADER(
     layout (location = 3) in float quad_height;
     layout (location = 4) in float quad_angle;
     layout (location = 5) in vec4  quad_colour;
+    layout (location = 6) in int   quad_use_texture;
     
     uniform mat4 u_proj_matrix;
     
-    out vec4 o_colour;
-    out vec2 o_uv;
+    flat out int o_use_texture;
+    out vec4     o_colour;
+    out vec2     o_uv;
     
     mat2 rotate(float theta)
     {
@@ -43,6 +45,7 @@ constexpr auto quad_vertex = R"SHADER(
     
         gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
     
+        o_use_texture = quad_use_texture;
         o_colour = quad_colour;
         o_uv = vec2((p_position.x + 1), (p_position.y + 1)) / 2;
     }
@@ -52,15 +55,16 @@ constexpr auto quad_fragment = R"SHADER(
     #version 410 core
     layout (location = 0) out vec4 out_colour;
     
-    in vec4 o_colour;
-    in vec2 o_uv;
+    flat in int o_use_texture;
+    in vec4     o_colour;
+    in vec2     o_uv;
 
     uniform int       u_use_texture;
     uniform sampler2D u_texture;
     
     void main()
     {
-        if (u_use_texture != 0) {
+        if (o_use_texture > 0) {
             out_colour = texture(u_texture, o_uv);
         } else {
             out_colour = o_colour;
@@ -73,7 +77,7 @@ constexpr auto quad_fragment = R"SHADER(
 void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    for (int i = 1; i != 6; ++i) {
+    for (int i = 1; i != 7; ++i) {
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
@@ -82,6 +86,7 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
+    glVertexAttribPointer(6, 1, GL_INT,   GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -250,9 +255,15 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
         extra_width = sand::lerp(10.0f, 0.0f, t);
     }
     
-    const auto quad = ui_graphics_quad{data.centre, width + extra_width, height, 0.0f, colour};
+    const auto quad = ui_graphics_quad{data.centre, width + extra_width, height, 0.0f, colour, 0};
     d_quads.emplace_back(quad);
     return data.clicked_this_frame;
+}
+
+void ui_engine::text(std::string_view message)
+{
+    const auto quad = ui_graphics_quad{{300, 300}, 50, 50, 0.0f, {0, 0, 0, 0}, 1};
+    d_quads.emplace_back(quad);
 }
 
 }
