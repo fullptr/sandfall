@@ -55,12 +55,16 @@ constexpr auto quad_fragment = R"SHADER(
     in vec4 o_colour;
     in vec2 o_uv;
 
+    uniform int       u_use_texture;
     uniform sampler2D u_texture;
     
     void main()
     {
-        out_colour = o_colour;
-        out_colour = texture(u_texture, o_uv);
+        if (u_use_texture != 0) {
+            out_colour = texture(u_texture, o_uv);
+        } else {
+            out_colour = o_colour;
+        }
     }
     )SHADER";
 
@@ -110,8 +114,17 @@ ui_engine::ui_engine()
             texture_data[j * 256 + i] = {r, g, 0, 1};
         }
     }
-    d_temp_texture.resize(256, 256);
-    d_temp_texture.set_data(texture_data);
+    d_temp_textures[0].resize(256, 256);
+    d_temp_textures[0].set_data(texture_data);
+    for (int i = 0; i != 256; ++i) {
+        for (int j = 0; j != 256; ++j) {
+            const auto r = (float)i / 256.0f;
+            const auto g = (float)j / 256.0f;
+            texture_data[j * 256 + i] = {r, 0, g, 1};
+        }
+    }
+    d_temp_textures[1].resize(256, 256);
+    d_temp_textures[1].set_data(texture_data);
 
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
@@ -127,7 +140,7 @@ ui_engine::~ui_engine()
 static auto is_in_region(glm::vec2 pos, glm::vec2 centre, f32 width, f32 height) -> bool
 {
     return (centre.x - width / 2) <= pos.x && pos.x < (centre.x + width / 2)
-        && (centre.y - height / 2) <= pos.y && pos.y < (centre.y + height / 2);
+    && (centre.y - height / 2) <= pos.y && pos.y < (centre.y + height / 2);
 }
 
 void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
@@ -173,6 +186,8 @@ void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
     d_unclicked_this_frame = false;
     
     glBindVertexArray(d_vao);
+    d_temp_textures[1].bind();
+    d_shader.load_int("u_use_texture", 1);
 
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
