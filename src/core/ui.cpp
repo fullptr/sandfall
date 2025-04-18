@@ -25,6 +25,7 @@ constexpr auto quad_vertex = R"SHADER(
     uniform mat4 u_proj_matrix;
     
     out vec4 o_colour;
+    out vec2 o_uv;
     
     mat2 rotate(float theta)
     {
@@ -43,6 +44,7 @@ constexpr auto quad_vertex = R"SHADER(
         gl_Position = u_proj_matrix * vec4(screen_position, 0, 1);
     
         o_colour = quad_colour;
+        o_uv = vec2((p_position.x + 1), (p_position.y + 1)) / 2;
     }
     )SHADER";
     
@@ -51,10 +53,14 @@ constexpr auto quad_fragment = R"SHADER(
     layout (location = 0) out vec4 out_colour;
     
     in vec4 o_colour;
+    in vec2 o_uv;
+
+    uniform sampler2D u_texture;
     
     void main()
     {
         out_colour = o_colour;
+        out_colour = texture(u_texture, o_uv);
     }
     )SHADER";
 
@@ -106,6 +112,9 @@ ui_engine::ui_engine()
     }
     d_temp_texture.resize(256, 256);
     d_temp_texture.set_data(texture_data);
+
+    d_shader.bind();
+    d_shader.load_sampler("u_texture", 0);
 }
 
 ui_engine::~ui_engine()
