@@ -29,9 +29,11 @@ auto scene_main_menu(sand::window& window) -> next_state
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
 
+    const auto clear_colour = from_hex(0x303952);
+
     while (window.is_running()) {
         const double dt = timer.on_update();
-        window.begin_frame();
+        window.begin_frame(clear_colour);
 
         for (const auto event : window.events()) {
             ui.on_event(event);

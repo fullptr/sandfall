@@ -75,7 +75,7 @@ class ui_engine
 
     std::unordered_map<std::string_view, ui_logic_quad> d_data;
 
-    ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
+    const ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
         auto& data = d_data[name];
         data.active = true; // keep this alive
         data.centre = pos + glm::vec2{width/2, height/2};

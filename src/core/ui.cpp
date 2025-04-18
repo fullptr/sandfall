@@ -189,7 +189,7 @@ bool ui_engine::on_event(const event& event)
 
 bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 height)
 {
-    auto& data = get_data(name, pos, width, height);
+    const auto& data = get_data(name, pos, width, height);
     
     const auto hovered_colour = glm::vec4{1, 0, 1, 1};
     const auto unhovered_colour = glm::vec4{1, 0, 0, 1};
