@@ -160,9 +160,11 @@ auto main() -> int
                 next = scene_level(window);
             } break;
             case next_state::exit: {
+                std::print("closing game\n");
                 return 1;
             } break;
             default: {
+                std::print("how did we get here\n");
                 return 1; // TODO: Handle this better
             }
         }
