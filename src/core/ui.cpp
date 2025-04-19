@@ -30,7 +30,7 @@ auto load_font_atlas() -> font_atlas
     }
     FT_Set_Pixel_Sizes(face, 0, 48);
 
-    if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+    if (FT_Load_Char(face, '%', FT_LOAD_RENDER))
     {
         std::print("ERROR::FREETYTPE: Failed to load Glyph\n");
         std::exit(1);
