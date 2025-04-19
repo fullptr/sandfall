@@ -6,13 +6,15 @@
 
 namespace sand {
 
-texture::texture(std::uint32_t width, std::uint32_t height)
-    : d_texture{0}
+texture::texture(std::uint32_t width, std::uint32_t height, texture_type type)
+    : d_type{type}
+    , d_texture{0}
 {
     resize(width, height);
 }
 
-texture::texture()
+texture::texture(texture_type type)
+    : d_type{type}
 {}
 
 texture::~texture()
@@ -24,7 +26,29 @@ auto texture::set_data(std::span<const glm::vec4> data) -> void
 {
     assert(data.size() == d_width * d_height);
     bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
+    switch (d_type) {
+        case texture_type::rgba: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
+        } break;
+        case texture_type::red: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, d_width, d_height, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
+        } break;
+    }
+}
+
+auto texture::set_data(std::span<const unsigned char> data, u64 width, u64 height) -> void
+{
+    assert(width == d_width);
+    assert(height == d_height);
+    bind();
+    switch (d_type) {
+        case texture_type::rgba: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data.data());
+        } break;
+        case texture_type::red: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
+        } break;
+    }
 }
 
 auto texture::bind() const -> void
@@ -47,7 +71,14 @@ auto texture::resize(std::uint32_t width, std::uint32_t height) -> void
     glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    switch (d_type) {
+        case texture_type::rgba: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, nullptr);
+        } break;
+        case texture_type::red: {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, d_width, d_height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        } break;
+    }
 }
 
 }

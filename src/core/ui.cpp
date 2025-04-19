@@ -5,12 +5,42 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include <ranges>
 #include <print>
 
 namespace sand {
 namespace {
+
+auto load_font_atlas() -> font_atlas
+{
+    FT_Library library;
+    if (FT_Init_FreeType(&library)) {
+        std::print("failed to init FreeType\n");
+        std::exit(1);
+    }
+    
+    FT_Face face;
+    if (FT_New_Face(library, "C:\\WINDOWS\\FONTS\\ARIAL.ttf", 0, &face))
+    {
+        std::print("ERROR::FREETYPE: Failed to load font\n");  
+        std::exit(1);
+    }
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+    {
+        std::print("ERROR::FREETYTPE: Failed to load Glyph\n");
+        std::exit(1);
+    }
+
+    font_atlas atlas;
+    atlas.texture = std::make_unique<texture>();
+    atlas.texture->resize(256, 256);
+    return atlas;
+}
 
 constexpr auto quad_vertex = R"SHADER(
     #version 410 core
@@ -49,7 +79,7 @@ constexpr auto quad_vertex = R"SHADER(
         o_colour = quad_colour;
         o_uv = vec2((p_position.x + 1), (p_position.y + 1)) / 2;
     }
-    )SHADER";
+)SHADER";
     
 constexpr auto quad_fragment = R"SHADER(
     #version 410 core
@@ -70,7 +100,7 @@ constexpr auto quad_fragment = R"SHADER(
             out_colour = o_colour;
         }
     }
-    )SHADER";
+)SHADER";
 
 }
 
@@ -262,7 +292,7 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
 
 void ui_engine::text(std::string_view message)
 {
-    const auto quad = ui_graphics_quad{{300, 300}, 50, 50, 0.0f, {0, 0, 0, 0}, 1};
+    const auto quad = ui_graphics_quad{{600, 300}, 300, 300, 0.0f, {0, 0, 0, 0}, 1};
     d_quads.emplace_back(quad);
 }
 

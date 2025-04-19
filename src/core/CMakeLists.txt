@@ -7,6 +7,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
+find_package(Stb REQUIRED)
 
 add_library(core STATIC
     buffer.cpp
@@ -27,7 +28,7 @@ add_library(core STATIC
     ui.cpp
 )
 
-target_include_directories(core PUBLIC .)
+target_include_directories(core PUBLIC . ${Stb_INCLUDE_DIR})
 
 target_link_libraries(core PRIVATE
     glfw

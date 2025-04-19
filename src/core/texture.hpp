@@ -8,8 +8,16 @@
 
 namespace sand {
 
+enum class texture_type
+{
+    rgba,
+    red,
+};
+
 class texture
 {
+    texture_type d_type;
+
     u32 d_texture;
     u32 d_width;
     u32 d_height;
@@ -18,11 +26,12 @@ class texture
     texture& operator=(const texture&) = delete;
 
 public:
-    texture();
-    texture(u32 width, u32 height);
+    texture(texture_type type = texture_type::rgba);
+    texture(u32 width, u32 height, texture_type type = texture_type::rgba);
     ~texture();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
+    auto set_data(std::span<const unsigned char> data, u64 width, u64 height) -> void;
     auto bind() const -> void;
 
     auto resize(u32 width, u32 height) -> void;

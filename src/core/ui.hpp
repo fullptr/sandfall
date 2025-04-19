@@ -12,6 +12,19 @@
 
 namespace sand {
 
+struct character
+{
+    glm::ivec2 size;
+    glm::ivec2 bearing;
+    i32        advance;
+};
+
+struct font_atlas
+{
+    std::unique_ptr<texture>            texture;
+    std::unordered_map<char, character> chars;
+};
+
 // This is just a copy of quad_instance from the shape_renderer, should
 // we combine these? I'm just making a copy now since I am assuming both will
 // iterate in different directions and I don't necessarily want them tied
