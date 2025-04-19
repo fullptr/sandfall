@@ -37,8 +37,16 @@ auto load_font_atlas() -> font_atlas
     }
 
     font_atlas atlas;
-    atlas.texture = std::make_unique<texture>();
+    atlas.texture = std::make_unique<texture>(texture_type::red);
     atlas.texture->resize(256, 256);
+    std::span<const unsigned char> data{face->glyph->bitmap.buffer, face->glyph->bitmap.buffer + face->glyph->bitmap.width * face->glyph->bitmap.rows};
+    atlas.texture->set_subdata(data, {50, 50}, face->glyph->bitmap.width, face->glyph->bitmap.rows);
+    character c = {
+        {50, 50}, 
+        glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+        glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+        face->glyph->advance.x
+    };
     return atlas;
 }
 
@@ -95,7 +103,7 @@ constexpr auto quad_fragment = R"SHADER(
     void main()
     {
         if (o_use_texture > 0) {
-            out_colour = texture(u_texture, o_uv);
+            out_colour = vec4(1, 1, 1, texture(u_texture, o_uv).r);
         } else {
             out_colour = o_colour;
         }
@@ -122,6 +130,7 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
 
 ui_engine::ui_engine()
     : d_shader(quad_vertex, quad_fragment)
+    , d_atlas{load_font_atlas()}
 {
     const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
@@ -221,7 +230,7 @@ void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
     d_unclicked_this_frame = false;
     
     glBindVertexArray(d_vao);
-    d_temp_textures[1].bind();
+    d_atlas.texture->bind();
     d_shader.load_int("u_use_texture", 1);
 
     glEnable(GL_BLEND);

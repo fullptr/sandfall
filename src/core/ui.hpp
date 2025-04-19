@@ -14,6 +14,7 @@ namespace sand {
 
 struct character
 {
+    glm::ivec2 position;
     glm::ivec2 size;
     glm::ivec2 bearing;
     i32        advance;
@@ -91,6 +92,7 @@ class ui_engine
     std::unordered_map<std::string_view, ui_logic_quad> d_data;
 
     std::array<texture, 2> d_temp_textures;
+    font_atlas d_atlas;
 
     const ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
         auto& data = d_data[name];
