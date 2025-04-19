@@ -31,9 +31,9 @@ public:
     ~texture();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
-    auto set_data(std::span<const unsigned char> data, u64 width, u64 height) -> void;
+    auto set_data(std::span<const unsigned char> data, i32 width, i32 height) -> void;
 
-    auto set_subdata(std::span<const unsigned char> data, glm::ivec2 top_left, u64 width, u64 height) -> void;
+    auto set_subdata(std::span<const unsigned char> data, glm::ivec2 top_left, i32 width, i32 height) -> void;
     auto bind() const -> void;
 
     auto resize(u32 width, u32 height) -> void;

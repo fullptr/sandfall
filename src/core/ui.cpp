@@ -28,7 +28,7 @@ auto load_font_atlas() -> font_atlas
         std::print("ERROR::FREETYPE: Failed to load font\n");  
         std::exit(1);
     }
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, 96);
 
     if (FT_Load_Char(face, '%', FT_LOAD_RENDER))
     {
@@ -41,12 +41,7 @@ auto load_font_atlas() -> font_atlas
     atlas.texture->resize(256, 256);
     std::span<const unsigned char> data{face->glyph->bitmap.buffer, face->glyph->bitmap.buffer + face->glyph->bitmap.width * face->glyph->bitmap.rows};
     atlas.texture->set_subdata(data, {50, 50}, face->glyph->bitmap.width, face->glyph->bitmap.rows);
-    character c = {
-        {50, 50}, 
-        glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-        glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-        face->glyph->advance.x
-    };
+
     return atlas;
 }
 
@@ -103,7 +98,8 @@ constexpr auto quad_fragment = R"SHADER(
     void main()
     {
         if (o_use_texture > 0) {
-            out_colour = vec4(1, 1, 1, texture(u_texture, o_uv).r);
+            float red = texture(u_texture, o_uv).r;
+            out_colour = vec4(1, 1, 1, red);
         } else {
             out_colour = o_colour;
         }
@@ -234,7 +230,7 @@ void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
     d_shader.load_int("u_use_texture", 1);
 
     glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
+    //glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     const auto dimensions = glm::vec2{screen_width, screen_height};
@@ -301,7 +297,7 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
 
 void ui_engine::text(std::string_view message)
 {
-    const auto quad = ui_graphics_quad{{600, 300}, 300, 300, 0.0f, {0, 0, 0, 0}, 1};
+    const auto quad = ui_graphics_quad{{600, 300}, 256, 256, 0.0f, {0, 0, 0, 0}, 1};
     d_quads.emplace_back(quad);
 }
 

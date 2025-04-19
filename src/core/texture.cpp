@@ -31,12 +31,14 @@ auto texture::set_data(std::span<const glm::vec4> data) -> void
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
         } break;
         case texture_type::red: {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, d_width, d_height, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         } break;
     }
 }
 
-auto texture::set_data(std::span<const unsigned char> data, u64 width, u64 height) -> void
+auto texture::set_data(std::span<const unsigned char> data, i32 width, i32 height) -> void
 {
     assert(width == d_width);
     assert(height == d_height);
@@ -46,19 +48,24 @@ auto texture::set_data(std::span<const unsigned char> data, u64 width, u64 heigh
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, data.data());
         } break;
         case texture_type::red: {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data.data());
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         } break;
     }
 }
 
-auto texture::set_subdata(std::span<const unsigned char> data, glm::ivec2 top_left, u64 width, u64 height) -> void
+auto texture::set_subdata(std::span<const unsigned char> data, glm::ivec2 top_left, i32 width, i32 height) -> void
 {
+    bind();
     switch (d_type) {
         case texture_type::rgba: {
             glTexSubImage2D(GL_TEXTURE_2D, 0, top_left.x, top_left.y, width, height, GL_RGBA, GL_FLOAT, data.data());
         } break;
         case texture_type::red: {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexSubImage2D(GL_TEXTURE_2D, 0, top_left.x, top_left.y, width, height, GL_RED, GL_UNSIGNED_BYTE, data.data());
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         } break;
     }
 }
@@ -78,7 +85,7 @@ auto texture::resize(std::uint32_t width, std::uint32_t height) -> void
     d_height = height;
 
     glGenTextures(1, &d_texture);
-    bind();
+    glBindTexture(GL_TEXTURE_2D, d_texture);
     glTextureParameteri(d_texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
