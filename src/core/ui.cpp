@@ -5,8 +5,6 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -20,7 +18,6 @@ namespace {
 auto load_pixel_font_atlas() -> font_atlas
 {
     font_atlas atlas;
-    std::print("making image texture\n");
     
     i32 width, height, channels;
     unsigned char *data = stbi_load("pixel_font.png", &width, &height, &channels, 0);
@@ -28,41 +25,8 @@ auto load_pixel_font_atlas() -> font_atlas
         std::print("Failed to load image\n");
         std::exit(1);
     }
-    std::print("here channels={}\n", channels);
     atlas.texture = std::make_unique<texture>(data, width, height);
     stbi_image_free(data);
-    std::print("Loaded atlas\n");
-    return atlas;
-}
-
-auto load_font_atlas() -> font_atlas
-{
-    FT_Library library;
-    if (FT_Init_FreeType(&library)) {
-        std::print("failed to init FreeType\n");
-        std::exit(1);
-    }
-    
-    FT_Face face;
-    if (FT_New_Face(library, "C:\\WINDOWS\\FONTS\\ARIAL.ttf", 0, &face))
-    {
-        std::print("ERROR::FREETYPE: Failed to load font\n");  
-        std::exit(1);
-    }
-    FT_Set_Pixel_Sizes(face, 0, 96);
-
-    if (FT_Load_Char(face, '%', FT_LOAD_RENDER))
-    {
-        std::print("ERROR::FREETYTPE: Failed to load Glyph\n");
-        std::exit(1);
-    }
-
-    font_atlas atlas;
-    atlas.texture = std::make_unique<texture>(texture_type::red);
-    atlas.texture->resize(256, 256);
-    std::span<const unsigned char> data{face->glyph->bitmap.buffer, face->glyph->bitmap.buffer + face->glyph->bitmap.width * face->glyph->bitmap.rows};
-    atlas.texture->set_subdata(data, {50, 50}, face->glyph->bitmap.width, face->glyph->bitmap.rows);
-
     return atlas;
 }
 

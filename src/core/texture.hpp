@@ -8,16 +8,8 @@
 
 namespace sand {
 
-enum class texture_type
-{
-    rgba,
-    red,
-};
-
 class texture
 {
-    texture_type d_type;
-
     u32 d_texture = 0;
     u32 d_width   = 0;
     u32 d_height  = 0;
@@ -26,8 +18,8 @@ class texture
     texture& operator=(const texture&) = delete;
 
 public:
-    texture(texture_type type = texture_type::rgba);
-    texture(u32 width, u32 height, texture_type type = texture_type::rgba);
+    texture();
+    texture(u32 width, u32 height);
     texture(const unsigned char* data, i32 width, i32 height);
     ~texture();
 
