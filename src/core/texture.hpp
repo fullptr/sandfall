@@ -8,18 +8,18 @@
 
 namespace sand {
 
-class texture
+class texture_dyn
 {
     u32 d_texture = 0;
     i32 d_width   = 0;
     i32 d_height  = 0;
 
-    texture(const texture&) = delete;
-    texture& operator=(const texture&) = delete;
+    texture_dyn(const texture_dyn&) = delete;
+    texture_dyn& operator=(const texture_dyn&) = delete;
 
 public:
-    texture();
-    ~texture();
+    texture_dyn();
+    ~texture_dyn();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
     auto bind() const -> void;

@@ -8,27 +8,27 @@
 #include <print>
 
 namespace sand {
-texture::texture()
+texture_dyn::texture_dyn()
 {}
 
-texture::~texture()
+texture_dyn::~texture_dyn()
 {
     glDeleteTextures(1, &d_texture);
 }
 
-auto texture::set_data(std::span<const glm::vec4> data) -> void
+auto texture_dyn::set_data(std::span<const glm::vec4> data) -> void
 {
     assert(data.size() == d_width * d_height);
     bind();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
 }
 
-auto texture::bind() const -> void
+auto texture_dyn::bind() const -> void
 {
     glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
-auto texture::resize(i32 width, i32 height) -> void
+auto texture_dyn::resize(i32 width, i32 height) -> void
 {
     if (d_texture) {
         glDeleteTextures(1, &d_texture);

@@ -19,7 +19,7 @@ class renderer
     u32 d_vbo;
     u32 d_ebo;
 
-    texture                d_texture;
+    texture_dyn                d_texture;
     std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
