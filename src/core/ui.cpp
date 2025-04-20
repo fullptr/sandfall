@@ -99,6 +99,8 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
     glVertexAttribPointer(6, 1, GL_INT,   GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
+    glVertexAttribPointer(7, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_pos));
+    glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_size));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -247,15 +249,16 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
         extra_width = sand::lerp(10.0f, 0.0f, t);
     }
     
-    const auto quad = ui_graphics_quad{pos, width + extra_width, height, 0.0f, colour, 0};
+    const auto quad = ui_graphics_quad{pos, width + extra_width, height, 0.0f, colour, 0, {0, 0}, {0, 0}};
     d_quads.emplace_back(quad);
     return data.clicked_this_frame;
 }
 
-void ui_engine::text(std::string_view message)
+void ui_engine::text(std::string_view message, glm::ivec2 pos)
 {
     constexpr auto colour = from_hex(0xd2dae2);
-    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1};
+    const auto ch_a = d_atlas.chars.at('A');
+    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1, ch_a.position, ch_a.size};
     d_quads.emplace_back(quad);
 }
 

@@ -39,6 +39,8 @@ struct ui_graphics_quad
     float     angle;
     glm::vec4 colour;
     int       use_texture;
+    glm::vec2 uv_pos;
+    glm::vec2 uv_size;
 
     static void set_buffer_attributes(std::uint32_t vbo);
 };
@@ -115,7 +117,7 @@ public:
 
     // Step 2: setup ui elements    
     bool button(std::string_view name, glm::vec2 pos, float width, float height);
-    void text(std::string_view message);
+    void text(std::string_view message, glm::ivec2 pos);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);
