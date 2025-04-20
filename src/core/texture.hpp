@@ -18,7 +18,7 @@ class texture_dyn
     texture_dyn& operator=(const texture_dyn&) = delete;
 
 public:
-    texture_dyn();
+    texture_dyn(i32 width, i32 height);
     ~texture_dyn();
 
     auto set_data(std::span<const glm::vec4> data) -> void;

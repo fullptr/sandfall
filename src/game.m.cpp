@@ -62,7 +62,7 @@ auto scene_level(sand::window& window) -> next_state
     using namespace sand;
     auto input           = sand::input{};
     auto level           = sand::load_level("save4.bin");
-    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
+    auto world_renderer  = sand::renderer{level->pixels.width_in_pixels(), level->pixels.height_in_pixels()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};

@@ -19,7 +19,7 @@ class renderer
     u32 d_vbo;
     u32 d_ebo;
 
-    texture_dyn                d_texture;
+    texture_dyn            d_texture;
     std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
@@ -28,7 +28,7 @@ class renderer
     renderer& operator=(const renderer&) = delete;
 
 public:
-    renderer(u32 width, u32 height);
+    renderer(i32 width, i32 height);
     ~renderer();
 
     auto bind() const -> void;

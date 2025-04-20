@@ -8,8 +8,11 @@
 #include <print>
 
 namespace sand {
-texture_dyn::texture_dyn()
-{}
+
+texture_dyn::texture_dyn(i32 width, i32 height)
+{
+    resize(width, height);
+}
 
 texture_dyn::~texture_dyn()
 {

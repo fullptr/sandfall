@@ -119,27 +119,6 @@ ui_engine::ui_engine()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
-    std::vector<glm::vec4> texture_data;
-    texture_data.resize(256 * 256);
-    for (int i = 0; i != 256; ++i) {
-        for (int j = 0; j != 256; ++j) {
-            const auto r = (float)i / 256.0f;
-            const auto g = (float)j / 256.0f;
-            texture_data[j * 256 + i] = {r, g, 0, 1};
-        }
-    }
-    d_temp_textures[0].resize(256, 256);
-    d_temp_textures[0].set_data(texture_data);
-    for (int i = 0; i != 256; ++i) {
-        for (int j = 0; j != 256; ++j) {
-            const auto r = (float)i / 256.0f;
-            const auto g = (float)j / 256.0f;
-            texture_data[j * 256 + i] = {r, 0, g, 1};
-        }
-    }
-    d_temp_textures[1].resize(256, 256);
-    d_temp_textures[1].set_data(texture_data);
-
     d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 }
