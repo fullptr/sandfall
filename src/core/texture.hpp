@@ -11,24 +11,23 @@ namespace sand {
 class texture
 {
     u32 d_texture = 0;
-    u32 d_width   = 0;
-    u32 d_height  = 0;
+    i32 d_width   = 0;
+    i32 d_height  = 0;
 
     texture(const texture&) = delete;
     texture& operator=(const texture&) = delete;
 
 public:
     texture();
-    texture(u32 width, u32 height);
     ~texture();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
     auto bind() const -> void;
 
-    auto resize(u32 width, u32 height) -> void;
+    auto resize(i32 width, i32 height) -> void;
 
-    auto width() const -> u32 { return d_width; }
-    auto height() const -> u32 { return d_height; }
+    auto width() const -> i32 { return d_width; }
+    auto height() const -> i32 { return d_height; }
 };
 
 class texture_png

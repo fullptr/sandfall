@@ -8,13 +8,6 @@
 #include <print>
 
 namespace sand {
-
-texture::texture(std::uint32_t width, std::uint32_t height)
-    : d_texture{0}
-{
-    resize(width, height);
-}
-
 texture::texture()
 {}
 
@@ -35,7 +28,7 @@ auto texture::bind() const -> void
     glBindTexture(GL_TEXTURE_2D, d_texture);
 }
 
-auto texture::resize(std::uint32_t width, std::uint32_t height) -> void
+auto texture::resize(i32 width, i32 height) -> void
 {
     if (d_texture) {
         glDeleteTextures(1, &d_texture);
