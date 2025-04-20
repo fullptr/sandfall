@@ -22,7 +22,7 @@ struct character
 
 struct font_atlas
 {
-    std::unique_ptr<texture>            texture;
+    std::unique_ptr<texture_png>        texture;
     std::unordered_map<char, character> chars;
 };
 

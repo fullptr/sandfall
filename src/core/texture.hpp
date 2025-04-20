@@ -36,4 +36,22 @@ public:
     auto height() const -> u32 { return d_height; }
 };
 
+class texture_png
+{
+    u32 d_texture = 0;
+    i32 d_width   = 0;
+    i32 d_height  = 0;
+
+    texture_png(const texture_png&) = delete;
+    texture_png& operator=(const texture_png&) = delete;
+
+public:
+    texture_png(const char* filename);
+    ~texture_png();
+    
+    auto bind()    const -> void;
+    auto width()   const -> i32 { return d_width; }
+    auto height()  const -> i32 { return d_height; }
+};
+
 }

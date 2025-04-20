@@ -6,9 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 #include <ranges>
 #include <print>
 
@@ -18,15 +15,7 @@ namespace {
 auto load_pixel_font_atlas() -> font_atlas
 {
     font_atlas atlas;
-    
-    i32 width, height, channels;
-    unsigned char *data = stbi_load("pixel_font.png", &width, &height, &channels, 0);
-    if (!data) {
-        std::print("Failed to load image\n");
-        std::exit(1);
-    }
-    atlas.texture = std::make_unique<texture>(data, width, height);
-    stbi_image_free(data);
+    atlas.texture = std::make_unique<texture_png>("pixel_font.png");
     return atlas;
 }
 
