@@ -16,6 +16,10 @@ auto load_pixel_font_atlas() -> font_atlas
 {
     font_atlas atlas;
     atlas.texture = std::make_unique<texture_png>("pixel_font.png");
+    atlas.missing_char = { .position{24, 52}, .size{5, 6}, .bearing{0, -6}, .advance=6 };
+    atlas.chars['A'] = character{ .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['B'] = character{ .position{6, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['C'] = character{ .position{12, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     return atlas;
 }
 
@@ -23,7 +27,7 @@ constexpr auto quad_vertex = R"SHADER(
     #version 410 core
     layout (location = 0) in vec2 p_position;
     
-    layout (location = 1) in vec2  quad_centre;
+    layout (location = 1) in vec2  quad_top_left;
     layout (location = 2) in float quad_width;
     layout (location = 3) in float quad_height;
     layout (location = 4) in float quad_angle;
@@ -45,8 +49,8 @@ constexpr auto quad_vertex = R"SHADER(
     
     void main()
     {
-        vec2 position = quad_centre;
         vec2 dimensions = vec2(quad_width, quad_height) / 2;
+        vec2 position = quad_top_left + dimensions;
     
         vec2 screen_position = rotate(quad_angle) * (p_position * dimensions) + position;
     
@@ -89,7 +93,7 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, centre));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, top_left));
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, width));
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
@@ -243,7 +247,7 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
         extra_width = sand::lerp(10.0f, 0.0f, t);
     }
     
-    const auto quad = ui_graphics_quad{data.centre, width + extra_width, height, 0.0f, colour, 0};
+    const auto quad = ui_graphics_quad{pos, width + extra_width, height, 0.0f, colour, 0};
     d_quads.emplace_back(quad);
     return data.clicked_this_frame;
 }
@@ -251,7 +255,7 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
 void ui_engine::text(std::string_view message)
 {
     constexpr auto colour = from_hex(0xd2dae2);
-    const auto quad = ui_graphics_quad{{600, 300}, 512, 512, 0.0f, colour, 1};
+    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1};
     d_quads.emplace_back(quad);
 }
 

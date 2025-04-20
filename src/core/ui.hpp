@@ -24,6 +24,7 @@ struct font_atlas
 {
     std::unique_ptr<texture_png>        texture;
     std::unordered_map<char, character> chars;
+    character                           missing_char;
 };
 
 // This is just a copy of quad_instance from the shape_renderer, should
@@ -32,7 +33,7 @@ struct font_atlas
 // together, but I still feel conflicted.
 struct ui_graphics_quad
 {
-    glm::vec2 centre;
+    glm::vec2 top_left;
     float     width;
     float     height;
     float     angle;
