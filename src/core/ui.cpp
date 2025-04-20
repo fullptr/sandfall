@@ -73,7 +73,7 @@ constexpr auto quad_fragment = R"SHADER(
     {
         if (o_use_texture > 0) {
             float red = texture(u_texture, o_uv).r;
-            out_colour = vec4(1, 1, 1, red);
+            out_colour = vec4(o_colour.xyz, red);
         } else {
             out_colour = o_colour;
         }
@@ -250,7 +250,8 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
 
 void ui_engine::text(std::string_view message)
 {
-    const auto quad = ui_graphics_quad{{600, 300}, 256, 256, 0.0f, {0, 0, 0, 0}, 1};
+    constexpr auto colour = from_hex(0xd2dae2);
+    const auto quad = ui_graphics_quad{{600, 300}, 512, 512, 0.0f, colour, 1};
     d_quads.emplace_back(quad);
 }
 
