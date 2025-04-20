@@ -8,11 +8,32 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <ranges>
 #include <print>
 
 namespace sand {
 namespace {
+
+auto load_pixel_font_atlas() -> font_atlas
+{
+    font_atlas atlas;
+    std::print("making image texture\n");
+    
+    i32 width, height, channels;
+    unsigned char *data = stbi_load("pixel_font.png", &width, &height, &channels, 0);
+    if (!data) {
+        std::print("Failed to load image\n");
+        std::exit(1);
+    }
+    std::print("here channels={}\n", channels);
+    atlas.texture = std::make_unique<texture>(data, width, height);
+    stbi_image_free(data);
+    std::print("Loaded atlas\n");
+    return atlas;
+}
 
 auto load_font_atlas() -> font_atlas
 {
@@ -126,7 +147,7 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
 
 ui_engine::ui_engine()
     : d_shader(quad_vertex, quad_fragment)
-    , d_atlas{load_font_atlas()}
+    , d_atlas{load_pixel_font_atlas()}
 {
     const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f};
     const std::uint32_t indices[] = {0, 1, 2, 0, 2, 3};
