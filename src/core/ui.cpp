@@ -20,6 +20,15 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['A'] = character{ .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['B'] = character{ .position{6, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['C'] = character{ .position{12, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['D'] = character{ .position{18, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['E'] = character{ .position{24, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
+    atlas.chars['F'] = character{ .position{29, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
+    atlas.chars['G'] = character{ .position{34, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['H'] = character{ .position{40, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['I'] = character{ .position{46, 0}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
+    atlas.chars['J'] = character{ .position{50, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
+    atlas.chars['K'] = character{ .position{55, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
+    atlas.chars['L'] = character{ .position{60, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
     return atlas;
 }
 
