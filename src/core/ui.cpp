@@ -149,10 +149,8 @@ constexpr auto quad_vertex = R"SHADER(
         o_use_texture = quad_use_texture;
         o_colour = quad_colour;
 
-        ivec2 texture_size = textureSize(u_texture, 0);
-
         o_uv = (p_position + vec2(1, 1)) / 2;
-        o_uv = (o_uv * quad_uv_size + quad_uv_pos) / texture_size;
+        o_uv = (o_uv * quad_uv_size + quad_uv_pos) / textureSize(u_texture, 0);
     }
 )SHADER";
     
@@ -291,7 +289,7 @@ void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
     d_shader.load_int("u_use_texture", 1);
 
     glEnable(GL_BLEND);
-    //glBlendEquation(GL_FUNC_ADD);
+    glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     const auto dimensions = glm::vec2{screen_width, screen_height};

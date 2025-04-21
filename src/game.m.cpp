@@ -39,17 +39,18 @@ auto scene_main_menu(sand::window& window) -> next_state
             ui.on_event(event);
         }
 
+        ui.text("Start Game", {215, 200});
         if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
+        ui.text("Exit", {215, 350});
         if (ui.button("button2", {100, 250}, 100, 100)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
         
-        ui.text("Matt: 2 + 2 == 4; lorum ipsum... Last one Laughing", {50, 50});
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
