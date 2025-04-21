@@ -63,7 +63,7 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("qui officia deserunt mollit anim id est laborum.", {500, 200 + 7 * 11 * scale}, scale);
 
         ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {100, 600}, scale);
-        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' #", {100, 600 + 1 * 11 * scale}, scale);
+        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~", {100, 600 + 1 * 11 * scale}, scale);
 
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
