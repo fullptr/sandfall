@@ -33,8 +33,11 @@ constexpr auto quad_vertex = R"SHADER(
     layout (location = 4) in float quad_angle;
     layout (location = 5) in vec4  quad_colour;
     layout (location = 6) in int   quad_use_texture;
+    layout (location = 7) in ivec2 quad_uv_pos;
+    layout (location = 8) in ivec2 quad_uv_size;
     
-    uniform mat4 u_proj_matrix;
+    uniform mat4      u_proj_matrix;
+    uniform sampler2D u_texture;
     
     flat out int o_use_texture;
     out vec4     o_colour;
@@ -58,7 +61,11 @@ constexpr auto quad_vertex = R"SHADER(
     
         o_use_texture = quad_use_texture;
         o_colour = quad_colour;
+
+        ivec2 texture_size = textureSize(u_texture, 0);
+
         o_uv = vec2((p_position.x + 1), (p_position.y + 1)) / 2;
+        o_uv = (o_uv * quad_uv_size + quad_uv_pos) / texture_size;
     }
 )SHADER";
     
@@ -89,7 +96,7 @@ constexpr auto quad_fragment = R"SHADER(
 void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
 {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    for (int i = 1; i != 7; ++i) {
+    for (int i = 1; i != 9; ++i) {
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
@@ -98,9 +105,9 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
-    glVertexAttribPointer(6, 1, GL_INT,   GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
-    glVertexAttribPointer(7, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_pos));
-    glVertexAttribPointer(8, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_size));
+    glVertexAttribIPointer(6, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
+    glVertexAttribIPointer(7, 2, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_pos));
+    glVertexAttribIPointer(8, 2, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_size));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -257,8 +264,8 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
 void ui_engine::text(std::string_view message, glm::ivec2 pos)
 {
     constexpr auto colour = from_hex(0xd2dae2);
-    const auto ch_a = d_atlas.chars.at('A');
-    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1, ch_a.position, ch_a.size};
+    const auto ch_a = d_atlas.chars.at('B');
+    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1, {6, 0}, {5, 7}};
     d_quads.emplace_back(quad);
 }
 

@@ -33,14 +33,14 @@ struct font_atlas
 // together, but I still feel conflicted.
 struct ui_graphics_quad
 {
-    glm::vec2 top_left;
-    float     width;
-    float     height;
-    float     angle;
-    glm::vec4 colour;
-    int       use_texture;
-    glm::vec2 uv_pos;
-    glm::vec2 uv_size;
+    glm::vec2  top_left;
+    float      width;
+    float      height;
+    float      angle;
+    glm::vec4  colour;
+    int        use_texture;
+    glm::ivec2 uv_pos;
+    glm::ivec2 uv_size;
 
     static void set_buffer_attributes(std::uint32_t vbo);
 };
