@@ -6,7 +6,6 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(cereal CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
-find_package(freetype CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 
 add_library(core STATIC
@@ -37,5 +36,4 @@ target_link_libraries(core PRIVATE
     imgui::imgui
     cereal::cereal
     box2d::box2d
-    Freetype::Freetype
 )
