@@ -84,8 +84,10 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['0'] = character{ .position{51, 43}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
 
     atlas.chars['!'] = character{ .position{60, 8}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
-    atlas.chars[';'] = character{ .position{62, 8}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
+    atlas.chars[';'] = character{ .position{62, 10}, .size={2, 7}, .bearing={0, -5}, .advance=3 };
+    atlas.chars[':'] = character{ .position{63, 10}, .size={1, 4}, .bearing={0, -5}, .advance=2 };
     atlas.chars[','] = character{ .position{61, 29}, .size={2, 2}, .bearing={0, -2}, .advance=3 };
+    atlas.chars['.'] = character{ .position{62, 29}, .size={1, 1}, .bearing={0, -1}, .advance=2 };
     atlas.chars[' '] = character{ .position{0, 0}, .size={1, 1}, .bearing={0, 0}, .advance=3 };
     atlas.chars['('] = character{ .position{38, 32}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
     atlas.chars[')'] = character{ .position{41, 32}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
