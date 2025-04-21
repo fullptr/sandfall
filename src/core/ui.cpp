@@ -84,6 +84,7 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['0'] = { .position{51, 43}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
 
     atlas.chars['#'] = { .position{42, 51}, .size={5, 5}, .bearing={0, -6}, .advance=6 };
+    atlas.chars['&'] = { .position{28, 35}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['~'] = { .position{6, 40}, .size={4, 2}, .bearing={0, -5}, .advance=5 };
     atlas.chars['!'] = { .position{60, 8}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
     atlas.chars['?'] = { .position{57, 43}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
@@ -112,6 +113,7 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['\\'] = { .position{24, 32}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
     atlas.chars['\"'] = { .position{8, 51}, .size={3, 2}, .bearing={0, -7}, .advance=4 };
     atlas.chars['\''] = { .position{8, 51}, .size={1, 2}, .bearing={0, -7}, .advance=2 };
+    '£';
     return atlas;
 }
 
