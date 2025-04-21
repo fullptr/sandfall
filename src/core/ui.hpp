@@ -49,7 +49,7 @@ struct ui_graphics_quad
 
 struct ui_logic_quad
 {
-    glm::vec2 centre = {0, 0};
+    glm::vec2 top_left = {0, 0};
     f32       width = 0;
     f32       height = 0;
     bool      active = false;
@@ -98,10 +98,10 @@ class ui_engine
 
     font_atlas d_atlas;
 
-    const ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
+    const ui_logic_quad& get_data(std::string_view name, glm::vec2 top_left, f32 width, f32 height) { 
         auto& data = d_data[name];
         data.active = true; // keep this alive
-        data.centre = pos + glm::vec2{width/2, height/2};
+        data.top_left = top_left;
         data.width = width;
         data.height = height;
         return data;

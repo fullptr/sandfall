@@ -236,10 +236,10 @@ ui_engine::~ui_engine()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-static auto is_in_region(glm::vec2 pos, glm::vec2 centre, f32 width, f32 height) -> bool
+static auto is_in_region(glm::vec2 pos, glm::vec2 top_left, f32 width, f32 height) -> bool
 {
-    return (centre.x - width / 2) <= pos.x && pos.x < (centre.x + width / 2)
-    && (centre.y - height / 2) <= pos.y && pos.y < (centre.y + height / 2);
+    return top_left.x <= pos.x && pos.x < top_left.x + width
+        && top_left.y <= pos.y && pos.y < top_left.y + height;
 }
 
 void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
@@ -264,7 +264,7 @@ void ui_engine::draw_frame(i32 screen_width, i32 screen_height, f64 dt)
             data.unclicked_time = d_time;
         }
         
-        if (is_in_region(d_mouse_pos, data.centre, data.width, data.height)) {
+        if (is_in_region(d_mouse_pos, data.top_left, data.width, data.height)) {
             d_capture_mouse = true;
 
             if (!data.is_hovered()) {
