@@ -15,7 +15,7 @@ namespace {
 auto load_pixel_font_atlas() -> font_atlas
 {
     font_atlas atlas;
-    atlas.texture = std::make_unique<texture_png>("pixel_font.png");
+    atlas.texture = std::make_unique<texture_png>("res\\pixel_font.png");
     atlas.missing_char = { .position{24, 52}, .size{5, 6}, .bearing{0, -6}, .advance=6 };
 
     atlas.chars['A'] = { .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };

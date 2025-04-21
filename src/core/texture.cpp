@@ -52,7 +52,7 @@ auto texture_dyn::resize(i32 width, i32 height) -> void
 texture_png::texture_png(const char* filename)
 {
     i32 channels = 0;
-    unsigned char *data = stbi_load("pixel_font.png", &d_width, &d_height, &channels, 0);
+    unsigned char *data = stbi_load(filename, &d_width, &d_height, &channels, 0);
     if (!data) {
         std::print("Failed to load image\n");
         std::exit(1);
