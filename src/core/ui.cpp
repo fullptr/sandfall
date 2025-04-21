@@ -67,6 +67,10 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['t'] = character{ .position{47, 24}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
     atlas.chars['u'] = character{ .position{50, 26}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
     atlas.chars['v'] = character{ .position{55, 26}, .size={5, 5}, .bearing={0, -5}, .advance=6 };
+    atlas.chars['w'] = character{ .position{0, 34}, .size={5, 5}, .bearing={0, -5}, .advance=6 };
+    atlas.chars['x'] = character{ .position{6, 34}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
+    atlas.chars['y'] = character{ .position{11, 34}, .size={4, 7}, .bearing={0, -5}, .advance=5 };
+    atlas.chars['z'] = character{ .position{16, 34}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
 
     atlas.chars['!'] = character{ .position{60, 8}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
     atlas.chars[';'] = character{ .position{62, 8}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
