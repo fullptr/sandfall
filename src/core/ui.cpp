@@ -64,7 +64,7 @@ constexpr auto quad_vertex = R"SHADER(
 
         ivec2 texture_size = textureSize(u_texture, 0);
 
-        o_uv = vec2((p_position.x + 1), (p_position.y + 1)) / 2;
+        o_uv = (p_position + vec2(1, 1)) / 2;
         o_uv = (o_uv * quad_uv_size + quad_uv_pos) / texture_size;
     }
 )SHADER";
@@ -91,6 +91,14 @@ constexpr auto quad_fragment = R"SHADER(
     }
 )SHADER";
 
+}
+
+auto font_atlas::get_character(char c) const -> const character&
+{
+    if (auto it = chars.find(c); it != chars.end()) {
+        return it->second;
+    }
+    return missing_char;
 }
 
 void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
@@ -261,12 +269,27 @@ bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 heig
     return data.clicked_this_frame;
 }
 
-void ui_engine::text(std::string_view message, glm::ivec2 pos)
+void ui_engine::text(std::string_view message, glm::vec2 pos)
 {
     constexpr auto colour = from_hex(0xd2dae2);
-    const auto ch_a = d_atlas.chars.at('B');
-    const auto quad = ui_graphics_quad{{250, 100}, 512, 512, 0.0f, colour, 1, {6, 0}, {5, 7}};
-    d_quads.emplace_back(quad);
+    const auto scale = 3.0f;
+    for (char c : message) {
+        const auto ch = d_atlas.get_character(c);
+        const auto sizef = glm::vec2{ch.size};
+        const auto bearingf = glm::vec2{ch.bearing};
+        const auto quad = ui_graphics_quad{
+            pos + (scale * bearingf),
+            scale * (sizef.x),
+            scale * (sizef.y),
+            0.0f,
+            colour,
+            1,
+            ch.position,
+            ch.size
+        };
+        d_quads.emplace_back(quad);
+        pos.x += scale * ch.advance;
+    }
 }
 
 }

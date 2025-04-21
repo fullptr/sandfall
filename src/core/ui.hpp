@@ -25,6 +25,8 @@ struct font_atlas
     std::unique_ptr<texture_png>        texture;
     std::unordered_map<char, character> chars;
     character                           missing_char;
+
+    auto get_character(char c) const -> const character&;
 };
 
 // This is just a copy of quad_instance from the shape_renderer, should
@@ -117,7 +119,7 @@ public:
 
     // Step 2: setup ui elements    
     bool button(std::string_view name, glm::vec2 pos, float width, float height);
-    void text(std::string_view message, glm::ivec2 pos);
+    void text(std::string_view message, glm::vec2 pos);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);

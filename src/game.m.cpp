@@ -49,7 +49,7 @@ auto scene_main_menu(sand::window& window) -> next_state
             return next_state::exit;
         }
         
-        ui.text("hello world", {200, 100});
+        ui.text("ABCDABC", {200, 100});
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
