@@ -7,8 +7,8 @@ namespace sand {
 
 class input
 {
-    std::bitset<128> d_keyboard_down;
-    std::bitset<128> d_keyboard_down_this_frame;
+    std::bitset<348> d_keyboard_down;
+    std::bitset<348> d_keyboard_down_this_frame;
     
     std::bitset<8> d_mouse_down;
     std::bitset<8> d_mouse_down_this_frame;

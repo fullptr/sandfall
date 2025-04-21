@@ -38,17 +38,33 @@ auto scene_main_menu(sand::window& window) -> next_state
         for (const auto event : window.events()) {
             ui.on_event(event);
         }
+        
+        const auto scale = 3.0f;
 
+        ui.text("Start Game", {215, 200}, scale);
         if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
+        ui.text("Exit", {215, 350}, scale);
         if (ui.button("button2", {100, 250}, 100, 100)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
-        
+
+        ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {500, 200}, scale);
+        ui.text("sed do eiusmod tempor incididunt ut labore et dolore magna", {500, 200 + 1 * 11 * scale}, scale);
+        ui.text("aliqua. Ut enim ad minim veniam, quis nostrud exercitation", {500, 200 + 2 * 11 * scale}, scale);
+        ui.text("ullamco laboris nisi ut aliquip ex ea commodo consequat.", {500, 200 + 3 * 11 * scale}, scale);
+        ui.text("Duis aute irure dolor in reprehenderit in voluptate velit", {500, 200 + 4 * 11 * scale}, scale);
+        ui.text("esse cillum dolore eu fugiat nulla pariatur. Excepteur", {500, 200 + 5 * 11 * scale}, scale);
+        ui.text("sint occaecat cupidatat non proident, sunt in culpa", {500, 200 + 6 * 11 * scale}, scale);
+        ui.text("qui officia deserunt mollit anim id est laborum.", {500, 200 + 7 * 11 * scale}, scale);
+
+        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {100, 600}, scale);
+        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {100, 600 + 1 * 11 * scale}, scale);
+
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
@@ -61,7 +77,7 @@ auto scene_level(sand::window& window) -> next_state
     using namespace sand;
     auto input           = sand::input{};
     auto level           = sand::load_level("save4.bin");
-    auto world_renderer  = sand::renderer{static_cast<u32>(level->pixels.width_in_pixels()), static_cast<u32>(level->pixels.height_in_pixels())};
+    auto world_renderer  = sand::renderer{level->pixels.width_in_pixels(), level->pixels.height_in_pixels()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
@@ -93,7 +109,7 @@ auto scene_level(sand::window& window) -> next_state
             }
         }
 
-        if (input.is_down_this_frame(keyboard::P)) {
+        if (input.is_down_this_frame(keyboard::escape)) {
             return next_state::main_menu;
         }
 
@@ -160,9 +176,11 @@ auto main() -> int
                 next = scene_level(window);
             } break;
             case next_state::exit: {
+                std::print("closing game\n");
                 return 1;
             } break;
             default: {
+                std::print("how did we get here\n");
                 return 1; // TODO: Handle this better
             }
         }

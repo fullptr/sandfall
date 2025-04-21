@@ -5,11 +5,29 @@
 #include "event.hpp"
 #include "common.hpp"
 
+#include <array>
 #include <unordered_map>
 
 #include <glm/glm.hpp>
 
 namespace sand {
+
+struct character
+{
+    glm::ivec2 position;
+    glm::ivec2 size;
+    glm::ivec2 bearing;
+    i32        advance;
+};
+
+struct font_atlas
+{
+    std::unique_ptr<texture_png>        texture;
+    std::unordered_map<char, character> chars;
+    character                           missing_char;
+
+    auto get_character(char c) const -> const character&;
+};
 
 // This is just a copy of quad_instance from the shape_renderer, should
 // we combine these? I'm just making a copy now since I am assuming both will
@@ -17,18 +35,21 @@ namespace sand {
 // together, but I still feel conflicted.
 struct ui_graphics_quad
 {
-    glm::vec2 centre;
-    float     width;
-    float     height;
-    float     angle;
-    glm::vec4 colour;
+    glm::vec2  top_left;
+    float      width;
+    float      height;
+    float      angle;
+    glm::vec4  colour;
+    int        use_texture;
+    glm::ivec2 uv_pos;
+    glm::ivec2 uv_size;
 
     static void set_buffer_attributes(std::uint32_t vbo);
 };
 
 struct ui_logic_quad
 {
-    glm::vec2 centre = {0, 0};
+    glm::vec2 top_left = {0, 0};
     f32       width = 0;
     f32       height = 0;
     bool      active = false;
@@ -75,10 +96,12 @@ class ui_engine
 
     std::unordered_map<std::string_view, ui_logic_quad> d_data;
 
-    const ui_logic_quad& get_data(std::string_view name, glm::vec2 pos, f32 width, f32 height) { 
+    font_atlas d_atlas;
+
+    const ui_logic_quad& get_data(std::string_view name, glm::vec2 top_left, f32 width, f32 height) { 
         auto& data = d_data[name];
         data.active = true; // keep this alive
-        data.centre = pos + glm::vec2{width/2, height/2};
+        data.top_left = top_left;
         data.width = width;
         data.height = height;
         return data;
@@ -95,7 +118,8 @@ public:
     bool on_event(const event& e);
 
     // Step 2: setup ui elements    
-    bool button(std::string_view name, glm::vec2 pos, float width, float height);
+    bool button(std::string_view name, glm::vec2 pos, f32 width, f32 height);
+    void text(std::string_view message, glm::vec2 pos, f32 size);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);

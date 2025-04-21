@@ -60,11 +60,11 @@ auto light_noise(glm::vec4 vec) -> glm::vec4
 
 }
 
-renderer::renderer(u32 width, u32 height)
+renderer::renderer(i32 width, i32 height)
     : d_vao{0}
     , d_vbo{0}
     , d_ebo{0}
-    , d_texture{}
+    , d_texture{width, height}
     , d_texture_data{}
     , d_shader{vertex_shader, fragment_shader}
 {
