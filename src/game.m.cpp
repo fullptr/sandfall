@@ -49,7 +49,7 @@ auto scene_main_menu(sand::window& window) -> next_state
             return next_state::exit;
         }
         
-        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890", {50, 50});
+        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!;,(){}^<>_-+=\"@%", {50, 50});
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }

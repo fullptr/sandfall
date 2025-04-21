@@ -17,6 +17,7 @@ auto load_pixel_font_atlas() -> font_atlas
     font_atlas atlas;
     atlas.texture = std::make_unique<texture_png>("pixel_font.png");
     atlas.missing_char = { .position{24, 52}, .size{5, 6}, .bearing{0, -6}, .advance=6 };
+
     atlas.chars['A'] = character{ .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['B'] = character{ .position{6, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['C'] = character{ .position{12, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
@@ -29,6 +30,19 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['J'] = character{ .position{50, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
     atlas.chars['K'] = character{ .position{55, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
     atlas.chars['L'] = character{ .position{60, 0}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
+
+    atlas.chars['M'] = character{ .position{0, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['N'] = character{ .position{6, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['O'] = character{ .position{12, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['P'] = character{ .position{18, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['Q'] = character{ .position{24, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['R'] = character{ .position{30, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['S'] = character{ .position{36, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['T'] = character{ .position{42, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['U'] = character{ .position{48, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['V'] = character{ .position{54, 8}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
+    atlas.chars['!'] = character{ .position{60, 8}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
+    atlas.chars[';'] = character{ .position{62, 8}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
     return atlas;
 }
 
