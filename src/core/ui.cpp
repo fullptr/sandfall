@@ -113,7 +113,8 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['\\'] = { .position{24, 32}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
     atlas.chars['\"'] = { .position{8, 51}, .size={3, 2}, .bearing={0, -7}, .advance=4 };
     atlas.chars['\''] = { .position{8, 51}, .size={1, 2}, .bearing={0, -7}, .advance=2 };
-    '£';
+    atlas.chars['|'] = { .position{48, 51}, .size={1, 9}, .bearing={0, -8}, .advance=2 };
+    atlas.chars['`'] = { .position{50, 51}, .size={2, 2}, .bearing={0, -7}, .advance=3 };
     return atlas;
 }
 
