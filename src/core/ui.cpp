@@ -51,10 +51,10 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['d'] = character{ .position{39, 16}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
     atlas.chars['e'] = character{ .position{44, 18}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
     atlas.chars['f'] = character{ .position{49, 16}, .size={3, 10}, .bearing={0, -7}, .advance=4 };
-    atlas.chars['g'] = character{ .position{53, 19}, .size={4, 7}, .bearing={0, -4}, .advance=5 };
+    atlas.chars['g'] = character{ .position{53, 18}, .size={4, 8}, .bearing={0, -5}, .advance=5 };
     atlas.chars['h'] = character{ .position{58, 16}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
-    atlas.chars['i'] = character{ .position{63, 17}, .size={1, 6}, .bearing={0, -6}, .advance=2 };
-    atlas.chars['j'] = character{ .position{1, 25}, .size={2, 9}, .bearing={0, -6}, .advance=3 };
+    atlas.chars['i'] = character{ .position{63, 16}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
+    atlas.chars['j'] = character{ .position{1, 24}, .size={2, 10}, .bearing={0, -7}, .advance=3 };
     atlas.chars['k'] = character{ .position{4, 24}, .size={4, 7}, .bearing={0, -7}, .advance=5 };
     atlas.chars['l'] = character{ .position{9, 24}, .size={1, 7}, .bearing={0, -7}, .advance=2 };
     atlas.chars['m'] = character{ .position{11, 26}, .size={5, 5}, .bearing={0, -5}, .advance=6 };
@@ -69,7 +69,7 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars['v'] = character{ .position{55, 26}, .size={5, 5}, .bearing={0, -5}, .advance=6 };
     atlas.chars['w'] = character{ .position{0, 34}, .size={5, 5}, .bearing={0, -5}, .advance=6 };
     atlas.chars['x'] = character{ .position{6, 34}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
-    atlas.chars['y'] = character{ .position{11, 34}, .size={4, 7}, .bearing={0, -5}, .advance=5 };
+    atlas.chars['y'] = character{ .position{11, 34}, .size={4, 8}, .bearing={0, -5}, .advance=5 };
     atlas.chars['z'] = character{ .position{16, 34}, .size={4, 5}, .bearing={0, -5}, .advance=5 };
 
     atlas.chars['1'] = character{ .position{0, 43}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
