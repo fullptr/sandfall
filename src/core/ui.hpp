@@ -118,8 +118,8 @@ public:
     bool on_event(const event& e);
 
     // Step 2: setup ui elements    
-    bool button(std::string_view name, glm::vec2 pos, float width, float height);
-    void text(std::string_view message, glm::vec2 pos);
+    bool button(std::string_view name, glm::vec2 pos, f32 width, f32 height);
+    void text(std::string_view message, glm::vec2 pos, f32 size);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);

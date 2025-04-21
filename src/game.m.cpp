@@ -38,19 +38,33 @@ auto scene_main_menu(sand::window& window) -> next_state
         for (const auto event : window.events()) {
             ui.on_event(event);
         }
+        
+        const auto scale = 3.0f;
 
-        ui.text("Start Game (by Matt) {BY MATT} [BE MATT]", {215, 200});
+        ui.text("Start Game", {215, 200}, scale);
         if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
-        ui.text("Exit", {215, 350});
+        ui.text("Exit", {215, 350}, scale);
         if (ui.button("button2", {100, 250}, 100, 100)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
-        
+
+        ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {500, 200}, scale);
+        ui.text("sed do eiusmod tempor incididunt ut labore et dolore magna", {500, 200 + 1 * 10 * scale}, scale);
+        ui.text("aliqua. Ut enim ad minim veniam, quis nostrud exercitation", {500, 200 + 2 * 10 * scale}, scale);
+        ui.text("ullamco laboris nisi ut aliquip ex ea commodo consequat.", {500, 200 + 3 * 10 * scale}, scale);
+        ui.text("Duis aute irure dolor in reprehenderit in voluptate velit", {500, 200 + 4 * 10 * scale}, scale);
+        ui.text("esse cillum dolore eu fugiat nulla pariatur. Excepteur", {500, 200 + 5 * 10 * scale}, scale);
+        ui.text("sint occaecat cupidatat non proident, sunt in culpa", {500, 200 + 6 * 10 * scale}, scale);
+        ui.text("qui officia deserunt mollit anim id est laborum.", {500, 200 + 7 * 10 * scale}, scale);
+
+        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {100, 600}, scale);
+        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \"", {100, 600 + 1 * 10 * scale}, scale);
+
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
