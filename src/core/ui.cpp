@@ -89,12 +89,12 @@ auto load_pixel_font_atlas() -> font_atlas
     atlas.chars[','] = character{ .position{61, 29}, .size={2, 2}, .bearing={0, -2}, .advance=3 };
     atlas.chars['.'] = character{ .position{62, 29}, .size={1, 1}, .bearing={0, -1}, .advance=2 };
     atlas.chars[' '] = character{ .position{0, 0}, .size={1, 1}, .bearing={0, 0}, .advance=3 };
-    atlas.chars['('] = character{ .position{38, 32}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
-    atlas.chars[')'] = character{ .position{41, 32}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
-    atlas.chars['{'] = character{ .position{44, 32}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
-    atlas.chars['}'] = character{ .position{48, 32}, .size={3, 7}, .bearing={0, -7}, .advance=4 };
-    atlas.chars['['] = character{ .position{30, 51}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
-    atlas.chars[']'] = character{ .position{33, 51}, .size={2, 7}, .bearing={0, -7}, .advance=3 };
+    atlas.chars['('] = character{ .position{38, 32}, .size={2, 9}, .bearing={0, -8}, .advance=3 };
+    atlas.chars[')'] = character{ .position{41, 32}, .size={2, 9}, .bearing={0, -8}, .advance=3 };
+    atlas.chars['{'] = character{ .position{44, 32}, .size={3, 9}, .bearing={0, -8}, .advance=4 };
+    atlas.chars['}'] = character{ .position{48, 32}, .size={3, 9}, .bearing={0, -8}, .advance=4 };
+    atlas.chars['['] = character{ .position{30, 51}, .size={2, 9}, .bearing={0, -8}, .advance=3 };
+    atlas.chars[']'] = character{ .position{33, 51}, .size={2, 9}, .bearing={0, -8}, .advance=3 };
     atlas.chars['^'] = character{ .position{52, 32}, .size={5, 3}, .bearing={0, -7}, .advance=6 };
     atlas.chars['<'] = character{ .position{58, 32}, .size={3, 5}, .bearing={0, -6}, .advance=4 };
     atlas.chars['>'] = character{ .position{61, 34}, .size={3, 5}, .bearing={0, -6}, .advance=4 };

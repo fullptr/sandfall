@@ -39,7 +39,7 @@ auto scene_main_menu(sand::window& window) -> next_state
             ui.on_event(event);
         }
 
-        ui.text("Start Game", {215, 200});
+        ui.text("Start Game (by Matt) {BY MATT} [BE MATT]", {215, 200});
         if (ui.button("button1", {100, 100}, 100, 100)) {
             std::print("loading level!\n");
             return next_state::level;
