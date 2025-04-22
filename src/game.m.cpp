@@ -42,13 +42,13 @@ auto scene_main_menu(sand::window& window) -> next_state
         const auto scale = 3.0f;
 
         ui.text("Start Game", {215, 200}, scale);
-        if (ui.button("button1", {100, 100}, 100, 100)) {
+        if (ui.button({100, 100}, 100, 100)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
         ui.text("Exit", {215, 350}, scale);
-        if (ui.button("button2", {100, 250}, 100, 100)) {
+        if (ui.button({100, 250}, 100, 100)) {
             std::print("exiting!\n");
             return next_state::exit;
         }

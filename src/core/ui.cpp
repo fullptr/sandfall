@@ -330,9 +330,9 @@ bool ui_engine::on_event(const event& event)
     return false;
 }
 
-bool ui_engine::button(std::string_view name, glm::vec2 pos, f32 width, f32 height)
+bool ui_engine::button(glm::vec2 pos, f32 width, f32 height, const widget_key& key)
 {
-    const auto& data = get_data(name, pos, width, height);
+    const auto& data = get_data(key, pos, width, height);
     
     constexpr auto unhovered_colour = from_hex(0x17c0eb);
     constexpr auto hovered_colour = from_hex(0x18dcff);

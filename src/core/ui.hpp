@@ -7,8 +7,39 @@
 
 #include <array>
 #include <unordered_map>
+#include <source_location>
 
 #include <glm/glm.hpp>
+
+namespace sand {
+
+class widget_key
+{
+    std::string_view d_file;
+    u64              d_line;
+    u64              d_column;
+
+public:
+    widget_key(std::source_location loc = std::source_location::current())
+        : d_file{loc.file_name()}
+        , d_line{loc.line()}
+        , d_column{loc.column()}
+    {}
+    auto operator<=>(const widget_key&) const = default;
+    auto operator==(const widget_key&) const -> bool = default;
+    auto hash() const -> std::size_t { return 1; }
+};
+
+}
+
+template<>
+struct std::hash<sand::widget_key>
+{
+    auto operator()(const sand::widget_key& wk) const -> std::size_t
+    {
+        return wk.hash();
+    }
+};
 
 namespace sand {
 
@@ -94,12 +125,12 @@ class ui_engine
     f64       d_time                 = 0.0;
     bool      d_capture_mouse        = false;
 
-    std::unordered_map<std::string_view, ui_logic_quad> d_data;
+    std::unordered_map<widget_key, ui_logic_quad> d_data;
 
     font_atlas d_atlas;
 
-    const ui_logic_quad& get_data(std::string_view name, glm::vec2 top_left, f32 width, f32 height) { 
-        auto& data = d_data[name];
+    const ui_logic_quad& get_data(const widget_key& key, glm::vec2 top_left, f32 width, f32 height) { 
+        auto& data = d_data[key];
         data.active = true; // keep this alive
         data.top_left = top_left;
         data.width = width;
@@ -118,7 +149,7 @@ public:
     bool on_event(const event& e);
 
     // Step 2: setup ui elements    
-    bool button(std::string_view name, glm::vec2 pos, f32 width, f32 height);
+    bool button(glm::vec2 pos, f32 width, f32 height, const widget_key& key = {});
     void text(std::string_view message, glm::vec2 pos, f32 size);
     
     // Step 3: draw
