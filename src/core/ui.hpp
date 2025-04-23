@@ -56,6 +56,7 @@ struct font_atlas
     std::unique_ptr<texture_png>        texture;
     std::unordered_map<char, character> chars;
     character                           missing_char;
+    i32                                 height; // height of an "a", used for centring
 
     auto get_character(char c) const -> const character&;
 };
@@ -66,9 +67,9 @@ struct font_atlas
 // together, but I still feel conflicted.
 struct ui_graphics_quad
 {
-    glm::vec2  top_left;
-    float      width;
-    float      height;
+    glm::ivec2 top_left;
+    int        width;
+    int        height;
     float      angle;
     glm::vec4  colour;
     int        use_texture;
@@ -149,8 +150,8 @@ public:
     bool on_event(const event& e);
 
     // Step 2: setup ui elements    
-    bool button(glm::vec2 pos, f32 width, f32 height, const widget_key& key = {});
-    void text(std::string_view message, glm::vec2 pos, f32 size);
+    bool button(std::string_view msg, glm::ivec2 pos, i32 width, i32 height, i32 scale, const widget_key& key = {});
+    void text(std::string_view message, glm::ivec2 pos, i32 size);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);

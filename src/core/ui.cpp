@@ -17,7 +17,8 @@ auto load_pixel_font_atlas() -> font_atlas
     font_atlas atlas;
     atlas.texture = std::make_unique<texture_png>("res\\pixel_font.png");
     atlas.missing_char = { .position{24, 52}, .size{5, 6}, .bearing{0, -6}, .advance=6 };
-
+    atlas.height = 7;
+    
     atlas.chars['A'] = { .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['B'] = { .position{6, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['C'] = { .position{12, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
@@ -122,9 +123,9 @@ constexpr auto quad_vertex = R"SHADER(
     #version 410 core
     layout (location = 0) in vec2 p_position;
     
-    layout (location = 1) in vec2  quad_top_left;
-    layout (location = 2) in float quad_width;
-    layout (location = 3) in float quad_height;
+    layout (location = 1) in ivec2 quad_top_left;
+    layout (location = 2) in int   quad_width;
+    layout (location = 3) in int   quad_height;
     layout (location = 4) in float quad_angle;
     layout (location = 5) in vec4  quad_colour;
     layout (location = 6) in int   quad_use_texture;
@@ -201,9 +202,9 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
     }
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, top_left));
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, width));
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
+    glVertexAttribIPointer(1, 2, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, top_left));
+    glVertexAttribIPointer(2, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, width));
+    glVertexAttribIPointer(3, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
     glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
     glVertexAttribIPointer(6, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
@@ -330,7 +331,8 @@ bool ui_engine::on_event(const event& event)
     return false;
 }
 
-bool ui_engine::button(glm::vec2 pos, f32 width, f32 height, const widget_key& key)
+bool ui_engine::button(
+    std::string_view msg, glm::ivec2 pos, i32 width, i32 height, i32 scale, const widget_key& key)
 {
     const auto& data = get_data(key, pos, width, height);
     
@@ -357,22 +359,27 @@ bool ui_engine::button(glm::vec2 pos, f32 width, f32 height, const widget_key& k
         extra_width = sand::lerp(10.0f, 0.0f, t);
     }
     
-    const auto quad = ui_graphics_quad{pos, width + extra_width, height, 0.0f, colour, 0, {0, 0}, {0, 0}};
+    const auto quad = ui_graphics_quad{pos, (i32)std::trunc(width + extra_width), height, 0.0f, colour, 0, {0, 0}, {0, 0}};
     d_quads.emplace_back(quad);
+
+    if (!msg.empty()) {
+        auto text_pos = pos;
+        text_pos.y += 301.0f;
+        text(msg, text_pos, scale);
+    }
     return data.clicked_this_frame;
 }
 
-void ui_engine::text(std::string_view message, glm::vec2 pos, f32 size)
+void ui_engine::text(std::string_view message, glm::ivec2 pos, i32 size)
 {
     constexpr auto colour = from_hex(0xd2dae2);
     for (char c : message) {
         const auto ch = d_atlas.get_character(c);
-        const auto sizef = glm::vec2{ch.size};
-        const auto bearingf = glm::vec2{ch.bearing};
+        
         const auto quad = ui_graphics_quad{
-            pos + (size * bearingf),
-            size * (sizef.x),
-            size * (sizef.y),
+            pos + (size * ch.bearing),
+            size * ch.size.x,
+            size * ch.size.y,
             0.0f,
             colour,
             1,
