@@ -17,7 +17,7 @@ auto load_pixel_font_atlas() -> font_atlas
     font_atlas atlas;
     atlas.texture = std::make_unique<texture_png>("res\\pixel_font.png");
     atlas.missing_char = { .position{24, 52}, .size{5, 6}, .bearing{0, -6}, .advance=6 };
-    atlas.height = 7;
+    atlas.height = 5;
     
     atlas.chars['A'] = { .position{0, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
     atlas.chars['B'] = { .position{6, 0}, .size={5, 7}, .bearing={0, -7}, .advance=6 };
@@ -343,28 +343,28 @@ bool ui_engine::button(
     const auto lerp_time = 0.1;
     
     auto colour = unhovered_colour;
-    auto extra_width = 0.0f;
+    auto extra_width = 0;
     if (data.is_clicked()) {
         colour = clicked_colour;
-        extra_width = 10.0f;
+        extra_width = 10;
     }
     else if (data.is_hovered()) {
         const auto t = std::clamp(data.time_hovered(d_time) / lerp_time, 0.0, 1.0);
         colour = sand::lerp(unhovered_colour, hovered_colour, t);
-        extra_width = sand::lerp(0.0f, 10.0f, t);
+        extra_width = sand::lerp(0, 10, t);
     }
     else if (d_time > lerp_time) { // Don't start the game looking hovered
         const auto t = std::clamp(data.time_unhovered(d_time) / lerp_time, 0.0, 1.0);
         colour = sand::lerp(hovered_colour, unhovered_colour, t);
-        extra_width = sand::lerp(10.0f, 0.0f, t);
+        extra_width = sand::lerp(10, 0, t);
     }
     
-    const auto quad = ui_graphics_quad{pos, (i32)std::trunc(width + extra_width), height, 0.0f, colour, 0, {0, 0}, {0, 0}};
+    const auto quad = ui_graphics_quad{pos, width + extra_width, height, 0.0f, colour, 0, {0, 0}, {0, 0}};
     d_quads.emplace_back(quad);
 
     if (!msg.empty()) {
         auto text_pos = pos;
-        text_pos.y += 301.0f;
+        text_pos.y += (height + d_atlas.height * scale) / 2;
         text(msg, text_pos, scale);
     }
     return data.clicked_this_frame;
@@ -375,7 +375,7 @@ void ui_engine::text(std::string_view message, glm::ivec2 pos, i32 size)
     constexpr auto colour = from_hex(0xd2dae2);
     for (char c : message) {
         const auto ch = d_atlas.get_character(c);
-        
+
         const auto quad = ui_graphics_quad{
             pos + (size * ch.bearing),
             size * ch.size.x,
