@@ -30,7 +30,7 @@ auto scene_main_menu(sand::window& window) -> next_state
     auto ui              = sand::ui_engine{};
     auto mouse_pos       = glm::vec2{0, 0};
 
-    constexpr auto clear_colour = from_hex(0x3d3d3d);
+    constexpr auto clear_colour = from_hex(0x222f3e);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -45,17 +45,15 @@ auto scene_main_menu(sand::window& window) -> next_state
         
         const auto scale = 3.0f;
 
-        if (ui.button("Start Game", {100, 100}, 100, 100, scale)) {
+        if (ui.button("Start Game", {100, 100}, 200, 50, scale)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
-        if (ui.button("Exit", {100, 250}, 100, 100, scale)) {
+        if (ui.button("Exit", {100, 160}, 200, 50, scale)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
-
-        ui.text("Start Game", mouse_pos, scale);
 
         ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {500, 200}, scale);
         ui.text("sed do eiusmod tempor incididunt ut labore et dolore magna", {500, 200 + 1 * 11 * scale}, scale);
