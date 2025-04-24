@@ -33,9 +33,9 @@ public:
 
     auto bind() const -> void;
 
-    auto update(const level& world, const camera& camera) -> void;
+    auto update(const level& world) -> void;
 
-    auto draw() const -> void;
+    auto draw(const camera& camera) const -> void;
 
     auto resize(u32 width, u32 height) -> void;
 };

@@ -260,9 +260,9 @@ auto main() -> int
         // Render and display the world
         world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, camera);
+            world_renderer.update(*level);
         }
-        world_renderer.draw();
+        world_renderer.draw(camera);
 
         shape_renderer.begin_frame(camera);
 

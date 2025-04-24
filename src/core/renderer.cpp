@@ -104,7 +104,7 @@ auto renderer::bind() const -> void
     d_shader.bind();
 }
 
-auto renderer::update(const level& world, const camera& camera) -> void
+auto renderer::update(const level& world) -> void
 {
     if (d_texture.width() != world.pixels.width_in_pixels() || d_texture.height() != world.pixels.height_in_pixels()) {
         resize(world.pixels.width_in_pixels(), world.pixels.height_in_pixels());
@@ -154,19 +154,21 @@ auto renderer::update(const level& world, const camera& camera) -> void
             }
         }
     }
+    d_texture.set_data(d_texture_data);
+    
+}
 
+auto renderer::draw(const camera& camera) const -> void
+{
+    d_shader.bind();
     d_shader.load_vec2("u_tex_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);
-
+    
     const auto projection = glm::ortho(
         0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
     );
     d_shader.load_mat4("u_proj_matrix", projection);
-    d_texture.set_data(d_texture_data);
-}
-
-auto renderer::draw() const -> void
-{
+    
     d_texture.bind();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }

@@ -144,9 +144,9 @@ auto scene_level(sand::window& window) -> next_state
 
         world_renderer.bind();
         if (updated || input.is_down(keyboard::R)) {
-            world_renderer.update(*level, camera);
+            world_renderer.update(*level);
         }
-        world_renderer.draw();
+        world_renderer.draw(camera);
 
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(camera);      
