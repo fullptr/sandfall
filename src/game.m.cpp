@@ -28,7 +28,6 @@ auto scene_main_menu(sand::window& window) -> next_state
     using namespace sand;
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
-    auto mouse_pos       = glm::vec2{0, 0};
 
     constexpr auto clear_colour = from_hex(0x222f3e);
 
@@ -38,9 +37,6 @@ auto scene_main_menu(sand::window& window) -> next_state
 
         for (const auto event : window.events()) {
             ui.on_event(event);
-            if (auto e = event.get_if<mouse_moved_event>()) {
-                mouse_pos = e->pos;
-            }
         }
         
         const auto scale = 3.0f;
