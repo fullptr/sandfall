@@ -45,8 +45,16 @@ uniform sampler2D u_texture;
 void main()
 {
     out_colour = texture(u_texture, pass_uv);
-}
+    }
 )SHADER";
+
+constexpr auto fire_colours = std::array{
+    from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
+};
+
+constexpr auto electricity_colours = std::array{
+    from_hex(0xf6e58d), from_hex(0xf9ca24)
+};
 
 auto light_noise(glm::vec4 vec) -> glm::vec4
 {
@@ -103,15 +111,7 @@ auto renderer::update(const level& world) -> void
         resize(world.pixels.width_in_pixels(), world.pixels.height_in_pixels());
     }
 
-    static const auto fire_colours = std::array{
-        from_hex(0xe55039), from_hex(0xf6b93b), from_hex(0xfad390)
-    };
-
-    static const auto electricity_colours = std::array{
-        from_hex(0xf6e58d), from_hex(0xf9ca24)
-    };
-
-    glm::vec4 data[config::chunk_size * config::chunk_size] = {};
+    auto buffer = std::array<glm::vec4, config::chunk_size * config::chunk_size> {};
 
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
@@ -126,7 +126,7 @@ auto renderer::update(const level& world) -> void
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
                     
-                    auto& colour = data[x + config::chunk_size * y];
+                    auto& colour = buffer[x + config::chunk_size * y];
                     if (pixel.flags[is_burning]) {
                         colour = sand::random_element(fire_colours);
                     }
@@ -147,10 +147,9 @@ auto renderer::update(const level& world) -> void
                     }
                 }
             }
-            d_texture.set_subdata(data, glm::ivec2{top_left}, config::chunk_size, config::chunk_size);
+            d_texture.set_subdata(buffer, glm::ivec2{top_left}, config::chunk_size, config::chunk_size);
         }
-    }
-    
+    }    
 }
 
 auto renderer::draw(const camera& camera) const -> void
