@@ -36,7 +36,7 @@ window::window(const char* name, int width, int height)
 
     glfwMakeContextCurrent(native_window);
     glfwSetWindowUserPointer(native_window, &d_data);
-    enable_vsync(true);
+    enable_vsync(false);
 
     // Initialise GLAD
     if (0 == gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
