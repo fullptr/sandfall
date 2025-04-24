@@ -56,6 +56,13 @@ auto scene_main_menu(sand::window& window) -> next_state
             return next_state::exit;
         }
 
+        if (ui.button("Enable Vsync", {10, 50}, button_width, button_height, scale)) {
+            window.enable_vsync(true);
+        }
+        if (ui.button("Disable Vsync", {10, 110}, button_width, button_height, scale)) {
+            window.enable_vsync(false);
+        }
+
         const auto para_left = 100;
         const auto para_top = 300;
         ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {para_left, para_top}, scale);
@@ -69,11 +76,11 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {para_left, para_top + 8 * 11 * scale}, scale);
         ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
-        ui.draw_frame(window.width(), window.height(), dt);
-
+        
         const auto frame_rate = std::format_to_n(frame_rate_str, 64, "{}", timer.frame_rate());
         const auto frame_rate_msg = std::string_view{frame_rate_str, frame_rate.out};
         ui.text(frame_rate_msg, {0, 21}, 3);
+        ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
 
