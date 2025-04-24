@@ -76,7 +76,7 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
         std::array<char, 8> buf = {};
-        ui.text(sand::format_to(buf, "{}", timer.frame_rate()), {0, 21}, 3);
+        ui.text_box(sand::format_to(buf, "{}", timer.frame_rate()), {0, 0}, 120, 50, 3);
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
@@ -170,7 +170,7 @@ auto scene_level(sand::window& window) -> next_state
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};
-        ui.text(sand::format_to(buf, "{}", timer.frame_rate()), {0, 21}, 3);
+        ui.text_box(sand::format_to(buf, "{}", timer.frame_rate()), {0, 0}, 120, 50, 3);
         ui.draw_frame(window.width(), window.height(), dt);
 
         window.end_frame();
