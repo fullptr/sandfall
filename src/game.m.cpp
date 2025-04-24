@@ -29,7 +29,8 @@ auto scene_main_menu(sand::window& window) -> next_state
     using namespace sand;
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
-    char frame_rate_str[64];
+
+    std::array<char, 64> frame_rate_buf = {};
 
     constexpr auto clear_colour = from_hex(0x222f3e);
 
@@ -76,10 +77,7 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {para_left, para_top + 8 * 11 * scale}, scale);
         ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
-        
-        const auto frame_rate = std::format_to_n(frame_rate_str, 64, "{}", timer.frame_rate());
-        const auto frame_rate_msg = std::string_view{frame_rate_str, frame_rate.out};
-        ui.text(frame_rate_msg, {0, 21}, 3);
+        ui.text(sand::format_to(frame_rate_buf, "{}", timer.frame_rate()), {0, 21}, 3);
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
@@ -99,7 +97,7 @@ auto scene_level(sand::window& window) -> next_state
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
 
-    char frame_rate_str[64];
+    std::array<char, 64> frame_rate_buf = {};
 
     const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
     auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
@@ -173,9 +171,7 @@ auto scene_level(sand::window& window) -> next_state
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
 
-        const auto frame_rate = std::format_to_n(frame_rate_str, 64, "{}", timer.frame_rate());
-        const auto frame_rate_msg = std::string_view{frame_rate_str, frame_rate.out};
-        ui.text(frame_rate_msg, {0, 21}, 3);
+        ui.text(sand::format_to(frame_rate_buf, "{}", timer.frame_rate()), {0, 21}, 3);
         ui.draw_frame(window.width(), window.height(), dt);
 
         window.end_frame();
