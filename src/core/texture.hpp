@@ -22,6 +22,7 @@ public:
     ~texture_dyn();
 
     auto set_data(std::span<const glm::vec4> data) -> void;
+    auto set_subdata(std::span<const glm::vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void;
     auto bind() const -> void;
 
     auto resize(i32 width, i32 height) -> void;

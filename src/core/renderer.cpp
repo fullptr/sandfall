@@ -65,7 +65,6 @@ renderer::renderer(i32 width, i32 height)
     , d_vbo{0}
     , d_ebo{0}
     , d_texture{width, height}
-    , d_texture_data{}
     , d_shader{vertex_shader, fragment_shader}
 {
     const f32 vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
@@ -98,13 +97,7 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::bind() const -> void
-{
-    glBindVertexArray(d_vao);
-    d_shader.bind();
-}
-
-auto renderer::update(const level& world, const camera& camera) -> void
+auto renderer::update(const level& world) -> void
 {
     if (d_texture.width() != world.pixels.width_in_pixels() || d_texture.height() != world.pixels.height_in_pixels()) {
         resize(world.pixels.width_in_pixels(), world.pixels.height_in_pixels());
@@ -118,13 +111,7 @@ auto renderer::update(const level& world, const camera& camera) -> void
         from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
-    d_shader.load_vec2("u_tex_offset", camera.top_left);
-    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
-
-    const auto projection = glm::ortho(
-        0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
-    );
-    d_shader.load_mat4("u_proj_matrix", projection);
+    glm::vec4 data[config::chunk_size * config::chunk_size] = {};
 
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
@@ -139,7 +126,7 @@ auto renderer::update(const level& world, const camera& camera) -> void
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
                     
-                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
+                    auto& colour = data[x + config::chunk_size * y];
                     if (pixel.flags[is_burning]) {
                         colour = sand::random_element(fire_colours);
                     }
@@ -160,21 +147,31 @@ auto renderer::update(const level& world, const camera& camera) -> void
                     }
                 }
             }
+            d_texture.set_subdata(data, glm::ivec2{top_left}, config::chunk_size, config::chunk_size);
         }
     }
-
-    d_texture.set_data(d_texture_data);
+    
 }
 
-auto renderer::draw() const -> void
+auto renderer::draw(const camera& camera) const -> void
 {
+    glBindVertexArray(d_vao);
+    d_shader.bind();
+    d_shader.load_vec2("u_tex_offset", camera.top_left);
+    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
+    
+    const auto projection = glm::ortho(
+        0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
+    );
+    d_shader.load_mat4("u_proj_matrix", projection);
+    
+    d_texture.bind();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
 auto renderer::resize(u32 width, u32 height) -> void
 {
     d_texture.resize(width, height);
-    d_texture_data.resize(width * height);
 }
 
 }

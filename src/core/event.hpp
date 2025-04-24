@@ -60,11 +60,11 @@ struct mouse_released_event {
 };
 
 struct mouse_moved_event {
-	glm::vec2 pos;
+	glm::ivec2 pos;
 };
 
 struct mouse_scrolled_event {
-	glm::vec2 offset;
+	glm::ivec2 offset;
 };
 
 // WINDOW EVENTS

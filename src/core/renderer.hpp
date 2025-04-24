@@ -20,7 +20,6 @@ class renderer
     u32 d_ebo;
 
     texture_dyn            d_texture;
-    std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
 
@@ -31,11 +30,9 @@ public:
     renderer(i32 width, i32 height);
     ~renderer();
 
-    auto bind() const -> void;
+    auto update(const level& world) -> void;
 
-    auto update(const level& world, const camera& camera) -> void;
-
-    auto draw() const -> void;
+    auto draw(const camera& camera) const -> void;
 
     auto resize(u32 width, u32 height) -> void;
 };

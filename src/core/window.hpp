@@ -52,6 +52,8 @@ public:
     auto width() const -> int;
     auto height() const -> int;
 
+    auto enable_vsync(bool enable) const -> void;
+
     auto native_handle() -> GLFWwindow*;
 };
 

@@ -42,15 +42,6 @@ auto update_player(entity& e, const input& in) -> void
     if (on_ground) {
         e.double_jump = true;
     }
-    if (in.is_down_this_frame(keyboard::W) || in.is_down_this_frame(mouse::left)) {
-        if (on_ground || e.double_jump) {
-            if (!on_ground) {
-                e.double_jump = false;
-            }
-            float impulse = e.body->GetMass() * 7;
-            e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
-        }
-    }
 }
 
 auto update_enemy(entity& e, const input& in) -> void
@@ -62,6 +53,22 @@ auto update_enemy(entity& e, const input& in) -> void
             const auto self_pos = entity_centre(e);
             const auto dir = glm::normalize(pos - self_pos);
             e.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
+        }
+    }
+}
+
+auto player_handle_event(entity& e, const event& ev) -> void
+{
+    const bool on_ground = !e.floors.empty();
+    if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
+        if (inner->key == keyboard::W) {
+            if (on_ground || e.double_jump) {
+                if (!on_ground) {
+                    e.double_jump = false;
+                }
+                float impulse = e.body->GetMass() * 7;
+                e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+            }
         }
     }
 }
@@ -278,6 +285,15 @@ auto update_entity(entity& e, const input& in) -> void
         } break;
         case entity_type::enemy: {
             update_enemy(e, in);
+        } break;
+    }
+}
+
+auto entity_handle_event(entity& e, const event& ev) -> void
+{
+    switch (e.type) {
+        case entity_type::player: {
+            player_handle_event(e, ev);
         } break;
     }
 }

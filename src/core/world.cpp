@@ -486,7 +486,7 @@ auto world::step() -> void
         }
     }
     
-    d_physics.Step(sand::config::time_step, 8, 3);
+    d_physics.Step(sand::config::time_step, 10, 5);
 }
 
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)

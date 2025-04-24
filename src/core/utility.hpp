@@ -105,6 +105,12 @@ inline auto to_string(glm::vec2 v) -> std::string
     return std::format("glm::vec2{{{}, {}}}", v.x, v.y);
 }
 
+template <typename... Args>
+auto format_to(std::span<char> buffer, std::format_string<Args...> fmt, Args&&... args) -> std::string_view
+{
+    const auto result = std::format_to_n(buffer.data(), buffer.size(), fmt, std::forward<Args>(args)...);
+    return {buffer.data(), result.out};
+}
 
 template <typename T>
 concept has_to_string_member = requires(T obj)

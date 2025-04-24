@@ -26,6 +26,12 @@ auto texture_dyn::set_data(std::span<const glm::vec4> data) -> void
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
 }
 
+auto texture_dyn::set_subdata(std::span<const glm::vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void
+{
+    assert(data.size() == width * height);
+    glTextureSubImage2D(d_texture, 0, top_left.x, top_left.y, width, height, GL_RGBA, GL_FLOAT, data.data());
+}
+
 auto texture_dyn::bind() const -> void
 {
     glBindTexture(GL_TEXTURE_2D, d_texture);

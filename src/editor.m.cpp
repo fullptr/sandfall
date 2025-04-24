@@ -98,6 +98,10 @@ auto main() -> int
             }
 
             input.on_event(event);
+            entity_handle_event(level->player, event);
+            for (auto& e: level->entities) {
+                entity_handle_event(e, event);
+            }
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -258,11 +262,10 @@ auto main() -> int
         ImGui::End();
 
         // Render and display the world
-        world_renderer.bind();
         if (updated) {
-            world_renderer.update(*level, camera);
+            world_renderer.update(*level);
         }
-        world_renderer.draw();
+        world_renderer.draw(camera);
 
         shape_renderer.begin_frame(camera);
 
