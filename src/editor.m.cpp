@@ -124,9 +124,9 @@ auto main() -> int
             level->pixels.step();
         }
 
-        update_entity(level->player, input);
+        update_entity(level->player, input, dt);
         for (auto& e: level->entities) {
-            update_entity(e, input);
+            update_entity(e, input, dt);
         }
 
         const auto mouse_pos = pixel_at_mouse(input, camera);

@@ -9,7 +9,7 @@ namespace {
 static constexpr auto player_id = 1;
 static constexpr auto enemy_id = 2;
 
-auto update_player(entity& e, const input& in) -> void
+auto update_player(entity& e, const input& in, double dt) -> void
 {
     const bool on_ground = !e.floors.empty();
     const bool can_move_left = e.num_left_contacts == 0;
@@ -53,7 +53,7 @@ auto update_player(entity& e, const input& in) -> void
     }
 }
 
-auto update_enemy(entity& e, const input& in) -> void
+auto update_enemy(entity& e, const input& in, double dt) -> void
 {
     for (const auto curr : e.nearby_entities) {
         const auto user_data = curr->GetUserData();
@@ -270,14 +270,14 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     return e;
 }
 
-auto update_entity(entity& e, const input& in) -> void
+auto update_entity(entity& e, const input& in, double dt) -> void
 {
     switch (e.type) {
         case entity_type::player: {
-            update_player(e, in);
+            update_player(e, in, dt);
         } break;
         case entity_type::enemy: {
-            update_enemy(e, in);
+            update_enemy(e, in, dt);
         } break;
     }
 }
