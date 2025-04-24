@@ -98,6 +98,10 @@ auto main() -> int
             }
 
             input.on_event(event);
+            entity_handle_event(level->player, event);
+            for (auto& e: level->entities) {
+                entity_handle_event(e, event);
+            }
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -124,9 +128,9 @@ auto main() -> int
             level->pixels.step();
         }
 
-        update_entity(level->player, input, dt);
+        update_entity(level->player, input);
         for (auto& e: level->entities) {
-            update_entity(e, input, dt);
+            update_entity(e, input);
         }
 
         const auto mouse_pos = pixel_at_mouse(input, camera);

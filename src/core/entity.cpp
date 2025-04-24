@@ -9,7 +9,7 @@ namespace {
 static constexpr auto player_id = 1;
 static constexpr auto enemy_id = 2;
 
-auto update_player(entity& e, const input& in, double dt) -> void
+auto update_player(entity& e, const input& in) -> void
 {
     const bool on_ground = !e.floors.empty();
     const bool can_move_left = e.num_left_contacts == 0;
@@ -42,18 +42,9 @@ auto update_player(entity& e, const input& in, double dt) -> void
     if (on_ground) {
         e.double_jump = true;
     }
-    if (in.is_down_this_frame(keyboard::W) || in.is_down_this_frame(mouse::left)) {
-        if (on_ground || e.double_jump) {
-            if (!on_ground) {
-                e.double_jump = false;
-            }
-            float impulse = e.body->GetMass() * 7;
-            e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
-        }
-    }
 }
 
-auto update_enemy(entity& e, const input& in, double dt) -> void
+auto update_enemy(entity& e, const input& in) -> void
 {
     for (const auto curr : e.nearby_entities) {
         const auto user_data = curr->GetUserData();
@@ -62,6 +53,22 @@ auto update_enemy(entity& e, const input& in, double dt) -> void
             const auto self_pos = entity_centre(e);
             const auto dir = glm::normalize(pos - self_pos);
             e.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
+        }
+    }
+}
+
+auto player_handle_event(entity& e, const event& ev) -> void
+{
+    const bool on_ground = !e.floors.empty();
+    if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
+        if (inner->key == keyboard::W) {
+            if (on_ground || e.double_jump) {
+                if (!on_ground) {
+                    e.double_jump = false;
+                }
+                float impulse = e.body->GetMass() * 7;
+                e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+            }
         }
     }
 }
@@ -270,14 +277,23 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     return e;
 }
 
-auto update_entity(entity& e, const input& in, double dt) -> void
+auto update_entity(entity& e, const input& in) -> void
 {
     switch (e.type) {
         case entity_type::player: {
-            update_player(e, in, dt);
+            update_player(e, in);
         } break;
         case entity_type::enemy: {
-            update_enemy(e, in, dt);
+            update_enemy(e, in);
+        } break;
+    }
+}
+
+auto entity_handle_event(entity& e, const event& ev) -> void
+{
+    switch (e.type) {
+        case entity_type::player: {
+            player_handle_event(e, ev);
         } break;
     }
 }

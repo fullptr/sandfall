@@ -107,6 +107,10 @@ auto scene_level(sand::window& window) -> next_state
         
         for (const auto event : window.events()) {
             input.on_event(event);
+            entity_handle_event(level->player, event);
+            for (auto& e: level->entities) {
+                entity_handle_event(e, event);
+            }
             
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -124,9 +128,9 @@ auto scene_level(sand::window& window) -> next_state
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            update_entity(level->player, input, dt);
+            update_entity(level->player, input);
             for (auto& e : level->entities) {
-                update_entity(e, input, dt);
+                update_entity(e, input);
             }
             level->pixels.step();
         }
