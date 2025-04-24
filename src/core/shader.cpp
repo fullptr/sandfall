@@ -62,22 +62,22 @@ auto shader::unbind() const -> void
 
 auto shader::load_mat4(const char* name, const glm::mat4& matrix) const -> void
 {
-    glUniformMatrix4fv(get_location(name), 1, GL_FALSE, glm::value_ptr(matrix));
+    glProgramUniformMatrix4fv(d_program, get_location(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 auto shader::load_vec2(const char* name, const glm::vec2& vector) const -> void
 {
-	glUniform2f(get_location(name), vector.x, vector.y);
+	glProgramUniform2f(d_program, get_location(name), vector.x, vector.y);
 }
 
 auto shader::load_vec3(const char* name, const glm::vec3& vector) const -> void
 {
-	glUniform3f(get_location(name), vector.x, vector.y, vector.z);
+	glProgramUniform3f(d_program, get_location(name), vector.x, vector.y, vector.z);
 }
 
 auto shader::load_vec4(const char* name, const glm::vec4& vector) const -> void
 {
-	glUniform4f(get_location(name), vector.x, vector.y, vector.z, vector.w);
+	glProgramUniform4f(d_program, get_location(name), vector.x, vector.y, vector.z, vector.w);
 }
 
 auto shader::load_sampler(const char* name, int value) const -> void
@@ -92,7 +92,7 @@ auto shader::load_int(const char* name, int value) const -> void
 
 auto shader::load_float(const char* name, float value) const -> void
 {
-	glUniform1f(get_location(name), value);
+	glProgramUniform1f(d_program, get_location(name), value);
 }
 
 }

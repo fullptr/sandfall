@@ -91,8 +91,6 @@ renderer::renderer(i32 width, i32 height)
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
-
-    d_shader.bind();
     d_shader.load_sampler("u_texture", 0);
 
     resize(width, height);
