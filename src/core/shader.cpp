@@ -33,8 +33,7 @@ auto compile_shader(std::uint32_t type, const char* source) -> std::uint32_t
 
 }
 
-shader::shader(const char* vertex_shader_source,
-		       const char* fragment_shader_source)
+shader::shader(const char* vertex_shader_source, const char* fragment_shader_source)
 	: d_program(glCreateProgram())
 	, d_vertex_shader(compile_shader(GL_VERTEX_SHADER, vertex_shader_source))
 	, d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, fragment_shader_source))
@@ -45,7 +44,16 @@ shader::shader(const char* vertex_shader_source,
 	glValidateProgram(d_program);
 }
 
-auto shader::get_location(const char* name) const -> std::uint32_t
+shader::~shader()
+{
+	glDetachShader(d_program, d_vertex_shader);
+    glDetachShader(d_program, d_fragment_shader);
+    glDeleteShader(d_vertex_shader);
+    glDeleteShader(d_fragment_shader);
+    glDeleteProgram(d_program);
+}
+
+auto shader::get_location(const char* name) const -> u32
 {
     return glGetUniformLocation(d_program, name);
 }
