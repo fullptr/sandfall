@@ -98,12 +98,6 @@ renderer::~renderer()
     glDeleteVertexArrays(1, &d_vao);
 }
 
-auto renderer::bind() const -> void
-{
-    glBindVertexArray(d_vao);
-    d_shader.bind();
-}
-
 auto renderer::update(const level& world) -> void
 {
     if (d_texture.width() != world.pixels.width_in_pixels() || d_texture.height() != world.pixels.height_in_pixels()) {
@@ -160,6 +154,7 @@ auto renderer::update(const level& world) -> void
 
 auto renderer::draw(const camera& camera) const -> void
 {
+    glBindVertexArray(d_vao);
     d_shader.bind();
     d_shader.load_vec2("u_tex_offset", camera.top_left);
     d_shader.load_float("u_world_to_screen", camera.world_to_screen);

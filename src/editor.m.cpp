@@ -262,7 +262,6 @@ auto main() -> int
         ImGui::End();
 
         // Render and display the world
-        world_renderer.bind();
         if (updated) {
             world_renderer.update(*level);
         }

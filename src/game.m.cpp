@@ -146,8 +146,7 @@ auto scene_level(sand::window& window) -> next_state
             camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
         }
 
-        world_renderer.bind();
-        if (updated || input.is_down(keyboard::R)) {
+        if (updated) {
             world_renderer.update(*level);
         }
         world_renderer.draw(camera);

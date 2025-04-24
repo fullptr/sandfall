@@ -31,8 +31,6 @@ public:
     renderer(i32 width, i32 height);
     ~renderer();
 
-    auto bind() const -> void;
-
     auto update(const level& world) -> void;
 
     auto draw(const camera& camera) const -> void;
