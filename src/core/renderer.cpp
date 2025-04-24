@@ -65,7 +65,6 @@ renderer::renderer(i32 width, i32 height)
     , d_vbo{0}
     , d_ebo{0}
     , d_texture{width, height}
-    , d_texture_data{}
     , d_shader{vertex_shader, fragment_shader}
 {
     const f32 vertices[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
@@ -112,6 +111,8 @@ auto renderer::update(const level& world) -> void
         from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
+    glm::vec4 data[config::chunk_size * config::chunk_size] = {};
+
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
@@ -125,7 +126,7 @@ auto renderer::update(const level& world) -> void
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
                     
-                    auto& colour = d_texture_data[world_coord.x + d_texture.width() * world_coord.y];
+                    auto& colour = data[x + config::chunk_size * y];
                     if (pixel.flags[is_burning]) {
                         colour = sand::random_element(fire_colours);
                     }
@@ -146,9 +147,9 @@ auto renderer::update(const level& world) -> void
                     }
                 }
             }
+            d_texture.set_subdata(data, glm::ivec2{top_left}, config::chunk_size, config::chunk_size);
         }
     }
-    d_texture.set_data(d_texture_data);
     
 }
 
@@ -171,7 +172,6 @@ auto renderer::draw(const camera& camera) const -> void
 auto renderer::resize(u32 width, u32 height) -> void
 {
     d_texture.resize(width, height);
-    d_texture_data.resize(width * height);
 }
 
 }

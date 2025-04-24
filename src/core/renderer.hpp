@@ -20,7 +20,6 @@ class renderer
     u32 d_ebo;
 
     texture_dyn            d_texture;
-    std::vector<glm::vec4> d_texture_data;
 
     shader d_shader;
 

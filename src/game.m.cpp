@@ -29,6 +29,7 @@ auto scene_main_menu(sand::window& window) -> next_state
     using namespace sand;
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
+    char frame_rate_str[64];
 
     constexpr auto clear_colour = from_hex(0x222f3e);
 
@@ -69,6 +70,10 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
         ui.draw_frame(window.width(), window.height(), dt);
+
+        const auto frame_rate = std::format_to_n(frame_rate_str, 64, "{}", timer.frame_rate());
+        const auto frame_rate_msg = std::string_view{frame_rate_str, frame_rate.out};
+        ui.text(frame_rate_msg, {0, 21}, 3);
         window.end_frame();
     }
 
