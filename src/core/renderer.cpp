@@ -118,14 +118,6 @@ auto renderer::update(const level& world, const camera& camera) -> void
         from_hex(0xf6e58d), from_hex(0xf9ca24)
     };
 
-    d_shader.load_vec2("u_tex_offset", camera.top_left);
-    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
-
-    const auto projection = glm::ortho(
-        0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
-    );
-    d_shader.load_mat4("u_proj_matrix", projection);
-
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
@@ -163,11 +155,19 @@ auto renderer::update(const level& world, const camera& camera) -> void
         }
     }
 
+    d_shader.load_vec2("u_tex_offset", camera.top_left);
+    d_shader.load_float("u_world_to_screen", camera.world_to_screen);
+
+    const auto projection = glm::ortho(
+        0.0f, static_cast<float>(camera.screen_width), static_cast<float>(camera.screen_height), 0.0f
+    );
+    d_shader.load_mat4("u_proj_matrix", projection);
     d_texture.set_data(d_texture_data);
 }
 
 auto renderer::draw() const -> void
 {
+    d_texture.bind();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 

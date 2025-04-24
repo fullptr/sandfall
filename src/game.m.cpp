@@ -124,6 +124,10 @@ auto scene_level(sand::window& window) -> next_state
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
+            update_entity(level->player, input, dt);
+            for (auto& e : level->entities) {
+                update_entity(e, input, dt);
+            }
             level->pixels.step();
         }
 
@@ -138,13 +142,8 @@ auto scene_level(sand::window& window) -> next_state
             camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
         }
 
-        update_entity(level->player, input, dt);
-        for (auto& e : level->entities) {
-            update_entity(e, input, dt);
-        }
-
         world_renderer.bind();
-        if (updated) {
+        if (updated || input.is_down(keyboard::R)) {
             world_renderer.update(*level, camera);
         }
         world_renderer.draw();
