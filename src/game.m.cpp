@@ -29,7 +29,7 @@ auto scene_main_menu(sand::window& window) -> next_state
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
 
-    constexpr auto clear_colour = from_hex(0x3d3d3d);
+    constexpr auto clear_colour = from_hex(0x222f3e);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -40,30 +40,32 @@ auto scene_main_menu(sand::window& window) -> next_state
         }
         
         const auto scale = 3.0f;
+        const auto button_width = 200;
+        const auto button_height = 50;
+        const auto button_left = (window.width() - button_width) / 2;
 
-        ui.text("Start Game", {215, 200}, scale);
-        if (ui.button("button1", {100, 100}, 100, 100)) {
+        if (ui.button("Start Game", {button_left, 100}, button_width, button_height, scale)) {
             std::print("loading level!\n");
             return next_state::level;
         }
 
-        ui.text("Exit", {215, 350}, scale);
-        if (ui.button("button2", {100, 250}, 100, 100)) {
+        if (ui.button("Exit", {button_left, 160}, button_width, button_height, scale)) {
             std::print("exiting!\n");
             return next_state::exit;
         }
 
-        ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {500, 200}, scale);
-        ui.text("sed do eiusmod tempor incididunt ut labore et dolore magna", {500, 200 + 1 * 11 * scale}, scale);
-        ui.text("aliqua. Ut enim ad minim veniam, quis nostrud exercitation", {500, 200 + 2 * 11 * scale}, scale);
-        ui.text("ullamco laboris nisi ut aliquip ex ea commodo consequat.", {500, 200 + 3 * 11 * scale}, scale);
-        ui.text("Duis aute irure dolor in reprehenderit in voluptate velit", {500, 200 + 4 * 11 * scale}, scale);
-        ui.text("esse cillum dolore eu fugiat nulla pariatur. Excepteur", {500, 200 + 5 * 11 * scale}, scale);
-        ui.text("sint occaecat cupidatat non proident, sunt in culpa", {500, 200 + 6 * 11 * scale}, scale);
-        ui.text("qui officia deserunt mollit anim id est laborum.", {500, 200 + 7 * 11 * scale}, scale);
-
-        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {100, 600}, scale);
-        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {100, 600 + 1 * 11 * scale}, scale);
+        const auto para_left = 100;
+        const auto para_top = 300;
+        ui.text("Lorem ipsum dolor sit amet, consectetur adipiscing elit,", {para_left, para_top}, scale);
+        ui.text("sed do eiusmod tempor incididunt ut labore et dolore magna", {para_left, para_top + 1 * 11 * scale}, scale);
+        ui.text("aliqua. Ut enim ad minim veniam, quis nostrud exercitation", {para_left, para_top + 2 * 11 * scale}, scale);
+        ui.text("ullamco laboris nisi ut aliquip ex ea commodo consequat.", {para_left, para_top + 3 * 11 * scale}, scale);
+        ui.text("Duis aute irure dolor in reprehenderit in voluptate velit", {para_left, para_top + 4 * 11 * scale}, scale);
+        ui.text("esse cillum dolore eu fugiat nulla pariatur. Excepteur", {para_left, para_top + 5 * 11 * scale}, scale);
+        ui.text("sint occaecat cupidatat non proident, sunt in culpa", {para_left, para_top + 6 * 11 * scale}, scale);
+        ui.text("qui officia deserunt mollit anim id est laborum.", {para_left, para_top + 7 * 11 * scale}, scale);
+        ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {para_left, para_top + 8 * 11 * scale}, scale);
+        ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
