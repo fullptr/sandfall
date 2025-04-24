@@ -30,8 +30,6 @@ auto scene_main_menu(sand::window& window) -> next_state
     auto timer           = sand::timer{};
     auto ui              = sand::ui_engine{};
 
-    std::array<char, 64> frame_rate_buf = {};
-
     constexpr auto clear_colour = from_hex(0x222f3e);
 
     while (window.is_running()) {
@@ -77,7 +75,8 @@ auto scene_main_menu(sand::window& window) -> next_state
         ui.text("ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz", {para_left, para_top + 8 * 11 * scale}, scale);
         ui.text("0123456789 () {} [] ^ < > - _ = + ! ? : ; . , @ % $ / \\ \" ' # ~ & | `", {para_left, para_top + 9 * 11 * scale}, scale);
 
-        ui.text(sand::format_to(frame_rate_buf, "{}", timer.frame_rate()), {0, 21}, 3);
+        std::array<char, 8> buf = {};
+        ui.text(sand::format_to(buf, "{}", timer.frame_rate()), {0, 21}, 3);
         ui.draw_frame(window.width(), window.height(), dt);
         window.end_frame();
     }
@@ -97,19 +96,18 @@ auto scene_level(sand::window& window) -> next_state
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
 
-    std::array<char, 64> frame_rate_buf = {};
-
+    
     const auto player_pos = glm::ivec2{entity_centre(level->player) + glm::vec2{200, 0}};
     auto other_entity = make_enemy(level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     level->entities.push_back(other_entity);
-
+    
     auto camera = sand::camera{
         .top_left = {0, 0},
         .screen_width = window.width(),
         .screen_height = window.height(),
         .world_to_screen = window.height() / 210.0f
     };
-
+    
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.begin_frame();
@@ -144,23 +142,23 @@ auto scene_level(sand::window& window) -> next_state
             }
             level->pixels.step();
         }
-
+        
         const auto desired_top_left = entity_centre(level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
         if (desired_top_left != camera.top_left) {
             const auto diff = desired_top_left - camera.top_left;
             camera.top_left += (float)dt * 3 * diff;
-
+            
             // Clamp the camera to the world, don't allow players to see the void
             const auto camera_dimensions_world_space = sand::dimensions(camera) / camera.world_to_screen;
             camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width_in_pixels() - camera_dimensions_world_space.x);
             camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
         }
-
+        
         if (updated) {
             world_renderer.update(*level);
         }
         world_renderer.draw(camera);
-
+        
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(camera);      
         shape_renderer.draw_circle(entity_centre(level->player), {1.0, 1.0, 0.0, 1.0}, 3);
@@ -170,8 +168,9 @@ auto scene_level(sand::window& window) -> next_state
         level->pixels.physics().SetDebugDraw(&debug_renderer);
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
-
-        ui.text(sand::format_to(frame_rate_buf, "{}", timer.frame_rate()), {0, 21}, 3);
+        
+        std::array<char, 8> buf = {};
+        ui.text(sand::format_to(buf, "{}", timer.frame_rate()), {0, 21}, 3);
         ui.draw_frame(window.width(), window.height(), dt);
 
         window.end_frame();
