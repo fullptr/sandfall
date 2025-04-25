@@ -45,7 +45,7 @@ uniform sampler2D u_texture;
 void main()
 {
     out_colour = texture(u_texture, pass_uv);
-    }
+}
 )SHADER";
 
 constexpr auto fire_colours = std::array{
