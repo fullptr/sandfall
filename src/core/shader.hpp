@@ -1,4 +1,6 @@
 #pragma once
+#include "common.hpp"
+
 #include <glm/glm.hpp>
 
 #include <cstdint>
@@ -9,15 +11,18 @@ namespace sand {
 
 class shader
 {
-    std::uint32_t d_program;
-    std::uint32_t d_vertex_shader;
-    std::uint32_t d_fragment_shader;
+    u32 d_program;
+    u32 d_vertex_shader;
+    u32 d_fragment_shader;
 
-    std::uint32_t get_location(const char* name) const;
+    u32 get_location(const char* name) const;
+
+    shader(const shader&) = delete;
+    shader& operator=(const shader&) = delete;
 
 public:
-    shader(const char* vertex_shader_source,
-           const char* fragment_shader_source);
+    shader(const char* vertex_shader_source, const char* fragment_shader_source);
+    ~shader();
 
     auto bind() const -> void;
     auto unbind() const -> void;

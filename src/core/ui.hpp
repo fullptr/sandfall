@@ -153,6 +153,7 @@ public:
     // Step 2: setup ui elements    
     bool button(std::string_view msg, glm::ivec2 pos, i32 width, i32 height, i32 scale, const widget_key& key = {});
     void text(std::string_view message, glm::ivec2 pos, i32 size);
+    void text_box(std::string_view message, glm::ivec2 pos, i32 width, i32 height, i32 size);
     
     // Step 3: draw
     void draw_frame(i32 screen_width, i32 screen_height, f64 dt);

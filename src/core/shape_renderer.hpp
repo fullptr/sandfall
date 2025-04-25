@@ -2,6 +2,7 @@
 #include "buffer.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
+#include "common.hpp"
 
 #include <glm/glm.hpp>
 
@@ -17,7 +18,7 @@ struct line_instance
     glm::vec4 end_colour;
     float     thickness;
 
-    static void set_buffer_attributes(std::uint32_t vbo);
+    static void set_buffer_attributes(u32 vbo);
 };
 
 struct circle_instance
@@ -29,7 +30,7 @@ struct circle_instance
     glm::vec4 end_colour;
     float     angle;
 
-    static void set_buffer_attributes(std::uint32_t vbo);
+    static void set_buffer_attributes(u32 vbo);
 };
 
 struct quad_instance
@@ -40,14 +41,14 @@ struct quad_instance
     float     angle;
     glm::vec4 colour;
 
-    static void set_buffer_attributes(std::uint32_t vbo);
+    static void set_buffer_attributes(u32 vbo);
 };
 
 class shape_renderer
 {
-    std::uint32_t d_vao;
-    std::uint32_t d_vbo;
-    std::uint32_t d_ebo;
+    u32 d_vao;
+    u32 d_vbo;
+    u32 d_ebo;
 
     std::vector<quad_instance>   d_quads;
     std::vector<line_instance>   d_lines;
@@ -66,48 +67,12 @@ public:
     void begin_frame(const camera& c);
     void end_frame();
 
-    void draw_rect(
-        const glm::vec2& top_left,
-        const float      width,
-        const float      height,
-        const glm::vec4& colour
-    );
-
-    void draw_quad(
-        const glm::vec2& centre,
-        const float      width,
-        const float      height,
-        const float      angle,
-        const glm::vec4& colour
-    );
-
-    void draw_line(
-        const glm::vec2& begin,
-        const glm::vec2& end,
-        const glm::vec4& begin_colour,
-        const glm::vec4& end_colour,
-        const float      thickness
-    );
-
-    void draw_line(
-        const glm::vec2& begin,
-        const glm::vec2& end,
-        const glm::vec4& colour,
-        const float      thickness
-    );
-
-    void draw_circle(
-        const glm::vec2& centre,
-        const glm::vec4& colour,
-        const float      radius
-    );
-
-    void draw_annulus(
-        const glm::vec2& centre,
-        const glm::vec4& colour,
-        const float      inner_radius,
-        const float      outer_radius
-    );
+    void draw_rect(glm::vec2 top_left, float width, float height, glm::vec4 colour);
+    void draw_quad(glm::vec2 centre, float width, float height, float angle, glm::vec4 colour);
+    void draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 begin_colour, glm::vec4 end_colour, float thickness);
+    void draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 colour, float thickness);
+    void draw_circle(glm::vec2 centre, glm::vec4 colour, float radius);
+    void draw_annulus(glm::vec2 centre, glm::vec4 colour, float inner_radius, float outer_radius);
 };
 
 }

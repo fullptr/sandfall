@@ -401,4 +401,12 @@ void ui_engine::text(std::string_view message, glm::ivec2 pos, i32 size)
     }
 }
 
+void ui_engine::text_box(std::string_view message, glm::ivec2 pos, i32 width, i32 height, i32 scale)
+{
+    auto text_pos = pos;
+    text_pos.x += (width - d_atlas.length_of(message) * scale) / 2;
+    text_pos.y += (height + d_atlas.height * scale) / 2;
+    text(message, text_pos, scale);
+}
+
 }

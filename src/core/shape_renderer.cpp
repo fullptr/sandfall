@@ -362,57 +362,32 @@ void shape_renderer::end_frame()
     glDisable(GL_BLEND);
 }
 
-void shape_renderer::draw_rect(
-    const glm::vec2& top_left,
-    const float      width,
-    const float      height,
-    const glm::vec4& colour)
+void shape_renderer::draw_rect(glm::vec2 top_left, float width, float height, glm::vec4 colour)
 {
     d_quads.emplace_back(top_left + glm::vec2{width/2, height/2}, width, height, 0.0f, colour);
 }
 
-void shape_renderer::draw_quad(
-    const glm::vec2& centre,
-    const float      width,
-    const float      height,
-    const float      angle,
-    const glm::vec4& colour)
+void shape_renderer::draw_quad(glm::vec2 centre, float width, float height, float angle, glm::vec4 colour)
 {
     d_quads.emplace_back(centre, width, height, angle, colour);
 }
 
-void shape_renderer::draw_line(
-    const glm::vec2& begin,
-    const glm::vec2& end,
-    const glm::vec4& begin_colour,
-    const glm::vec4& end_colour,
-    const float thickness)
+void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 begin_colour, glm::vec4 end_colour, float thickness)
 {
     d_lines.emplace_back(begin, end, begin_colour, end_colour, thickness);
 }
 
-void shape_renderer::draw_line(
-    const glm::vec2& begin,
-    const glm::vec2& end,
-    const glm::vec4& colour,
-    const float thickness)
+void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 colour, float thickness)
 {
     d_lines.emplace_back(begin, end, colour, colour, thickness);
 }
 
-void shape_renderer::draw_circle(
-    const glm::vec2& centre,
-    const glm::vec4& colour,
-    const float radius)
+void shape_renderer::draw_circle(glm::vec2 centre, glm::vec4 colour, float radius)
 {
     d_circles.emplace_back(centre, 0.0f, radius, colour, colour, 0.0f);
 }
 
-void shape_renderer::draw_annulus(
-    const glm::vec2& centre,
-    const glm::vec4& colour,
-    const float inner_radius,
-    const float outer_radius)
+void shape_renderer::draw_annulus(glm::vec2 centre, glm::vec4 colour, float inner_radius, float outer_radius)
 {
     d_circles.emplace_back(centre, inner_radius, outer_radius, colour, colour, 0.0f);
 }

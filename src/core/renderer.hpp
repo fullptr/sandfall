@@ -19,9 +19,8 @@ class renderer
     u32 d_vbo;
     u32 d_ebo;
 
-    texture_dyn            d_texture;
-
-    shader d_shader;
+    texture_dyn d_texture;
+    shader      d_shader;
 
     renderer(const renderer&) = delete;
     renderer& operator=(const renderer&) = delete;
