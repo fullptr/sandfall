@@ -14,39 +14,39 @@ namespace {
 
 auto compile_shader(std::uint32_t type, const char* source) -> std::uint32_t
 {
-	std::uint32_t id = glCreateShader(type);
-	glShaderSource(id, 1, &source, nullptr);
-	glCompileShader(id);
+    std::uint32_t id = glCreateShader(type);
+    glShaderSource(id, 1, &source, nullptr);
+    glCompileShader(id);
 
-	int result = 0;
-	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-	if (!result) {
-		char infoLog[512];
-    	glGetShaderInfoLog(id, 512, NULL, infoLog);
+    int result = 0;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    if (!result) {
+        char infoLog[512];
+        glGetShaderInfoLog(id, 512, NULL, infoLog);
         std::print("[{} ERROR] {}\n", (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT", infoLog);
-		glDeleteShader(id);
-		std::terminate();
-	}
+        glDeleteShader(id);
+        std::terminate();
+    }
 
-	return id;
+    return id;
 }
 
 }
 
 shader::shader(const char* vertex_shader_source, const char* fragment_shader_source)
-	: d_program(glCreateProgram())
-	, d_vertex_shader(compile_shader(GL_VERTEX_SHADER, vertex_shader_source))
-	, d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, fragment_shader_source))
+    : d_program(glCreateProgram())
+    , d_vertex_shader(compile_shader(GL_VERTEX_SHADER, vertex_shader_source))
+    , d_fragment_shader(compile_shader(GL_FRAGMENT_SHADER, fragment_shader_source))
 {
-	glAttachShader(d_program, d_vertex_shader);
-	glAttachShader(d_program, d_fragment_shader);
-	glLinkProgram(d_program);
-	glValidateProgram(d_program);
+    glAttachShader(d_program, d_vertex_shader);
+    glAttachShader(d_program, d_fragment_shader);
+    glLinkProgram(d_program);
+    glValidateProgram(d_program);
 }
 
 shader::~shader()
 {
-	glDetachShader(d_program, d_vertex_shader);
+    glDetachShader(d_program, d_vertex_shader);
     glDetachShader(d_program, d_fragment_shader);
     glDeleteShader(d_vertex_shader);
     glDeleteShader(d_fragment_shader);
@@ -75,32 +75,32 @@ auto shader::load_mat4(const char* name, const glm::mat4& matrix) const -> void
 
 auto shader::load_vec2(const char* name, const glm::vec2& vector) const -> void
 {
-	glProgramUniform2f(d_program, get_location(name), vector.x, vector.y);
+    glProgramUniform2f(d_program, get_location(name), vector.x, vector.y);
 }
 
 auto shader::load_vec3(const char* name, const glm::vec3& vector) const -> void
 {
-	glProgramUniform3f(d_program, get_location(name), vector.x, vector.y, vector.z);
+    glProgramUniform3f(d_program, get_location(name), vector.x, vector.y, vector.z);
 }
 
 auto shader::load_vec4(const char* name, const glm::vec4& vector) const -> void
 {
-	glProgramUniform4f(d_program, get_location(name), vector.x, vector.y, vector.z, vector.w);
+    glProgramUniform4f(d_program, get_location(name), vector.x, vector.y, vector.z, vector.w);
 }
 
 auto shader::load_sampler(const char* name, int value) const -> void
 {
-	glProgramUniform1i(d_program, get_location(name), value);
+    glProgramUniform1i(d_program, get_location(name), value);
 }
 
 auto shader::load_int(const char* name, int value) const -> void
 {
-	glProgramUniform1i(d_program, get_location(name), value);
+    glProgramUniform1i(d_program, get_location(name), value);
 }
 
 auto shader::load_float(const char* name, float value) const -> void
 {
-	glProgramUniform1f(d_program, get_location(name), value);
+    glProgramUniform1f(d_program, get_location(name), value);
 }
 
 }
