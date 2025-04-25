@@ -164,7 +164,11 @@ auto scene_level(sand::window& window) -> next_state
         shape_renderer.draw_circle(entity_centre(level->player), {1.0, 1.0, 0.0, 1.0}, 3);
         for (const auto& e : level->entities) {
             shape_renderer.draw_circle(entity_centre(e), {0.5, 1.0, 0.5, 1.0}, 2.5);
-        }  
+        }
+
+        const auto centre = entity_centre(level->player);
+        const auto direction = glm::normalize(mouse_pos_world_space(input, camera) - centre);
+        shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
         level->pixels.physics().SetDebugDraw(&debug_renderer);
         level->pixels.physics().DebugDraw();
         shape_renderer.end_frame();
