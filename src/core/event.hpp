@@ -15,6 +15,7 @@ enum class mouse
 enum class keyboard
 {
 	A = 65, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+	space     = 32,
 	escape    = 256,
 	enter     = 257,
 	tab       = 258,

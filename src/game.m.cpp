@@ -13,7 +13,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
-#include <memory>
 #include <format>
 #include <print>
 
@@ -27,8 +26,8 @@ enum class next_state
 auto scene_main_menu(sand::window& window) -> next_state
 {
     using namespace sand;
-    auto timer           = sand::timer{};
-    auto ui              = sand::ui_engine{};
+    auto timer = sand::timer{};
+    auto ui    = sand::ui_engine{};
 
     constexpr auto clear_colour = from_hex(0x222f3e);
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "event.hpp"
+#include "utility.hpp"
 
 #include <glm/glm.hpp>
 

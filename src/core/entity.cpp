@@ -41,6 +41,7 @@ auto update_player(entity& e, const input& in) -> void
 
     if (on_ground) {
         e.double_jump = true;
+        e.ground_pound = true;
     }
 }
 
@@ -61,7 +62,7 @@ auto player_handle_event(entity& e, const event& ev) -> void
 {
     const bool on_ground = !e.floors.empty();
     if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
-        if (inner->key == keyboard::W) {
+        if (inner->key == keyboard::space) {
             if (on_ground || e.double_jump) {
                 if (!on_ground) {
                     e.double_jump = false;
@@ -69,6 +70,18 @@ auto player_handle_event(entity& e, const event& ev) -> void
                 float impulse = e.body->GetMass() * 7;
                 e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
             }
+        }
+        else if (inner->key == keyboard::S) {
+            if (e.ground_pound) {
+                e.ground_pound = false;
+                float impulse = e.body->GetMass() * 7;
+                e.body->ApplyLinearImpulseToCenter(b2Vec2(0, impulse), true);
+            }
+        }
+    }
+    else if (const auto inner = ev.get_if<mouse_pressed_event>()) {
+        if (inner->button == mouse::left) {
+            std::print("spawning bullet\n");
         }
     }
 }

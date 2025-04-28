@@ -47,6 +47,7 @@ struct entity
     std::unordered_set<b2Body*> nearby_entities;
 
     bool double_jump        = false;
+    bool ground_pound       = false;
     int  num_left_contacts  = 0;
     int  num_right_contacts = 0;
 
