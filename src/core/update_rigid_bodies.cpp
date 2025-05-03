@@ -197,7 +197,9 @@ auto new_body(b2World& world) -> b2Body*
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
     bodyDef.position.Set(0.0f, 0.0f);
-    return world.CreateBody(&bodyDef);
+    auto body = world.CreateBody(&bodyDef);
+    body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
+    return body;
 }
 
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void

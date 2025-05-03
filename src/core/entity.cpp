@@ -127,7 +127,7 @@ void contact_listener::BeginContact(b2Contact* contact)
     }
     if (d_level->entities.has<proximity_component>(ea)) {
         auto& comp = d_level->entities.get<proximity_component>(ea);
-        if (comp.proximity_sensor && a == comp.proximity_sensor) {
+        if (comp.proximity_sensor && a == comp.proximity_sensor && d_level->entities.valid(eb)) {
             comp.nearby_entities.insert(eb);
         }
     }
@@ -147,7 +147,7 @@ void contact_listener::BeginContact(b2Contact* contact)
     }
     if (d_level->entities.has<proximity_component>(eb)) {
         auto& comp = d_level->entities.get<proximity_component>(eb);
-        if (comp.proximity_sensor && b == comp.proximity_sensor) {
+        if (comp.proximity_sensor && b == comp.proximity_sensor && d_level->entities.valid(ea)) {
             comp.nearby_entities.insert(ea);
         }
     }
@@ -217,10 +217,10 @@ auto add_player(registry& entities, b2World& world, pixel_pos position) -> entit
     const auto pos = pixel_to_physics(position);
     bodyDef.position.Set(pos.x, pos.y);
     body_comp.body = world.CreateBody(&bodyDef);
+    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
     b2MassData md;
     md.mass = 80;
     body_comp.body->SetMassData(&md);
-    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
 
     // Set up main body fixture
     {
@@ -294,10 +294,10 @@ auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity
     const auto pos = pixel_to_physics(position);
     bodyDef.position.Set(pos.x, pos.y);
     body_comp.body = world.CreateBody(&bodyDef);
+    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
     b2MassData md;
     md.mass = 10;
     body_comp.body->SetMassData(&md);
-    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
 
     // Set up main body fixture
     {
