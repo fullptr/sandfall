@@ -94,13 +94,10 @@ class world
 
 struct level
 {
-    world               pixels;
-    pixel_pos           spawn_point;
-
-    entity              player;
-    std::vector<entity> entities;
-    
-    contact_listener    listener;
+    world            pixels;
+    pixel_pos        spawn_point;
+    registry         entities;
+    contact_listener listener;
 
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };

@@ -492,10 +492,10 @@ auto world::step() -> void
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
     : pixels{width, height, data}
     , spawn_point{spawn}
-    , player{make_player(pixels.physics(), spawn)}
     , listener{this}
 {
     pixels.physics().SetContactListener(&listener);
+    add_player(entities, pixels.physics(), spawn);
 }
 
 }
