@@ -97,9 +97,12 @@ auto player_handle_event(registry& entities, entity e, const event& ev) -> void
 
 }
 
-void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse) 
+void contact_listener::PreSolve(b2Contact* contact, const b2Manifold*) 
 {
-    if (contact->GetFixtureA()->GetBody()->GetUserData().pointer == player_id || contact->GetFixtureB()->GetBody()->GetUserData().pointer == player_id) {
+    const auto a = static_cast<entity>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
+    const auto b = static_cast<entity>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
+
+    if (d_level->entities.has<player_component>(a) || d_level->entities.has<player_component>(b)) {
         contact->ResetFriction();
     }
 }
