@@ -104,101 +104,74 @@ void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse)
     }
 }
 
+void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
+{
+    const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    
+    if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
+        auto& comp = d_level->entities.get<player_component>(curr_entity);
+        if (comp.foot_sensor && curr == comp.foot_sensor) {
+            comp.floors.insert(other);
+        }
+        if (comp.left_sensor && curr == comp.left_sensor) {
+            ++comp.num_left_contacts;
+        }
+        if (comp.right_sensor && curr == comp.right_sensor) {
+            ++comp.num_right_contacts;
+        }
+    }
+    
+    if (d_level->entities.has<proximity_component>(curr_entity)) {
+        const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
+        auto& comp = d_level->entities.get<proximity_component>(curr_entity);
+        if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
+            comp.nearby_entities.insert(other_entity);
+        }
+    }
+}
+
+void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
+{
+    const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    
+    if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
+        auto& comp = d_level->entities.get<player_component>(curr_entity);
+        if (comp.foot_sensor && curr == comp.foot_sensor) {
+            comp.floors.erase(other);
+        }
+        if (comp.left_sensor && curr == comp.left_sensor) {
+            --comp.num_left_contacts;
+        }
+        if (comp.right_sensor && curr == comp.right_sensor) {
+            --comp.num_right_contacts;
+        }
+    }
+    
+    if (d_level->entities.has<proximity_component>(curr_entity)) {
+        const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
+        auto& comp = d_level->entities.get<proximity_component>(curr_entity);
+        if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
+            comp.nearby_entities.erase(other_entity);
+        }
+    }
+}
+
 void contact_listener::BeginContact(b2Contact* contact)
 {
     const auto a = contact->GetFixtureA();
     const auto b = contact->GetFixtureB();
 
-    const auto ea = static_cast<entity>(a->GetBody()->GetUserData().pointer);
-    const auto eb = static_cast<entity>(b->GetBody()->GetUserData().pointer);
-
-    // Update entity a
-    if (d_level->entities.has<player_component>(ea) && !b->IsSensor()) {
-        auto& comp = d_level->entities.get<player_component>(ea);
-        if (comp.foot_sensor && a == comp.foot_sensor) {
-            comp.floors.insert(b);
-        }
-        if (comp.left_sensor && a == comp.left_sensor) {
-            ++comp.num_left_contacts;
-        }
-        if (comp.right_sensor && a == comp.right_sensor) {
-            ++comp.num_right_contacts;
-        }
-    }
-    if (d_level->entities.has<proximity_component>(ea)) {
-        auto& comp = d_level->entities.get<proximity_component>(ea);
-        if (comp.proximity_sensor && a == comp.proximity_sensor && d_level->entities.valid(eb)) {
-            comp.nearby_entities.insert(eb);
-        }
-    }
-
-    // Update entity b
-    if (d_level->entities.has<player_component>(eb) && !a->IsSensor()) {
-        auto& comp = d_level->entities.get<player_component>(eb);
-        if (comp.foot_sensor && b == comp.foot_sensor) {
-            comp.floors.insert(a);
-        }
-        if (comp.left_sensor && b == comp.left_sensor) {
-            ++comp.num_left_contacts;
-        }
-        if (comp.right_sensor && b == comp.right_sensor) {
-            ++comp.num_right_contacts;
-        }
-    }
-    if (d_level->entities.has<proximity_component>(eb)) {
-        auto& comp = d_level->entities.get<proximity_component>(eb);
-        if (comp.proximity_sensor && b == comp.proximity_sensor && d_level->entities.valid(ea)) {
-            comp.nearby_entities.insert(ea);
-        }
-    }
+    begin_contact(a, b);
+    begin_contact(b, a);
 }
 
-void contact_listener::EndContact(b2Contact* contact) {
+void contact_listener::EndContact(b2Contact* contact)
+{
     const auto a = contact->GetFixtureA();
     const auto b = contact->GetFixtureB();
 
-    const auto ea = static_cast<entity>(a->GetBody()->GetUserData().pointer);
-    const auto eb = static_cast<entity>(b->GetBody()->GetUserData().pointer);
-
-    // Update entity a
-    if (d_level->entities.has<player_component>(ea) && !b->IsSensor()) {
-        auto& comp = d_level->entities.get<player_component>(ea);
-        if (comp.foot_sensor && a == comp.foot_sensor) {
-            comp.floors.erase(b);
-        }
-        if (comp.left_sensor && a == comp.left_sensor) {
-            --comp.num_left_contacts;
-        }
-        if (comp.right_sensor && a == comp.right_sensor) {
-            --comp.num_right_contacts;
-        }
-    }
-    if (d_level->entities.has<proximity_component>(ea)) {
-        auto& comp = d_level->entities.get<proximity_component>(ea);
-        if (comp.proximity_sensor && a == comp.proximity_sensor) {
-            comp.nearby_entities.erase(eb);
-        }
-    }
-
-    // Update entity b
-    if (d_level->entities.has<player_component>(eb) && !a->IsSensor()) {
-        auto& comp = d_level->entities.get<player_component>(eb);
-        if (comp.foot_sensor && b == comp.foot_sensor) {
-            comp.floors.erase(a);
-        }
-        if (comp.left_sensor && b == comp.left_sensor) {
-            --comp.num_left_contacts;
-        }
-        if (comp.right_sensor && b == comp.right_sensor) {
-            --comp.num_right_contacts;
-        }
-    }
-    if (d_level->entities.has<proximity_component>(eb)) {
-        auto& comp = d_level->entities.get<proximity_component>(eb);
-        if (comp.proximity_sensor && b == comp.proximity_sensor) {
-            comp.nearby_entities.erase(ea);
-        }
-    }
+    end_contact(a, b);
+    end_contact(b, a);
 }
 
 auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity

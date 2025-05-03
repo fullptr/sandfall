@@ -17,6 +17,9 @@ class contact_listener : public b2ContactListener
 {
     level* d_level;
 
+    void begin_contact(b2Fixture* curr, b2Fixture* other);
+    void end_contact(b2Fixture* curr, b2Fixture* other);
+
 public:
     contact_listener(level* l) : d_level{l} {}
 
