@@ -301,7 +301,7 @@ auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity
     return e;
 }
 
-auto update_entities(registry& entities, const input& in) -> void
+auto ecs_on_update(registry& entities, const input& in) -> void
 {
     for (auto e : entities.view<player_component>()) {
         update_player(entities, e, in);
@@ -311,7 +311,7 @@ auto update_entities(registry& entities, const input& in) -> void
     }
 }
 
-auto entities_handle_event(registry& entities, const event& ev) -> void
+auto ecs_on_event(registry& entities, const event& ev) -> void
 {
     for (auto e : entities.view<body_component, player_component>()) {
         player_handle_event(entities, e, ev);
@@ -335,14 +335,6 @@ auto entity_centre(const registry& entities, entity e) -> glm::vec2
 {
     assert(entities.has<body_component>(e));
     return physics_to_pixel(entities.get<body_component>(e).body->GetPosition());
-}
-
-auto get_player(const registry& entities) -> entity
-{
-    for (auto e : entities.view<player_component>()) {
-        return e;
-    }
-    return apx::null;
 }
 
 }

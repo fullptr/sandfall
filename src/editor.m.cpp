@@ -98,7 +98,7 @@ auto main() -> int
             }
 
             input.on_event(event);
-            entities_handle_event(level->entities, event);
+            ecs_on_event(level->entities, event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -125,7 +125,7 @@ auto main() -> int
             level->pixels.step();
         }
 
-        update_entities(level->entities, input);
+        ecs_on_update(level->entities, input);
 
         const auto mouse_pos = pixel_at_mouse(input, camera);
         switch (editor.brush_type) {
@@ -180,8 +180,7 @@ auto main() -> int
                 ImGui::Text("  is_falling: n/a");
             }
 
-            const auto player = get_player(level->entities);
-            const auto num_floors = level->entities.get<player_component>(player).floors.size();
+            const auto num_floors = level->entities.get<player_component>(level->player).floors.size();
             ImGui::Text("Number of Floors: %d", num_floors);
             ImGui::Text("Events this frame: %zu", window.events().size());
             ImGui::Separator();
@@ -198,7 +197,7 @@ auto main() -> int
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width_in_pixels());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height_in_pixels());
             if (ImGui::Button("Respawn")) {
-                respawn_entity(level->entities, player);
+                respawn_entity(level->entities, level->player);
             }
             ImGui::Separator();
 
@@ -267,8 +266,7 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         // TODO: Replace with actual sprite data
-        auto player = get_player(level->entities);
-        shape_renderer.draw_circle(entity_centre(level->entities, player), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.draw_circle(entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (editor.show_physics) {
             level->pixels.physics().SetDebugDraw(&debug_draw);

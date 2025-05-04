@@ -97,6 +97,7 @@ struct level
     world            pixels;
     pixel_pos        spawn_point;
     registry         entities;
+    entity           player;
     contact_listener listener;
 
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
