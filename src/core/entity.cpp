@@ -9,13 +9,17 @@ namespace {
 static constexpr auto player_id = 1;
 static constexpr auto enemy_id = 2;
 
-auto update_player(entity& e, const input& in) -> void
-{
-    const bool on_ground = !e.floors.empty();
-    const bool can_move_left = e.num_left_contacts == 0;
-    const bool can_move_right = e.num_right_contacts == 0;
+static_assert(sizeof(std::uintptr_t) == sizeof(entity));
 
-    const auto vel = e.body->GetLinearVelocity();
+auto update_player(registry& entities, entity e, const input& in) -> void
+{
+    auto [body_comp, player_comp] = entities.get_all<body_component, player_component>(e);
+    
+    const bool on_ground = !player_comp.floors.empty();
+    const bool can_move_left = player_comp.num_left_contacts == 0;
+    const bool can_move_right = player_comp.num_right_contacts == 0;
+
+    const auto vel = body_comp.body->GetLinearVelocity();
     
     auto direction = 0;
     if (can_move_left && in.is_down(keyboard::A)) {
@@ -33,137 +37,153 @@ auto update_player(entity& e, const input& in) -> void
         if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
     }
 
-    e.body_fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
+    body_comp.body_fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
 
     float vel_change = desired_vel - vel.x;
-    float impulse = e.body->GetMass() * vel_change;
-    e.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
+    float impulse = body_comp.body->GetMass() * vel_change;
+    body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
 
     if (on_ground) {
-        e.double_jump = true;
+        player_comp.double_jump = true;
+        player_comp.ground_pound = true;
     }
 }
 
-auto update_enemy(entity& e, const input& in) -> void
+auto update_enemy(registry& entities, entity e) -> void
 {
-    for (const auto curr : e.nearby_entities) {
-        const auto user_data = curr->GetUserData();
-        if (user_data.pointer == player_id) {
-            const auto pos = physics_to_pixel(curr->GetPosition());
-            const auto self_pos = entity_centre(e);
-            const auto dir = glm::normalize(pos - self_pos);
-            e.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
-        }
-    }
-}
-
-auto player_handle_event(entity& e, const event& ev) -> void
-{
-    const bool on_ground = !e.floors.empty();
-    if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
-        if (inner->key == keyboard::W) {
-            if (on_ground || e.double_jump) {
-                if (!on_ground) {
-                    e.double_jump = false;
-                }
-                float impulse = e.body->GetMass() * 7;
-                e.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+    if (entities.has<enemy_component>(e)) {
+        auto [body_comp, enemy_comp] = entities.get_all<body_component, enemy_component>(e);
+        for (const auto curr : enemy_comp.nearby_entities) {
+            if (entities.has<player_component>(curr)) {
+                auto& curr_body_comp = entities.get<body_component>(curr);
+                const auto pos = physics_to_pixel(curr_body_comp.body->GetPosition());
+                const auto self_pos = ecs_entity_centre(entities, e);
+                const auto dir = glm::normalize(pos - self_pos);
+                body_comp.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
             }
         }
     }
 }
 
+auto player_handle_event(registry& entities, entity e, const event& ev) -> void
+{
+    auto [body_comp, player_comp] = entities.get_all<body_component, player_component>(e);
+
+    const bool on_ground = !player_comp.floors.empty();
+    if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
+        if (inner->key == keyboard::space) {
+            if (on_ground || player_comp.double_jump) {
+                if (!on_ground) {
+                    player_comp.double_jump = false;
+                }
+                const auto impulse = body_comp.body->GetMass() * 7;
+                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+            }
+        }
+        else if (inner->key == keyboard::S) {
+            if (player_comp.ground_pound) {
+                player_comp.ground_pound = false;
+                const auto impulse = body_comp.body->GetMass() * 7;
+                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, impulse), true);
+            }
+        }
+    }
+    else if (const auto inner = ev.get_if<mouse_pressed_event>()) {
+        if (inner->button == mouse::left) {
+            std::print("spawning bullet\n");
+        }
+    }
 }
 
-void contact_listener::PreSolve(b2Contact* contact, const b2Manifold* impulse) 
+}
+
+void contact_listener::PreSolve(b2Contact* contact, const b2Manifold*) 
 {
-    if (contact->GetFixtureA()->GetUserData().pointer == player_id || contact->GetFixtureB()->GetUserData().pointer == player_id) {
+    const auto a = static_cast<entity>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
+    const auto b = static_cast<entity>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
+
+    if (d_level->entities.has<player_component>(a) || d_level->entities.has<player_component>(b)) {
         contact->ResetFriction();
+    }
+}
+
+void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
+{
+    const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
+    
+    if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
+        auto& comp = d_level->entities.get<player_component>(curr_entity);
+        if (comp.foot_sensor && curr == comp.foot_sensor) {
+            comp.floors.insert(other);
+        }
+        if (comp.left_sensor && curr == comp.left_sensor) {
+            ++comp.num_left_contacts;
+        }
+        if (comp.right_sensor && curr == comp.right_sensor) {
+            ++comp.num_right_contacts;
+        }
+    }
+    
+    if (d_level->entities.has<enemy_component>(curr_entity)) {
+        auto& comp = d_level->entities.get<enemy_component>(curr_entity);
+        if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
+            comp.nearby_entities.insert(other_entity);
+        }
+    }
+}
+
+void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
+{
+    const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
+    
+    if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
+        auto& comp = d_level->entities.get<player_component>(curr_entity);
+        if (comp.foot_sensor && curr == comp.foot_sensor) {
+            comp.floors.erase(other);
+        }
+        if (comp.left_sensor && curr == comp.left_sensor) {
+            --comp.num_left_contacts;
+        }
+        if (comp.right_sensor && curr == comp.right_sensor) {
+            --comp.num_right_contacts;
+        }
+    }
+    
+    if (d_level->entities.has<enemy_component>(curr_entity)) {
+        auto& comp = d_level->entities.get<enemy_component>(curr_entity);
+        if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
+            comp.nearby_entities.erase(other_entity);
+        }
     }
 }
 
 void contact_listener::BeginContact(b2Contact* contact)
 {
-    const auto func = [&](entity& e) {
-        const auto a = contact->GetFixtureA();
-        const auto b = contact->GetFixtureB();
-        if (e.foot_sensor) {
-            if (a == e.foot_sensor && !b->IsSensor()) {
-                e.floors.insert(b);
-            }
-            if (b == e.foot_sensor && !a->IsSensor()) {
-                e.floors.insert(a);
-            }
-        }
-        if (e.left_sensor) {
-            if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
-                ++e.num_left_contacts;
-            }
-        }
-        if (e.right_sensor) {
-            if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
-                ++e.num_right_contacts;
-            }
-        }
-        if (e.proximity_sensor) {
-            if (a == e.proximity_sensor) {
-                e.nearby_entities.insert(b->GetBody());
-            }
-            if (b == e.proximity_sensor) {
-                e.nearby_entities.insert(a->GetBody());
-            }
-        }
-    };
-    
-    func(d_level->player);
-    for (auto & e : d_level->entities) {
-        func(e);
-    }
+    const auto a = contact->GetFixtureA();
+    const auto b = contact->GetFixtureB();
+
+    begin_contact(a, b);
+    begin_contact(b, a);
 }
 
-void contact_listener::EndContact(b2Contact* contact) {
-    const auto func = [&](entity& e) {
-        const auto a = contact->GetFixtureA();
-        const auto b = contact->GetFixtureB();
-        if (e.foot_sensor) {
-            if (a == e.foot_sensor && !b->IsSensor()) {
-                e.floors.erase(b);
-            }
-            if (b == e.foot_sensor && !a->IsSensor()) {
-                e.floors.erase(a);
-            }
-        }
-        if (e.left_sensor) {
-            if ((b == e.left_sensor && !a->IsSensor()) || (a == e.left_sensor && !b->IsSensor())) {
-                --e.num_left_contacts;
-            }
-        }
-        if (e.right_sensor) {
-            if ((b == e.right_sensor && !a->IsSensor()) || (a == e.right_sensor && !b->IsSensor())) {
-                --e.num_right_contacts;
-            }
-        }
-        if (e.proximity_sensor) {
-            if (a == e.proximity_sensor) {
-                e.nearby_entities.erase(b->GetBody());
-            }
-            if (b == e.proximity_sensor) {
-                e.nearby_entities.erase(a->GetBody());
-            }
-        }
-    };
-
-    func(d_level->player);
-    for (auto & e : d_level->entities) {
-        func(e);
-    }
-}
-
-auto make_player(b2World& world, pixel_pos position) -> entity
+void contact_listener::EndContact(b2Contact* contact)
 {
-    entity e;
-    e.type = entity_type::player;
-    e.spawn_point = position;
+    const auto a = contact->GetFixtureA();
+    const auto b = contact->GetFixtureB();
+
+    end_contact(a, b);
+    end_contact(b, a);
+}
+
+auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity
+{
+    const auto e = entities.create();
+    auto& body_comp = entities.emplace<body_component>(e);
+    auto& player_comp = entities.emplace<player_component>(e);
+    auto& life_comp = entities.emplace<life_component>(e);
+    life_comp.spawn_point = position;
 
     // Create player body
     b2BodyDef bodyDef;
@@ -172,11 +192,11 @@ auto make_player(b2World& world, pixel_pos position) -> entity
     bodyDef.linearDamping = 1.0f;
     const auto pos = pixel_to_physics(position);
     bodyDef.position.Set(pos.x, pos.y);
-    e.body = world.CreateBody(&bodyDef);
+    body_comp.body = world.CreateBody(&bodyDef);
+    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
     b2MassData md;
     md.mass = 80;
-    e.body->SetMassData(&md);
-    e.body->GetUserData().pointer = player_id;
+    body_comp.body->SetMassData(&md);
 
     // Set up main body fixture
     {
@@ -188,7 +208,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         fixtureDef.shape = &shape;
         fixtureDef.density = 1.0f;
         fixtureDef.friction = 1.0f;
-        e.body_fixture = e.body->CreateFixture(&fixtureDef);
+        body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
     }
     
     // Set up foot sensor
@@ -200,7 +220,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
         fixtureDef.isSensor = true;
-        e.foot_sensor = e.body->CreateFixture(&fixtureDef);
+        player_comp.foot_sensor = body_comp.body->CreateFixture(&fixtureDef);
     }
 
      // Set up left sensor
@@ -212,7 +232,7 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
         fixtureDef.isSensor = true;
-        e.left_sensor = e.body->CreateFixture(&fixtureDef);
+        player_comp.left_sensor = body_comp.body->CreateFixture(&fixtureDef);
     }
 
     // Set up right sensor
@@ -224,17 +244,20 @@ auto make_player(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &shape;
         fixtureDef.isSensor = true;
-        e.right_sensor = e.body->CreateFixture(&fixtureDef);
+        player_comp.right_sensor = body_comp.body->CreateFixture(&fixtureDef);
     }
 
     return e;
 }
 
-auto make_enemy(b2World& world, pixel_pos position) -> entity
+auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity
 {
-    entity e;
-    e.type = entity_type::enemy;
-    e.spawn_point = position;
+    const auto e = entities.create();
+    auto& body_comp = entities.emplace<body_component>(e);
+    auto& enemy_comp = entities.emplace<enemy_component>(e);
+    auto& life_comp = entities.emplace<life_component>(e);
+
+    life_comp.spawn_point = position;
 
     // Create player body
     b2BodyDef bodyDef;
@@ -245,11 +268,11 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
     bodyDef.linearDamping = 1.0f;
     const auto pos = pixel_to_physics(position);
     bodyDef.position.Set(pos.x, pos.y);
-    e.body = world.CreateBody(&bodyDef);
+    body_comp.body = world.CreateBody(&bodyDef);
+    body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
     b2MassData md;
     md.mass = 10;
-    e.body->SetMassData(&md);
-    e.body->GetUserData().pointer = enemy_id;
+    body_comp.body->SetMassData(&md);
 
     // Set up main body fixture
     {
@@ -260,7 +283,7 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
         fixtureDef.shape = &circleShape;
         fixtureDef.density = 1.0f;
         fixtureDef.friction = 0.5f;
-        e.body_fixture = e.body->CreateFixture(&fixtureDef);
+        body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
     }
 
     // Set up proximity sensor
@@ -271,43 +294,46 @@ auto make_enemy(b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circleShape;
         fixtureDef.isSensor = true;
-        e.proximity_sensor = e.body->CreateFixture(&fixtureDef);
+        enemy_comp.proximity_sensor = body_comp.body->CreateFixture(&fixtureDef);
     }
 
     return e;
 }
 
-auto update_entity(entity& e, const input& in) -> void
+auto ecs_on_update(registry& entities, const input& in) -> void
 {
-    switch (e.type) {
-        case entity_type::player: {
-            update_player(e, in);
-        } break;
-        case entity_type::enemy: {
-            update_enemy(e, in);
-        } break;
+    for (auto e : entities.view<player_component>()) {
+        update_player(entities, e, in);
+    }
+    for (auto e : entities.view<enemy_component>()) {
+        update_enemy(entities, e);
     }
 }
 
-auto entity_handle_event(entity& e, const event& ev) -> void
+auto ecs_on_event(registry& entities, const event& ev) -> void
 {
-    switch (e.type) {
-        case entity_type::player: {
-            player_handle_event(e, ev);
-        } break;
+    for (auto e : entities.view<body_component, player_component>()) {
+        player_handle_event(entities, e, ev);
     }
 }
 
-auto respawn_entity(entity& e) -> void
+auto ecs_entity_respawn(const registry& entities, entity e) -> void
 {
-    e.body->SetTransform(pixel_to_physics(e.spawn_point), 0);
-    e.body->SetLinearVelocity({0, 0});
-    e.body->SetAwake(true);
+    assert(entities.has<body_component>(e));
+    assert(entities.has<life_component>(e));
+    
+    auto& body_comp = entities.get<body_component>(e);
+    auto& life_comp = entities.get<life_component>(e);
+
+    body_comp.body->SetTransform(pixel_to_physics(life_comp.spawn_point), 0);
+    body_comp.body->SetLinearVelocity({0, 0});
+    body_comp.body->SetAwake(true);
 }
 
-auto entity_centre(const entity& e) -> glm::vec2
+auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2
 {
-    return physics_to_pixel(e.body->GetPosition());
+    assert(entities.has<body_component>(e));
+    return physics_to_pixel(entities.get<body_component>(e).body->GetPosition());
 }
 
 }

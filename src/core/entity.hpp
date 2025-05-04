@@ -10,10 +10,15 @@
 
 namespace sand {
 
+using entity = apx::entity;
+
 class level;
 class contact_listener : public b2ContactListener
 {
     level* d_level;
+
+    void begin_contact(b2Fixture* curr, b2Fixture* other);
+    void end_contact(b2Fixture* curr, b2Fixture* other);
 
 public:
     contact_listener(level* l) : d_level{l} {}
@@ -23,41 +28,52 @@ public:
     void EndContact(b2Contact* contact) override;
 };
 
-enum class entity_type
+struct body_component
 {
-    player,
-    enemy,
+    b2Body* body = nullptr;
+    b2Fixture* body_fixture = nullptr;
 };
 
-// Possibly will replace with an entity component system in the future,
-// but for now just a big bag of data will suffice
-struct entity
+struct player_component
 {
-    entity_type type;
-    pixel_pos  spawn_point  = {0, 0};
-
-    b2Body*    body         = nullptr;
-    b2Fixture* body_fixture = nullptr;
     b2Fixture* foot_sensor  = nullptr;
     b2Fixture* left_sensor  = nullptr;
     b2Fixture* right_sensor = nullptr;
-
-    // Used by the enemy AI to detect the player
-    b2Fixture*                  proximity_sensor = nullptr;
-    std::unordered_set<b2Body*> nearby_entities;
-
-    bool double_jump        = false;
-    int  num_left_contacts  = 0;
-    int  num_right_contacts = 0;
-
+    
     std::unordered_set<b2Fixture*> floors;
+    int num_left_contacts  = 0;
+    int num_right_contacts = 0;
+
+    bool double_jump = true;
+    bool ground_pound = true;
 };
 
-auto make_player(b2World& world, pixel_pos position) -> entity;
-auto make_enemy(b2World& world, pixel_pos position) -> entity;
-auto update_entity(entity& e, const input& in) -> void;
-auto entity_handle_event(entity& e, const event& ev) -> void;
-auto respawn_entity(entity& e) -> void;
-auto entity_centre(const entity& e) -> glm::vec2;
+struct enemy_component
+{
+    b2Fixture*                 proximity_sensor = nullptr;
+    std::unordered_set<entity> nearby_entities;
+};
+
+struct life_component
+{
+    pixel_pos spawn_point = {0, 0};
+    i32       health      = 100;
+};
+
+using registry = apx::registry<
+    body_component,
+    player_component,
+    enemy_component,
+    life_component
+>;
+
+
+auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity;
+auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity;
+
+auto ecs_on_update(registry& entities, const input& in) -> void;
+auto ecs_on_event(registry& entities, const event& ev) -> void;
+auto ecs_entity_respawn(const registry& entities, entity e) -> void;
+auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2;
 
 }
