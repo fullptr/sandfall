@@ -51,9 +51,9 @@ auto update_player(registry& entities, entity e, const input& in) -> void
 
 auto update_enemy(registry& entities, entity e) -> void
 {
-    if (entities.has<proximity_component>(e)) {
-        auto [body_comp, enemy_comp, prox_comp] = entities.get_all<body_component, enemy_component, proximity_component>(e);
-        for (const auto curr : prox_comp.nearby_entities) {
+    if (entities.has<enemy_component>(e)) {
+        auto [body_comp, enemy_comp] = entities.get_all<body_component, enemy_component>(e);
+        for (const auto curr : enemy_comp.nearby_entities) {
             if (entities.has<player_component>(curr)) {
                 auto& curr_body_comp = entities.get<body_component>(curr);
                 const auto pos = physics_to_pixel(curr_body_comp.body->GetPosition());
@@ -125,8 +125,8 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
         }
     }
     
-    if (d_level->entities.has<proximity_component>(curr_entity)) {
-        auto& comp = d_level->entities.get<proximity_component>(curr_entity);
+    if (d_level->entities.has<enemy_component>(curr_entity)) {
+        auto& comp = d_level->entities.get<enemy_component>(curr_entity);
         if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
             comp.nearby_entities.insert(other_entity);
         }
@@ -151,8 +151,8 @@ void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
         }
     }
     
-    if (d_level->entities.has<proximity_component>(curr_entity)) {
-        auto& comp = d_level->entities.get<proximity_component>(curr_entity);
+    if (d_level->entities.has<enemy_component>(curr_entity)) {
+        auto& comp = d_level->entities.get<enemy_component>(curr_entity);
         if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
             comp.nearby_entities.erase(other_entity);
         }
@@ -256,7 +256,6 @@ auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity
     auto& body_comp = entities.emplace<body_component>(e);
     auto& enemy_comp = entities.emplace<enemy_component>(e);
     auto& life_comp = entities.emplace<life_component>(e);
-    auto& prox_comp = entities.emplace<proximity_component>(e);
 
     life_comp.spawn_point = position;
 
@@ -295,7 +294,7 @@ auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &circleShape;
         fixtureDef.isSensor = true;
-        prox_comp.proximity_sensor = body_comp.body->CreateFixture(&fixtureDef);
+        enemy_comp.proximity_sensor = body_comp.body->CreateFixture(&fixtureDef);
     }
 
     return e;

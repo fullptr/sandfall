@@ -50,6 +50,8 @@ struct player_component
 
 struct enemy_component
 {
+    b2Fixture*                 proximity_sensor = nullptr;
+    std::unordered_set<entity> nearby_entities;
 };
 
 struct life_component
@@ -58,18 +60,11 @@ struct life_component
     i32       health      = 100;
 };
 
-struct proximity_component
-{
-    b2Fixture*                 proximity_sensor = nullptr;
-    std::unordered_set<entity> nearby_entities;
-};
-
 using registry = apx::registry<
     body_component,
     player_component,
     enemy_component,
-    life_component,
-    proximity_component
+    life_component
 >;
 
 
