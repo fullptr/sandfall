@@ -57,7 +57,7 @@ auto update_enemy(registry& entities, entity e) -> void
             if (entities.has<player_component>(curr)) {
                 auto& curr_body_comp = entities.get<body_component>(curr);
                 const auto pos = physics_to_pixel(curr_body_comp.body->GetPosition());
-                const auto self_pos = entity_centre(entities, e);
+                const auto self_pos = ecs_entity_centre(entities, e);
                 const auto dir = glm::normalize(pos - self_pos);
                 body_comp.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
             }
@@ -318,7 +318,7 @@ auto ecs_on_event(registry& entities, const event& ev) -> void
     }
 }
 
-auto respawn_entity(const registry& entities, entity e) -> void
+auto ecs_entity_respawn(const registry& entities, entity e) -> void
 {
     assert(entities.has<body_component>(e));
     assert(entities.has<life_component>(e));
@@ -331,7 +331,7 @@ auto respawn_entity(const registry& entities, entity e) -> void
     body_comp.body->SetAwake(true);
 }
 
-auto entity_centre(const registry& entities, entity e) -> glm::vec2
+auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2
 {
     assert(entities.has<body_component>(e));
     return physics_to_pixel(entities.get<body_component>(e).body->GetPosition());

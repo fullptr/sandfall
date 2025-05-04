@@ -197,7 +197,7 @@ auto main() -> int
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width_in_pixels());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height_in_pixels());
             if (ImGui::Button("Respawn")) {
-                respawn_entity(level->entities, level->player);
+                ecs_entity_respawn(level->entities, level->player);
             }
             ImGui::Separator();
 
@@ -266,7 +266,7 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         // TODO: Replace with actual sprite data
-        shape_renderer.draw_circle(entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (editor.show_physics) {
             level->pixels.physics().SetDebugDraw(&debug_draw);
