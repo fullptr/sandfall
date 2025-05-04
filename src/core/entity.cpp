@@ -110,6 +110,7 @@ void contact_listener::PreSolve(b2Contact* contact, const b2Manifold*)
 void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
 {
     const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
     
     if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
         auto& comp = d_level->entities.get<player_component>(curr_entity);
@@ -125,7 +126,6 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
     }
     
     if (d_level->entities.has<proximity_component>(curr_entity)) {
-        const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
         auto& comp = d_level->entities.get<proximity_component>(curr_entity);
         if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
             comp.nearby_entities.insert(other_entity);
@@ -136,6 +136,7 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
 void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
 {
     const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
+    const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
     
     if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
         auto& comp = d_level->entities.get<player_component>(curr_entity);
@@ -151,7 +152,6 @@ void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
     }
     
     if (d_level->entities.has<proximity_component>(curr_entity)) {
-        const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
         auto& comp = d_level->entities.get<proximity_component>(curr_entity);
         if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
             comp.nearby_entities.erase(other_entity);

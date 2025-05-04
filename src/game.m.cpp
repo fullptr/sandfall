@@ -112,18 +112,19 @@ auto scene_level(sand::window& window) -> next_state
         input.on_new_frame();
         
         for (const auto event : window.events()) {
-            input.on_event(event);
-            entities_handle_event(level->entities, event);
-            
-            if (const auto e = event.get_if<sand::window_resize_event>()) {
+            if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
+                if (e->key == keyboard::escape) {
+                    return next_state::main_menu;
+                }
+            }
+            else if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
                 camera.screen_height = e->height;
                 camera.world_to_screen = e->height / 210.0f;
             }
-        }
-        
-        if (input.is_down_this_frame(keyboard::escape)) {
-            return next_state::main_menu;
+
+            input.on_event(event);
+            entities_handle_event(level->entities, event);
         }
         
         accumulator += dt;
