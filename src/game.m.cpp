@@ -23,13 +23,13 @@ enum class next_state
     exit,
 };
 
+constexpr auto clear_colour = sand::from_hex(0x222f3e);
+
 auto scene_main_menu(sand::window& window) -> next_state
 {
     using namespace sand;
     auto timer = sand::timer{};
     auto ui    = sand::ui_engine{};
-
-    constexpr auto clear_colour = from_hex(0x222f3e);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -107,7 +107,7 @@ auto scene_level(sand::window& window) -> next_state
     
     while (window.is_running()) {
         const double dt = timer.on_update();
-        window.begin_frame();
+        window.begin_frame(clear_colour);
         input.on_new_frame();
         
         for (const auto event : window.events()) {

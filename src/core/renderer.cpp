@@ -140,6 +140,9 @@ auto renderer::update(const level& world) -> void
                         const auto t = static_cast<float>(pixel.power) / props.power_max;
                         colour = sand::lerp(a, b, t);
                     }
+                    else if (pixel.type == pixel_type::none) {
+                        colour = {0.0, 0.0, 0.0, 0.0};
+                    }
                     else {
                         colour = pixel.colour;
                     }
@@ -163,7 +166,11 @@ auto renderer::draw(const camera& camera) const -> void
     d_shader.load_mat4("u_proj_matrix", projection);
     
     d_texture.bind();
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glDisable(GL_BLEND);
 }
 
 auto renderer::resize(u32 width, u32 height) -> void

@@ -98,7 +98,6 @@ auto main() -> int
             }
 
             input.on_event(event);
-            ecs_on_event(level->entities, event);
 
             if (const auto e = event.get_if<sand::window_resize_event>()) {
                 camera.screen_width = e->width;
@@ -124,8 +123,6 @@ auto main() -> int
             updated = true;
             level->pixels.step();
         }
-
-        ecs_on_update(level->entities, input);
 
         const auto mouse_pos = pixel_at_mouse(input, camera);
         switch (editor.brush_type) {
@@ -196,9 +193,6 @@ auto main() -> int
             ImGui::Checkbox("Show Spawn", &editor.show_spawn);
             ImGui::SliderInt("Spawn X", &level->spawn_point.x, 0, level->pixels.width_in_pixels());
             ImGui::SliderInt("Spawn Y", &level->spawn_point.y, 0, level->pixels.height_in_pixels());
-            if (ImGui::Button("Respawn")) {
-                ecs_entity_respawn(level->entities, level->player);
-            }
             ImGui::Separator();
 
             ImGui::Text("Info");
@@ -257,6 +251,15 @@ auto main() -> int
         }
         ImGui::End();
 
+        shape_renderer.begin_frame(camera);
+        shape_renderer.draw_rect(
+            {0, 0},
+            config::chunk_size * level->pixels.width_in_chunks(),
+            config::chunk_size * level->pixels.height_in_chunks(),
+            {0.1, 0.1, 0.1, 1.0}
+        );
+        shape_renderer.end_frame();
+
         // Render and display the world
         if (updated) {
             world_renderer.update(*level);
@@ -264,9 +267,6 @@ auto main() -> int
         world_renderer.draw(camera);
 
         shape_renderer.begin_frame(camera);
-
-        // TODO: Replace with actual sprite data
-        shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
 
         if (editor.show_physics) {
             level->pixels.physics().SetDebugDraw(&debug_draw);

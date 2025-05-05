@@ -102,28 +102,28 @@ struct pixel
     // For power sources, it is a value between in [0, 5), with 5 being active
     std::uint8_t    power = 0;
 
-    static auto air() -> pixel;
-    static auto sand() -> pixel;
-    static auto coal() -> pixel;
-    static auto dirt() -> pixel;
-    static auto rock() -> pixel;
-    static auto water() -> pixel;
-    static auto lava() -> pixel;
-    static auto acid() -> pixel;
-    static auto steam() -> pixel;
-    static auto titanium() -> pixel;
-    static auto fuse() -> pixel;
-    static auto ember() -> pixel;
-    static auto oil() -> pixel;
+    static auto air()       -> pixel;
+    static auto sand()      -> pixel;
+    static auto coal()      -> pixel;
+    static auto dirt()      -> pixel;
+    static auto rock()      -> pixel;
+    static auto water()     -> pixel;
+    static auto lava()      -> pixel;
+    static auto acid()      -> pixel;
+    static auto steam()     -> pixel;
+    static auto titanium()  -> pixel;
+    static auto fuse()      -> pixel;
+    static auto ember()     -> pixel;
+    static auto oil()       -> pixel;
     static auto gunpowder() -> pixel;
-    static auto methane() -> pixel;
-    static auto battery() -> pixel;
-    static auto solder() -> pixel;
-    static auto diode_in() -> pixel;
+    static auto methane()   -> pixel;
+    static auto battery()   -> pixel;
+    static auto solder()    -> pixel;
+    static auto diode_in()  -> pixel;
     static auto diode_out() -> pixel;
-    static auto spark() -> pixel;
-    static auto c4() -> pixel;
-    static auto relay() -> pixel;
+    static auto spark()     -> pixel;
+    static auto c4()        -> pixel;
+    static auto relay()     -> pixel;
 };
 
 auto properties(const pixel& px) -> const pixel_properties&;
