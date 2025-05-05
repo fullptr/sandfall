@@ -176,9 +176,6 @@ auto main() -> int
                 ImGui::Text("  pixel power: n/a");
                 ImGui::Text("  is_falling: n/a");
             }
-
-            const auto num_floors = level->entities.get<player_component>(level->player).floors.size();
-            ImGui::Text("Number of Floors: %d", num_floors);
             ImGui::Text("Events this frame: %zu", window.events().size());
             ImGui::Separator();
 
@@ -251,6 +248,8 @@ auto main() -> int
         }
         ImGui::End();
 
+        // The shape renderer is used twice per frame, which is a bit of a hack,
+        // but an easy way to draw a quad behind the level.
         shape_renderer.begin_frame(camera);
         shape_renderer.draw_rect(
             {0, 0},

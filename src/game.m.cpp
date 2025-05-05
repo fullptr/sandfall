@@ -95,6 +95,7 @@ auto scene_level(sand::window& window) -> next_state
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
 
+    level->player = add_player(level->entities, level->pixels.physics(), level->spawn_point);
     const auto player_pos = glm::ivec2{ecs_entity_centre(level->entities, level->player) + glm::vec2{200, 0}};
     add_enemy(level->entities, level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     
@@ -104,6 +105,9 @@ auto scene_level(sand::window& window) -> next_state
         .screen_height = window.height(),
         .world_to_screen = window.height() / 210.0f
     };
+
+    // This can be done a litle better surely.
+    camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
     
     while (window.is_running()) {
         const double dt = timer.on_update();
