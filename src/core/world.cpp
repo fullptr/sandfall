@@ -495,7 +495,6 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
     , listener{this}
 {
     pixels.physics().SetContactListener(&listener);
-    player = add_player(entities, pixels.physics(), spawn);
 }
 
 }

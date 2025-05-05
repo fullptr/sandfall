@@ -251,7 +251,7 @@ auto pixel::air() -> pixel
 {
     return pixel{
         .type = pixel_type::none,
-        .colour = from_hex(0x2C3A47)
+        .colour = {0.0f, 0.0f, 0.0f, 0.0f}
     };
 }
 

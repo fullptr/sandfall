@@ -23,13 +23,13 @@ enum class next_state
     exit,
 };
 
+constexpr auto clear_colour = sand::from_hex(0x222f3e);
+
 auto scene_main_menu(sand::window& window) -> next_state
 {
     using namespace sand;
     auto timer = sand::timer{};
     auto ui    = sand::ui_engine{};
-
-    constexpr auto clear_colour = from_hex(0x222f3e);
 
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -95,6 +95,7 @@ auto scene_level(sand::window& window) -> next_state
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
 
+    level->player = add_player(level->entities, level->pixels.physics(), level->spawn_point);
     const auto player_pos = glm::ivec2{ecs_entity_centre(level->entities, level->player) + glm::vec2{200, 0}};
     add_enemy(level->entities, level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     
@@ -104,10 +105,13 @@ auto scene_level(sand::window& window) -> next_state
         .screen_height = window.height(),
         .world_to_screen = window.height() / 210.0f
     };
+
+    // This can be done a litle better surely.
+    camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
     
     while (window.is_running()) {
         const double dt = timer.on_update();
-        window.begin_frame();
+        window.begin_frame(clear_colour);
         input.on_new_frame();
         
         for (const auto event : window.events()) {

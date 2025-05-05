@@ -150,8 +150,8 @@ auto window::begin_frame(glm::vec4 colour) -> void
 {
     d_data.events.clear();
     glfwPollEvents();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glClearColor(colour.r, colour.g, colour.b, colour.a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 auto window::end_frame() -> void
