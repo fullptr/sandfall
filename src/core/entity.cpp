@@ -19,6 +19,13 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
 {
     const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
     const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
+
+    if (d_level->entities.has<grenade_component>(curr_entity) 
+        && !d_level->entities.has<player_component>(other_entity)
+        && !other->IsSensor())
+    {
+        std::print("grenade has impacted\n");
+    }
     
     if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {
         auto& comp = d_level->entities.get<player_component>(curr_entity);

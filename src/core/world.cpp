@@ -388,6 +388,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             
             auto grenade = l.entities.create();
             auto& body_comp = l.entities.emplace<body_component>(grenade);
+            l.entities.emplace<grenade_component>(grenade);
             
             // Create player body
             b2BodyDef body_def;
@@ -399,7 +400,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             const auto pos = pixel_to_physics(spawn_pot);
             body_def.position.Set(pos.x, pos.y);
             body_comp.body = l.pixels.physics().CreateBody(&body_def);
-            body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
+            body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(grenade);
             b2MassData md;
             md.mass = 10;
             body_comp.body->SetMassData(&md);

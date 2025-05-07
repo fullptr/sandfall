@@ -60,13 +60,16 @@ struct life_component
     i32       health      = 100;
 };
 
+struct grenade_component
+{};
+
 using registry = apx::registry<
     body_component,
     player_component,
     enemy_component,
-    life_component
+    life_component,
+    grenade_component
 >;
-
 
 auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity;
 auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity;
