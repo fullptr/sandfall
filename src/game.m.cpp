@@ -127,7 +127,7 @@ auto scene_level(sand::window& window) -> next_state
             }
 
             input.on_event(event);
-            ecs_on_event(level->entities, event);
+            level_on_event(*level, event);
         }
         
         accumulator += dt;
@@ -135,8 +135,7 @@ auto scene_level(sand::window& window) -> next_state
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            ecs_on_update(level->entities, input);
-            level->pixels.step();
+            level_on_update(*level, input);
         }
         
         const auto desired_top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);

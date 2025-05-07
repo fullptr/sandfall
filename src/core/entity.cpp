@@ -37,7 +37,7 @@ auto update_player(registry& entities, entity e, const input& in) -> void
         if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
     }
 
-    body_comp.body_fixture->SetFriction(desired_vel != 0 ? 0.2f : 0.95f);
+    body_comp.body_fixture->SetFriction((desired_vel != 0) ? 0.1f : 0.3f);
 
     float vel_change = desired_vel - vel.x;
     float impulse = body_comp.body->GetMass() * vel_change;

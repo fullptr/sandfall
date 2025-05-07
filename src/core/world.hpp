@@ -103,4 +103,7 @@ struct level
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };
 
+auto level_on_update(level& l, const input& in) -> void;
+auto level_on_event(level& l, const event& e) -> void;
+
 }

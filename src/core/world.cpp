@@ -497,4 +497,16 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
     pixels.physics().SetContactListener(&listener);
 }
 
+auto level_on_update(level& l, const input& in) -> void
+{
+    l.pixels.step();
+    ecs_on_update(l.entities, in);
+}
+
+auto level_on_event(level& l, const event& e) -> void
+{
+    ecs_on_event(l.entities, e);
+}
+
+
 }
