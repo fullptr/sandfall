@@ -4,6 +4,7 @@
 #include "serialise.hpp"
 #include "world_save.hpp"
 #include "entity.hpp"
+#include "context.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -103,7 +104,7 @@ struct level
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };
 
-auto level_on_update(level& l, const input& in) -> void;
-auto level_on_event(level& l, const event& e) -> void;
+auto level_on_update(level& l, const context& ctx) -> void;
+auto level_on_event(level& l, const context& ctx, const event& e) -> void;
 
 }

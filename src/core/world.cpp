@@ -583,18 +583,18 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
     pixels.physics().SetContactListener(&listener);
 }
 
-auto level_on_update(level& l, const input& in) -> void
+auto level_on_update(level& l, const context& ctx) -> void
 {
     l.pixels.step();
     for (auto e : l.entities.view<player_component>()) {
-        update_player(l.entities, e, in);
+        update_player(l.entities, e, ctx.input);
     }
     for (auto e : l.entities.view<enemy_component>()) {
         update_enemy(l.entities, e);
     }
 }
 
-auto level_on_event(level& l, const event& ev) -> void
+auto level_on_event(level& l, const context& ctx, const event& ev) -> void
 {
     for (auto e : l.entities.view<body_component, player_component>()) {
         player_handle_event(l.entities, e, ev);

@@ -86,7 +86,6 @@ auto scene_main_menu(sand::window& window) -> next_state
 auto scene_level(sand::window& window) -> next_state
 {
     using namespace sand;
-    auto input           = sand::input{};
     auto level           = sand::load_level("save4.bin");
     auto world_renderer  = sand::renderer{level->pixels.width_in_pixels(), level->pixels.height_in_pixels()};
     auto accumulator     = 0.0;
@@ -94,25 +93,29 @@ auto scene_level(sand::window& window) -> next_state
     auto shape_renderer  = sand::shape_renderer{};
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
-
+    
     level->player = add_player(level->entities, level->pixels.physics(), level->spawn_point);
     const auto player_pos = glm::ivec2{ecs_entity_centre(level->entities, level->player) + glm::vec2{200, 0}};
     add_enemy(level->entities, level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
     
-    auto camera = sand::camera{
-        .top_left = {0, 0},
-        .screen_width = window.width(),
-        .screen_height = window.height(),
-        .world_to_screen = window.height() / 210.0f
+    auto ctx = context{
+        .window=&window,
+        .input={},
+        .camera={
+            .top_left = {0, 0},
+            .screen_width = window.width(),
+            .screen_height = window.height(),
+            .world_to_screen = window.height() / 210.0f
+        }
     };
 
     // This can be done a litle better surely.
-    camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
+    ctx.camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
     
     while (window.is_running()) {
         const double dt = timer.on_update();
         window.begin_frame(clear_colour);
-        input.on_new_frame();
+        ctx.input.on_new_frame();
         
         for (const auto event : window.events()) {
             if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
@@ -121,13 +124,13 @@ auto scene_level(sand::window& window) -> next_state
                 }
             }
             else if (const auto e = event.get_if<sand::window_resize_event>()) {
-                camera.screen_width = e->width;
-                camera.screen_height = e->height;
-                camera.world_to_screen = e->height / 210.0f;
+                ctx.camera.screen_width = e->width;
+                ctx.camera.screen_height = e->height;
+                ctx.camera.world_to_screen = e->height / 210.0f;
             }
 
-            input.on_event(event);
-            level_on_event(*level, event);
+            ctx.input.on_event(event);
+            level_on_event(*level, ctx, event);
         }
         
         accumulator += dt;
@@ -135,34 +138,34 @@ auto scene_level(sand::window& window) -> next_state
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            level_on_update(*level, input);
+            level_on_update(*level, ctx);
         }
         
-        const auto desired_top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(camera) / (2.0f * camera.world_to_screen);
-        if (desired_top_left != camera.top_left) {
-            const auto diff = desired_top_left - camera.top_left;
-            camera.top_left += (float)dt * 3 * diff;
+        const auto desired_top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
+        if (desired_top_left != ctx.camera.top_left) {
+            const auto diff = desired_top_left - ctx.camera.top_left;
+            ctx.camera.top_left += (float)dt * 3 * diff;
             
             // Clamp the camera to the world, don't allow players to see the void
-            const auto camera_dimensions_world_space = sand::dimensions(camera) / camera.world_to_screen;
-            camera.top_left.x = std::clamp(camera.top_left.x, 0.0f, (float)level->pixels.width_in_pixels() - camera_dimensions_world_space.x);
-            camera.top_left.y = std::clamp(camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
+            const auto camera_dimensions_world_space = sand::dimensions(ctx.camera) / ctx.camera.world_to_screen;
+            ctx.camera.top_left.x = std::clamp(ctx.camera.top_left.x, 0.0f, (float)level->pixels.width_in_pixels() - camera_dimensions_world_space.x);
+            ctx.camera.top_left.y = std::clamp(ctx.camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
         }
         
         if (updated) {
             world_renderer.update(*level);
         }
-        world_renderer.draw(camera);
+        world_renderer.draw(ctx.camera);
         
         // TODO: Replace with actual sprite data
-        shape_renderer.begin_frame(camera);      
+        shape_renderer.begin_frame(ctx.camera);      
         shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
         for (auto e : level->entities.all()) {
             shape_renderer.draw_circle(ecs_entity_centre(level->entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
         }
 
         const auto centre = ecs_entity_centre(level->entities, level->player);
-        const auto direction = glm::normalize(mouse_pos_world_space(input, camera) - centre);
+        const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
         level->pixels.physics().SetDebugDraw(&debug_renderer);
         level->pixels.physics().DebugDraw();
