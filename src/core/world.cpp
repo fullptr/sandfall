@@ -357,9 +357,9 @@ auto get_chunk_from_pixel(pixel_pos pos) -> chunk_pos
     return {pos.x / config::chunk_size, pos.y / config::chunk_size};
 }
 
-auto player_handle_event(registry& entities, entity e, const event& ev) -> void
+auto player_handle_event(level& l, const context& ctx, entity e, const event& ev) -> void
 {
-    auto [body_comp, player_comp] = entities.get_all<body_component, player_component>(e);
+    auto [body_comp, player_comp] = l.entities.get_all<body_component, player_component>(e);
 
     const bool on_ground = !player_comp.floors.empty();
     if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
@@ -382,6 +382,42 @@ auto player_handle_event(registry& entities, entity e, const event& ev) -> void
     }
     else if (const auto inner = ev.get_if<mouse_pressed_event>()) {
         if (inner->button == mouse::left) {
+            const auto centre = ecs_entity_centre(l.entities, e);
+            const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+            const auto spawn_pot = centre + 10.0f * direction;
+            
+            auto grenade = l.entities.create();
+            auto& body_comp = l.entities.emplace<body_component>(grenade);
+            
+            // Create player body
+            b2BodyDef body_def;
+            body_def.allowSleep = false;
+            body_def.gravityScale = 1.0f;
+            body_def.type = b2_dynamicBody;
+            body_def.fixedRotation = true;
+            body_def.linearDamping = 1.0f;
+            const auto pos = pixel_to_physics(spawn_pot);
+            body_def.position.Set(pos.x, pos.y);
+            body_comp.body = l.pixels.physics().CreateBody(&body_def);
+            body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(e);
+            b2MassData md;
+            md.mass = 10;
+            body_comp.body->SetMassData(&md);
+
+            const auto impulse = 12.0f * md.mass * direction;
+            body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse.x, impulse.y), true);
+
+            // Set up main body fixture
+            {
+                b2CircleShape circleShape;
+                circleShape.m_radius = pixel_to_physics(1.0f);
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &circleShape;
+                fixtureDef.density = 1.0f;
+                body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
+            }
+
             std::print("spawning bullet\n");
         }
     }
@@ -596,8 +632,8 @@ auto level_on_update(level& l, const context& ctx) -> void
 
 auto level_on_event(level& l, const context& ctx, const event& ev) -> void
 {
-    for (auto e : l.entities.view<body_component, player_component>()) {
-        player_handle_event(l.entities, e, ev);
+    for (auto e : l.entities.view<player_component, body_component>()) {
+        player_handle_event(l, ctx, e, ev);
     }
 }
 
