@@ -71,8 +71,6 @@ using registry = apx::registry<
 auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity;
 auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity;
 
-auto ecs_on_update(registry& entities, const input& in) -> void;
-auto ecs_on_event(registry& entities, const event& ev) -> void;
 auto ecs_entity_respawn(const registry& entities, entity e) -> void;
 auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2;
 
