@@ -418,8 +418,6 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
                 fixtureDef.density = 1.0f;
                 body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
             }
-
-            std::print("spawning bullet\n");
         }
     }
 }
