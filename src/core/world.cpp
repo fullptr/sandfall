@@ -621,14 +621,13 @@ auto level_on_update(level& l, const context& ctx) -> void
             const auto pos = chunk_pos{x, y};
             const auto& chunk = l.pixels[pos];
             if (!chunk.should_step) continue;
-            const auto top_left = config::chunk_size * glm::ivec2{x, y};
-            const auto tl = pixel_pos{top_left.x, top_left.y};
+            const auto top_left = get_chunk_top_left(pos);
 
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
                 l.physics.world.DestroyBody(it->second);
             }
-            l.physics.chunk_bodies[pos] = create_chunk_triangles(l, tl);
+            l.physics.chunk_bodies[pos] = create_chunk_triangles(l, top_left);
             
         }
     }

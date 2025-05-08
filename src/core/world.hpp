@@ -50,10 +50,6 @@ public:
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
-    pixel_world(const pixel_world&) = delete;
-    pixel_world(pixel_world&&) = delete;
-    pixel_world& operator=(const pixel_world&) = delete;
-    pixel_world& operator=(pixel_world&&) = delete;
     
     auto step() -> void;
 
@@ -101,7 +97,7 @@ struct level
     pixel_world      pixels;
     physics_world    physics;
     registry         entities;
-    
+
     pixel_pos        spawn_point;
     entity           player;
     contact_listener listener;
