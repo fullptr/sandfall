@@ -615,20 +615,19 @@ auto level_on_update(level& l, const context& ctx) -> void
 
     const auto width_chunks = l.pixels.width_in_chunks();
     const auto height_chunks = l.pixels.height_in_chunks();
-
+    std::print("width in chunks: {}, height in chunks: {}\n", width_chunks, height_chunks);
     for (i32 x = 0; x != width_chunks; ++x) {
         for (i32 y = 0; y != height_chunks; ++y) {
             const auto pos = chunk_pos{x, y};
-            const auto& chunk = l.pixels[pos];
-            if (!chunk.should_step) continue;
-            const auto top_left = get_chunk_top_left(pos);
-
+            if (!l.pixels[pos].should_step) continue;
+            
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
                 l.physics.world.DestroyBody(it->second);
+                map.erase(it);
             }
-            l.physics.chunk_bodies[pos] = create_chunk_triangles(l, top_left);
-            
+            const auto top_left = get_chunk_top_left(pos);
+            map[pos] = create_chunk_triangles(l, top_left); 
         }
     }
 
