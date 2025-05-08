@@ -94,9 +94,9 @@ auto scene_level(sand::window& window) -> next_state
     auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
     
-    level->player = add_player(level->entities, level->pixels.physics(), level->spawn_point);
+    level->player = add_player(level->entities, level->physics, level->spawn_point);
     const auto player_pos = glm::ivec2{ecs_entity_centre(level->entities, level->player) + glm::vec2{200, 0}};
-    add_enemy(level->entities, level->pixels.physics(), pixel_pos::from_ivec2(player_pos));
+    add_enemy(level->entities, level->physics, pixel_pos::from_ivec2(player_pos));
     
     auto ctx = context{
         .window=&window,
@@ -167,8 +167,8 @@ auto scene_level(sand::window& window) -> next_state
         const auto centre = ecs_entity_centre(level->entities, level->player);
         const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
-        level->pixels.physics().SetDebugDraw(&debug_renderer);
-        level->pixels.physics().DebugDraw();
+        level->physics.SetDebugDraw(&debug_renderer);
+        level->physics.DebugDraw();
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};

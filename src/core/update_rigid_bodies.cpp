@@ -241,13 +241,9 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
+auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*
 {
-    if (c.triangles) {
-        w.physics().DestroyBody(c.triangles);
-    }
-    
-    c.triangles = new_body(w.physics());
+    auto body = new_body(l.physics);
     
     auto chunk_pixels = chunk_static_pixels{};
     
@@ -255,7 +251,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(top_left, w, top_left + glm::ivec2{x, y})) {
+            if (is_static_pixel(top_left, l.pixels, top_left + glm::ivec2{x, y})) {
                 chunk_pixels.set(index);
             }
         }
@@ -271,7 +267,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     // triangles, then flood remove the pixels
     while (chunk_pixels.any()) {
         const auto offset = get_start_pixel_offset(chunk_pixels);
-        const auto boundary = calc_boundary(top_left, w, top_left + offset, 1.5f);
+        const auto boundary = calc_boundary(top_left, l.pixels, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
             for (std::int64_t i = 0; i != boundary.size(); ++i) {
@@ -281,11 +277,13 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
                 const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
     
                 shape.SetOneSided(v0, v1, v2, v3);
-                c.triangles->CreateFixture(&fixtureDef);
+                body->CreateFixture(&fixtureDef);
             }
         }
         flood_remove(chunk_pixels, offset);
     }
+
+    return body;
 }
     
 

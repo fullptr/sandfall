@@ -28,7 +28,6 @@ struct chunk
 
 class world
 {
-    b2World            d_physics;
     std::vector<pixel> d_pixels;
     std::vector<chunk> d_chunks;
     i32                d_width;
@@ -41,8 +40,7 @@ class world
     
     public:
     world(i32 width, i32 height, const std::vector<pixel>& pixels)
-        : d_physics{{config::gravity.x, config::gravity.y}}
-        , d_pixels{pixels}
+        : d_pixels{pixels}
         , d_width{width}
         , d_height{height}
     {
@@ -58,8 +56,6 @@ class world
     world& operator=(const world&) = delete;
     world& operator=(world&&) = delete;
     
-    auto physics() -> b2World& { return d_physics; }
-    
     auto step() -> void;
 
     auto wake_chunk_with_pixel(pixel_pos pixel) -> void;
@@ -71,6 +67,7 @@ class world
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](pixel_pos pos) const -> const pixel&;
     auto operator[](chunk_pos pos) const -> const chunk&;
+    auto set_chunk_body(chunk_pos pos, b2Body* body) -> void;
     
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
@@ -96,6 +93,7 @@ class world
 struct level
 {
     world            pixels;
+    b2World          physics;
     pixel_pos        spawn_point;
     registry         entities;
     entity           player;

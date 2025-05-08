@@ -399,7 +399,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             body_def.linearDamping = 1.0f;
             const auto pos = pixel_to_physics(spawn_pot);
             body_def.position.Set(pos.x, pos.y);
-            body_comp.body = l.pixels.physics().CreateBody(&body_def);
+            body_comp.body = l.physics.CreateBody(&body_def);
             body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(grenade);
             b2MassData md;
             md.mass = 10;
@@ -521,6 +521,15 @@ auto world::operator[](chunk_pos pos) const -> const chunk&
     return d_chunks[index];
 }
 
+auto world::set_chunk_body(chunk_pos pos, b2Body* body) -> void
+{
+    auto curr = at(pos).triangles;
+    if (curr) {
+        curr->GetWorld()->DestroyBody(curr);
+    }
+    at(pos).triangles = body;;
+}
+
 auto world::set(pixel_pos pos, const pixel& p) -> void
 {
     assert(is_valid_pixel(pos));
@@ -593,40 +602,51 @@ auto world::step() -> void
             }
         }
     }
-    
-    const auto width_chunks = d_width / config::chunk_size;
-    const auto height_chunks = d_height / config::chunk_size;
-
-    for (i32 x = 0; x != width_chunks; ++x) {
-        for (i32 y = 0; y != height_chunks; ++y) {
-            auto& chunk = d_chunks[y * width_chunks + x];
-            if (!chunk.should_step) continue;
-            const auto top_left = config::chunk_size * glm::ivec2{x, y};
-            const auto tl = pixel_pos{top_left.x, top_left.y};
-            create_chunk_triangles(*this, chunk, tl);
-        }
-    }
-    
-    d_physics.Step(sand::config::time_step, 10, 5);
 }
 
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
     : pixels{width, height, data}
+    , physics{{config::gravity.x, config::gravity.y}}
     , spawn_point{spawn}
     , listener{this}
 {
-    pixels.physics().SetContactListener(&listener);
+    physics.SetContactListener(&listener);
 }
 
 auto level_on_update(level& l, const context& ctx) -> void
 {
     l.pixels.step();
+
+    const auto width_chunks = l.pixels.width_in_chunks();
+    const auto height_chunks = l.pixels.height_in_chunks();
+
+    for (i32 x = 0; x != width_chunks; ++x) {
+        for (i32 y = 0; y != height_chunks; ++y) {
+            const auto& chunk = l.pixels[chunk_pos{x, y}];
+            if (!chunk.should_step) continue;
+            const auto top_left = config::chunk_size * glm::ivec2{x, y};
+            const auto tl = pixel_pos{top_left.x, top_left.y};
+            l.pixels.set_chunk_body(chunk_pos{x, y}, create_chunk_triangles(l, tl));
+        }
+    }
+
+    l.physics.Step(sand::config::time_step, 10, 5);
+
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
     }
     for (auto e : l.entities.view<enemy_component>()) {
         update_enemy(l.entities, e);
     }
+
+    // Clean up all entities about to go.
+    for (auto e : l.entities.marked_entities()) {
+        if (l.entities.has<body_component>(e)) {
+            const auto& comp = l.entities.get<body_component>(e);
+            l.physics.DestroyBody(comp.body);
+        }
+    }
+    l.entities.destroy_marked();
 }
 
 auto level_on_event(level& l, const context& ctx, const event& ev) -> void

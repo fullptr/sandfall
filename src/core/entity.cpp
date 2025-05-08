@@ -25,6 +25,7 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
         && !other->IsSensor())
     {
         std::print("grenade has impacted\n");
+        d_level->entities.mark_for_death(curr_entity);
     }
     
     if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {

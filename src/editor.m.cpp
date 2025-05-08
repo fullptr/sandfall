@@ -268,8 +268,8 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         if (editor.show_physics) {
-            level->pixels.physics().SetDebugDraw(&debug_draw);
-            level->pixels.physics().DebugDraw();
+            level->physics.SetDebugDraw(&debug_draw);
+            level->physics.DebugDraw();
         }
 
         if (editor.show_spawn) {
