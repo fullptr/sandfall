@@ -1,5 +1,6 @@
 #include "entity.hpp"
 #include "world.hpp"
+#include "explosion.hpp"
 
 #include <box2d/b2_body.h>
 
@@ -24,8 +25,9 @@ void contact_listener::begin_contact(b2Fixture* curr, b2Fixture* other)
         && !d_level->entities.has<player_component>(other_entity)
         && !other->IsSensor())
     {
-        std::print("grenade has impacted\n");
         d_level->entities.mark_for_death(curr_entity);
+        const auto pos = ecs_entity_centre(d_level->entities, curr_entity);
+        apply_explosion(d_level->pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
     }
     
     if (d_level->entities.has<player_component>(curr_entity) && !other->IsSensor()) {

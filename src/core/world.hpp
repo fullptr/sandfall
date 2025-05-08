@@ -100,8 +100,9 @@ struct level
 {
     pixel_world      pixels;
     physics_world    physics;
-    pixel_pos        spawn_point;
     registry         entities;
+    
+    pixel_pos        spawn_point;
     entity           player;
     contact_listener listener;
 
