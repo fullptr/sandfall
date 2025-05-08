@@ -23,10 +23,9 @@ struct chunk
 {
     bool    should_step      = true;
     bool    should_step_next = true;
-    b2Body* triangles        = nullptr;
 };
 
-class world
+class pixel_world
 {
     std::vector<pixel> d_pixels;
     std::vector<chunk> d_chunks;
@@ -38,8 +37,8 @@ class world
 
     auto wake_chunk(chunk_pos pos) -> void;
     
-    public:
-    world(i32 width, i32 height, const std::vector<pixel>& pixels)
+public:
+    pixel_world(i32 width, i32 height, const std::vector<pixel>& pixels)
         : d_pixels{pixels}
         , d_width{width}
         , d_height{height}
@@ -51,10 +50,10 @@ class world
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
-    world(const world&) = delete;
-    world(world&&) = delete;
-    world& operator=(const world&) = delete;
-    world& operator=(world&&) = delete;
+    pixel_world(const pixel_world&) = delete;
+    pixel_world(pixel_world&&) = delete;
+    pixel_world& operator=(const pixel_world&) = delete;
+    pixel_world& operator=(pixel_world&&) = delete;
     
     auto step() -> void;
 
@@ -67,7 +66,6 @@ class world
     auto swap(pixel_pos a, pixel_pos b) -> void;
     auto operator[](pixel_pos pos) const -> const pixel&;
     auto operator[](chunk_pos pos) const -> const chunk&;
-    auto set_chunk_body(chunk_pos pos, b2Body* body) -> void;
     
     auto visit_no_wake(pixel_pos pos, auto&& updater) -> void
     {
@@ -90,10 +88,18 @@ class world
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
+struct physics_world
+{
+    b2World world;
+    std::unordered_map<chunk_pos, b2Body*> chunk_bodies;
+
+    physics_world(glm::vec2 gravity);
+};
+
 struct level
 {
-    world            pixels;
-    b2World          physics;
+    pixel_world      pixels;
+    physics_world    physics;
     pixel_pos        spawn_point;
     registry         entities;
     entity           player;

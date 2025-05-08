@@ -17,6 +17,6 @@ struct explosion
     float scorch;
 };
 
-auto apply_explosion(world& w, pixel_pos pos, const explosion& info) -> void;
+auto apply_explosion(pixel_world& w, pixel_pos pos, const explosion& info) -> void;
 
 }

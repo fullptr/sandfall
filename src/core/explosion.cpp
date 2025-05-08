@@ -14,7 +14,7 @@ auto nearest_pixel(glm::vec2 pos) -> pixel_pos
     return {static_cast<int>(pos.x), static_cast<int>(pos.y)};
 }
 
-auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
+auto explosion_ray(pixel_world& w, glm::vec2 start, glm::vec2 end, const explosion& info) -> void
 {
     // Calculate a step length small enough to hit every pixel on the path.
     const auto line = end - start;
@@ -49,7 +49,7 @@ auto explosion_ray(world& w, glm::vec2 start, glm::vec2 end, const explosion& in
 
 }
 
-auto apply_explosion(world& w, pixel_pos pos, const explosion& info) -> void
+auto apply_explosion(pixel_world& w, pixel_pos pos, const explosion& info) -> void
 {
     const auto p = glm::vec2{pos.x, pos.y};
     const auto a = info.max_radius + 3 * info.scorch;

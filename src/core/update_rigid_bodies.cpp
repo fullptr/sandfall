@@ -15,7 +15,7 @@ using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config:
 
 auto is_static_pixel(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos pos) -> bool
 {
     if (!(top_left.x <= pos.x && pos.x < top_left.x + sand::config::chunk_size) || !(top_left.y <= pos.y && pos.y < top_left.y + sand::config::chunk_size)) return false;
@@ -30,7 +30,7 @@ auto is_static_pixel(
 
 auto is_static_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos A, glm::ivec2 offset) -> bool
 {
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
@@ -41,7 +41,7 @@ auto is_static_boundary(
 
 auto is_along_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos curr, pixel_pos next) -> bool
 {
     const auto offset = next - curr;
@@ -55,7 +55,7 @@ auto is_along_boundary(
 
 auto is_boundary_cross(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos curr) -> bool
 {
     const auto tl = is_static_pixel(top_left, w, curr + left + up);
@@ -67,7 +67,7 @@ auto is_boundary_cross(
 
 auto is_valid_step(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos prev,
     pixel_pos curr,
     pixel_pos next) -> bool
@@ -93,7 +93,7 @@ auto is_valid_step(
 
 auto get_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos start) -> std::vector<pixel_pos>
 {
     auto ret = std::vector<pixel_pos>{};
@@ -179,7 +179,7 @@ auto ramer_douglas_puecker(std::span<const pixel_pos> points, float epsilon, std
 
 auto calc_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos start,
     float epsilon) -> std::vector<pixel_pos>
 {
@@ -243,7 +243,7 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
 
 auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*
 {
-    auto body = new_body(l.physics);
+    auto body = new_body(l.physics.world);
     
     auto chunk_pixels = chunk_static_pixels{};
     

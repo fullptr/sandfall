@@ -29,7 +29,7 @@
 #include <cmath>
 #include <span>
 
-auto num_awake_chunks(const sand::world& w) -> sand::u64
+auto num_awake_chunks(const sand::pixel_world& w) -> sand::u64
 {
     auto count = 0;
     for (sand::i32 x = 0; x != w.width_in_chunks(); ++x) {
@@ -42,7 +42,7 @@ auto num_awake_chunks(const sand::world& w) -> sand::u64
     return count;
 }
 
-auto clear_world(sand::world& w) -> void
+auto clear_world(sand::pixel_world& w) -> void
 {
     w.wake_all();
     for (sand::i32 x = 0; x != w.width_in_pixels(); ++x) {
@@ -268,8 +268,8 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         if (editor.show_physics) {
-            level->physics.SetDebugDraw(&debug_draw);
-            level->physics.DebugDraw();
+            level->physics.world.SetDebugDraw(&debug_draw);
+            level->physics.world.DebugDraw();
         }
 
         if (editor.show_spawn) {

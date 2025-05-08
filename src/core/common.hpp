@@ -63,3 +63,13 @@ struct chunk_pos
 };
 
 }
+
+template <>
+struct std::hash<sand::chunk_pos>
+{
+    auto operator()(sand::chunk_pos pos) const noexcept -> std::size_t
+    {
+        static const auto hasher = std::hash<sand::i32>{};
+        return hasher(pos.x) ^ hasher(pos.y);
+    }
+};

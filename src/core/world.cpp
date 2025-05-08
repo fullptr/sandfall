@@ -30,7 +30,7 @@ static constexpr auto adjacent_offsets = std::array{
     glm::ivec2{0, -1}
 };
 
-auto can_pixel_move_to(const world& w, pixel_pos src_pos, pixel_pos dst_pos) -> bool
+auto can_pixel_move_to(const pixel_world& w, pixel_pos src_pos, pixel_pos dst_pos) -> bool
 {
     if (!w.is_valid_pixel(src_pos) || !w.is_valid_pixel(dst_pos)) { return false; }
 
@@ -54,7 +54,7 @@ auto can_pixel_move_to(const world& w, pixel_pos src_pos, pixel_pos dst_pos) -> 
     }
 }
 
-auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
+auto set_adjacent_free_falling(pixel_world& w, pixel_pos pos) -> void
 {
     const auto l = pos + glm::ivec2{-1, 0};
     const auto r = pos + glm::ivec2{1, 0};
@@ -72,7 +72,7 @@ auto set_adjacent_free_falling(world& w, pixel_pos pos) -> void
 
 // Moves towards the given offset, updating pos to the new postion and returning
 // true if the position has changed
-auto move_offset(world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
+auto move_offset(pixel_world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
 {
     const auto start_pos = pos;
 
@@ -100,7 +100,7 @@ auto move_offset(world& w, pixel_pos& pos, glm::ivec2 offset) -> bool
     return false;
 }
 
-auto is_surrounded(const world& w, pixel_pos pos) -> bool
+auto is_surrounded(const pixel_world& w, pixel_pos pos) -> bool
 { 
     for (const auto& offset : neighbour_offsets) {
         const auto n = pos + offset;
@@ -120,7 +120,7 @@ auto sign(float f) -> int
     return 0;
 }
 
-inline auto update_pixel_position(world& w, pixel_pos& pos) -> void
+inline auto update_pixel_position(pixel_world& w, pixel_pos& pos) -> void
 {
     const auto& props = properties(w[pos]);
 
@@ -162,7 +162,7 @@ inline auto update_pixel_position(world& w, pixel_pos& pos) -> void
 
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
-auto should_get_powered(const world& w, pixel_pos pos, glm::ivec2 offset) -> bool
+auto should_get_powered(const pixel_world& w, pixel_pos pos, glm::ivec2 offset) -> bool
 {
     const auto& dst = w[pos];
     const auto& src = w[pos + offset];
@@ -197,7 +197,7 @@ auto should_get_powered(const world& w, pixel_pos pos, glm::ivec2 offset) -> boo
 }
 
 // Update logic for single pixels depending on properties only
-inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
+inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
 {
     const auto& px = w[pos];
     const auto& props = properties(px);
@@ -282,7 +282,7 @@ inline auto update_pixel_attributes(world& w, pixel_pos pos) -> void
     }
 }
 
-inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
+inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
 {
     auto& px = w[pos];
     const auto& props = properties(px);
@@ -328,7 +328,7 @@ inline auto update_pixel_neighbours(world& w, pixel_pos pos) -> void
     }
 }
 
-auto update_pixel(world& w, pixel_pos pos) -> pixel_pos
+auto update_pixel(pixel_world& w, pixel_pos pos) -> pixel_pos
 {
     if (w[pos].type == pixel_type::none || w[pos].flags[is_updated]) {
         return pos;
@@ -399,7 +399,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             body_def.linearDamping = 1.0f;
             const auto pos = pixel_to_physics(spawn_pot);
             body_def.position.Set(pos.x, pos.y);
-            body_comp.body = l.physics.CreateBody(&body_def);
+            body_comp.body = l.physics.world.CreateBody(&body_def);
             body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(grenade);
             b2MassData md;
             md.mass = 10;
@@ -485,35 +485,35 @@ auto get_chunk_top_left(chunk_pos pos) -> pixel_pos
     return {pos.x * config::chunk_size, pos.y * config::chunk_size};
 }
 
-auto world::wake_chunk(chunk_pos pos) -> void
+auto pixel_world::wake_chunk(chunk_pos pos) -> void
 {
     assert(is_valid_chunk(pos));
     at(pos).should_step_next = true;
 }
 
-auto world::at(pixel_pos pos) -> pixel&
+auto pixel_world::at(pixel_pos pos) -> pixel&
 {
     assert(is_valid_pixel(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto world::at(chunk_pos pos) -> chunk&
+auto pixel_world::at(chunk_pos pos) -> chunk&
 {
     assert(is_valid_chunk(pos));
     return d_chunks[pos.x + width_in_chunks() * pos.y];
 }
 
-auto world::is_valid_pixel(pixel_pos pos) const -> bool
+auto pixel_world::is_valid_pixel(pixel_pos pos) const -> bool
 {
     return 0 <= pos.x && pos.x < d_width && 0 <= pos.y && pos.y < d_height;
 }
 
-auto world::is_valid_chunk(chunk_pos pos) const -> bool
+auto pixel_world::is_valid_chunk(chunk_pos pos) const -> bool
 {
     return 0 <= pos.x && pos.x < width_in_chunks() && 0 <= pos.y && pos.y < height_in_chunks();
 }
 
-auto world::operator[](chunk_pos pos) const -> const chunk&
+auto pixel_world::operator[](chunk_pos pos) const -> const chunk&
 {
     assert(is_valid_chunk(pos));
     const auto width_chunks = d_width / config::chunk_size;
@@ -521,41 +521,32 @@ auto world::operator[](chunk_pos pos) const -> const chunk&
     return d_chunks[index];
 }
 
-auto world::set_chunk_body(chunk_pos pos, b2Body* body) -> void
-{
-    auto curr = at(pos).triangles;
-    if (curr) {
-        curr->GetWorld()->DestroyBody(curr);
-    }
-    at(pos).triangles = body;;
-}
-
-auto world::set(pixel_pos pos, const pixel& p) -> void
+auto pixel_world::set(pixel_pos pos, const pixel& p) -> void
 {
     assert(is_valid_pixel(pos));
     at(pos) = p;
     wake_chunk_with_pixel(pos);
 }
 
-auto world::swap(pixel_pos a, pixel_pos b) -> void
+auto pixel_world::swap(pixel_pos a, pixel_pos b) -> void
 {
     std::swap(at(a), at(b));
     wake_chunk_with_pixel(a);
     wake_chunk_with_pixel(b);
 }
 
-auto world::operator[](pixel_pos pos) const -> const pixel&
+auto pixel_world::operator[](pixel_pos pos) const -> const pixel&
 {
     assert(is_valid_pixel(pos));
     return d_pixels[pos.x + d_width * pos.y];
 }
 
-auto world::wake_all() -> void
+auto pixel_world::wake_all() -> void
 {
     for (auto& c : d_chunks) { c.should_step_next = true; }
 }
 
-auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
+auto pixel_world::wake_chunk_with_pixel(pixel_pos pos) -> void
 {
     const auto chunk_pos = get_chunk_from_pixel(pos);
     wake_chunk(chunk_pos);
@@ -568,7 +559,7 @@ auto world::wake_chunk_with_pixel(pixel_pos pos) -> void
     }
 }
 
-auto world::step() -> void
+auto pixel_world::step() -> void
 {
     for (auto& pixel : d_pixels) {
         pixel.flags[is_updated] = false;
@@ -604,13 +595,18 @@ auto world::step() -> void
     }
 }
 
+physics_world::physics_world(glm::vec2 gravity)
+    : world{{gravity.x, gravity.y}}
+{
+}
+
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
     : pixels{width, height, data}
-    , physics{{config::gravity.x, config::gravity.y}}
+    , physics{config::gravity}
     , spawn_point{spawn}
     , listener{this}
 {
-    physics.SetContactListener(&listener);
+    physics.world.SetContactListener(&listener);
 }
 
 auto level_on_update(level& l, const context& ctx) -> void
@@ -622,15 +618,22 @@ auto level_on_update(level& l, const context& ctx) -> void
 
     for (i32 x = 0; x != width_chunks; ++x) {
         for (i32 y = 0; y != height_chunks; ++y) {
-            const auto& chunk = l.pixels[chunk_pos{x, y}];
+            const auto pos = chunk_pos{x, y};
+            const auto& chunk = l.pixels[pos];
             if (!chunk.should_step) continue;
             const auto top_left = config::chunk_size * glm::ivec2{x, y};
             const auto tl = pixel_pos{top_left.x, top_left.y};
-            l.pixels.set_chunk_body(chunk_pos{x, y}, create_chunk_triangles(l, tl));
+
+            auto& map = l.physics.chunk_bodies;
+            if (auto it = map.find(pos); it != map.end()) {
+                l.physics.world.DestroyBody(it->second);
+            }
+            l.physics.chunk_bodies[pos] = create_chunk_triangles(l, tl);
+            
         }
     }
 
-    l.physics.Step(sand::config::time_step, 10, 5);
+    l.physics.world.Step(sand::config::time_step, 10, 5);
 
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
@@ -643,7 +646,7 @@ auto level_on_update(level& l, const context& ctx) -> void
     for (auto e : l.entities.marked_entities()) {
         if (l.entities.has<body_component>(e)) {
             const auto& comp = l.entities.get<body_component>(e);
-            l.physics.DestroyBody(comp.body);
+            l.physics.world.DestroyBody(comp.body);
         }
     }
     l.entities.destroy_marked();
