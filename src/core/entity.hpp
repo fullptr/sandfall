@@ -8,6 +8,24 @@
 #include "utility.hpp"
 #include "input.hpp"
 
+struct shape_id_hash
+{
+    auto operator()(const b2ShapeId id) const -> std::size_t
+    {
+        return std::hash<std::uint64_t>{}(std::bit_cast<std::uint64_t>(id));
+    }
+};
+
+struct shape_id_equal
+{
+    auto operator()(const b2ShapeId lhs, const b2ShapeId rhs) const -> bool
+    {
+        return lhs.generation == rhs.generation
+            && lhs.index1 == rhs.index1
+            && lhs.world0 == rhs.world0;
+    }
+};
+
 namespace sand {
 
 using entity = apx::entity;
@@ -40,7 +58,7 @@ struct player_component
     b2ShapeId left_sensor  = b2_nullShapeId;
     b2ShapeId right_sensor = b2_nullShapeId;
     
-    std::unordered_set<b2ShapeId> floors;
+    std::unordered_set<b2ShapeId, shape_id_hash, shape_id_equal> floors;
     int num_left_contacts  = 0;
     int num_right_contacts = 0;
 

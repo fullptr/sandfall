@@ -90,6 +90,13 @@ struct physics_world
     std::unordered_map<chunk_pos, b2BodyId> chunk_bodies;
 
     physics_world(glm::vec2 gravity);
+    ~physics_world();
+
+    physics_world(const physics_world&) = delete;
+    physics_world& operator=(const physics_world&) = delete;
+
+    physics_world(physics_world&&) = default;
+    physics_world& operator=(physics_world&&) = default;
 };
 
 struct level

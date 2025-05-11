@@ -91,7 +91,7 @@ auto scene_level(sand::window& window) -> next_state
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
+    //auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
     
     level->player = add_player(level->entities, level->physics.world, level->spawn_point);
@@ -167,8 +167,8 @@ auto scene_level(sand::window& window) -> next_state
         const auto centre = ecs_entity_centre(level->entities, level->player);
         const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
-        level->physics.world.SetDebugDraw(&debug_renderer);
-        level->physics.world.DebugDraw();
+        //level->physics.world.SetDebugDraw(&debug_renderer);
+        //level->physics.world.DebugDraw();
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};

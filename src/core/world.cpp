@@ -368,15 +368,15 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
                 if (!on_ground) {
                     player_comp.double_jump = false;
                 }
-                const auto impulse = body_comp.body->GetMass() * 7;
-                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+                const auto impulse = b2Body_GetMass(body_comp.body) * 7;
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(0, -impulse), true);
             }
         }
         else if (inner->key == keyboard::S) {
             if (player_comp.ground_pound) {
                 player_comp.ground_pound = false;
-                const auto impulse = body_comp.body->GetMass() * 7;
-                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, impulse), true);
+                const auto impulse = b2Body_GetMass(body_comp.body) * 7;
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(0, impulse), true);
             }
         }
     }
@@ -391,32 +391,30 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             l.entities.emplace<grenade_component>(grenade);
             
             // Create player body
-            b2BodyDef body_def;
-            body_def.allowSleep = false;
-            body_def.gravityScale = 1.0f;
-            body_def.type = b2_dynamicBody;
-            body_def.fixedRotation = true;
-            body_def.linearDamping = 1.0f;
-            const auto pos = pixel_to_physics(spawn_pot);
-            body_def.position.Set(pos.x, pos.y);
-            body_comp.body = l.physics.world.CreateBody(&body_def);
-            body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(grenade);
-            b2MassData md;
-            md.mass = 10;
-            body_comp.body->SetMassData(&md);
+            b2BodyDef def;
+            def.type = b2_dynamicBody;
+            def.enableSleep = false;
+            def.gravityScale = 1.0f;
+            def.fixedRotation = true;
+            def.linearDamping = 1.0f;
+            def.position = pixel_to_physics(spawn_pot);
 
-            const auto impulse = 12.0f * md.mass * direction;
-            body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse.x, impulse.y), true);
+            body_comp.body = b2CreateBody(l.physics.world, &def);
+            b2Body_SetUserData(body_comp.body, (void*)(std::uintptr_t)grenade);
+            b2Body_SetMassData(body_comp.body, b2MassData{.mass = 10});
+
+            const auto impulse = 12.0f * b2Body_GetMass(body_comp.body) * direction;
+            b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(impulse.x, impulse.y), true);
 
             // Set up main body fixture
             {
-                b2CircleShape circleShape;
-                circleShape.m_radius = pixel_to_physics(1.0f);
+                b2Circle circle;
+                circle.radius = pixel_to_physics(1.0f);
 
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &circleShape;
-                fixtureDef.density = 1.0f;
-                body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
+                b2ShapeDef def = b2DefaultShapeDef();
+                def.density = 1.0f;
+
+                body_comp.body_fixture = b2CreateCircleShape(body_comp.body, &def, &circle);
             }
         }
     }
@@ -433,7 +431,7 @@ auto update_player(registry& entities, entity e, const input& in) -> void
     const bool can_move_left = player_comp.num_left_contacts == 0;
     const bool can_move_right = player_comp.num_right_contacts == 0;
 
-    const auto vel = body_comp.body->GetLinearVelocity();
+    const auto vel = b2Body_GetLinearVelocity(body_comp.body);
     
     auto direction = 0;
     if (can_move_left && in.is_down(keyboard::A)) {
@@ -446,16 +444,17 @@ auto update_player(registry& entities, entity e, const input& in) -> void
     const auto max_vel = 5.0f;
     auto desired_vel = 0.0f;
     if (direction == -1) { // left
-        if (vel.x > -max_vel) desired_vel = b2Max(vel.x - max_vel, -max_vel);
+        if (vel.x > -max_vel) desired_vel = glm::max(vel.x - max_vel, -max_vel);
     } else if (direction == 1) { // right
-        if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
+        if (vel.x < max_vel) desired_vel = glm::min(vel.x + max_vel, max_vel);
     }
 
-    body_comp.body_fixture->SetFriction((desired_vel != 0) ? 0.1f : 0.3f);
+    // TODO: Is this actually doing anything?
+    b2Shape_SetFriction(body_comp.body_fixture, (desired_vel != 0) ? 0.1f : 0.3f);
 
     float vel_change = desired_vel - vel.x;
-    float impulse = body_comp.body->GetMass() * vel_change;
-    body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
+    float impulse = b2Body_GetMass(body_comp.body) * vel_change;
+    b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(impulse, 0), true);
 
     if (on_ground) {
         player_comp.double_jump = true;
@@ -470,10 +469,10 @@ auto update_enemy(registry& entities, entity e) -> void
         for (const auto curr : enemy_comp.nearby_entities) {
             if (entities.has<player_component>(curr)) {
                 auto& curr_body_comp = entities.get<body_component>(curr);
-                const auto pos = physics_to_pixel(curr_body_comp.body->GetPosition());
+                const auto pos = physics_to_pixel(b2Body_GetPosition(curr_body_comp.body));
                 const auto self_pos = ecs_entity_centre(entities, e);
                 const auto dir = glm::normalize(pos - self_pos);
-                body_comp.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(0.25f * dir), true);
             }
         }
     }
@@ -608,6 +607,11 @@ static auto make_world(glm::vec2 gravity) -> b2WorldId
 physics_world::physics_world(glm::vec2 gravity)
     : world{make_world(gravity)}
 {
+}
+
+physics_world::~physics_world()
+{
+    b2DestroyWorld(world);
 }
 
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
