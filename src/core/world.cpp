@@ -500,7 +500,9 @@ auto pixel_world::at(pixel_pos pos) -> pixel&
 auto pixel_world::at(chunk_pos pos) -> chunk&
 {
     assert(is_valid_chunk(pos));
-    return d_chunks[pos.x + width_in_chunks() * pos.y];
+    const auto index = pos.x + width_in_chunks() * pos.y;
+    assert(index < d_chunks.size());
+    return d_chunks[index];
 }
 
 auto pixel_world::is_valid_pixel(pixel_pos pos) const -> bool
@@ -615,7 +617,6 @@ auto level_on_update(level& l, const context& ctx) -> void
 
     const auto width_chunks = l.pixels.width_in_chunks();
     const auto height_chunks = l.pixels.height_in_chunks();
-    std::print("width in chunks: {}, height in chunks: {}\n", width_chunks, height_chunks);
     for (i32 x = 0; x != width_chunks; ++x) {
         for (i32 y = 0; y != height_chunks; ++y) {
             const auto pos = chunk_pos{x, y};
@@ -644,7 +645,9 @@ auto level_on_update(level& l, const context& ctx) -> void
     for (auto e : l.entities.marked_entities()) {
         if (l.entities.has<body_component>(e)) {
             const auto& comp = l.entities.get<body_component>(e);
-            l.physics.world.DestroyBody(comp.body);
+            if (comp.body) {
+                l.physics.world.DestroyBody(comp.body);
+            }
         }
     }
     l.entities.destroy_marked();
