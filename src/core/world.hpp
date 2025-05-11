@@ -86,8 +86,8 @@ public:
 
 struct physics_world
 {
-    b2World world;
-    std::unordered_map<chunk_pos, b2Body*> chunk_bodies;
+    b2WorldId world;
+    std::unordered_map<chunk_pos, b2BodyId> chunk_bodies;
 
     physics_world(glm::vec2 gravity);
 };
@@ -100,7 +100,6 @@ struct level
 
     pixel_pos        spawn_point;
     entity           player;
-    contact_listener listener;
 
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };

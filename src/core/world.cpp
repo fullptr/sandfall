@@ -423,6 +423,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
 }
 
 static_assert(sizeof(std::uintptr_t) == sizeof(entity));
+static_assert(sizeof(entity) == sizeof(void*));
 
 auto update_player(registry& entities, entity e, const input& in) -> void
 {
@@ -597,8 +598,15 @@ auto pixel_world::step() -> void
     }
 }
 
+static auto make_world(glm::vec2 gravity) -> b2WorldId
+{
+    auto def = b2DefaultWorldDef();
+    def.gravity = {gravity.x, gravity.y};
+    return b2CreateWorld(&def);
+}
+
 physics_world::physics_world(glm::vec2 gravity)
-    : world{{gravity.x, gravity.y}}
+    : world{make_world(gravity)}
 {
 }
 
@@ -606,9 +614,7 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
     : pixels{width, height, data}
     , physics{config::gravity}
     , spawn_point{spawn}
-    , listener{this}
 {
-    physics.world.SetContactListener(&listener);
 }
 
 auto level_on_update(level& l, const context& ctx) -> void
@@ -624,7 +630,7 @@ auto level_on_update(level& l, const context& ctx) -> void
             
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
-                l.physics.world.DestroyBody(it->second);
+                b2DestroyBody(it->second);
                 map.erase(it);
             }
             const auto top_left = get_chunk_top_left(pos);
@@ -632,7 +638,7 @@ auto level_on_update(level& l, const context& ctx) -> void
         }
     }
 
-    l.physics.world.Step(sand::config::time_step, 10, 5);
+    b2World_Step(l.physics.world, sand::config::time_step, 4);
 
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
@@ -645,8 +651,8 @@ auto level_on_update(level& l, const context& ctx) -> void
     for (auto e : l.entities.marked_entities()) {
         if (l.entities.has<body_component>(e)) {
             const auto& comp = l.entities.get<body_component>(e);
-            if (comp.body) {
-                l.physics.world.DestroyBody(comp.body);
+            if (B2_IS_NON_NULL(comp.body)) {
+                b2DestroyBody(comp.body);
             }
         }
     }

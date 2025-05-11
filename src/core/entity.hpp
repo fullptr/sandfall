@@ -12,35 +12,35 @@ namespace sand {
 
 using entity = apx::entity;
 
-class level;
-class contact_listener : public b2ContactListener
-{
-    level* d_level;
-
-    void begin_contact(b2Fixture* curr, b2Fixture* other);
-    void end_contact(b2Fixture* curr, b2Fixture* other);
-
-public:
-    contact_listener(level* l) : d_level{l} {}
-
-    void PreSolve(b2Contact* contact, const b2Manifold* impulse) override;
-    void BeginContact(b2Contact* contact) override;
-    void EndContact(b2Contact* contact) override;
-};
+//class level;
+//class contact_listener : public b2ContactListener
+//{
+//    level* d_level;
+//
+//    void begin_contact(b2Fixture* curr, b2Fixture* other);
+//    void end_contact(b2Fixture* curr, b2Fixture* other);
+//
+//public:
+//    contact_listener(level* l) : d_level{l} {}
+//
+//    void PreSolve(b2Contact* contact, const b2Manifold* impulse) override;
+//    void BeginContact(b2Contact* contact) override;
+//    void EndContact(b2Contact* contact) override;
+//};
 
 struct body_component
 {
-    b2Body* body = nullptr;
-    b2Fixture* body_fixture = nullptr;
+    b2BodyId body = b2_nullBodyId;
+    b2ShapeId body_fixture = b2_nullShapeId;
 };
 
 struct player_component
 {
-    b2Fixture* foot_sensor  = nullptr;
-    b2Fixture* left_sensor  = nullptr;
-    b2Fixture* right_sensor = nullptr;
+    b2ShapeId foot_sensor  = b2_nullShapeId;
+    b2ShapeId left_sensor  = b2_nullShapeId;
+    b2ShapeId right_sensor = b2_nullShapeId;
     
-    std::unordered_set<b2Fixture*> floors;
+    std::unordered_set<b2ShapeId> floors;
     int num_left_contacts  = 0;
     int num_right_contacts = 0;
 
@@ -50,7 +50,7 @@ struct player_component
 
 struct enemy_component
 {
-    b2Fixture*                 proximity_sensor = nullptr;
+    b2ShapeId                  proximity_sensor = b2_nullShapeId;
     std::unordered_set<entity> nearby_entities;
 };
 
@@ -71,8 +71,8 @@ using registry = apx::registry<
     grenade_component
 >;
 
-auto add_player(registry& entities, b2World& world, pixel_pos position) -> entity;
-auto add_enemy(registry& entities, b2World& world, pixel_pos position) -> entity;
+auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> entity;
+auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entity;
 
 auto ecs_entity_respawn(const registry& entities, entity e) -> void;
 auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2;

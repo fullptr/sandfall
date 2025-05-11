@@ -6,6 +6,7 @@
 
 namespace sand {
 
+#if 0
 class physics_debug_draw : public b2Draw
 {
     shape_renderer* d_renderer;
@@ -21,5 +22,6 @@ public:
 	void DrawTransform(const b2Transform& xf) override;
 	void DrawPoint(const b2Vec2& p, float size, const b2Color& color) override;
 };
+#endif
 
 }

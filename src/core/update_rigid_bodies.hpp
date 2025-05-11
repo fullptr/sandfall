@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-class b2Body;
+struct b2BodyId;
 
 namespace sand {
 

@@ -2,6 +2,7 @@
 
 namespace sand {
 
+#if 0
 physics_debug_draw::physics_debug_draw(shape_renderer* s) : d_renderer{s} {
     SetFlags(b2Draw::e_shapeBit);
 }
@@ -59,5 +60,6 @@ void physics_debug_draw::DrawPoint(const b2Vec2& p, float size, const b2Color& c
         2.0f
     );
 }
+#endif
 
 }

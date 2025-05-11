@@ -192,13 +192,13 @@ auto calc_boundary(
     return simplified;
 }
 
-auto new_body(level& l) -> b2Body*
+auto new_body(level& l) -> b2BodyId
 {
     b2BodyDef def;
     def.type = b2_staticBody;
     def.position.Set(0.0f, 0.0f);
-    auto body = l.physics.world.CreateBody(&def);
-    body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
+    auto body = b2CreateBody(l.physics.world, &def);
+    b2Body_SetUserData(comp.body, (void*)(std::uintptr_t)(apx::null));
     return body;
 }
 
@@ -257,11 +257,8 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
         }
     }
 
-    b2FixtureDef fixtureDef;
-    fixtureDef.friction = 1;
-    
-    b2EdgeShape shape;
-    fixtureDef.shape = &shape;
+    b2ShapeDef def = b2DefaultShapeDef();
+    def.material.friction = 1;
     
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
@@ -270,15 +267,16 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
         const auto boundary = calc_boundary(top_left, l.pixels, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
-            for (std::int64_t i = 0; i != boundary.size(); ++i) {
-                const auto v0 = pixel_to_physics(signed_index(boundary, i-1));
-                const auto v1 = pixel_to_physics(signed_index(boundary, i));
-                const auto v2 = pixel_to_physics(signed_index(boundary, i+1));
-                const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
-    
-                shape.SetOneSided(v0, v1, v2, v3);
-                body->CreateFixture(&fixtureDef);
+            std::vector<b2Vec2> points;
+            points.reserve(boundary.size());
+            for (const auto pos : boundary) {
+                points.push_back(pixel_to_physics(pos));
             }
+            b2ChainDef def = b2DefaultChainDef();
+            def.count = points.size();
+            def.points = points.data();
+            def.isLoop = true;
+            b2CreateChain(body, &def);
         }
         flood_remove(chunk_pixels, offset);
     }
