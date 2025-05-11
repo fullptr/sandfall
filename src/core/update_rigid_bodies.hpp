@@ -3,10 +3,11 @@
 
 #include "common.hpp"
 
+class b2Body;
+
 namespace sand {
 
-class world;
-class chunk;
-auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void;
+class level;
+auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*;
 
 }

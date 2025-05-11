@@ -123,7 +123,7 @@ public:
         }
 
         // Pop the back element of the sparse_list
-        auto back = d_packed.back();
+        auto back = std::move(d_packed.back());
         d_packed.pop_back();
 
         // Get the index of the outgoing value within the elements vector.
@@ -131,7 +131,7 @@ public:
         d_sparse[index] = EMPTY;
 
         // Overwrite the outgoing value with the back value.
-        d_packed[packed_index] = back;
+        d_packed[packed_index] = std::move(back);
 
         // Point the index for the back value to its new location.
         d_sparse[back.first] = packed_index;
@@ -219,6 +219,7 @@ private:
 
     apx::sparse_set<apx::entity> d_entities;
     std::deque<apx::entity>      d_pool;
+    std::vector<apx::entity>     d_marked_for_death;
 
     tuple_type d_components;
 
@@ -269,6 +270,30 @@ public:
         return entity != apx::null
             && d_entities.has(index)
             && d_entities[index] == entity;
+    }
+
+    // Marks the entity as head. This *does not* destroy entities, and
+    // marked entites are still treated like normal. To destroy these
+    // entities, call "destroy_marked". This mechanism exists because
+    // destroying entities while looping over them is dangerous, so this
+    // allows you mark them and then clean all marked entities up at the
+    // end of the frame
+    void mark_for_death(const apx::entity entity)
+    {
+        d_marked_for_death.push_back(entity);
+    }
+
+    void destroy_marked()
+    {
+        for (const auto e : d_marked_for_death) {
+            destroy(e);
+        }
+        d_marked_for_death.clear();
+    }
+
+    auto marked_entities() -> std::span<const apx::entity>
+    {
+        return d_marked_for_death;
     }
 
     void destroy(const apx::entity entity)

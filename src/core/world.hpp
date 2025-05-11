@@ -4,6 +4,7 @@
 #include "serialise.hpp"
 #include "world_save.hpp"
 #include "entity.hpp"
+#include "context.hpp"
 
 #include <cstdint>
 #include <unordered_set>
@@ -22,12 +23,10 @@ struct chunk
 {
     bool    should_step      = true;
     bool    should_step_next = true;
-    b2Body* triangles        = nullptr;
 };
 
-class world
+class pixel_world
 {
-    b2World            d_physics;
     std::vector<pixel> d_pixels;
     std::vector<chunk> d_chunks;
     i32                d_width;
@@ -38,10 +37,9 @@ class world
 
     auto wake_chunk(chunk_pos pos) -> void;
     
-    public:
-    world(i32 width, i32 height, const std::vector<pixel>& pixels)
-        : d_physics{{config::gravity.x, config::gravity.y}}
-        , d_pixels{pixels}
+public:
+    pixel_world(i32 width, i32 height, const std::vector<pixel>& pixels)
+        : d_pixels{pixels}
         , d_width{width}
         , d_height{height}
     {
@@ -52,12 +50,6 @@ class world
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
-    world(const world&) = delete;
-    world(world&&) = delete;
-    world& operator=(const world&) = delete;
-    world& operator=(world&&) = delete;
-    
-    auto physics() -> b2World& { return d_physics; }
     
     auto step() -> void;
 
@@ -92,15 +84,28 @@ class world
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
+struct physics_world
+{
+    b2World world;
+    std::unordered_map<chunk_pos, b2Body*> chunk_bodies;
+
+    physics_world(glm::vec2 gravity);
+};
+
 struct level
 {
-    world            pixels;
-    pixel_pos        spawn_point;
+    pixel_world      pixels;
+    physics_world    physics;
     registry         entities;
+
+    pixel_pos        spawn_point;
     entity           player;
     contact_listener listener;
 
     level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };
+
+auto level_on_update(level& l, const context& ctx) -> void;
+auto level_on_event(level& l, const context& ctx, const event& e) -> void;
 
 }

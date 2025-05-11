@@ -15,7 +15,7 @@ using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config:
 
 auto is_static_pixel(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos pos) -> bool
 {
     if (!(top_left.x <= pos.x && pos.x < top_left.x + sand::config::chunk_size) || !(top_left.y <= pos.y && pos.y < top_left.y + sand::config::chunk_size)) return false;
@@ -30,7 +30,7 @@ auto is_static_pixel(
 
 auto is_static_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos A, glm::ivec2 offset) -> bool
 {
     assert(glm::abs(offset.x) + glm::abs(offset.y) == 1);
@@ -41,7 +41,7 @@ auto is_static_boundary(
 
 auto is_along_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos curr, pixel_pos next) -> bool
 {
     const auto offset = next - curr;
@@ -55,7 +55,7 @@ auto is_along_boundary(
 
 auto is_boundary_cross(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos curr) -> bool
 {
     const auto tl = is_static_pixel(top_left, w, curr + left + up);
@@ -67,7 +67,7 @@ auto is_boundary_cross(
 
 auto is_valid_step(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos prev,
     pixel_pos curr,
     pixel_pos next) -> bool
@@ -93,7 +93,7 @@ auto is_valid_step(
 
 auto get_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos start) -> std::vector<pixel_pos>
 {
     auto ret = std::vector<pixel_pos>{};
@@ -179,7 +179,7 @@ auto ramer_douglas_puecker(std::span<const pixel_pos> points, float epsilon, std
 
 auto calc_boundary(
     pixel_pos top_left,
-    const world& w,
+    const pixel_world& w,
     pixel_pos start,
     float epsilon) -> std::vector<pixel_pos>
 {
@@ -192,14 +192,17 @@ auto calc_boundary(
     return simplified;
 }
 
-auto new_body(b2World& world) -> b2Body*
+auto new_body(level& l) -> b2Body*
 {
+    auto e = l.entities.create();
+    auto& comp = l.entities.emplace<body_component>(e);
+
     b2BodyDef bodyDef;
     bodyDef.type = b2_staticBody;
     bodyDef.position.Set(0.0f, 0.0f);
-    auto body = world.CreateBody(&bodyDef);
-    body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
-    return body;
+    comp.body = l.physics.world.CreateBody(&bodyDef);
+    comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
+    return comp.body;
 }
 
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void
@@ -241,13 +244,9 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
+auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*
 {
-    if (c.triangles) {
-        w.physics().DestroyBody(c.triangles);
-    }
-    
-    c.triangles = new_body(w.physics());
+    auto body = new_body(l);
     
     auto chunk_pixels = chunk_static_pixels{};
     
@@ -255,7 +254,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     for (int x = 0; x != sand::config::chunk_size; ++x) {
         for (int y = 0; y != sand::config::chunk_size; ++y) {
             const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(top_left, w, top_left + glm::ivec2{x, y})) {
+            if (is_static_pixel(top_left, l.pixels, top_left + glm::ivec2{x, y})) {
                 chunk_pixels.set(index);
             }
         }
@@ -271,7 +270,7 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
     // triangles, then flood remove the pixels
     while (chunk_pixels.any()) {
         const auto offset = get_start_pixel_offset(chunk_pixels);
-        const auto boundary = calc_boundary(top_left, w, top_left + offset, 1.5f);
+        const auto boundary = calc_boundary(top_left, l.pixels, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
             for (std::int64_t i = 0; i != boundary.size(); ++i) {
@@ -281,11 +280,13 @@ auto create_chunk_triangles(world& w, chunk& c, pixel_pos top_left) -> void
                 const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
     
                 shape.SetOneSided(v0, v1, v2, v3);
-                c.triangles->CreateFixture(&fixtureDef);
+                body->CreateFixture(&fixtureDef);
             }
         }
         flood_remove(chunk_pixels, offset);
     }
+
+    return body;
 }
     
 
