@@ -241,7 +241,7 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*
+auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
 {
     auto body = new_body(l);
     
