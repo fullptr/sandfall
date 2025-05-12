@@ -628,7 +628,7 @@ auto level_on_update(level& l, const context& ctx) -> void
                 map.erase(it);
             }
             const auto top_left = get_chunk_top_left(pos);
-            map[pos] = create_chunk_triangles(l, top_left); 
+            map[pos] = create_chunk_rigid_bodies(l, top_left); 
         }
     }
 

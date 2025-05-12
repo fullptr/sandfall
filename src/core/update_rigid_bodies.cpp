@@ -194,15 +194,12 @@ auto calc_boundary(
 
 auto new_body(level& l) -> b2Body*
 {
-    auto e = l.entities.create();
-    auto& comp = l.entities.emplace<body_component>(e);
-
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_staticBody;
-    bodyDef.position.Set(0.0f, 0.0f);
-    comp.body = l.physics.world.CreateBody(&bodyDef);
-    comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
-    return comp.body;
+    b2BodyDef def;
+    def.type = b2_staticBody;
+    def.position.Set(0.0f, 0.0f);
+    auto body = l.physics.world.CreateBody(&def);
+    body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
+    return body;
 }
 
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void
@@ -244,7 +241,7 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_triangles(level& l, pixel_pos top_left) -> b2Body*
+auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
 {
     auto body = new_body(l);
     
