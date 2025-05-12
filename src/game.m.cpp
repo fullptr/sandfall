@@ -111,8 +111,13 @@ auto scene_level(sand::window& window) -> next_state
     b2DebugDraw debug = b2DefaultDebugDraw();
     debug.context = static_cast<void*>(&shape_renderer);
     debug.drawShapes = true;
+    debug.drawBounds = true;
+    debug.drawContactFeatures = false;
+
     debug.DrawPolygonFcn = draw_polygon;
+    debug.DrawSolidPolygonFcn = draw_solid_polygon;
     debug.DrawCircleFcn = draw_circle;
+    debug.DrawSolidCircleFcn = draw_solid_circle;
 
     // This can be done a litle better surely.
     ctx.camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);

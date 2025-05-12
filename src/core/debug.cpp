@@ -44,11 +44,12 @@ void draw_solid_capsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor colour, v
 
 void draw_solid_circle(b2Transform transform, float radius, b2HexColor colour, void* context)
 {
-
+    draw_circle(transform.p, radius, colour, context);
 }
 
 void draw_solid_polygon(b2Transform transform, const b2Vec2* vertices, int vertexCount, float radius, b2HexColor colour, void* context)
 {
+    draw_polygon(vertices, vertexCount, colour, context);
 }
 
 void draw_string(b2Vec2 p, const char* s, b2HexColor colour, void* context)
@@ -64,22 +65,6 @@ void draw_transform(b2Transform transform, void* context)
 
 #if 0
 
-
-void physics_debug_draw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
-{
-    DrawPolygon(vertices, vertexCount, color);
-}
-
-void physics_debug_draw::DrawCircle(const b2Vec2& center, float radius, const b2Color& color)
-{
-    const auto r = physics_to_pixel(radius);
-    d_renderer->draw_annulus(
-        physics_to_pixel(center),
-        {color.r, color.g, color.b, 1.0},
-        r - 1.0f,
-        r
-    );
-}
 
 void physics_debug_draw::DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color)
 {

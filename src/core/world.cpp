@@ -599,6 +599,7 @@ auto pixel_world::step() -> void
 
 static auto make_world(glm::vec2 gravity) -> b2WorldId
 {
+    std::print("making world\n");
     auto def = b2DefaultWorldDef();
     def.gravity = {gravity.x, gravity.y};
     return b2CreateWorld(&def);
@@ -623,6 +624,7 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
+    std::print("begin contact\n");
     const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
@@ -637,8 +639,7 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
         apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
     }
     
-    if (l.entities.has<player_component>(curr_entity)
-        && !b2Shape_IsSensor(other))
+    if (l.entities.has<player_component>(curr_entity) && !b2Shape_IsSensor(other))
     {
         auto& comp = l.entities.get<player_component>(curr_entity);
         
@@ -653,8 +654,7 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
         }
     }
     
-    if (l.entities.has<enemy_component>(curr_entity) 
-        && l.entities.valid(other_entity))
+    if (l.entities.has<enemy_component>(curr_entity) && l.entities.valid(other_entity))
     {
         auto& comp = l.entities.get<enemy_component>(curr_entity);
         if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(curr, comp.proximity_sensor) && l.entities.valid(other_entity)) {
@@ -665,13 +665,13 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 
 static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
+    std::print("end contact\n");
     const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
     if (!l.entities.valid(curr_entity)) return;
     
-    if (l.entities.has<player_component>(curr_entity)
-        && !b2Shape_IsSensor(other))
+    if (l.entities.has<player_component>(curr_entity) && !b2Shape_IsSensor(other))
     {
         auto& comp = l.entities.get<player_component>(curr_entity);
         
@@ -686,14 +686,23 @@ static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
         }
     }
     
-    if (l.entities.has<enemy_component>(curr_entity) 
-        && l.entities.valid(other_entity))
+    if (l.entities.has<enemy_component>(curr_entity) && l.entities.valid(other_entity))
     {
         auto& comp = l.entities.get<enemy_component>(curr_entity);
         if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(curr, comp.proximity_sensor) && l.entities.valid(other_entity)) {
             comp.nearby_entities.erase(other_entity);
         }
     }
+}
+
+static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
+{
+    std::print("begin sensor event\n");
+}
+
+static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
+{
+    std::print("end sensor event\n");
 }
 
 auto level_on_update(level& l, const context& ctx) -> void
@@ -719,18 +728,31 @@ auto level_on_update(level& l, const context& ctx) -> void
 
     b2World_Step(l.physics.world, sand::config::time_step, 4);
 
-    b2ContactEvents events = b2World_GetContactEvents(l.physics.world);
-
-    for (std::size_t i = 0; i != events.beginCount; ++i) {
-        begin_contact(l, events.beginEvents[i].shapeIdA, events.beginEvents[i].shapeIdB);
-        begin_contact(l, events.beginEvents[i].shapeIdB, events.beginEvents[i].shapeIdA);
+    {
+        b2ContactEvents events = b2World_GetContactEvents(l.physics.world);
+    
+        for (std::size_t i = 0; i != events.beginCount; ++i) {
+            begin_contact(l, events.beginEvents[i].shapeIdA, events.beginEvents[i].shapeIdB);
+            begin_contact(l, events.beginEvents[i].shapeIdB, events.beginEvents[i].shapeIdA);
+        }
+    
+        for (std::size_t i = 0; i != events.endCount; ++i) {
+            end_contact(l, events.endEvents[i].shapeIdA, events.endEvents[i].shapeIdB);
+            end_contact(l, events.endEvents[i].shapeIdB, events.endEvents[i].shapeIdA);
+        }
     }
 
-    for (std::size_t i = 0; i != events.endCount; ++i) {
-        end_contact(l, events.endEvents[i].shapeIdA, events.endEvents[i].shapeIdB);
-        end_contact(l, events.endEvents[i].shapeIdB, events.endEvents[i].shapeIdA);
+    {
+        b2SensorEvents events = b2World_GetSensorEvents(l.physics.world);
+    
+        for (std::size_t i = 0; i != events.beginCount; ++i) {
+            begin_sensor_event(l, events.beginEvents[i].sensorShapeId, events.beginEvents[i].visitorShapeId);
+        }
+    
+        for (std::size_t i = 0; i != events.endCount; ++i) {
+            end_sensor_event(l, events.endEvents[i].sensorShapeId, events.endEvents[i].visitorShapeId);
+        }
     }
-
 
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
