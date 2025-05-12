@@ -52,10 +52,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     // Set up foot sensor
     {
         const auto half_extents = pixel_to_physics(pixel_pos{2, 4});
-        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
-        b2Transform t = {};
-        t.p = pixel_to_physics(pixel_pos{0, 10});
-        b2TransformPolygon(t, &box);
+        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{0, 10}), b2MakeRot(0));
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
@@ -65,10 +62,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
      // Set up left sensor
      {
         const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
-        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
-        b2Transform t = {};
-        t.p = pixel_to_physics(pixel_pos{-5, 0});
-        b2TransformPolygon(t, &box);
+        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{-5, 0}), b2MakeRot(0));
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
@@ -78,10 +72,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     // Set up right sensor
     {
         const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
-        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
-        b2Transform t = {};
-        t.p = pixel_to_physics(pixel_pos{5, 0});
-        b2TransformPolygon(t, &box);
+        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{5, 0}), b2MakeRot(0));
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
