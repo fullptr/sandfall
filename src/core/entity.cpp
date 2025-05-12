@@ -119,7 +119,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     life_comp.spawn_point = position;
 
     // Create player body
-    b2BodyDef def;
+    b2BodyDef def = b2DefaultBodyDef();
     def.type = b2_dynamicBody;
     def.fixedRotation = true;
     def.linearDamping = 1.0f;
@@ -143,7 +143,10 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     // Set up foot sensor
     {
         const auto half_extents = pixel_to_physics(pixel_pos{2, 4});
-        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{0, 10}), b2Rot(0));
+        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
+        b2Transform t = {};
+        t.p = pixel_to_physics(pixel_pos{0, 10});
+        b2TransformPolygon(t, &box);
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
@@ -153,7 +156,10 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
      // Set up left sensor
      {
         const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
-        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{-5, 0}), b2Rot(0));
+        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
+        b2Transform t = {};
+        t.p = pixel_to_physics(pixel_pos{-5, 0});
+        b2TransformPolygon(t, &box);
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
@@ -163,7 +169,10 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     // Set up right sensor
     {
         const auto half_extents = pixel_to_physics(pixel_pos{1, 9});
-        b2Polygon box = b2MakeOffsetBox(half_extents.x, half_extents.y, pixel_to_physics(pixel_pos{5, 0}), b2Rot(0));
+        b2Polygon box = b2MakeBox(half_extents.x, half_extents.y);
+        b2Transform t = {};
+        t.p = pixel_to_physics(pixel_pos{5, 0});
+        b2TransformPolygon(t, &box);
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
@@ -183,7 +192,7 @@ auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entit
     life_comp.spawn_point = position;
 
     // Create player body
-    b2BodyDef def;
+    b2BodyDef def = b2DefaultBodyDef();
     def.type = b2_dynamicBody;
     def.enableSleep = false;
     def.gravityScale = 0.0f;
@@ -197,18 +206,18 @@ auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entit
 
     // Set up main body fixture
     {
-        b2Circle circle;
+        b2Circle circle = {};
         circle.radius = pixel_to_physics(4.0f);
 
-        b2ShapeDef def = b2DefaultShapeDef();
-        def.density = 1.0f;
-        def.material.friction = 0.5f;
-        body_comp.body_fixture = b2CreateCircleShape(body_comp.body, &def, &circle);
+        b2ShapeDef def2 = b2DefaultShapeDef();
+        def2.density = 1.0f;
+        def2.material.friction = 0.5f;
+        body_comp.body_fixture = b2CreateCircleShape(body_comp.body, &def2, &circle);
     }
 
     // Set up proximity sensor
     {
-        b2Circle circle;
+        b2Circle circle = {};
         circle.radius = pixel_to_physics(100.0f);
         
         b2ShapeDef def = b2DefaultShapeDef();
@@ -235,6 +244,7 @@ auto ecs_entity_respawn(const registry& entities, entity e) -> void
 auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2
 {
     assert(entities.has<body_component>(e));
+    assert(b2Body_IsValid(entities.get<body_component>(e).body));
     return physics_to_pixel(b2Body_GetPosition(entities.get<body_component>(e).body));
 }
 

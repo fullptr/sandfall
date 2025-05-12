@@ -408,7 +408,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
 
             // Set up main body fixture
             {
-                b2Circle circle;
+                b2Circle circle = {};
                 circle.radius = pixel_to_physics(1.0f);
 
                 b2ShapeDef def = b2DefaultShapeDef();
@@ -599,6 +599,7 @@ auto pixel_world::step() -> void
 
 static auto make_world(glm::vec2 gravity) -> b2WorldId
 {
+    std::print("Creating physics world\n");
     auto def = b2DefaultWorldDef();
     def.gravity = {gravity.x, gravity.y};
     return b2CreateWorld(&def);
