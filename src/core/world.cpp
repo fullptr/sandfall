@@ -391,7 +391,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             l.entities.emplace<grenade_component>(grenade);
             
             // Create player body
-            b2BodyDef def;
+            b2BodyDef def = b2DefaultBodyDef();
             def.type = b2_dynamicBody;
             def.enableSleep = false;
             def.gravityScale = 1.0f;

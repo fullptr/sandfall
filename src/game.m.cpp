@@ -160,9 +160,9 @@ auto scene_level(sand::window& window) -> next_state
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(ctx.camera);      
         shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
-        for (auto e : level->entities.view<body_component>()) {
-            shape_renderer.draw_circle(ecs_entity_centre(level->entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
-        }
+        //for (auto e : level->entities.view<body_component>()) {
+        //    shape_renderer.draw_circle(ecs_entity_centre(level->entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
+        //}
 
         const auto centre = ecs_entity_centre(level->entities, level->player);
         const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
