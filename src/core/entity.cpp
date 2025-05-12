@@ -18,57 +18,6 @@ namespace sand {
 //        contact->ResetFriction();
 //    }
 //}
-//
-//
-//void contact_listener::end_contact(b2Fixture* curr, b2Fixture* other)
-//{
-//    const auto curr_entity = static_cast<entity>(curr->GetBody()->GetUserData().pointer);
-//    const auto other_entity = static_cast<entity>(other->GetBody()->GetUserData().pointer);
-//    
-//    if (!d_level->entities.valid(curr_entity)) return;
-//
-//    if (d_level->entities.has<player_component>(curr_entity)
-//        && !other->IsSensor())
-//    {
-//        auto& comp = d_level->entities.get<player_component>(curr_entity);
-//        if (comp.foot_sensor && curr == comp.foot_sensor) {
-//            comp.floors.erase(other);
-//        }
-//        if (comp.left_sensor && curr == comp.left_sensor) {
-//            --comp.num_left_contacts;
-//        }
-//        if (comp.right_sensor && curr == comp.right_sensor) {
-//            --comp.num_right_contacts;
-//        }
-//    }
-//    
-//    if (d_level->entities.has<enemy_component>(curr_entity) 
-//        && d_level->entities.valid(other_entity))
-//    {
-//        auto& comp = d_level->entities.get<enemy_component>(curr_entity);
-//        if (comp.proximity_sensor && curr == comp.proximity_sensor && d_level->entities.valid(other_entity)) {
-//            comp.nearby_entities.erase(other_entity);
-//        }
-//    }
-//}
-//
-//void contact_listener::BeginContact(b2Contact* contact)
-//{
-//    const auto a = contact->GetFixtureA();
-//    const auto b = contact->GetFixtureB();
-//
-//    begin_contact(a, b);
-//    begin_contact(b, a);
-//}
-//
-//void contact_listener::EndContact(b2Contact* contact)
-//{
-//    const auto a = contact->GetFixtureA();
-//    const auto b = contact->GetFixtureB();
-//
-//    end_contact(a, b);
-//    end_contact(b, a);
-//}
 
 auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> entity
 {

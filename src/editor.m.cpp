@@ -65,7 +65,13 @@ auto main() -> int
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    //auto debug_draw      = sand::physics_debug_draw{&shape_renderer};
+
+    b2DebugDraw debug = b2DefaultDebugDraw();
+    debug.context = static_cast<void*>(&shape_renderer);
+    debug.drawShapes = true;
+
+    debug.DrawPolygonFcn = draw_polygon;
+    debug.DrawCircleFcn = draw_circle;
 
     auto update_window_half_width = 2 + sand::config::chunk_size;
     auto update_window_half_height = 2 + sand::config::chunk_size;
@@ -268,8 +274,7 @@ auto main() -> int
         shape_renderer.begin_frame(camera);
 
         if (editor.show_physics) {
-            //level->physics.world.SetDebugDraw(&debug_draw);
-            //level->physics.world.DebugDraw();
+            b2World_Draw(level->physics.world, &debug);
         }
 
         if (editor.show_spawn) {
