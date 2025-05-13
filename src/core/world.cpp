@@ -364,6 +364,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
     const bool on_ground = !player_comp.floors.empty();
     if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
         if (inner->key == keyboard::space) {
+            std::print("handling space press\n");
             if (on_ground || player_comp.double_jump) {
                 if (!on_ground) {
                     player_comp.double_jump = false;
@@ -624,85 +625,83 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
-    std::print("begin contact\n");
-    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
+    
+}
+
+static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
+{
+    
+}
+
+static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
+{
+    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
-    if (!l.entities.valid(curr_entity)) return;
+    if (!l.entities.valid(sensor_entity)) return;
 
-    if (l.entities.has<grenade_component>(curr_entity) 
+    if (l.entities.has<grenade_component>(sensor_entity) 
         && !b2Shape_IsSensor(other)
         && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
     {
-        l.entities.mark_for_death(curr_entity);
-        const auto pos = ecs_entity_centre(l.entities, curr_entity);
+        l.entities.mark_for_death(sensor_entity);
+        const auto pos = ecs_entity_centre(l.entities, sensor_entity);
         apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
     }
     
-    if (l.entities.has<player_component>(curr_entity) && !b2Shape_IsSensor(other))
+    if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
     {
-        auto& comp = l.entities.get<player_component>(curr_entity);
+        auto& comp = l.entities.get<player_component>(sensor_entity);
         
-        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(curr, comp.foot_sensor)) {
+        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(sensor, comp.foot_sensor)) {
             comp.floors.insert(other);
         }
-        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(curr, comp.left_sensor)) {
+        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(sensor, comp.left_sensor)) {
             ++comp.num_left_contacts;
         }
-        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(curr, comp.right_sensor)) {
+        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(sensor, comp.right_sensor)) {
             ++comp.num_right_contacts;
         }
     }
     
-    if (l.entities.has<enemy_component>(curr_entity) && l.entities.valid(other_entity))
+    if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
     {
-        auto& comp = l.entities.get<enemy_component>(curr_entity);
-        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(curr, comp.proximity_sensor) && l.entities.valid(other_entity)) {
+        auto& comp = l.entities.get<enemy_component>(sensor_entity);
+        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(sensor, comp.proximity_sensor) && l.entities.valid(other_entity)) {
             comp.nearby_entities.insert(other_entity);
         }
     }
 }
 
-static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
+static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 {
-    std::print("end contact\n");
-    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
+    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
-    if (!l.entities.valid(curr_entity)) return;
+    if (!l.entities.valid(sensor_entity)) return;
     
-    if (l.entities.has<player_component>(curr_entity) && !b2Shape_IsSensor(other))
+    if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
     {
-        auto& comp = l.entities.get<player_component>(curr_entity);
+        auto& comp = l.entities.get<player_component>(sensor_entity);
         
-        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(curr, comp.foot_sensor)) {
+        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(sensor, comp.foot_sensor)) {
             comp.floors.erase(other);
         }
-        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(curr, comp.left_sensor)) {
+        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(sensor, comp.left_sensor)) {
             --comp.num_left_contacts;
         }
-        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(curr, comp.right_sensor)) {
+        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(sensor, comp.right_sensor)) {
             --comp.num_right_contacts;
         }
     }
     
-    if (l.entities.has<enemy_component>(curr_entity) && l.entities.valid(other_entity))
+    if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
     {
-        auto& comp = l.entities.get<enemy_component>(curr_entity);
-        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(curr, comp.proximity_sensor) && l.entities.valid(other_entity)) {
+        auto& comp = l.entities.get<enemy_component>(sensor_entity);
+        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(sensor, comp.proximity_sensor) && l.entities.valid(other_entity)) {
             comp.nearby_entities.erase(other_entity);
         }
     }
-}
-
-static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
-{
-    std::print("begin sensor event\n");
-}
-
-static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
-{
-    std::print("end sensor event\n");
 }
 
 auto level_on_update(level& l, const context& ctx) -> void

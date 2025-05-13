@@ -273,6 +273,7 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
                 points.push_back(pixel_to_physics(pos));
             }
             b2ChainDef def = b2DefaultChainDef();
+            def.enableSensorEvents = true;
             def.count = points.size();
             def.points = points.data();
             def.isLoop = true;

@@ -56,6 +56,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
+        def.enableSensorEvents = true;
         player_comp.foot_sensor = b2CreatePolygonShape(body_comp.body, &def, &box);
     }
 
