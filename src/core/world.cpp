@@ -624,6 +624,7 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
+    std::print("start of contact\n");
     const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
@@ -634,8 +635,8 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
         && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
     {
         l.entities.mark_for_death(curr_entity);
-        const auto pos = ecs_entity_centre(l.entities, curr_entity);
-        apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
+        //const auto pos = ecs_entity_centre(l.entities, curr_entity);
+        //apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
     }
 }
 

@@ -217,9 +217,9 @@ public:
 private:
     using tuple_type = std::tuple<apx::sparse_set<Comps>...>;
 
-    apx::sparse_set<apx::entity> d_entities;
-    std::deque<apx::entity>      d_pool;
-    std::vector<apx::entity>     d_marked_for_death;
+    apx::sparse_set<apx::entity>    d_entities;
+    std::deque<apx::entity>         d_pool;
+    std::unordered_set<apx::entity> d_marked_for_death;
 
     tuple_type d_components;
 
@@ -280,7 +280,7 @@ public:
     // end of the frame
     void mark_for_death(const apx::entity entity)
     {
-        d_marked_for_death.push_back(entity);
+        d_marked_for_death.insert(entity);
     }
 
     void destroy_marked()
@@ -291,7 +291,7 @@ public:
         d_marked_for_death.clear();
     }
 
-    auto marked_entities() -> std::span<const apx::entity>
+    auto marked_entities() const -> const std::unordered_set<apx::entity>&
     {
         return d_marked_for_death;
     }
