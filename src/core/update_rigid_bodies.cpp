@@ -192,16 +192,6 @@ auto calc_boundary(
     return simplified;
 }
 
-auto new_body(level& l) -> b2BodyId
-{
-    b2BodyDef def = b2DefaultBodyDef();
-    def.type = b2_staticBody;
-    def.position = {0.0f, 0.0f};
-    auto body = b2CreateBody(l.physics.world, &def);
-    b2Body_SetUserData(body, (void*)(std::uintptr_t)(apx::null));
-    return body;
-}
-
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void
 {
     const auto is_valid = [](const glm::ivec2 p) {
@@ -243,7 +233,11 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
 
 auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
 {
-    auto body = new_body(l);
+    b2BodyDef body_def = b2DefaultBodyDef();
+    body_def.type = b2_staticBody;
+    body_def.position = {0.0f, 0.0f};
+    auto body = b2CreateBody(l.physics.world, &body_def);
+    b2Body_SetUserData(body, (void*)(std::uintptr_t)(apx::null));
     
     auto chunk_pixels = chunk_static_pixels{};
     

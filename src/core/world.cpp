@@ -364,7 +364,6 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
     const bool on_ground = !player_comp.floors.empty();
     if (const auto inner = ev.get_if<keyboard_pressed_event>()) {
         if (inner->key == keyboard::space) {
-            std::print("handling space press\n");
             if (on_ground || player_comp.double_jump) {
                 if (!on_ground) {
                     player_comp.double_jump = false;
@@ -642,8 +641,6 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 
 static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
-    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
-    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
 }
 
 static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
@@ -712,23 +709,6 @@ auto level_on_update(level& l, const context& ctx) -> void
 {
     l.pixels.step();
 
-    const auto width_chunks = l.pixels.width_in_chunks();
-    const auto height_chunks = l.pixels.height_in_chunks();
-    for (i32 x = 0; x != width_chunks; ++x) {
-        for (i32 y = 0; y != height_chunks; ++y) {
-            const auto pos = chunk_pos{x, y};
-            if (!l.pixels[pos].should_step) continue;
-            
-            auto& map = l.physics.chunk_bodies;
-            if (auto it = map.find(pos); it != map.end()) {
-                b2DestroyBody(it->second);
-                map.erase(it);
-            }
-            const auto top_left = get_chunk_top_left(pos);
-            map[pos] = create_chunk_rigid_bodies(l, top_left); 
-        }
-    }
-
     b2World_Step(l.physics.world, sand::config::time_step, 4);
 
     {
@@ -757,6 +737,23 @@ auto level_on_update(level& l, const context& ctx) -> void
         }
     }
 
+    const auto width_chunks = l.pixels.width_in_chunks();
+    const auto height_chunks = l.pixels.height_in_chunks();
+    for (i32 x = 0; x != width_chunks; ++x) {
+        for (i32 y = 0; y != height_chunks; ++y) {
+            const auto pos = chunk_pos{x, y};
+            if (!l.pixels[pos].should_step) continue;
+            
+            auto& map = l.physics.chunk_bodies;
+            if (auto it = map.find(pos); it != map.end()) {
+                b2DestroyBody(it->second);
+                map.erase(it);
+            }
+            const auto top_left = get_chunk_top_left(pos);
+            map[pos] = create_chunk_rigid_bodies(l, top_left); 
+        }
+    }
+
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
     }
@@ -769,7 +766,7 @@ auto level_on_update(level& l, const context& ctx) -> void
     for (auto e : l.entities.marked_entities()) {
         if (l.entities.has<body_component>(e)) {
             const auto& comp = l.entities.get<body_component>(e);
-            if (B2_IS_NON_NULL(comp.body)) {
+            if (b2Body_IsValid(comp.body)) {
                 b2DestroyBody(comp.body);
             }
         }
