@@ -676,14 +676,9 @@ static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 
 static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 {
-    // Somehow explosions cause issues in debug mode due to this being an invalid. I'm not quite
-    // sure why, perhaps the out of order destruction of pixels causes rigid body refreshes
-    // that remove the bodies already referenced in events. Seems dubious, but here we are
-    if (!b2Shape_IsValid(other)) return;
-
-    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
-    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
+    if (!b2Shape_IsValid(sensor)) return;
     
+    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
     if (!l.entities.valid(sensor_entity)) return;
     
     if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
@@ -701,6 +696,10 @@ static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
         }
     }
     
+    // Both shapes in the end event can be invalid
+    if (!b2Shape_IsValid(other)) return;
+
+    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
     {
         auto& comp = l.entities.get<enemy_component>(sensor_entity);
