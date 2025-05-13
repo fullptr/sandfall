@@ -13,7 +13,8 @@ void draw_circle(b2Vec2 centre, float radius, b2HexColor colour, void* context)
 
 void draw_point(b2Vec2 p, float size, b2HexColor colour, void* context)
 {
-
+    auto& renderer = *static_cast<shape_renderer*>(context);
+    renderer.draw_circle(physics_to_pixel(p), from_hex(colour), 2.0f);
 }
 
 void draw_polygon(const b2Vec2* vertices, int vertexCount, b2HexColor colour, void* context)
@@ -62,35 +63,5 @@ void draw_transform(b2Transform transform, void* context)
 {
 
 }
-
-
-#if 0
-
-
-void physics_debug_draw::DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color)
-{
-    DrawCircle(center, radius, color);
-}
-
-void physics_debug_draw::DrawSegment(const b2Vec2& bp1, const b2Vec2& bp2, const b2Color& color)
-{
-    const auto p1 = physics_to_pixel(bp1);
-    const auto p2 = physics_to_pixel(bp2);
-    d_renderer->draw_line(p1, p2, {color.r, color.g, color.b, 1.0}, 1);
-}
-
-void physics_debug_draw::DrawTransform(const b2Transform& xf)
-{
-}
-
-void physics_debug_draw::DrawPoint(const b2Vec2& p, float size, const b2Color& color)
-{
-    d_renderer->draw_circle(
-        physics_to_pixel(p),
-        {color.r, color.g, color.b, 1.0},
-        2.0f
-    );
-}
-#endif
 
 }
