@@ -67,6 +67,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
+        def.enableSensorEvents = true;
         player_comp.left_sensor = b2CreatePolygonShape(body_comp.body, &def, &box);
     }
 
@@ -77,6 +78,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
+        def.enableSensorEvents = true;
         player_comp.right_sensor = b2CreatePolygonShape(body_comp.body, &def, &box);
     }
 
@@ -123,6 +125,7 @@ auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entit
         
         b2ShapeDef def = b2DefaultShapeDef();
         def.isSensor = true;
+        def.enableSensorEvents = true;
         enemy_comp.proximity_sensor = b2CreateCircleShape(body_comp.body, &def, &circle);
     }
 

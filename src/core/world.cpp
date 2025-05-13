@@ -472,7 +472,7 @@ auto update_enemy(registry& entities, entity e) -> void
                 const auto pos = physics_to_pixel(b2Body_GetPosition(curr_body_comp.body));
                 const auto self_pos = ecs_entity_centre(entities, e);
                 const auto dir = glm::normalize(pos - self_pos);
-                b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(0.25f * dir), true);
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(200.0f * dir), true);
             }
         }
     }
@@ -624,7 +624,6 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
-    std::print("start of contact\n");
     const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
@@ -677,6 +676,11 @@ static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 
 static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 {
+    // Somehow explosions cause issues in debug mode due to this being an invalid. I'm not quite
+    // sure why, perhaps the out of order destruction of pixels causes rigid body refreshes
+    // that remove the bodies already referenced in events. Seems dubious, but here we are
+    if (!b2Shape_IsValid(other)) return;
+
     const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     

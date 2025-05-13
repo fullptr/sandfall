@@ -34,7 +34,8 @@ void draw_polygon(const b2Vec2* vertices, int vertexCount, b2HexColor colour, vo
 
 void draw_segment(b2Vec2 p1, b2Vec2 p2, b2HexColor colour, void* context)
 {
-
+    auto& renderer = *static_cast<shape_renderer*>(context);
+    renderer.draw_line(physics_to_pixel(p1), physics_to_pixel(p2), from_hex(colour), 2.0f);
 }
 
 void draw_solid_capsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor colour, void* context)
