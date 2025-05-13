@@ -6,19 +6,6 @@
 
 namespace sand {
 
-//void contact_listener::PreSolve(b2Contact* contact, const b2Manifold*) 
-//{
-//    const auto a = static_cast<entity>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
-//    const auto b = static_cast<entity>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
-//
-//    const auto a_is_player = d_level->entities.valid(a) && d_level->entities.has<player_component>(a);
-//    const auto b_is_player = d_level->entities.valid(b) && d_level->entities.has<player_component>(b);
-//
-//    if (a_is_player || b_is_player) {
-//        contact->ResetFriction();
-//    }
-//}
-
 auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> entity
 {
     const auto e = entities.create();
