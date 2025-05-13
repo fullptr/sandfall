@@ -391,7 +391,6 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             auto& body_comp = l.entities.emplace<body_component>(grenade);
             l.entities.emplace<grenade_component>(grenade);
             
-            // Create player body
             b2BodyDef def = b2DefaultBodyDef();
             def.type = b2_dynamicBody;
             def.enableSleep = false;
@@ -414,6 +413,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
 
                 b2ShapeDef def = b2DefaultShapeDef();
                 def.density = 1.0f;
+                def.enableContactEvents = true;
 
                 body_comp.body_fixture = b2CreateCircleShape(body_comp.body, &def, &circle);
             }
@@ -625,12 +625,25 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
+    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
+    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
+    if (!l.entities.valid(curr_entity)) return;
+
+    if (l.entities.has<grenade_component>(curr_entity) 
+        && !b2Shape_IsSensor(other)
+        && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
+    {
+        l.entities.mark_for_death(curr_entity);
+        const auto pos = ecs_entity_centre(l.entities, curr_entity);
+        apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
+    }
 }
 
 static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
-    
+    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
+    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
 }
 
 static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
@@ -639,15 +652,6 @@ static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
     const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
     
     if (!l.entities.valid(sensor_entity)) return;
-
-    if (l.entities.has<grenade_component>(sensor_entity) 
-        && !b2Shape_IsSensor(other)
-        && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
-    {
-        l.entities.mark_for_death(sensor_entity);
-        const auto pos = ecs_entity_centre(l.entities, sensor_entity);
-        apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
-    }
     
     if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
     {
