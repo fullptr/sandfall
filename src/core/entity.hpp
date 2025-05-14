@@ -79,4 +79,10 @@ auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entit
 auto ecs_entity_respawn(const registry& entities, entity e) -> void;
 auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2;
 
+// Used for storing entity values in the user data. The point is not a valid
+// pointer! It just encodes the entity.
+static_assert(sizeof(entity) == sizeof(void*));
+auto to_user_data(entity e) -> void*;
+auto from_user_data(void* data) -> entity;
+
 }

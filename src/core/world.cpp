@@ -399,7 +399,7 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             def.position = pixel_to_physics(spawn_pot);
 
             body_comp.body = b2CreateBody(l.physics.world, &def);
-            b2Body_SetUserData(body_comp.body, (void*)(std::uintptr_t)grenade);
+            b2Body_SetUserData(body_comp.body, to_user_data(grenade));
             b2Body_SetMassData(body_comp.body, b2MassData{.mass = 10});
 
             const auto impulse = 12.0f * b2Body_GetMass(body_comp.body) * direction;
@@ -419,9 +419,6 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
         }
     }
 }
-
-static_assert(sizeof(std::uintptr_t) == sizeof(entity));
-static_assert(sizeof(entity) == sizeof(void*));
 
 auto update_player(registry& entities, entity e, const input& in) -> void
 {
@@ -624,8 +621,8 @@ level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos sp
 
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
-    const auto curr_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(curr));
-    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
+    const auto curr_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(curr)));
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
     
     if (!l.entities.valid(curr_entity)) return;
 
@@ -645,8 +642,8 @@ static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
 
 static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 {
-    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
-    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
+    const auto sensor_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(sensor)));
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
     
     if (!l.entities.valid(sensor_entity)) return;
     
@@ -678,7 +675,7 @@ static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
 {
     if (!b2Shape_IsValid(sensor)) return;
     
-    const auto sensor_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(sensor));
+    const auto sensor_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(sensor)));
     if (!l.entities.valid(sensor_entity)) return;
     
     if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
@@ -699,7 +696,7 @@ static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
     // Both shapes in the end event can be invalid
     if (!b2Shape_IsValid(other)) return;
 
-    const auto other_entity = (entity)(std::uintptr_t)b2Body_GetUserData(b2Shape_GetBody(other));
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
     if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
     {
         auto& comp = l.entities.get<enemy_component>(sensor_entity);

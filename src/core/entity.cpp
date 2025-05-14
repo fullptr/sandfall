@@ -23,7 +23,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
 
     body_comp.body = b2CreateBody(world, &def);
     b2Body_SetMassData(body_comp.body, b2MassData{.mass = 80});
-    b2Body_SetUserData(body_comp.body, (void*)(std::uintptr_t)e); // TODO: Make this safer!!
+    b2Body_SetUserData(body_comp.body, to_user_data(e));
 
     // Set up main body fixture
     {
@@ -91,7 +91,7 @@ auto add_enemy(registry& entities, b2WorldId world, pixel_pos position) -> entit
     def.position = pixel_to_physics(position);
 
     body_comp.body = b2CreateBody(world, &def);
-    b2Body_SetUserData(body_comp.body, (void*)(std::uintptr_t)e);
+    b2Body_SetUserData(body_comp.body, to_user_data(e));
     b2Body_SetMassData(body_comp.body, b2MassData{.mass = 10});
 
     // Set up main body fixture
@@ -138,5 +138,16 @@ auto ecs_entity_centre(const registry& entities, entity e) -> glm::vec2
     assert(b2Body_IsValid(entities.get<body_component>(e).body));
     return physics_to_pixel(b2Body_GetPosition(entities.get<body_component>(e).body));
 }
+
+auto to_user_data(entity e) -> void*
+{
+    return std::bit_cast<void*>(e);
+}
+
+auto from_user_data(void* data) -> entity
+{
+    return std::bit_cast<entity>(data);
+}
+
 
 }

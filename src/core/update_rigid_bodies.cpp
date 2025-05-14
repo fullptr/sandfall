@@ -237,7 +237,7 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
     body_def.type = b2_staticBody;
     body_def.position = {0.0f, 0.0f};
     auto body = b2CreateBody(l.physics.world, &body_def);
-    b2Body_SetUserData(body, (void*)(std::uintptr_t)(apx::null));
+    b2Body_SetUserData(body, to_user_data(apx::null));
     
     auto chunk_pixels = chunk_static_pixels{};
     
