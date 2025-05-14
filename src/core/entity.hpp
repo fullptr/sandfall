@@ -20,9 +20,7 @@ struct shape_id_equal
 {
     auto operator()(const b2ShapeId lhs, const b2ShapeId rhs) const -> bool
     {
-        return lhs.generation == rhs.generation
-            && lhs.index1 == rhs.index1
-            && lhs.world0 == rhs.world0;
+        return B2_ID_EQUALS(lhs, rhs);
     }
 };
 
