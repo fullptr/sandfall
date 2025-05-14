@@ -368,15 +368,15 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
                 if (!on_ground) {
                     player_comp.double_jump = false;
                 }
-                const auto impulse = body_comp.body->GetMass() * 7;
-                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, -impulse), true);
+                const auto impulse = b2Body_GetMass(body_comp.body) * 7;
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(0, -impulse), true);
             }
         }
         else if (inner->key == keyboard::S) {
             if (player_comp.ground_pound) {
                 player_comp.ground_pound = false;
-                const auto impulse = body_comp.body->GetMass() * 7;
-                body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(0, impulse), true);
+                const auto impulse = b2Body_GetMass(body_comp.body) * 7;
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(0, impulse), true);
             }
         }
     }
@@ -390,39 +390,35 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
             auto& body_comp = l.entities.emplace<body_component>(grenade);
             l.entities.emplace<grenade_component>(grenade);
             
-            // Create player body
-            b2BodyDef body_def;
-            body_def.allowSleep = false;
-            body_def.gravityScale = 1.0f;
-            body_def.type = b2_dynamicBody;
-            body_def.fixedRotation = true;
-            body_def.linearDamping = 1.0f;
-            const auto pos = pixel_to_physics(spawn_pot);
-            body_def.position.Set(pos.x, pos.y);
-            body_comp.body = l.physics.world.CreateBody(&body_def);
-            body_comp.body->GetUserData().pointer = static_cast<std::uintptr_t>(grenade);
-            b2MassData md;
-            md.mass = 10;
-            body_comp.body->SetMassData(&md);
+            b2BodyDef def = b2DefaultBodyDef();
+            def.type = b2_dynamicBody;
+            def.enableSleep = false;
+            def.gravityScale = 1.0f;
+            def.fixedRotation = true;
+            def.linearDamping = 1.0f;
+            def.position = pixel_to_physics(spawn_pot);
 
-            const auto impulse = 12.0f * md.mass * direction;
-            body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse.x, impulse.y), true);
+            body_comp.body = b2CreateBody(l.physics.world, &def);
+            b2Body_SetUserData(body_comp.body, to_user_data(grenade));
+            b2Body_SetMassData(body_comp.body, b2MassData{.mass = 10});
+
+            const auto impulse = 12.0f * b2Body_GetMass(body_comp.body) * direction;
+            b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(impulse.x, impulse.y), true);
 
             // Set up main body fixture
             {
-                b2CircleShape circleShape;
-                circleShape.m_radius = pixel_to_physics(1.0f);
+                b2Circle circle = {};
+                circle.radius = pixel_to_physics(1.0f);
 
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &circleShape;
-                fixtureDef.density = 1.0f;
-                body_comp.body_fixture = body_comp.body->CreateFixture(&fixtureDef);
+                b2ShapeDef def = b2DefaultShapeDef();
+                def.density = 1.0f;
+                def.enableContactEvents = true;
+
+                body_comp.body_fixture = b2CreateCircleShape(body_comp.body, &def, &circle);
             }
         }
     }
 }
-
-static_assert(sizeof(std::uintptr_t) == sizeof(entity));
 
 auto update_player(registry& entities, entity e, const input& in) -> void
 {
@@ -432,7 +428,7 @@ auto update_player(registry& entities, entity e, const input& in) -> void
     const bool can_move_left = player_comp.num_left_contacts == 0;
     const bool can_move_right = player_comp.num_right_contacts == 0;
 
-    const auto vel = body_comp.body->GetLinearVelocity();
+    const auto vel = b2Body_GetLinearVelocity(body_comp.body);
     
     auto direction = 0;
     if (can_move_left && in.is_down(keyboard::A)) {
@@ -445,16 +441,17 @@ auto update_player(registry& entities, entity e, const input& in) -> void
     const auto max_vel = 5.0f;
     auto desired_vel = 0.0f;
     if (direction == -1) { // left
-        if (vel.x > -max_vel) desired_vel = b2Max(vel.x - max_vel, -max_vel);
+        if (vel.x > -max_vel) desired_vel = glm::max(vel.x - max_vel, -max_vel);
     } else if (direction == 1) { // right
-        if (vel.x < max_vel) desired_vel = b2Min(vel.x + max_vel, max_vel);
+        if (vel.x < max_vel) desired_vel = glm::min(vel.x + max_vel, max_vel);
     }
 
-    body_comp.body_fixture->SetFriction((desired_vel != 0) ? 0.1f : 0.3f);
+    // TODO: Is this actually doing anything?
+    b2Shape_SetFriction(body_comp.body_fixture, (desired_vel != 0) ? 0.1f : 0.3f);
 
     float vel_change = desired_vel - vel.x;
-    float impulse = body_comp.body->GetMass() * vel_change;
-    body_comp.body->ApplyLinearImpulseToCenter(b2Vec2(impulse, 0), true);
+    float impulse = b2Body_GetMass(body_comp.body) * vel_change;
+    b2Body_ApplyLinearImpulseToCenter(body_comp.body, b2Vec2(impulse, 0), true);
 
     if (on_ground) {
         player_comp.double_jump = true;
@@ -469,10 +466,10 @@ auto update_enemy(registry& entities, entity e) -> void
         for (const auto curr : enemy_comp.nearby_entities) {
             if (entities.has<player_component>(curr)) {
                 auto& curr_body_comp = entities.get<body_component>(curr);
-                const auto pos = physics_to_pixel(curr_body_comp.body->GetPosition());
+                const auto pos = physics_to_pixel(b2Body_GetPosition(curr_body_comp.body));
                 const auto self_pos = ecs_entity_centre(entities, e);
                 const auto dir = glm::normalize(pos - self_pos);
-                body_comp.body->ApplyLinearImpulseToCenter(pixel_to_physics(0.25f * dir), true);
+                b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(200.0f * dir), true);
             }
         }
     }
@@ -597,23 +594,149 @@ auto pixel_world::step() -> void
     }
 }
 
-physics_world::physics_world(glm::vec2 gravity)
-    : world{{gravity.x, gravity.y}}
+static auto make_world(glm::vec2 gravity) -> b2WorldId
 {
+    std::print("making world\n");
+    auto def = b2DefaultWorldDef();
+    def.gravity = {gravity.x, gravity.y};
+    return b2CreateWorld(&def);
+}
+
+physics_world::physics_world(glm::vec2 gravity)
+    : world{make_world(gravity)}
+{
+}
+
+physics_world::~physics_world()
+{
+    b2DestroyWorld(world);
 }
 
 level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
     : pixels{width, height, data}
     , physics{config::gravity}
     , spawn_point{spawn}
-    , listener{this}
 {
-    physics.world.SetContactListener(&listener);
+}
+
+static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
+{
+    const auto curr_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(curr)));
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
+    
+    if (!l.entities.valid(curr_entity)) return;
+
+    if (l.entities.has<grenade_component>(curr_entity) 
+        && !b2Shape_IsSensor(other)
+        && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
+    {
+        l.entities.mark_for_death(curr_entity);
+        const auto pos = ecs_entity_centre(l.entities, curr_entity);
+        apply_explosion(l.pixels, pixel_pos::from_ivec2(pos), explosion{.min_radius=5, .max_radius=10, .scorch=15});   
+    }
+}
+
+static void end_contact(level& l, b2ShapeId curr, b2ShapeId other)
+{
+}
+
+static void begin_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
+{
+    const auto sensor_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(sensor)));
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
+    
+    if (!l.entities.valid(sensor_entity)) return;
+    
+    if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
+    {
+        auto& comp = l.entities.get<player_component>(sensor_entity);
+        
+        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(sensor, comp.foot_sensor)) {
+            comp.floors.insert(other);
+        }
+        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(sensor, comp.left_sensor)) {
+            ++comp.num_left_contacts;
+        }
+        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(sensor, comp.right_sensor)) {
+            ++comp.num_right_contacts;
+        }
+    }
+    
+    if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
+    {
+        auto& comp = l.entities.get<enemy_component>(sensor_entity);
+        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(sensor, comp.proximity_sensor) && l.entities.valid(other_entity)) {
+            comp.nearby_entities.insert(other_entity);
+        }
+    }
+}
+
+static void end_sensor_event(level& l, b2ShapeId sensor, b2ShapeId other)
+{
+    if (!b2Shape_IsValid(sensor)) return;
+    
+    const auto sensor_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(sensor)));
+    if (!l.entities.valid(sensor_entity)) return;
+    
+    if (l.entities.has<player_component>(sensor_entity) && !b2Shape_IsSensor(other))
+    {
+        auto& comp = l.entities.get<player_component>(sensor_entity);
+        
+        if (b2Shape_IsValid(comp.foot_sensor) && B2_ID_EQUALS(sensor, comp.foot_sensor)) {
+            comp.floors.erase(other);
+        }
+        if (b2Shape_IsValid(comp.left_sensor) && B2_ID_EQUALS(sensor, comp.left_sensor)) {
+            --comp.num_left_contacts;
+        }
+        if (b2Shape_IsValid(comp.right_sensor) && B2_ID_EQUALS(sensor, comp.right_sensor)) {
+            --comp.num_right_contacts;
+        }
+    }
+    
+    // Both shapes in the end event can be invalid
+    if (!b2Shape_IsValid(other)) return;
+
+    const auto other_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(other)));
+    if (l.entities.has<enemy_component>(sensor_entity) && l.entities.valid(other_entity))
+    {
+        auto& comp = l.entities.get<enemy_component>(sensor_entity);
+        if (b2Shape_IsValid(comp.proximity_sensor) && B2_ID_EQUALS(sensor, comp.proximity_sensor) && l.entities.valid(other_entity)) {
+            comp.nearby_entities.erase(other_entity);
+        }
+    }
 }
 
 auto level_on_update(level& l, const context& ctx) -> void
 {
     l.pixels.step();
+
+    b2World_Step(l.physics.world, sand::config::time_step, 4);
+
+    {
+        b2ContactEvents events = b2World_GetContactEvents(l.physics.world);
+    
+        for (std::size_t i = 0; i != events.beginCount; ++i) {
+            begin_contact(l, events.beginEvents[i].shapeIdA, events.beginEvents[i].shapeIdB);
+            begin_contact(l, events.beginEvents[i].shapeIdB, events.beginEvents[i].shapeIdA);
+        }
+    
+        for (std::size_t i = 0; i != events.endCount; ++i) {
+            end_contact(l, events.endEvents[i].shapeIdA, events.endEvents[i].shapeIdB);
+            end_contact(l, events.endEvents[i].shapeIdB, events.endEvents[i].shapeIdA);
+        }
+    }
+
+    {
+        b2SensorEvents events = b2World_GetSensorEvents(l.physics.world);
+    
+        for (std::size_t i = 0; i != events.beginCount; ++i) {
+            begin_sensor_event(l, events.beginEvents[i].sensorShapeId, events.beginEvents[i].visitorShapeId);
+        }
+    
+        for (std::size_t i = 0; i != events.endCount; ++i) {
+            end_sensor_event(l, events.endEvents[i].sensorShapeId, events.endEvents[i].visitorShapeId);
+        }
+    }
 
     const auto width_chunks = l.pixels.width_in_chunks();
     const auto height_chunks = l.pixels.height_in_chunks();
@@ -624,7 +747,7 @@ auto level_on_update(level& l, const context& ctx) -> void
             
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
-                l.physics.world.DestroyBody(it->second);
+                b2DestroyBody(it->second);
                 map.erase(it);
             }
             const auto top_left = get_chunk_top_left(pos);
@@ -632,11 +755,10 @@ auto level_on_update(level& l, const context& ctx) -> void
         }
     }
 
-    l.physics.world.Step(sand::config::time_step, 10, 5);
-
     for (auto e : l.entities.view<player_component>()) {
         update_player(l.entities, e, ctx.input);
     }
+
     for (auto e : l.entities.view<enemy_component>()) {
         update_enemy(l.entities, e);
     }
@@ -645,12 +767,13 @@ auto level_on_update(level& l, const context& ctx) -> void
     for (auto e : l.entities.marked_entities()) {
         if (l.entities.has<body_component>(e)) {
             const auto& comp = l.entities.get<body_component>(e);
-            if (comp.body) {
-                l.physics.world.DestroyBody(comp.body);
+            if (b2Body_IsValid(comp.body)) {
+                b2DestroyBody(comp.body);
             }
         }
     }
     l.entities.destroy_marked();
+    
 }
 
 auto level_on_event(level& l, const context& ctx, const event& ev) -> void

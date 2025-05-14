@@ -192,16 +192,6 @@ auto calc_boundary(
     return simplified;
 }
 
-auto new_body(level& l) -> b2Body*
-{
-    b2BodyDef def;
-    def.type = b2_staticBody;
-    def.position.Set(0.0f, 0.0f);
-    auto body = l.physics.world.CreateBody(&def);
-    body->GetUserData().pointer = static_cast<std::uintptr_t>(apx::null);
-    return body;
-}
-
 auto flood_remove(chunk_static_pixels& pixels, glm::ivec2 offset) -> void
 {
     const auto is_valid = [](const glm::ivec2 p) {
@@ -241,9 +231,13 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
+auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
 {
-    auto body = new_body(l);
+    b2BodyDef body_def = b2DefaultBodyDef();
+    body_def.type = b2_staticBody;
+    body_def.position = {0.0f, 0.0f};
+    auto body = b2CreateBody(l.physics.world, &body_def);
+    b2Body_SetUserData(body, to_user_data(apx::null));
     
     auto chunk_pixels = chunk_static_pixels{};
     
@@ -257,11 +251,8 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
         }
     }
 
-    b2FixtureDef fixtureDef;
-    fixtureDef.friction = 1;
-    
-    b2EdgeShape shape;
-    fixtureDef.shape = &shape;
+    b2ShapeDef def = b2DefaultShapeDef();
+    def.material.friction = 1;
     
     // While bitset still has elements, take one, apply algorithm to create
     // triangles, then flood remove the pixels
@@ -270,15 +261,17 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2Body*
         const auto boundary = calc_boundary(top_left, l.pixels, top_left + offset, 1.5f);
 
         if (boundary.size() > 3) { // If there's only a small group, dont bother
-            for (std::int64_t i = 0; i != boundary.size(); ++i) {
-                const auto v0 = pixel_to_physics(signed_index(boundary, i-1));
-                const auto v1 = pixel_to_physics(signed_index(boundary, i));
-                const auto v2 = pixel_to_physics(signed_index(boundary, i+1));
-                const auto v3 = pixel_to_physics(signed_index(boundary, i+2));
-    
-                shape.SetOneSided(v0, v1, v2, v3);
-                body->CreateFixture(&fixtureDef);
+            std::vector<b2Vec2> points;
+            points.reserve(boundary.size());
+            for (const auto pos : boundary) {
+                points.push_back(pixel_to_physics(pos));
             }
+            b2ChainDef def = b2DefaultChainDef();
+            def.enableSensorEvents = true;
+            def.count = points.size();
+            def.points = points.data();
+            def.isLoop = true;
+            b2CreateChain(body, &def);
         }
         flood_remove(chunk_pixels, offset);
     }

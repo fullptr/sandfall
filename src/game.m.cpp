@@ -91,7 +91,6 @@ auto scene_level(sand::window& window) -> next_state
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
-    auto debug_renderer  = sand::physics_debug_draw{&shape_renderer};
     auto ui              = sand::ui_engine{};
     
     level->player = add_player(level->entities, level->physics.world, level->spawn_point);
@@ -108,6 +107,18 @@ auto scene_level(sand::window& window) -> next_state
             .world_to_screen = window.height() / 210.0f
         }
     };
+
+    b2DebugDraw debug = b2DefaultDebugDraw();
+    debug.context = static_cast<void*>(&shape_renderer);
+    debug.drawShapes = true;
+    debug.drawBounds = false;
+    debug.drawContactFeatures = false;
+
+    debug.DrawPolygonFcn = draw_polygon;
+    debug.DrawSolidPolygonFcn = draw_solid_polygon;
+    debug.DrawCircleFcn = draw_circle;
+    debug.DrawSolidCircleFcn = draw_solid_circle;
+    debug.DrawSegmentFcn = draw_segment;
 
     // This can be done a litle better surely.
     ctx.camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
@@ -160,15 +171,14 @@ auto scene_level(sand::window& window) -> next_state
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(ctx.camera);      
         shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
-        for (auto e : level->entities.all()) {
+        for (auto e : level->entities.view<body_component>()) {
             shape_renderer.draw_circle(ecs_entity_centre(level->entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
         }
 
         const auto centre = ecs_entity_centre(level->entities, level->player);
         const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
-        level->physics.world.SetDebugDraw(&debug_renderer);
-        level->physics.world.DebugDraw();
+        b2World_Draw(level->physics.world, &debug);
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};
