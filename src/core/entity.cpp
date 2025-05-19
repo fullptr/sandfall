@@ -18,7 +18,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
     b2BodyDef def = b2DefaultBodyDef();
     def.type = b2_dynamicBody;
     def.fixedRotation = true;
-    def.linearDamping = 1.0f;
+    def.linearDamping = 0.5f;
     def.position = pixel_to_physics(position);
 
     body_comp.body = b2CreateBody(world, &def);
@@ -32,7 +32,7 @@ auto add_player(registry& entities, b2WorldId world, pixel_pos position) -> enti
 
         b2ShapeDef def = b2DefaultShapeDef();
         def.density = 1.0f;
-        def.material.friction = 1.0f;
+        def.material.friction = 0.5f;
         body_comp.body_fixture = b2CreatePolygonShape(body_comp.body, &def, &box);
     }
     
