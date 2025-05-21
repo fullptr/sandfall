@@ -101,12 +101,12 @@ struct physics_world
 
 struct level
 {
-    pixel_world      pixels;
-    physics_world    physics;
-    registry         entities;
+    pixel_world   pixels;
+    physics_world physics;
+    registry      entities;
 
-    pixel_pos        spawn_point;
-    entity           player;
+    pixel_pos     spawn_point;
+    entity        player;
 };
 
 auto level_on_update(level& l, const context& ctx) -> void;
