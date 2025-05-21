@@ -87,15 +87,15 @@ auto scene_level(sand::window& window) -> next_state
 {
     using namespace sand;
     auto level           = sand::load_level("save4.bin");
-    auto world_renderer  = sand::renderer{level->pixels.width_in_pixels(), level->pixels.height_in_pixels()};
+    auto world_renderer  = sand::renderer{level.pixels.width_in_pixels(), level.pixels.height_in_pixels()};
     auto accumulator     = 0.0;
     auto timer           = sand::timer{};
     auto shape_renderer  = sand::shape_renderer{};
     auto ui              = sand::ui_engine{};
     
-    level->player = add_player(level->entities, level->physics.world, level->spawn_point);
-    const auto player_pos = glm::ivec2{ecs_entity_centre(level->entities, level->player) + glm::vec2{200, 0}};
-    add_enemy(level->entities, level->physics.world, pixel_pos::from_ivec2(player_pos));
+    level.player = add_player(level.entities, level.physics.world, level.spawn_point);
+    const auto player_pos = glm::ivec2{ecs_entity_centre(level.entities, level.player) + glm::vec2{200, 0}};
+    add_enemy(level.entities, level.physics.world, pixel_pos::from_ivec2(player_pos));
     
     auto ctx = context{
         .window=&window,
@@ -121,7 +121,7 @@ auto scene_level(sand::window& window) -> next_state
     debug.DrawSegmentFcn = draw_segment;
 
     // This can be done a litle better surely.
-    ctx.camera.top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
+    ctx.camera.top_left = ecs_entity_centre(level.entities, level.player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
     
     while (window.is_running()) {
         const double dt = timer.on_update();
@@ -141,7 +141,7 @@ auto scene_level(sand::window& window) -> next_state
             }
 
             ctx.input.on_event(event);
-            level_on_event(*level, ctx, event);
+            level_on_event(level, ctx, event);
         }
         
         accumulator += dt;
@@ -149,36 +149,36 @@ auto scene_level(sand::window& window) -> next_state
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
             updated = true;
-            level_on_update(*level, ctx);
+            level_on_update(level, ctx);
         }
         
-        const auto desired_top_left = ecs_entity_centre(level->entities, level->player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
+        const auto desired_top_left = ecs_entity_centre(level.entities, level.player) - sand::dimensions(ctx.camera) / (2.0f * ctx.camera.world_to_screen);
         if (desired_top_left != ctx.camera.top_left) {
             const auto diff = desired_top_left - ctx.camera.top_left;
             ctx.camera.top_left += (float)dt * 3 * diff;
             
             // Clamp the camera to the world, don't allow players to see the void
             const auto camera_dimensions_world_space = sand::dimensions(ctx.camera) / ctx.camera.world_to_screen;
-            ctx.camera.top_left.x = std::clamp(ctx.camera.top_left.x, 0.0f, (float)level->pixels.width_in_pixels() - camera_dimensions_world_space.x);
-            ctx.camera.top_left.y = std::clamp(ctx.camera.top_left.y, 0.0f, (float)level->pixels.height_in_pixels() - camera_dimensions_world_space.y);
+            ctx.camera.top_left.x = std::clamp(ctx.camera.top_left.x, 0.0f, (float)level.pixels.width_in_pixels() - camera_dimensions_world_space.x);
+            ctx.camera.top_left.y = std::clamp(ctx.camera.top_left.y, 0.0f, (float)level.pixels.height_in_pixels() - camera_dimensions_world_space.y);
         }
         
         if (updated) {
-            world_renderer.update(*level);
+            world_renderer.update(level);
         }
         world_renderer.draw(ctx.camera);
         
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(ctx.camera);      
-        shape_renderer.draw_circle(ecs_entity_centre(level->entities, level->player), {1.0, 1.0, 0.0, 1.0}, 3);
-        for (auto e : level->entities.view<body_component>()) {
-            shape_renderer.draw_circle(ecs_entity_centre(level->entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
+        shape_renderer.draw_circle(ecs_entity_centre(level.entities, level.player), {1.0, 1.0, 0.0, 1.0}, 3);
+        for (auto e : level.entities.view<body_component>()) {
+            shape_renderer.draw_circle(ecs_entity_centre(level.entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
         }
 
-        const auto centre = ecs_entity_centre(level->entities, level->player);
+        const auto centre = ecs_entity_centre(level.entities, level.player);
         const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
-        b2World_Draw(level->physics.world, &debug);
+        b2World_Draw(level.physics.world, &debug);
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};

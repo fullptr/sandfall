@@ -107,8 +107,6 @@ struct level
 
     pixel_pos        spawn_point;
     entity           player;
-
-    level(i32 width, i32 height, const std::vector<pixel>& pixels, pixel_pos spawn);
 };
 
 auto level_on_update(level& l, const context& ctx) -> void;
