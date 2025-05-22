@@ -16,8 +16,8 @@ auto new_level(int chunks_width, int chunks_height) -> level
     const auto width = sand::config::chunk_size * chunks_width;
     const auto height = sand::config::chunk_size * chunks_height;
     return {
-        pixel_world{width, height, std::vector<sand::pixel>(width * height, sand::pixel::air())},
-        physics_world{config::gravity},
+        pixel_world{width, height},
+        physics_world{},
         registry{},
         pixel_pos{width/2, height/2},
         apx::null
@@ -50,7 +50,7 @@ auto load_level(const std::string& file_path) -> level
     // TODO: Store the sizes as u32's in the file
     return {
         pixel_world{static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels},
-        physics_world{config::gravity},
+        physics_world{},
         registry{},
         pixel_pos{save.spawn_point.x, save.spawn_point.y},
         apx::null

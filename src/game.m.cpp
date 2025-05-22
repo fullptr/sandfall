@@ -94,8 +94,8 @@ auto scene_level(sand::window& window) -> next_state
     auto ui              = sand::ui_engine{};
     
     level.player = add_player(level.entities, level.physics.world, level.spawn_point);
-    const auto player_pos = glm::ivec2{ecs_entity_centre(level.entities, level.player) + glm::vec2{200, 0}};
-    add_enemy(level.entities, level.physics.world, pixel_pos::from_ivec2(player_pos));
+    const auto enemy_pos = glm::ivec2{ecs_entity_centre(level.entities, level.player) + glm::vec2{200, 0}};
+    add_enemy(level.entities, level.physics.world, pixel_pos::from_ivec2(enemy_pos));
     
     auto ctx = context{
         .window=&window,

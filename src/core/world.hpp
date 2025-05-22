@@ -50,6 +50,9 @@ public:
         const auto height_chunks = height / config::chunk_size;
         d_chunks.resize(width_chunks * height_chunks);
     }
+    pixel_world(i32 width, i32 height)
+        : pixel_world(width, height, std::vector<sand::pixel>(width * height, sand::pixel::air()))
+    {}
     
     auto step() -> void;
 
@@ -89,7 +92,7 @@ struct physics_world
     b2WorldId world;
     std::unordered_map<chunk_pos, b2BodyId> chunk_bodies;
 
-    physics_world(glm::vec2 gravity);
+    physics_world(glm::vec2 gravity = config::gravity);
     ~physics_world();
 
     physics_world(const physics_world&) = delete;
