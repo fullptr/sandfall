@@ -612,13 +612,6 @@ physics_world::~physics_world()
     b2DestroyWorld(world);
 }
 
-level::level(i32 width, i32 height, const std::vector<pixel>& data, pixel_pos spawn)
-    : pixels{width, height, data}
-    , physics{config::gravity}
-    , spawn_point{spawn}
-{
-}
-
 static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
 {
     const auto curr_entity = from_user_data(b2Body_GetUserData(b2Shape_GetBody(curr)));

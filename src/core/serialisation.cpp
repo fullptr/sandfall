@@ -11,16 +11,17 @@
 
 namespace sand {
 
-auto new_level(int chunks_width, int chunks_height) -> std::unique_ptr<sand::level>
+auto new_level(int chunks_width, int chunks_height) -> level
 {
     const auto width = sand::config::chunk_size * chunks_width;
     const auto height = sand::config::chunk_size * chunks_height;
-    return std::make_unique<sand::level>(
-        width,
-        height,
-        std::vector<sand::pixel>(width * height, sand::pixel::air()),
-        pixel_pos{width/2, height/2}
-    );
+    return {
+        pixel_world{width, height},
+        physics_world{},
+        registry{},
+        pixel_pos{width/2, height/2},
+        apx::null
+    };
 }
 
 auto save_level(const std::string& file_path, const sand::level& w) -> void
@@ -38,7 +39,7 @@ auto save_level(const std::string& file_path, const sand::level& w) -> void
     archive(save);
 }
 
-auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
+auto load_level(const std::string& file_path) -> level
 {
     auto file = std::ifstream{file_path, std::ios::binary};
     auto archive = cereal::BinaryInputArchive{file};
@@ -47,9 +48,13 @@ auto load_level(const std::string& file_path) -> std::unique_ptr<sand::level>
     archive(save);
 
     // TODO: Store the sizes as u32's in the file
-    const auto spawn = pixel_pos{save.spawn_point.x, save.spawn_point.y};
-    auto w = std::make_unique<sand::level>(static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels, spawn);
-    return w;
+    return {
+        pixel_world{static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels},
+        physics_world{},
+        registry{},
+        pixel_pos{save.spawn_point.x, save.spawn_point.y},
+        apx::null
+    };
 }
 
 }

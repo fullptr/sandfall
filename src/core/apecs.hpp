@@ -244,6 +244,14 @@ private:
     }
 
 public:
+    registry() = default;
+    
+    registry(const registry&) = delete;
+    registry& operator=(const registry&) = delete;
+
+    registry(registry&&) = default;
+    registry& operator=(registry&&) = default;
+
     ~registry()
     {
         clear();
