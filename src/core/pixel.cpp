@@ -1,6 +1,7 @@
 #include "pixel.hpp"
 #include "utility.hpp"
 
+#include <cassert>
 #include <cstdlib>
 #include <print>
 #include <vector>
@@ -22,6 +23,9 @@ auto with_noise(glm::u8vec4 colour) -> glm::u8vec4
 
 }
 
+// No default case, so a pixel_type missing from this switch is a compile error
+#pragma warning(push)
+#pragma warning(error: 4062) // enumerator in switch of enum is not handled
 auto properties(const pixel& pix) -> const pixel_properties&
 {
     switch (pix.type) {
@@ -241,13 +245,15 @@ auto properties(const pixel& pix) -> const pixel_properties&
             };
             return px;
         }
-        default: {
-            std::print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
-            static constexpr auto px = pixel_properties{};
-            return px;
-        }
     }
+
+    // Only reachable if the value is outside of pixel_type, e.g. from a corrupt save
+    assert(false && "unknown pixel type");
+    std::print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
+    static constexpr auto px = pixel_properties{};
+    return px;
 }
+#pragma warning(pop)
 
 auto pixel::air() -> pixel
 {
