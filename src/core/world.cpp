@@ -218,6 +218,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
         // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
             w.set(pos, pixel::air());
+            return;
         }
 
         // See if it explodes
@@ -225,6 +226,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
             apply_explosion(w, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
+            return;
         }
 
     }
@@ -251,6 +253,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
                 apply_explosion(w, pos, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
+                return;
             }
         } break;
 
@@ -307,6 +310,7 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
                 w.set(neigh_pos, pixel::air());
                 if (random_unit() > 0.9f) {
                     w.set(pos, pixel::air());
+                    return;
                 }
             }
         }
