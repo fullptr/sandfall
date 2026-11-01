@@ -280,7 +280,8 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
         w.wake_chunk_with_pixel(pos);
     }
 
-    if (random_unit() < props.spontaneous_destroy) {
+    // Runs for every pixel, so skip the roll when it can never succeed
+    if (props.spontaneous_destroy > 0.0f && random_unit() < props.spontaneous_destroy) {
         w.set(pos, pixel::air());
     }
 }
@@ -317,7 +318,8 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
         
         // Spread fire
         if (props.is_burn_source || px.flags[is_burning]) {
-            if (random_unit() < properties(neighbour).flammability) {
+            const auto flammability = properties(neighbour).flammability;
+            if (flammability > 0.0f && random_unit() < flammability) {
                 w.visit(neigh_pos, [&](pixel& p) { p.flags[is_burning] = true; });
             }
         }
