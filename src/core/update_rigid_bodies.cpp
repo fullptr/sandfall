@@ -241,9 +241,9 @@ auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
     
     auto chunk_pixels = chunk_static_pixels{};
     
-    // Fill up the bitset
-    for (int x = 0; x != sand::config::chunk_size; ++x) {
-        for (int y = 0; y != sand::config::chunk_size; ++y) {
+    // Fill up the bitset, row by row to match the world's memory layout
+    for (int y = 0; y != sand::config::chunk_size; ++y) {
+        for (int x = 0; x != sand::config::chunk_size; ++x) {
             const auto index = y * sand::config::chunk_size + x;
             if (is_static_pixel(top_left, l.pixels, top_left + glm::ivec2{x, y})) {
                 chunk_pixels.set(index);

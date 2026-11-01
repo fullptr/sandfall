@@ -118,8 +118,9 @@ auto renderer::update(const level& world) -> void
             if (!chunk.should_step) continue;
             
             const auto top_left = get_chunk_top_left(cpos);
-            for (i32 x = 0; x != config::chunk_size; ++x) {
-                for (i32 y = 0; y != config::chunk_size; ++y) {
+            // Row by row to match the world's memory layout
+            for (i32 y = 0; y != config::chunk_size; ++y) {
+                for (i32 x = 0; x != config::chunk_size; ++x) {
                     const auto world_coord = top_left + glm::ivec2{x, y};
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
