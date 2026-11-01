@@ -19,17 +19,17 @@ texture_dyn::~texture_dyn()
     glDeleteTextures(1, &d_texture);
 }
 
-auto texture_dyn::set_data(std::span<const glm::vec4> data) -> void
+auto texture_dyn::set_data(std::span<const glm::u8vec4> data) -> void
 {
     assert(data.size() == d_width * d_height);
     bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, data.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, d_width, d_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
 }
 
-auto texture_dyn::set_subdata(std::span<const glm::vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void
+auto texture_dyn::set_subdata(std::span<const glm::u8vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void
 {
     assert(data.size() == width * height);
-    glTextureSubImage2D(d_texture, 0, top_left.x, top_left.y, width, height, GL_RGBA, GL_FLOAT, data.data());
+    glTextureSubImage2D(d_texture, 0, top_left.x, top_left.y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
 }
 
 auto texture_dyn::bind() const -> void
@@ -52,7 +52,7 @@ auto texture_dyn::resize(i32 width, i32 height) -> void
     glTextureParameteri(d_texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(d_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(d_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, d_width, d_height, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, d_width, d_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 }
 
 texture_png::texture_png(const char* filename)

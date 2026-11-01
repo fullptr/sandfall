@@ -41,7 +41,9 @@ auto explosion_ray(pixel_world& w, glm::vec2 start, glm::vec2 end, const explosi
     const auto scorch_limit = glm::length(curr - start) + std::abs(random_normal(0.0f, info.scorch));
     while (w.is_valid_pixel(nearest_pixel(curr)) && glm::length2(curr - start) < glm::pow(scorch_limit, 2)) {
         if (properties(w[nearest_pixel(curr)]).phase == pixel_phase::solid) {
-            w.visit(nearest_pixel(curr), [&](pixel& p) { p.colour *= 0.8f; });
+            w.visit(nearest_pixel(curr), [&](pixel& p) {
+                p.colour = to_byte_colour(to_float_colour(p.colour) * glm::vec4{0.8f, 0.8f, 0.8f, 1.0f});
+            });
         }
         curr += step;
     }

@@ -5,6 +5,7 @@
 #include <span>
 
 #include <glm/glm.hpp>
+#include <glm/ext/vector_uint4_sized.hpp>
 
 namespace sand {
 
@@ -21,8 +22,8 @@ public:
     texture_dyn(i32 width, i32 height);
     ~texture_dyn();
 
-    auto set_data(std::span<const glm::vec4> data) -> void;
-    auto set_subdata(std::span<const glm::vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void;
+    auto set_data(std::span<const glm::u8vec4> data) -> void;
+    auto set_subdata(std::span<const glm::u8vec4> data, glm::ivec2 top_left, i32 width, i32 height) -> void;
     auto bind() const -> void;
 
     auto resize(i32 width, i32 height) -> void;

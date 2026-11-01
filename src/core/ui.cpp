@@ -219,7 +219,7 @@ void ui_graphics_quad::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribIPointer(2, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, width));
     glVertexAttribIPointer(3, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, angle));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
+    glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, colour));
     glVertexAttribIPointer(6, 1, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, use_texture));
     glVertexAttribIPointer(7, 2, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_pos));
     glVertexAttribIPointer(8, 2, GL_INT, sizeof(ui_graphics_quad), (void*)offsetof(ui_graphics_quad, uv_size));

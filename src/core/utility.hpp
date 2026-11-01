@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include <glm/glm.hpp>
+#include <glm/ext/vector_uint4_sized.hpp>
 #include <box2d/box2d.h>
 
 #include "common.hpp"
@@ -64,23 +65,47 @@ auto coin_flip() -> bool;
 auto sign_flip() -> int;
 auto random_unit() -> float; // Same as random_from_range(0.0f, 1.0f)
 
-constexpr auto from_hex(int hex) -> glm::vec4
+// Colours are stored as 8-bit RGBA (glm::u8vec4). To do maths on one, convert it to
+// floats in [0, 1] with to_float_colour, then back with to_byte_colour.
+constexpr auto from_hex(int hex) -> glm::u8vec4
 {
-    const auto blue = static_cast<float>(hex & 0xff) / 256.0f;
-    hex /= 0x100;
-    const auto green = static_cast<float>(hex & 0xff) / 256.0f;
-    hex /= 0x100;
-    const auto red = static_cast<float>(hex & 0xff) / 256.0f;
-    return glm::vec4{red, green, blue, 1.0f};
+    return {
+        static_cast<u8>((hex >> 16) & 0xff),
+        static_cast<u8>((hex >> 8) & 0xff),
+        static_cast<u8>(hex & 0xff),
+        u8{0xff}
+    };
+}
+
+inline auto to_float_colour(glm::u8vec4 colour) -> glm::vec4
+{
+    return glm::vec4(colour) / 255.0f;
+}
+
+// Clamps to [0, 1] and rounds to nearest
+inline auto to_byte_colour(glm::vec4 colour) -> glm::u8vec4
+{
+    return glm::u8vec4(glm::clamp(colour, 0.0f, 1.0f) * 255.0f + 0.5f);
 }
 
 auto get_executable_filepath() -> std::filesystem::path;
+
+// Same as glm::normalize, but returns the zero vector instead of NaN for zero-length input
+inline auto normalize_or_zero(glm::vec2 v) -> glm::vec2
+{
+    return glm::dot(v, v) > 0.0f ? glm::normalize(v) : glm::vec2{0.0f, 0.0f};
+}
 
 template <typename T>
 auto lerp(const T& a, const T& b, float t) -> T
 {
     return t * b + (1 - t) * a;
 };
+
+inline auto lerp(glm::u8vec4 a, glm::u8vec4 b, float t) -> glm::u8vec4
+{
+    return to_byte_colour(lerp(to_float_colour(a), to_float_colour(b), t));
+}
 
 struct camera;
 class input;

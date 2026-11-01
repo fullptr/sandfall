@@ -5,6 +5,7 @@
 #include "common.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/ext/vector_uint4_sized.hpp>
 
 #include <memory>
 
@@ -14,8 +15,8 @@ struct line_instance
 {
     glm::vec2 begin;
     glm::vec2 end;
-    glm::vec4 begin_colour;
-    glm::vec4 end_colour;
+    glm::u8vec4 begin_colour;
+    glm::u8vec4 end_colour;
     float     thickness;
 
     static void set_buffer_attributes(u32 vbo);
@@ -26,8 +27,8 @@ struct circle_instance
     glm::vec2 centre;
     float     inner_radius;
     float     outer_radius;
-    glm::vec4 begin_colour;
-    glm::vec4 end_colour;
+    glm::u8vec4 begin_colour;
+    glm::u8vec4 end_colour;
     float     angle;
 
     static void set_buffer_attributes(u32 vbo);
@@ -39,7 +40,7 @@ struct quad_instance
     float     width;
     float     height;
     float     angle;
-    glm::vec4 colour;
+    glm::u8vec4 colour;
 
     static void set_buffer_attributes(u32 vbo);
 };
@@ -67,12 +68,12 @@ public:
     void begin_frame(const camera& c);
     void end_frame();
 
-    void draw_rect(glm::vec2 top_left, float width, float height, glm::vec4 colour);
-    void draw_quad(glm::vec2 centre, float width, float height, float angle, glm::vec4 colour);
-    void draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 begin_colour, glm::vec4 end_colour, float thickness);
-    void draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 colour, float thickness);
-    void draw_circle(glm::vec2 centre, glm::vec4 colour, float radius);
-    void draw_annulus(glm::vec2 centre, glm::vec4 colour, float inner_radius, float outer_radius);
+    void draw_rect(glm::vec2 top_left, float width, float height, glm::u8vec4 colour);
+    void draw_quad(glm::vec2 centre, float width, float height, float angle, glm::u8vec4 colour);
+    void draw_line(glm::vec2 begin, glm::vec2 end, glm::u8vec4 begin_colour, glm::u8vec4 end_colour, float thickness);
+    void draw_line(glm::vec2 begin, glm::vec2 end, glm::u8vec4 colour, float thickness);
+    void draw_circle(glm::vec2 centre, glm::u8vec4 colour, float radius);
+    void draw_annulus(glm::vec2 centre, glm::u8vec4 colour, float inner_radius, float outer_radius);
 };
 
 }

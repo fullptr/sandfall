@@ -6,6 +6,7 @@
 #include "entity.hpp"
 #include "context.hpp"
 
+#include <bitset>
 #include <cstdint>
 #include <unordered_set>
 #include <array>
@@ -38,12 +39,13 @@ class pixel_world
     auto wake_chunk(chunk_pos pos) -> void;
     
 public:
-    pixel_world(i32 width, i32 height, const std::vector<pixel>& pixels)
-        : d_pixels{pixels}
+    // Takes the pixels by value so callers can move them in rather than copying the whole world
+    pixel_world(i32 width, i32 height, std::vector<pixel> pixels)
+        : d_pixels{std::move(pixels)}
         , d_width{width}
         , d_height{height}
     {
-        assert(pixels.size() == width * height);
+        assert(d_pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
         assert(height % config::chunk_size == 0);
         const auto width_chunks = width / config::chunk_size;
@@ -87,10 +89,19 @@ public:
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
+// One bit per pixel in a chunk, set if the pixel is static (solid and not falling)
+using chunk_static_pixels = std::bitset<config::chunk_size * config::chunk_size>;
+
+struct chunk_body
+{
+    b2BodyId            body;
+    chunk_static_pixels static_pixels; // The pixels the body was built from
+};
+
 struct physics_world
 {
     b2WorldId world;
-    std::unordered_map<chunk_pos, b2BodyId> chunk_bodies;
+    std::unordered_map<chunk_pos, chunk_body> chunk_bodies;
 
     physics_world(glm::vec2 gravity = config::gravity);
     ~physics_world();

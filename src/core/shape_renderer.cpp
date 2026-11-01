@@ -246,8 +246,8 @@ void line_instance::set_buffer_attributes(std::uint32_t vbo)
     }
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(line_instance), (void*)offsetof(line_instance, begin));
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(line_instance), (void*)offsetof(line_instance, end));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(line_instance), (void*)offsetof(line_instance, begin_colour));
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(line_instance), (void*)offsetof(line_instance, end_colour));
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(line_instance), (void*)offsetof(line_instance, begin_colour));
+    glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(line_instance), (void*)offsetof(line_instance, end_colour));
     glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(line_instance), (void*)offsetof(line_instance, thickness));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -262,8 +262,8 @@ void circle_instance::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, centre));
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, inner_radius));
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, outer_radius));
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, begin_colour));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, end_colour));
+    glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(circle_instance), (void*)offsetof(circle_instance, begin_colour));
+    glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(circle_instance), (void*)offsetof(circle_instance, end_colour));
     glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(circle_instance), (void*)offsetof(circle_instance, angle));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -279,7 +279,7 @@ void quad_instance::set_buffer_attributes(std::uint32_t vbo)
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, width));
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, height));
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, angle));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(quad_instance), (void*)offsetof(quad_instance, colour));
+    glVertexAttribPointer(5, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(quad_instance), (void*)offsetof(quad_instance, colour));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -362,32 +362,32 @@ void shape_renderer::end_frame()
     glDisable(GL_BLEND);
 }
 
-void shape_renderer::draw_rect(glm::vec2 top_left, float width, float height, glm::vec4 colour)
+void shape_renderer::draw_rect(glm::vec2 top_left, float width, float height, glm::u8vec4 colour)
 {
     d_quads.emplace_back(top_left + glm::vec2{width/2, height/2}, width, height, 0.0f, colour);
 }
 
-void shape_renderer::draw_quad(glm::vec2 centre, float width, float height, float angle, glm::vec4 colour)
+void shape_renderer::draw_quad(glm::vec2 centre, float width, float height, float angle, glm::u8vec4 colour)
 {
     d_quads.emplace_back(centre, width, height, angle, colour);
 }
 
-void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 begin_colour, glm::vec4 end_colour, float thickness)
+void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::u8vec4 begin_colour, glm::u8vec4 end_colour, float thickness)
 {
     d_lines.emplace_back(begin, end, begin_colour, end_colour, thickness);
 }
 
-void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::vec4 colour, float thickness)
+void shape_renderer::draw_line(glm::vec2 begin, glm::vec2 end, glm::u8vec4 colour, float thickness)
 {
     d_lines.emplace_back(begin, end, colour, colour, thickness);
 }
 
-void shape_renderer::draw_circle(glm::vec2 centre, glm::vec4 colour, float radius)
+void shape_renderer::draw_circle(glm::vec2 centre, glm::u8vec4 colour, float radius)
 {
     d_circles.emplace_back(centre, 0.0f, radius, colour, colour, 0.0f);
 }
 
-void shape_renderer::draw_annulus(glm::vec2 centre, glm::vec4 colour, float inner_radius, float outer_radius)
+void shape_renderer::draw_annulus(glm::vec2 centre, glm::u8vec4 colour, float inner_radius, float outer_radius)
 {
     d_circles.emplace_back(centre, inner_radius, outer_radius, colour, colour, 0.0f);
 }

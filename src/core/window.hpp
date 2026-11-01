@@ -44,7 +44,7 @@ public:
     window(const char* name, int width, int height);
     ~window();
 
-    auto begin_frame(glm::vec4 colour = {0, 0, 0, 1}) -> void;
+    auto begin_frame(glm::u8vec4 colour = {0, 0, 0, 255}) -> void;
     auto end_frame() -> void;
     auto events() -> std::span<const event>;
 

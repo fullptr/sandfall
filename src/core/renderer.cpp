@@ -56,16 +56,6 @@ constexpr auto electricity_colours = std::array{
     from_hex(0xf6e58d), from_hex(0xf9ca24)
 };
 
-auto light_noise(glm::vec4 vec) -> glm::vec4
-{
-    return {
-        std::clamp(vec.x + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.y + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        std::clamp(vec.z + sand::random_from_range(-0.04f, 0.04f), 0.0f, 1.0f),
-        1.0f
-    };
-}
-
 }
 
 renderer::renderer(i32 width, i32 height)
@@ -109,7 +99,7 @@ auto renderer::update(const level& world) -> void
         resize(world.pixels.width_in_pixels(), world.pixels.height_in_pixels());
     }
 
-    auto buffer = std::array<glm::vec4, config::chunk_size * config::chunk_size> {};
+    auto buffer = std::array<glm::u8vec4, config::chunk_size * config::chunk_size> {};
 
     for (i32 cx = 0; cx != world.pixels.width_in_chunks(); ++cx) {
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
@@ -118,8 +108,9 @@ auto renderer::update(const level& world) -> void
             if (!chunk.should_step) continue;
             
             const auto top_left = get_chunk_top_left(cpos);
-            for (i32 x = 0; x != config::chunk_size; ++x) {
-                for (i32 y = 0; y != config::chunk_size; ++y) {
+            // Row by row to match the world's memory layout
+            for (i32 y = 0; y != config::chunk_size; ++y) {
+                for (i32 x = 0; x != config::chunk_size; ++x) {
                     const auto world_coord = top_left + glm::ivec2{x, y};
                     const auto& pixel = world.pixels[world_coord];
                     const auto& props = properties(pixel);
@@ -141,7 +132,7 @@ auto renderer::update(const level& world) -> void
                         colour = sand::lerp(a, b, t);
                     }
                     else if (pixel.type == pixel_type::none) {
-                        colour = {0.0, 0.0, 0.0, 0.0};
+                        colour = {0, 0, 0, 0};
                     }
                     else {
                         colour = pixel.colour;

@@ -122,7 +122,8 @@ auto main() -> int
             camera.top_left -= input.offset() / camera.world_to_screen;
         }
 
-        accumulator += dt;
+        // Drop any time beyond the step cap so a slow frame can't snowball
+        accumulator = std::min(accumulator + dt, (double)sand::config::max_steps_per_frame * sand::config::time_step);
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
@@ -261,7 +262,7 @@ auto main() -> int
             {0, 0},
             config::chunk_size * level.pixels.width_in_chunks(),
             config::chunk_size * level.pixels.height_in_chunks(),
-            {0.1, 0.1, 0.1, 1.0}
+            {26, 26, 26, 255}
         );
         shape_renderer.end_frame();
 
@@ -279,7 +280,7 @@ auto main() -> int
 
         if (editor.show_spawn) {
             const auto p = glm::ivec2{level.spawn_point.x, level.spawn_point.y};
-            shape_renderer.draw_circle(p, {0, 1, 0, 1}, 1.0);
+            shape_renderer.draw_circle(p, {0, 255, 0, 255}, 1.0);
         }
 
         if (editor.show_chunks) {
@@ -289,7 +290,7 @@ auto main() -> int
                     const auto top_left = get_chunk_top_left(cpos);
                     const auto chunk = level.pixels[cpos];
                     if (chunk.should_step) {
-                        shape_renderer.draw_rect(glm::ivec2{top_left}, config::chunk_size, config::chunk_size, {1, 1, 1, 0.1});
+                        shape_renderer.draw_rect(glm::ivec2{top_left}, config::chunk_size, config::chunk_size, {255, 255, 255, 26});
                     }
                 }
             }

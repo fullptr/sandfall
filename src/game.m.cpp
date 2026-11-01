@@ -108,6 +108,7 @@ auto scene_level(sand::window& window) -> next_state
         }
     };
 
+    static bool do_draw_debug = false; // TODO: make non-static
     b2DebugDraw debug = b2DefaultDebugDraw();
     debug.context = static_cast<void*>(&shape_renderer);
     debug.drawShapes = true;
@@ -133,6 +134,10 @@ auto scene_level(sand::window& window) -> next_state
                 if (e->key == keyboard::escape) {
                     return next_state::main_menu;
                 }
+                if (e->key == keyboard::G)
+                {
+                    do_draw_debug = !do_draw_debug;
+                }
             }
             else if (const auto e = event.get_if<sand::window_resize_event>()) {
                 ctx.camera.screen_width = e->width;
@@ -144,7 +149,8 @@ auto scene_level(sand::window& window) -> next_state
             level_on_event(level, ctx, event);
         }
         
-        accumulator += dt;
+        // Drop any time beyond the step cap so a slow frame can't snowball
+        accumulator = std::min(accumulator + dt, (double)sand::config::max_steps_per_frame * sand::config::time_step);
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
@@ -170,15 +176,17 @@ auto scene_level(sand::window& window) -> next_state
         
         // TODO: Replace with actual sprite data
         shape_renderer.begin_frame(ctx.camera);      
-        shape_renderer.draw_circle(ecs_entity_centre(level.entities, level.player), {1.0, 1.0, 0.0, 1.0}, 3);
+        shape_renderer.draw_circle(ecs_entity_centre(level.entities, level.player), {255, 255, 0, 255}, 3);
         for (auto e : level.entities.view<body_component>()) {
-            shape_renderer.draw_circle(ecs_entity_centre(level.entities, e), {0.5, 1.0, 0.5, 1.0}, 2.5);
+            shape_renderer.draw_circle(ecs_entity_centre(level.entities, e), {128, 255, 128, 255}, 2.5);
         }
 
         const auto centre = ecs_entity_centre(level.entities, level.player);
-        const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
-        shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
-        b2World_Draw(level.physics.world, &debug);
+        const auto direction = sand::normalize_or_zero(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+        shape_renderer.draw_line(centre, centre + 10.0f * direction, {255, 255, 255, 255}, 2);
+        if (do_draw_debug) {
+            b2World_Draw(level.physics.world, &debug);
+        }
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};
@@ -208,7 +216,7 @@ auto main() -> int
             } break;
             case next_state::exit: {
                 std::print("closing game\n");
-                return 1;
+                return 0;
             } break;
             default: {
                 std::print("how did we get here\n");

@@ -4,6 +4,7 @@
 #include "window.hpp"
 
 #include <array>
+#include <bit>
 #include <random>
 #include <numbers>
 #include <iostream>
@@ -11,6 +12,45 @@
 #include <Windows.h>
 
 namespace sand {
+namespace {
+
+// PCG32 (pcg-random.org): small, fast, and good quality in every output bit. Satisfies
+// UniformRandomBitGenerator so it also works with the std distributions.
+class pcg32
+{
+    static constexpr u64 multiplier = 6364136223846793005ull;
+    static constexpr u64 increment  = 1442695040888963407ull;
+
+    u64 d_state = 0;
+
+public:
+    using result_type = u32;
+
+    constexpr explicit pcg32(u64 seed)
+    {
+        (*this)();
+        d_state += seed;
+        (*this)();
+    }
+
+    // Parenthesised so the min/max macros from Windows.h don't expand
+    static constexpr auto (min)() -> result_type { return 0; }
+    static constexpr auto (max)() -> result_type { return (std::numeric_limits<u32>::max)(); }
+
+    constexpr auto operator()() -> result_type
+    {
+        const auto old = d_state;
+        d_state = old * multiplier + increment;
+        const auto xorshifted = static_cast<u32>(((old >> 18u) ^ old) >> 27u);
+        return std::rotr(xorshifted, static_cast<int>(old >> 59u));
+    }
+};
+
+// One generator for the whole game. Fixed seed, so runs are reproducible given the same inputs.
+// Not thread safe; give each thread its own if the simulation becomes multithreaded.
+auto rng = pcg32{0x853c49e6748fea9bull};
+
+}
 
 timer::timer()
     : d_clock()
@@ -43,20 +83,20 @@ auto timer::now() const -> clock::time_point
 
 auto random_from_range(float min, float max) -> float
 {
-    static std::default_random_engine gen;
-    return std::uniform_real_distribution(min, max)(gen);
+    return min + (max - min) * random_unit();
 }
 
 auto random_from_range(int min, int max) -> int
 {
-    static std::default_random_engine gen;
-    return std::uniform_int_distribution(min, max)(gen);
+    // Maps a 32-bit value onto the inclusive range with a multiply instead of a modulo
+    // (Lemire's method). The bias is negligible for ranges this small.
+    const auto range = static_cast<u64>(static_cast<i64>(max) - min + 1);
+    return min + static_cast<int>((static_cast<u64>(rng()) * range) >> 32);
 }
 
 auto random_normal(float centre, float sd) -> float
 {
-    static std::default_random_engine gen;
-    return std::normal_distribution(centre, sd)(gen);
+    return std::normal_distribution(centre, sd)(rng);
 }
 
 auto random_from_circle(float radius) -> glm::ivec2
@@ -68,7 +108,7 @@ auto random_from_circle(float radius) -> glm::ivec2
 
 auto coin_flip() -> bool
 {
-    return random_from_range(0, 1) == 0;
+    return rng() >> 31;
 }
 
 auto sign_flip() -> int
@@ -78,7 +118,8 @@ auto sign_flip() -> int
 
 auto random_unit() -> float
 {
-    return random_from_range(0.0f, 1.0f);
+    // The top 24 bits exactly fill a float's mantissa, giving a uniform value in [0, 1)
+    return static_cast<float>(rng() >> 8) * 0x1.0p-24f;
 }
 
 auto _print_inner(const std::string& msg) -> void

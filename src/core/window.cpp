@@ -146,11 +146,12 @@ window::~window()
     glfwTerminate();
 }
 
-auto window::begin_frame(glm::vec4 colour) -> void
+auto window::begin_frame(glm::u8vec4 colour) -> void
 {
     d_data.events.clear();
     glfwPollEvents();
-    glClearColor(colour.r, colour.g, colour.b, colour.a);
+    const auto c = to_float_colour(colour);
+    glClearColor(c.r, c.g, c.b, c.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 

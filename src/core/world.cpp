@@ -218,6 +218,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
         // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
             w.set(pos, pixel::air());
+            return;
         }
 
         // See if it explodes
@@ -225,6 +226,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
             apply_explosion(w, pos, sand::explosion{
                 .min_radius = 5.0f, .max_radius = 10.0f, .scorch = 5.0f
             });
+            return;
         }
 
     }
@@ -251,6 +253,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
                 apply_explosion(w, pos, sand::explosion{
                     .min_radius = 25.0f, .max_radius = 30.0f, .scorch = 10.0f
                 });
+                return;
             }
         } break;
 
@@ -277,7 +280,8 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
         w.wake_chunk_with_pixel(pos);
     }
 
-    if (random_unit() < props.spontaneous_destroy) {
+    // Runs for every pixel, so skip the roll when it can never succeed
+    if (props.spontaneous_destroy > 0.0f && random_unit() < props.spontaneous_destroy) {
         w.set(pos, pixel::air());
     }
 }
@@ -307,13 +311,15 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
                 w.set(neigh_pos, pixel::air());
                 if (random_unit() > 0.9f) {
                     w.set(pos, pixel::air());
+                    return;
                 }
             }
         }
         
         // Spread fire
         if (props.is_burn_source || px.flags[is_burning]) {
-            if (random_unit() < properties(neighbour).flammability) {
+            const auto flammability = properties(neighbour).flammability;
+            if (flammability > 0.0f && random_unit() < flammability) {
                 w.visit(neigh_pos, [&](pixel& p) { p.flags[is_burning] = true; });
             }
         }
@@ -383,7 +389,8 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
     else if (const auto inner = ev.get_if<mouse_pressed_event>()) {
         if (inner->button == mouse::left) {
             const auto centre = ecs_entity_centre(l.entities, e);
-            const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+            const auto direction = normalize_or_zero(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+            if (direction == glm::vec2{0.0f, 0.0f}) return; // No aim direction, so don't fire
             const auto spawn_pot = centre + 10.0f * direction;
             
             auto grenade = l.entities.create();
@@ -468,7 +475,7 @@ auto update_enemy(registry& entities, entity e) -> void
                 auto& curr_body_comp = entities.get<body_component>(curr);
                 const auto pos = physics_to_pixel(b2Body_GetPosition(curr_body_comp.body));
                 const auto self_pos = ecs_entity_centre(entities, e);
-                const auto dir = glm::normalize(pos - self_pos);
+                const auto dir = normalize_or_zero(pos - self_pos);
                 b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(200.0f * dir), true);
             }
         }
@@ -560,12 +567,20 @@ auto pixel_world::wake_chunk_with_pixel(pixel_pos pos) -> void
 
 auto pixel_world::step() -> void
 {
-    for (auto& pixel : d_pixels) {
-        pixel.flags[is_updated] = false;
-    }
-
     for (auto& chunk : d_chunks) {
         chunk.should_step = std::exchange(chunk.should_step_next, false);
+    }
+
+    // is_updated is only read for pixels in chunks stepping this tick, so only
+    // those need resetting. Sleeping chunks get reset on the tick they wake up.
+    // Walks row by row to keep memory access sequential.
+    for (i32 y = 0; y != d_height; ++y) {
+        for (i32 x = 0; x != d_width; x += config::chunk_size) {
+            if (!at(get_chunk_from_pixel({x, y})).should_step) continue;
+            for (i32 dx = 0; dx != config::chunk_size; ++dx) {
+                at(pixel_pos{x + dx, y}).flags[is_updated] = false;
+            }
+        }
     }
 
     for (i32 y = d_height - 1; y >= 0; --y) {
@@ -619,7 +634,9 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
     
     if (!l.entities.valid(curr_entity)) return;
 
-    if (l.entities.has<grenade_component>(curr_entity) 
+    // A grenade can have several contacts in one step; only explode on the first
+    if (l.entities.has<grenade_component>(curr_entity)
+        && !l.entities.marked_entities().contains(curr_entity)
         && !b2Shape_IsSensor(other)
         && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
     {
@@ -738,13 +755,18 @@ auto level_on_update(level& l, const context& ctx) -> void
             const auto pos = chunk_pos{x, y};
             if (!l.pixels[pos].should_step) continue;
             
+            const auto top_left = get_chunk_top_left(pos);
+            const auto static_pixels = get_chunk_static_pixels(l.pixels, top_left);
+
+            // Awake chunks often only contain moving liquids, gases or falling
+            // pixels, so only rebuild if the static pixels have actually changed
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
-                b2DestroyBody(it->second);
+                if (it->second.static_pixels == static_pixels) continue;
+                b2DestroyBody(it->second.body);
                 map.erase(it);
             }
-            const auto top_left = get_chunk_top_left(pos);
-            map[pos] = create_chunk_rigid_bodies(l, top_left); 
+            map[pos] = {create_chunk_rigid_bodies(l, top_left, static_pixels), static_pixels};
         }
     }
 
@@ -763,6 +785,12 @@ auto level_on_update(level& l, const context& ctx) -> void
             if (b2Body_IsValid(comp.body)) {
                 b2DestroyBody(comp.body);
             }
+        }
+
+        // The sensor end events for this body will have invalid shape ids, so
+        // they can't be mapped back to the entity; remove it from sensor sets here.
+        for (auto enemy : l.entities.view<enemy_component>()) {
+            l.entities.get<enemy_component>(enemy).nearby_entities.erase(e);
         }
     }
     l.entities.destroy_marked();
