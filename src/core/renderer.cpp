@@ -105,7 +105,7 @@ auto renderer::update(const level& world) -> void
         for (i32 cy = 0; cy != world.pixels.height_in_chunks(); ++cy) {
             const auto cpos = chunk_pos{cx, cy};
             const auto chunk = world.pixels[cpos];
-            if (!chunk.should_step) continue;
+            if (!chunk.should_step && !d_upload_all) continue;
             
             const auto top_left = get_chunk_top_left(cpos);
             // Row by row to match the world's memory layout
@@ -141,7 +141,8 @@ auto renderer::update(const level& world) -> void
             }
             d_texture.set_subdata(buffer, glm::ivec2{top_left}, config::chunk_size, config::chunk_size);
         }
-    }    
+    }
+    d_upload_all = false;
 }
 
 auto renderer::draw(const camera& camera) const -> void
@@ -167,6 +168,7 @@ auto renderer::draw(const camera& camera) const -> void
 auto renderer::resize(u32 width, u32 height) -> void
 {
     d_texture.resize(width, height);
+    d_upload_all = true;
 }
 
 }

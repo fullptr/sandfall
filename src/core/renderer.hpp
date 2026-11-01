@@ -22,6 +22,10 @@ class renderer
     texture_dyn d_texture;
     shader      d_shader;
 
+    // The texture starts empty, so the first update after creating or resizing it must
+    // upload every chunk, not just the ones that are awake
+    bool        d_upload_all = true;
+
     renderer(const renderer&) = delete;
     renderer& operator=(const renderer&) = delete;
 
