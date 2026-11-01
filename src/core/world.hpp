@@ -6,6 +6,7 @@
 #include "entity.hpp"
 #include "context.hpp"
 
+#include <bitset>
 #include <cstdint>
 #include <unordered_set>
 #include <array>
@@ -87,10 +88,19 @@ public:
     auto pixels() const -> const std::vector<pixel>& { return d_pixels; }
 };
 
+// One bit per pixel in a chunk, set if the pixel is static (solid and not falling)
+using chunk_static_pixels = std::bitset<config::chunk_size * config::chunk_size>;
+
+struct chunk_body
+{
+    b2BodyId            body;
+    chunk_static_pixels static_pixels; // The pixels the body was built from
+};
+
 struct physics_world
 {
     b2WorldId world;
-    std::unordered_map<chunk_pos, b2BodyId> chunk_bodies;
+    std::unordered_map<chunk_pos, chunk_body> chunk_bodies;
 
     physics_world(glm::vec2 gravity = config::gravity);
     ~physics_world();

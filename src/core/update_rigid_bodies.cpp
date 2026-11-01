@@ -11,8 +11,6 @@
 
 namespace sand {
 
-using chunk_static_pixels = std::bitset<sand::config::chunk_size * sand::config::chunk_size>;
-
 auto is_static_pixel(
     pixel_pos top_left,
     const pixel_world& w,
@@ -231,25 +229,29 @@ auto get_start_pixel_offset(const chunk_static_pixels& pixels) -> glm::ivec2
     std::unreachable();
 }
 
-auto create_chunk_rigid_bodies(level& l, pixel_pos top_left) -> b2BodyId
+auto get_chunk_static_pixels(const pixel_world& w, pixel_pos top_left) -> chunk_static_pixels
+{
+    auto chunk_pixels = chunk_static_pixels{};
+
+    // Fill up the bitset, row by row to match the world's memory layout
+    for (int y = 0; y != sand::config::chunk_size; ++y) {
+        for (int x = 0; x != sand::config::chunk_size; ++x) {
+            const auto index = y * sand::config::chunk_size + x;
+            if (is_static_pixel(top_left, w, top_left + glm::ivec2{x, y})) {
+                chunk_pixels.set(index);
+            }
+        }
+    }
+    return chunk_pixels;
+}
+
+auto create_chunk_rigid_bodies(level& l, pixel_pos top_left, chunk_static_pixels chunk_pixels) -> b2BodyId
 {
     b2BodyDef body_def = b2DefaultBodyDef();
     body_def.type = b2_staticBody;
     body_def.position = {0.0f, 0.0f};
     auto body = b2CreateBody(l.physics.world, &body_def);
     b2Body_SetUserData(body, to_user_data(apx::null));
-    
-    auto chunk_pixels = chunk_static_pixels{};
-    
-    // Fill up the bitset, row by row to match the world's memory layout
-    for (int y = 0; y != sand::config::chunk_size; ++y) {
-        for (int x = 0; x != sand::config::chunk_size; ++x) {
-            const auto index = y * sand::config::chunk_size + x;
-            if (is_static_pixel(top_left, l.pixels, top_left + glm::ivec2{x, y})) {
-                chunk_pixels.set(index);
-            }
-        }
-    }
 
     b2ShapeDef def = b2DefaultShapeDef();
     def.material.friction = 1;

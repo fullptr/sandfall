@@ -753,13 +753,18 @@ auto level_on_update(level& l, const context& ctx) -> void
             const auto pos = chunk_pos{x, y};
             if (!l.pixels[pos].should_step) continue;
             
+            const auto top_left = get_chunk_top_left(pos);
+            const auto static_pixels = get_chunk_static_pixels(l.pixels, top_left);
+
+            // Awake chunks often only contain moving liquids, gases or falling
+            // pixels, so only rebuild if the static pixels have actually changed
             auto& map = l.physics.chunk_bodies;
             if (auto it = map.find(pos); it != map.end()) {
-                b2DestroyBody(it->second);
+                if (it->second.static_pixels == static_pixels) continue;
+                b2DestroyBody(it->second.body);
                 map.erase(it);
             }
-            const auto top_left = get_chunk_top_left(pos);
-            map[pos] = create_chunk_rigid_bodies(l, top_left); 
+            map[pos] = {create_chunk_rigid_bodies(l, top_left, static_pixels), static_pixels};
         }
     }
 
