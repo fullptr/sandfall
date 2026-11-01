@@ -10,6 +10,7 @@
 #include <source_location>
 
 #include <glm/glm.hpp>
+#include <glm/ext/vector_uint4_sized.hpp>
 
 namespace sand {
 
@@ -72,7 +73,7 @@ struct ui_graphics_quad
     int        width;
     int        height;
     float      angle;
-    glm::vec4  colour;
+    glm::u8vec4 colour;
     int        use_texture;
     glm::ivec2 uv_pos;
     glm::ivec2 uv_size;

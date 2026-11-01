@@ -1,5 +1,8 @@
 #pragma once
+#include "utility.hpp"
+
 #include <glm/glm.hpp>
+#include <glm/ext/vector_uint4_sized.hpp>
 #include <box2d/box2d.h>
 
 #include <bitset>
@@ -94,7 +97,7 @@ struct pixel_properties
 struct pixel
 {
     pixel_type      type;
-    glm::vec4       colour;
+    glm::u8vec4     colour;
     glm::vec2       velocity;
     std::bitset<64> flags;
 
@@ -128,8 +131,18 @@ struct pixel
 
 auto properties(const pixel& px) -> const pixel_properties&;
 
-auto serialise(auto& archive, pixel& px) -> void {
-    archive(px.type, px.colour, px.velocity, px.flags, px.power);
+// Colours are saved as float vec4s, from before pixels stored them as bytes. Convert
+// on the way in and out to keep existing saves loadable.
+auto save(auto& archive, const pixel& px) -> void
+{
+    archive(px.type, to_float_colour(px.colour), px.velocity, px.flags, px.power);
+}
+
+auto load(auto& archive, pixel& px) -> void
+{
+    auto colour = glm::vec4{};
+    archive(px.type, colour, px.velocity, px.flags, px.power);
+    px.colour = to_byte_colour(colour);
 }
 
 auto is_active_power_source(const pixel& px) -> bool;

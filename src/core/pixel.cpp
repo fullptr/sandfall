@@ -8,14 +8,16 @@
 namespace sand {
 namespace {
 
-auto light_noise() -> glm::vec4
+// Slightly varies the colour so pixels of the same type don't all look identical
+auto with_noise(glm::u8vec4 colour) -> glm::u8vec4
 {
-    return {
+    const auto noise = glm::vec4{
         random_from_range(-0.04f, 0.04f),
         random_from_range(-0.04f, 0.04f),
         random_from_range(-0.04f, 0.04f),
-        1.0f
+        0.0f
     };
+    return to_byte_colour(to_float_colour(colour) + noise);
 }
 
 }
@@ -251,7 +253,7 @@ auto pixel::air() -> pixel
 {
     return pixel{
         .type = pixel_type::none,
-        .colour = {0.0f, 0.0f, 0.0f, 0.0f}
+        .colour = {0, 0, 0, 0}
     };
 }
 
@@ -259,7 +261,7 @@ auto pixel::sand() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::sand,
-        .colour = from_hex(0xF8EFBA) + light_noise()
+        .colour = with_noise(from_hex(0xF8EFBA))
     };
     p.flags[is_falling] = true;
     return p;
@@ -269,7 +271,7 @@ auto pixel::coal() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::coal,
-        .colour = from_hex(0x1E272E) + light_noise()
+        .colour = with_noise(from_hex(0x1E272E))
     };
     p.flags[is_falling] = true;
     return p;
@@ -279,7 +281,7 @@ auto pixel::dirt() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::dirt,
-        .colour = from_hex(0x5C1D06) + light_noise()
+        .colour = with_noise(from_hex(0x5C1D06))
     };
     p.flags[is_falling] = true;
     return p;
@@ -289,7 +291,7 @@ auto pixel::rock() -> pixel
 {
     return {
         .type = pixel_type::rock,
-        .colour = from_hex(0xC8C8C8) + light_noise()
+        .colour = with_noise(from_hex(0xC8C8C8))
     };
 }
 
@@ -297,7 +299,7 @@ auto pixel::water() -> pixel
 {
     return {
         .type = pixel_type::water,
-        .colour = from_hex(0x1B9CFC) + light_noise()
+        .colour = with_noise(from_hex(0x1B9CFC))
     };
 }
 
@@ -305,7 +307,7 @@ auto pixel::lava() -> pixel
 {
     return {
         .type = pixel_type::lava,
-        .colour = from_hex(0xF97F51) + light_noise()
+        .colour = with_noise(from_hex(0xF97F51))
     };
 }
 
@@ -313,7 +315,7 @@ auto pixel::acid() -> pixel
 {
     return {
         .type = pixel_type::acid,
-        .colour = from_hex(0x2ED573) + light_noise()
+        .colour = with_noise(from_hex(0x2ED573))
     };
 }
 
@@ -321,7 +323,7 @@ auto pixel::steam() -> pixel
 {
     return {
         .type = pixel_type::steam,
-        .colour = from_hex(0x9AECDB) + light_noise()
+        .colour = with_noise(from_hex(0x9AECDB))
     };
 }
 
@@ -337,7 +339,7 @@ auto pixel::fuse() -> pixel
 {
     return {
         .type = pixel_type::fuse,
-        .colour = from_hex(0x45AAF2) + light_noise()
+        .colour = with_noise(from_hex(0x45AAF2))
     };
 }
 
@@ -355,7 +357,7 @@ auto pixel::oil() -> pixel
 {
     return {
         .type = pixel_type::oil,
-        .colour = from_hex(0x650C30) + light_noise()
+        .colour = with_noise(from_hex(0x650C30))
     };
 }
 
@@ -363,7 +365,7 @@ auto pixel::gunpowder() -> pixel
 {
     auto p = pixel{
         .type = pixel_type::gunpowder,
-        .colour = from_hex(0x485460) + light_noise()
+        .colour = with_noise(from_hex(0x485460))
     };
     p.flags[is_falling] = true;
     return p;
@@ -373,7 +375,7 @@ auto pixel::methane() -> pixel
 {
     return {
         .type = pixel_type::methane,
-        .colour = from_hex(0xCED6E0) + light_noise()
+        .colour = with_noise(from_hex(0xCED6E0))
     };
 }
 
