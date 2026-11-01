@@ -23,6 +23,9 @@ static constexpr u64 u64_max = std::numeric_limits<u64>::max();
 namespace config {
 
 static constexpr auto time_step = 1.0f / 60.0f;
+
+// Caps how many fixed updates run per frame, preventing the update loop from spiralling
+static constexpr auto max_steps_per_frame = 4;
 static constexpr auto gravity = glm::vec2{0.0f, 9.81f};
 
 // Pixel Space

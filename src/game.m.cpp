@@ -144,7 +144,8 @@ auto scene_level(sand::window& window) -> next_state
             level_on_event(level, ctx, event);
         }
         
-        accumulator += dt;
+        // Drop any time beyond the step cap so a slow frame can't snowball
+        accumulator = std::min(accumulator + dt, (double)sand::config::max_steps_per_frame * sand::config::time_step);
         bool updated = false;
         while (accumulator > sand::config::time_step) {
             accumulator -= sand::config::time_step;
