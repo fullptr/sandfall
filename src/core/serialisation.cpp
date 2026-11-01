@@ -49,7 +49,7 @@ auto load_level(const std::string& file_path) -> level
 
     // TODO: Store the sizes as u32's in the file
     return {
-        pixel_world{static_cast<i32>(save.width), static_cast<i32>(save.height), save.pixels},
+        pixel_world{static_cast<i32>(save.width), static_cast<i32>(save.height), std::move(save.pixels)},
         physics_world{},
         registry{},
         pixel_pos{save.spawn_point.x, save.spawn_point.y},

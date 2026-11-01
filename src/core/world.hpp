@@ -39,12 +39,13 @@ class pixel_world
     auto wake_chunk(chunk_pos pos) -> void;
     
 public:
-    pixel_world(i32 width, i32 height, const std::vector<pixel>& pixels)
-        : d_pixels{pixels}
+    // Takes the pixels by value so callers can move them in rather than copying the whole world
+    pixel_world(i32 width, i32 height, std::vector<pixel> pixels)
+        : d_pixels{std::move(pixels)}
         , d_width{width}
         , d_height{height}
     {
-        assert(pixels.size() == width * height);
+        assert(d_pixels.size() == width * height);
         assert(width % config::chunk_size == 0);
         assert(height % config::chunk_size == 0);
         const auto width_chunks = width / config::chunk_size;
