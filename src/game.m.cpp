@@ -108,6 +108,7 @@ auto scene_level(sand::window& window) -> next_state
         }
     };
 
+    static bool do_draw_debug = false; // TODO: make non-static
     b2DebugDraw debug = b2DefaultDebugDraw();
     debug.context = static_cast<void*>(&shape_renderer);
     debug.drawShapes = true;
@@ -132,6 +133,10 @@ auto scene_level(sand::window& window) -> next_state
             if (const auto e = event.get_if<sand::keyboard_pressed_event>()) {
                 if (e->key == keyboard::escape) {
                     return next_state::main_menu;
+                }
+                if (e->key == keyboard::G)
+                {
+                    do_draw_debug = !do_draw_debug;
                 }
             }
             else if (const auto e = event.get_if<sand::window_resize_event>()) {
@@ -179,7 +184,9 @@ auto scene_level(sand::window& window) -> next_state
         const auto centre = ecs_entity_centre(level.entities, level.player);
         const auto direction = sand::normalize_or_zero(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {255, 255, 255, 255}, 2);
-        b2World_Draw(level.physics.world, &debug);
+        if (do_draw_debug) {
+            b2World_Draw(level.physics.world, &debug);
+        }
         shape_renderer.end_frame();
         
         std::array<char, 8> buf = {};
