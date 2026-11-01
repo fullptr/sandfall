@@ -160,6 +160,144 @@ inline auto update_pixel_position(pixel_world& w, pixel_pos& pos) -> void
     }
 }
 
+// Rounds up or down at random, weighted so that the average is f. Lets sub-pixel
+// velocities move pixels the right distance over time, and gives neighbouring pixels
+// with the same velocity slightly different paths.
+auto stochastic_round(float f) -> int
+{
+    return static_cast<int>(glm::floor(f + random_unit()));
+}
+
+// Moves a liquid up to steps pixels sideways, to the furthest free cell in range. It
+// can pass through pixels of the same liquid on the way, so liquid in the middle of a
+// body pushes outwards rather than jamming against its neighbours.
+auto flow_sideways(pixel_world& w, pixel_pos& pos, int dx, int steps) -> bool
+{
+    const auto type = w[pos].type;
+    auto target = pos;
+    for (int i = 1; i <= steps; ++i) {
+        const auto next = pos + glm::ivec2{dx * i, 0};
+        if (can_pixel_move_to(w, pos, next)) {
+            target = next;
+        } else if (!w.is_valid_pixel(next) || w[next].type != type) {
+            break;
+        }
+    }
+
+    if (target == pos) return false;
+    w.swap(pos, target);
+    pos = target;
+    set_adjacent_free_falling(w, pos);
+    w.visit(pos, [&](pixel& p) { p.flags[is_falling] = true; });
+    return true;
+}
+
+// Moves a liquid sideways through open space towards the nearest spot, within range,
+// that it could fall from. This is how a resting surface flows to lower ground and
+// levels out, while staying still on the flat.
+auto flow_to_drop(pixel_world& w, pixel_pos& pos, glm::ivec2 down, int dx, int range) -> bool
+{
+    for (int i = 1; i <= range; ++i) {
+        const auto next = pos + glm::ivec2{dx * i, 0};
+        if (!can_pixel_move_to(w, pos, next)) return false;
+        if (can_pixel_move_to(w, pos, next + down)) return move_offset(w, pos, {dx * i, 0});
+    }
+    return false;
+}
+
+// Liquids keep a 2D velocity. They fall under gravity, and on landing part of the fall
+// becomes sideways speed, so they never speed up by landing. Along a surface they flow
+// in a consistent direction, only gaining speed when flowing downhill (up to
+// dispersion_rate pixels per tick) and otherwise slowing down. The weight of liquid on
+// top pushes it outwards and a resting surface flows towards lower ground, so pools
+// level out and then come to rest. Sideways speed is carried off ledges, so fast flows
+// arc away while a trickle drops nearly straight down. Returns true if the pixel is
+// still in motion, even if it didn't move this tick.
+auto update_liquid_position(pixel_world& w, pixel_pos& pos) -> bool
+{
+    static constexpr auto air_drag     = 0.9f; // Fraction of sideways speed kept per tick in the air
+    static constexpr auto flow_accel   = 0.1f; // Sideways speed gained per tick while flowing along a surface
+    static constexpr auto splash       = 0.8f; // Fraction of fall speed turned into sideways speed on landing
+    static constexpr auto surface_drag = 0.9f; // Fraction of above-normal sideways speed kept per tick on a surface
+    static constexpr auto level_range  = 16;   // How far a resting surface looks for lower ground, in multiples of dispersion_rate
+
+    const auto& props = properties(w[pos]);
+    const auto down = glm::ivec2{0, sign(props.gravity_factor)};
+    const auto speed = static_cast<float>(glm::max(props.dispersion_rate, 1));
+    const auto fall_speed = w[pos].velocity.y * down.y;
+    auto vel = w[pos].velocity + props.gravity_factor * config::gravity * config::time_step;
+
+    const auto store_velocity = [&] {
+        w.visit_no_wake(pos, [&](pixel& p) { p.velocity = vel; });
+    };
+
+    // Falling: move along the velocity, always at least a pixel downwards
+    if (can_pixel_move_to(w, pos, pos + down)) {
+        vel.x *= air_drag;
+        const auto fall = glm::max(1, stochastic_round(glm::abs(vel.y)));
+        move_offset(w, pos, {stochastic_round(vel.x), down.y * fall});
+        store_velocity();
+        return true;
+    }
+
+    // Resting on liquid that is still falling: wait for it to move rather than
+    // spreading out mid-stream, and don't fall faster than it
+    if (w.is_valid_pixel(pos + down)) {
+        const auto& below = w[pos + down];
+        if (properties(below).phase == pixel_phase::liquid && below.flags[is_falling] && below.velocity.y * down.y > 0.0f) {
+            vel.y = glm::min(vel.y * down.y, below.velocity.y * down.y) * down.y;
+            store_velocity();
+            w.wake_chunk_with_pixel(pos);
+            return true;
+        }
+    }
+
+    // On a surface: keep flowing in the current direction (picking one on landing),
+    // downhill if possible, otherwise along the surface, turning around at walls
+    const auto dir = vel.x > 0.0f ? 1 : vel.x < 0.0f ? -1 : (coin_flip() ? 1 : -1);
+
+    // Landing turns part of the fall into sideways speed, like a splash. Since splash
+    // is below 1 this can only lose speed, and a gentle landing gains almost nothing.
+    const auto flow = glm::max(glm::abs(vel.x), fall_speed * splash);
+
+    // The sideways speed after moving in direction dx. Only flowing downhill builds
+    // speed (up to the liquid's normal speed); on the flat, or above normal speed after
+    // a splash, it slows down. Turning around starts again from nothing.
+    const auto flow_velocity = [&](int dx, bool downhill) {
+        const auto current = dx == dir ? flow : 0.0f;
+        const auto next = downhill && current < speed ? glm::min(current + flow_accel, speed) : current * surface_drag;
+        return dx * next;
+    };
+
+    for (const auto dx : {dir, -dir}) {
+        if (move_offset(w, pos, {dx, down.y})) {
+            vel = {flow_velocity(dx, true), 0.0f};
+            store_velocity();
+            return true;
+        }
+    }
+
+    // Move at the current sideways speed; turning around starts from nothing. Liquid with
+    // more of itself on top is pushed outwards by the weight, so it can spread up to
+    // dispersion_rate pixels through the body regardless of its speed. This is what
+    // levels pools out, and it doesn't add any velocity. Liquid with neither speed nor
+    // pressure only moves towards lower ground nearby, so on the flat, puddles and
+    // droplets come to rest.
+    const auto above = pos + -down;
+    const auto pressure = w.is_valid_pixel(above) && w[above].type == w[pos].type ? props.dispersion_rate : 0;
+    for (const auto dx : {dir, -dir}) {
+        const auto steps = glm::max(pressure, stochastic_round(dx == dir ? flow : 0.0f));
+        if (steps > 0 ? flow_sideways(w, pos, dx, steps) : flow_to_drop(w, pos, down, dx, props.dispersion_rate * level_range)) {
+            vel = {flow_velocity(dx, steps == 0), 0.0f};
+            store_velocity();
+            return true;
+        }
+    }
+
+    // Hemmed in, or resting on the flat with nowhere lower to go, so it has settled
+    return false;
+}
+
 // Determines if the pixel at the given offset should power the current position.
 // offset must be a unit vector.
 auto should_get_powered(const pixel_world& w, pixel_pos pos, glm::ivec2 offset) -> bool
@@ -341,13 +479,23 @@ auto update_pixel(pixel_world& w, pixel_pos pos) -> pixel_pos
     }
 
     const auto start_pos = pos;
-    update_pixel_position(w, pos);
+    auto in_motion = false;
+    if (properties(w[pos]).phase == pixel_phase::liquid) {
+        in_motion = update_liquid_position(w, pos);
+    } else {
+        update_pixel_position(w, pos);
+    }
 
-    // Pixels that don't move have their is_falling flag set to false
-    if (pos == start_pos) {
+    // Pixels that don't move have their is_falling flag set to false. Liquids can
+    // stay in motion for a tick without moving, e.g. waiting in a falling stream.
+    if (pos == start_pos && !in_motion) {
         w.visit_no_wake(pos, [&](pixel& p) {
             p.flags[is_falling] = false;
-            if (properties(p).gravity_factor) {
+            // Settled liquids keep no velocity, since any fall speed would turn into
+            // sideways flow next tick. Liquids fall at least a pixel per tick anyway.
+            if (properties(p).phase == pixel_phase::liquid) {
+                p.velocity = glm::vec2{0.0f, 0.0f};
+            } else if (properties(p).gravity_factor) {
                 p.velocity = glm::ivec2{0, 1};
             }
         });
