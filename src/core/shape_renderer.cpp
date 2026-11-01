@@ -26,9 +26,37 @@ out vec4  o_line_begin_colour;
 out vec4  o_line_end_colour;
 out float o_line_thickness;
 
+uniform int u_camera_width;
+uniform int u_camera_height;
+uniform vec2 u_camera_top_left;
+uniform float u_camera_world_to_screen;
+
+vec4 world_to_clip(vec2 world)
+{
+    vec2 screen = (world - u_camera_top_left) * u_camera_world_to_screen;
+    return vec4(
+        screen.x / u_camera_width * 2.0 - 1.0,
+        1.0 - screen.y / u_camera_height * 2.0,
+        0.0, 1.0
+    );
+}
+
 void main()
 {
-    gl_Position = vec4(position, 0.0, 1.0);
+    // Cover only the line: a rectangle along the segment, padded by the thickness
+    // (which the fragment shader treats as a half-width and end cap radius) plus a
+    // pixel, rather than the whole screen
+    vec2 along = line_end - line_begin;
+    float half_length = length(along) / 2.0;
+    vec2 dir = half_length > 0.0 ? along / (2.0 * half_length) : vec2(1.0, 0.0);
+    vec2 normal = vec2(-dir.y, dir.x);
+    float pad = (line_thickness + 1.0) / u_camera_world_to_screen;
+
+    vec2 centre = (line_begin + line_end) / 2.0;
+    vec2 corner = centre
+                + dir * position.x * (half_length + pad)
+                + normal * position.y * pad;
+    gl_Position = world_to_clip(corner);
 
     o_line_begin = line_begin;
     o_line_end = line_end;
@@ -84,14 +112,16 @@ void main()
     if (distance_from_line <= thickness) {
         if (ratio_along > 0 && ratio_along < 1) {
             out_colour = mix(o_line_begin_colour, o_line_end_colour, ratio_along);
+            return;
         } else if (ratio_along <= 0 && distance(line_begin, pixel) < thickness) {
             out_colour = o_line_begin_colour;
+            return;
         } else if (ratio_along >= 1 && distance(line_end, pixel) < thickness) {
             out_colour = o_line_end_colour;
-        } else {
-            out_colour = vec4(0.0);
+            return;
         }
     }
+    discard;
 }
 )SHADER";
 
@@ -113,10 +143,27 @@ out vec4  o_circle_begin_colour;
 out vec4  o_circle_end_colour;
 out float o_circle_angle;
 
+uniform int u_camera_width;
+uniform int u_camera_height;
+uniform vec2 u_camera_top_left;
+uniform float u_camera_world_to_screen;
+
+vec4 world_to_clip(vec2 world)
+{
+    vec2 screen = (world - u_camera_top_left) * u_camera_world_to_screen;
+    return vec4(
+        screen.x / u_camera_width * 2.0 - 1.0,
+        1.0 - screen.y / u_camera_height * 2.0,
+        0.0, 1.0
+    );
+}
+
 void main()
 {
-    gl_Position = vec4(position, 0.0, 1.0);
-    
+    // Cover only the circle's bounding square (plus a pixel), rather than the whole screen
+    float half_size = circle_outer_radius + 1.0 / u_camera_world_to_screen;
+    gl_Position = world_to_clip(circle_centre + position * half_size);
+
     o_circle_centre = circle_centre;
     o_circle_inner_radius = circle_inner_radius;
     o_circle_outer_radius = circle_outer_radius;
@@ -186,6 +233,7 @@ void main()
         );
         return;
     }
+    discard;
 }
 )SHADER";
 
