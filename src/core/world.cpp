@@ -387,7 +387,8 @@ auto player_handle_event(level& l, const context& ctx, entity e, const event& ev
     else if (const auto inner = ev.get_if<mouse_pressed_event>()) {
         if (inner->button == mouse::left) {
             const auto centre = ecs_entity_centre(l.entities, e);
-            const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+            const auto direction = normalize_or_zero(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+            if (direction == glm::vec2{0.0f, 0.0f}) return; // No aim direction, so don't fire
             const auto spawn_pot = centre + 10.0f * direction;
             
             auto grenade = l.entities.create();
@@ -472,7 +473,7 @@ auto update_enemy(registry& entities, entity e) -> void
                 auto& curr_body_comp = entities.get<body_component>(curr);
                 const auto pos = physics_to_pixel(b2Body_GetPosition(curr_body_comp.body));
                 const auto self_pos = ecs_entity_centre(entities, e);
-                const auto dir = glm::normalize(pos - self_pos);
+                const auto dir = normalize_or_zero(pos - self_pos);
                 b2Body_ApplyLinearImpulseToCenter(body_comp.body, pixel_to_physics(200.0f * dir), true);
             }
         }

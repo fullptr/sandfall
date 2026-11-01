@@ -177,7 +177,7 @@ auto scene_level(sand::window& window) -> next_state
         }
 
         const auto centre = ecs_entity_centre(level.entities, level.player);
-        const auto direction = glm::normalize(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
+        const auto direction = sand::normalize_or_zero(mouse_pos_world_space(ctx.input, ctx.camera) - centre);
         shape_renderer.draw_line(centre, centre + 10.0f * direction, {1, 1, 1, 1}, 2);
         b2World_Draw(level.physics.world, &debug);
         shape_renderer.end_frame();
@@ -209,7 +209,7 @@ auto main() -> int
             } break;
             case next_state::exit: {
                 std::print("closing game\n");
-                return 1;
+                return 0;
             } break;
             default: {
                 std::print("how did we get here\n");

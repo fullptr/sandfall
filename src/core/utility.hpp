@@ -76,6 +76,12 @@ constexpr auto from_hex(int hex) -> glm::vec4
 
 auto get_executable_filepath() -> std::filesystem::path;
 
+// Same as glm::normalize, but returns the zero vector instead of NaN for zero-length input
+inline auto normalize_or_zero(glm::vec2 v) -> glm::vec2
+{
+    return glm::dot(v, v) > 0.0f ? glm::normalize(v) : glm::vec2{0.0f, 0.0f};
+}
+
 template <typename T>
 auto lerp(const T& a, const T& b, float t) -> T
 {

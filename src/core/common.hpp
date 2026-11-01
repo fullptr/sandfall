@@ -72,7 +72,10 @@ struct std::hash<sand::chunk_pos>
 {
     auto operator()(sand::chunk_pos pos) const noexcept -> std::size_t
     {
-        static const auto hasher = std::hash<sand::i32>{};
-        return hasher(pos.x) ^ hasher(pos.y);
+        // Pack both coords into one 64-bit value; XORing separate hashes sends
+        // every (x, x) to 0 and makes (x, y) collide with (y, x)
+        const auto packed = (static_cast<sand::u64>(static_cast<sand::u32>(pos.x)) << 32)
+                          | static_cast<sand::u32>(pos.y);
+        return std::hash<sand::u64>{}(packed);
     }
 };
