@@ -565,12 +565,20 @@ auto pixel_world::wake_chunk_with_pixel(pixel_pos pos) -> void
 
 auto pixel_world::step() -> void
 {
-    for (auto& pixel : d_pixels) {
-        pixel.flags[is_updated] = false;
-    }
-
     for (auto& chunk : d_chunks) {
         chunk.should_step = std::exchange(chunk.should_step_next, false);
+    }
+
+    // is_updated is only read for pixels in chunks stepping this tick, so only
+    // those need resetting. Sleeping chunks get reset on the tick they wake up.
+    // Walks row by row to keep memory access sequential.
+    for (i32 y = 0; y != d_height; ++y) {
+        for (i32 x = 0; x != d_width; x += config::chunk_size) {
+            if (!at(get_chunk_from_pixel({x, y})).should_step) continue;
+            for (i32 dx = 0; dx != config::chunk_size; ++dx) {
+                at(pixel_pos{x + dx, y}).flags[is_updated] = false;
+            }
+        }
     }
 
     for (i32 y = d_height - 1; y >= 0; --y) {
