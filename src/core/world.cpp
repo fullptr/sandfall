@@ -619,7 +619,9 @@ static void begin_contact(level& l, b2ShapeId curr, b2ShapeId other)
     
     if (!l.entities.valid(curr_entity)) return;
 
-    if (l.entities.has<grenade_component>(curr_entity) 
+    // A grenade can have several contacts in one step; only explode on the first
+    if (l.entities.has<grenade_component>(curr_entity)
+        && !l.entities.marked_entities().contains(curr_entity)
         && !b2Shape_IsSensor(other)
         && (!l.entities.valid(other_entity) || !l.entities.has<player_component>(other_entity)))
     {
