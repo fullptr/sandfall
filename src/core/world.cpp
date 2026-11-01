@@ -764,6 +764,12 @@ auto level_on_update(level& l, const context& ctx) -> void
                 b2DestroyBody(comp.body);
             }
         }
+
+        // The sensor end events for this body will have invalid shape ids, so
+        // they can't be mapped back to the entity; remove it from sensor sets here.
+        for (auto enemy : l.entities.view<enemy_component>()) {
+            l.entities.get<enemy_component>(enemy).nearby_entities.erase(e);
+        }
     }
     l.entities.destroy_marked();
     
