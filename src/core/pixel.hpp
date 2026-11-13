@@ -31,6 +31,7 @@ enum class pixel_power_type : std::uint8_t
     conductor
 };
 
+// Saves store these as numbers, so only ever add new types at the end
 enum class pixel_type : std::uint8_t
 {
     none,
@@ -57,8 +58,23 @@ enum class pixel_type : std::uint8_t
     relay
 };
 
-struct pixel_properties
+// Keep in sync with the last entry of pixel_type
+inline constexpr std::size_t num_pixel_types = static_cast<std::size_t>(pixel_type::relay) + 1;
+
+// Everything about a type of pixel: how it looks, the state new pixels start in, and
+// how it behaves in the simulation
+struct material
 {
+    // Appearance
+    const char* name                = "";
+    glm::u8vec4 colour              = {0, 0, 0, 0};
+    bool        colour_noise        = false; // Vary each pixel's colour slightly
+
+    // Starting State
+    bool        starts_falling      = false;
+    bool        starts_burning      = false;
+    bool        starts_powered      = false; // Starts with power_max power
+
     // Movement Controls
     pixel_phase phase               = pixel_phase::solid;
     bool        can_move_diagonally = false;
@@ -104,32 +120,17 @@ struct pixel
     // For conductors, this is the current power level
     // For power sources, it is a value between in [0, 5), with 5 being active
     std::uint8_t    power = 0;
-
-    static auto air()       -> pixel;
-    static auto sand()      -> pixel;
-    static auto coal()      -> pixel;
-    static auto dirt()      -> pixel;
-    static auto rock()      -> pixel;
-    static auto water()     -> pixel;
-    static auto lava()      -> pixel;
-    static auto acid()      -> pixel;
-    static auto steam()     -> pixel;
-    static auto titanium()  -> pixel;
-    static auto fuse()      -> pixel;
-    static auto ember()     -> pixel;
-    static auto oil()       -> pixel;
-    static auto gunpowder() -> pixel;
-    static auto methane()   -> pixel;
-    static auto battery()   -> pixel;
-    static auto solder()    -> pixel;
-    static auto diode_in()  -> pixel;
-    static auto diode_out() -> pixel;
-    static auto spark()     -> pixel;
-    static auto c4()        -> pixel;
-    static auto relay()     -> pixel;
 };
 
-auto properties(const pixel& px) -> const pixel_properties&;
+auto material_of(pixel_type type) -> const material&;
+
+inline auto material_of(const pixel& px) -> const material&
+{
+    return material_of(px.type);
+}
+
+// Creates a new pixel of the given type, as described by its material
+auto make_pixel(pixel_type type) -> pixel;
 
 // Colours are saved as float vec4s, from before pixels stored them as bytes. Convert
 // on the way in and out to keep existing saves loadable.

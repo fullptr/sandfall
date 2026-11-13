@@ -38,8 +38,8 @@ auto can_pixel_move_to(const pixel_world& w, pixel_pos src_pos, pixel_pos dst_po
     // If the destination is empty, we can always move there
     if (w[dst_pos].type == pixel_type::none) { return true; }
 
-    const auto src = properties(w[src_pos]).phase;
-    const auto dst = properties(w[dst_pos]).phase;
+    const auto src = material_of(w[src_pos]).phase;
+    const auto dst = material_of(w[dst_pos]).phase;
 
     using pm = pixel_phase;
     switch (src) {
@@ -63,7 +63,7 @@ auto set_adjacent_free_falling(pixel_world& w, pixel_pos pos) -> void
     for (const auto x : {l, r}) {
         if (w.is_valid_pixel(x)) {
             const auto& px = w[x];
-            const auto& props = properties(px);
+            const auto& props = material_of(px);
             if (props.gravity_factor != 0.0f) {
                 w.visit(x, [&](pixel& p) { p.flags[is_falling] = true; });
             }
@@ -123,7 +123,7 @@ auto sign(float f) -> int
 
 inline auto update_pixel_position(pixel_world& w, pixel_pos& pos) -> void
 {
-    const auto& props = properties(w[pos]);
+    const auto& props = material_of(w[pos]);
 
     // Apply gravity
     if (props.gravity_factor) {
@@ -254,7 +254,7 @@ auto update_liquid_position(pixel_world& w, pixel_pos& pos) -> bool
     static constexpr auto level_range  = 64;   // How far liquid can push or look for lower ground, in multiples of dispersion_rate
     static constexpr auto push_scale   = 0.2f; // How readily weight pushes a layer outwards, per unit of dispersion_rate (1 for water)
 
-    const auto& props = properties(w[pos]);
+    const auto& props = material_of(w[pos]);
     const auto down = glm::ivec2{0, sign(props.gravity_factor)};
     const auto speed = static_cast<float>(glm::max(props.dispersion_rate, 1));
     const auto fall_speed = w[pos].velocity.y * down.y;
@@ -282,7 +282,7 @@ auto update_liquid_position(pixel_world& w, pixel_pos& pos) -> bool
         const auto& below = w[pos + down];
         const auto below_falling = can_pixel_move_to(w, pos + down, pos + down + down)
                                 || (below.flags[is_falling] && below.velocity.y * down.y > 0.0f);
-        if (properties(below).phase == pixel_phase::liquid && below_falling) {
+        if (material_of(below).phase == pixel_phase::liquid && below_falling) {
             vel.y = glm::min(vel.y * down.y, below.velocity.y * down.y) * down.y;
             store_velocity();
             w.wake_chunk_with_pixel(pos);
@@ -392,14 +392,14 @@ auto should_get_powered(const pixel_world& w, pixel_pos pos, glm::ivec2 offset) 
         auto new_pos = pos + 2 * offset;
         if (!w.is_valid_pixel({new_pos.x, new_pos.y})) return false;
         const auto& new_src = w[new_pos];
-        const auto& props = properties(new_src);
+        const auto& props = material_of(new_src);
         return is_active_power_source(new_src)
             || ((props.power_max) / 2 < new_src.power && new_src.power < props.power_max);
     }
 
     // dst can get powered if src is either a power source or powered. Excludes the
     // maximum power level so electricity can only flow one block per tick.
-    const auto& props = properties(src);
+    const auto& props = material_of(src);
     return is_active_power_source(src)
         || ((props.power_max) / 2 < src.power && src.power < props.power_max);
 }
@@ -408,7 +408,7 @@ auto should_get_powered(const pixel_world& w, pixel_pos pos, glm::ivec2 offset) 
 inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
 {
     const auto& px = w[pos];
-    const auto& props = properties(px);
+    const auto& props = material_of(px);
 
     if (props.always_awake) {
         w.wake_chunk_with_pixel(pos);
@@ -425,7 +425,7 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
 
         // See if it gets destroyed
         if (random_unit() < props.burn_out_chance) {
-            w.set(pos, pixel::air());
+            w.set(pos, make_pixel(pixel_type::none));
             return;
         }
 
@@ -490,14 +490,14 @@ inline auto update_pixel_attributes(pixel_world& w, pixel_pos pos) -> void
 
     // Runs for every pixel, so skip the roll when it can never succeed
     if (props.spontaneous_destroy > 0.0f && random_unit() < props.spontaneous_destroy) {
-        w.set(pos, pixel::air());
+        w.set(pos, make_pixel(pixel_type::none));
     }
 }
 
 inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
 {
     auto& px = w[pos];
-    const auto& props = properties(px);
+    const auto& props = material_of(px);
 
     // Affect adjacent neighbours as well as diagonals
     for (const auto& offset : neighbour_offsets) {
@@ -509,16 +509,16 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
         // Boil water
         if (props.can_boil_water) {
             if (neighbour.type == pixel_type::water) {
-                w.set(neigh_pos, pixel::steam());
+                w.set(neigh_pos, make_pixel(pixel_type::steam));
             }
         }
 
         // Corrode neighbours
         if (props.is_corrosion_source) {
-            if (random_unit() > properties(neighbour).corrosion_resist) {
-                w.set(neigh_pos, pixel::air());
+            if (random_unit() > material_of(neighbour).corrosion_resist) {
+                w.set(neigh_pos, make_pixel(pixel_type::none));
                 if (random_unit() > 0.9f) {
-                    w.set(pos, pixel::air());
+                    w.set(pos, make_pixel(pixel_type::none));
                     return;
                 }
             }
@@ -526,7 +526,7 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
         
         // Spread fire
         if (props.is_burn_source || px.flags[is_burning]) {
-            const auto flammability = properties(neighbour).flammability;
+            const auto flammability = material_of(neighbour).flammability;
             if (flammability > 0.0f && random_unit() < flammability) {
                 w.visit(neigh_pos, [&](pixel& p) { p.flags[is_burning] = true; });
             }
@@ -536,7 +536,7 @@ inline auto update_pixel_neighbours(pixel_world& w, pixel_pos pos) -> void
         const bool can_produce_embers = props.is_ember_source || px.flags[is_burning];
         if (can_produce_embers && neighbour.type == pixel_type::none) {
             if (random_unit() < 0.01f) {
-                w.set(neigh_pos, pixel::ember());
+                w.set(neigh_pos, make_pixel(pixel_type::ember));
             }
         }
     }
@@ -550,7 +550,7 @@ auto update_pixel(pixel_world& w, pixel_pos pos) -> pixel_pos
 
     const auto start_pos = pos;
     auto in_motion = false;
-    if (properties(w[pos]).phase == pixel_phase::liquid) {
+    if (material_of(w[pos]).phase == pixel_phase::liquid) {
         in_motion = update_liquid_position(w, pos);
     } else {
         update_pixel_position(w, pos);
@@ -563,9 +563,9 @@ auto update_pixel(pixel_world& w, pixel_pos pos) -> pixel_pos
             p.flags[is_falling] = false;
             // Settled liquids keep no velocity, since any fall speed would turn into
             // sideways flow next tick. Liquids fall at least a pixel per tick anyway.
-            if (properties(p).phase == pixel_phase::liquid) {
+            if (material_of(p).phase == pixel_phase::liquid) {
                 p.velocity = glm::vec2{0.0f, 0.0f};
-            } else if (properties(p).gravity_factor) {
+            } else if (material_of(p).gravity_factor) {
                 p.velocity = glm::ivec2{0, 1};
             }
         });

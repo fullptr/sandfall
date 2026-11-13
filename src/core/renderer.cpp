@@ -113,7 +113,7 @@ auto renderer::update(const level& world) -> void
                 for (i32 x = 0; x != config::chunk_size; ++x) {
                     const auto world_coord = top_left + glm::ivec2{x, y};
                     const auto& pixel = world.pixels[world_coord];
-                    const auto& props = properties(pixel);
+                    const auto& props = material_of(pixel);
                     
                     auto& colour = buffer[x + config::chunk_size * y];
                     if (pixel.flags[is_burning]) {

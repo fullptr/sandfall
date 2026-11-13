@@ -26,36 +26,50 @@ auto with_noise(glm::u8vec4 colour) -> glm::u8vec4
 // No default case, so a pixel_type missing from this switch is a compile error
 #pragma warning(push)
 #pragma warning(error: 4062) // enumerator in switch of enum is not handled
-auto properties(const pixel& pix) -> const pixel_properties&
+auto material_of(pixel_type type) -> const material&
 {
-    switch (pix.type) {
+    switch (type) {
         case pixel_type::none: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "air",
+                .colour = {0, 0, 0, 0},
                 .phase = pixel_phase::gas,
                 .corrosion_resist = 1.0f
             };
-            return px;
+            return m;
         }
         case pixel_type::sand: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "sand",
+                .colour = from_hex(0xF8EFBA),
+                .colour_noise = true,
+                .starts_falling = true,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
                 .corrosion_resist = 0.3f
             };
-            return px;
+            return m;
         }
         case pixel_type::dirt: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "dirt",
+                .colour = from_hex(0x5C1D06),
+                .colour_noise = true,
+                .starts_falling = true,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.4f,
                 .corrosion_resist = 0.5f
             };
-            return px;
+            return m;
         }
         case pixel_type::coal: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "coal",
+                .colour = from_hex(0x1E272E),
+                .colour_noise = true,
+                .starts_falling = true,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.95f,
@@ -65,20 +79,26 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out = 0.02f,
                 .burn_out_chance = 0.005f
             };
-            return px;
+            return m;
         }
         case pixel_type::water: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "water",
+                .colour = from_hex(0x1B9CFC),
+                .colour_noise = true,
                 .phase = pixel_phase::liquid,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .dispersion_rate = 5,
                 .corrosion_resist = 1.0f,
             };
-            return px;
+            return m;
         }
         case pixel_type::lava: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "lava",
+                .colour = from_hex(0xF97F51),
+                .colour_noise = true,
                 .phase = pixel_phase::liquid,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
@@ -88,10 +108,13 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .is_burn_source = true,
                 .is_ember_source = true
             };
-            return px;
+            return m;
         }
         case pixel_type::acid: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "acid",
+                .colour = from_hex(0x2ED573),
+                .colour_noise = true,
                 .phase = pixel_phase::liquid,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
@@ -99,44 +122,58 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .corrosion_resist = 1.0f,
                 .is_corrosion_source = true
             };
-            return px;
+            return m;
         }
         case pixel_type::rock: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "rock",
+                .colour = from_hex(0xC8C8C8),
+                .colour_noise = true,
                 .corrosion_resist = 0.95f,
             };
-            return px;
+            return m;
         }
         case pixel_type::titanium: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "titanium",
+                .colour = from_hex(0xDFE4EA),
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
                 .power_max = 25
             };
-            return px;
+            return m;
         }
         case pixel_type::steam: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "steam",
+                .colour = from_hex(0x9AECDB),
+                .colour_noise = true,
                 .phase = pixel_phase::gas,
                 .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
                 .dispersion_rate = 9,
                 .corrosion_resist = 0.0f
             };
-            return px;
+            return m;
         }
         case pixel_type::fuse: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "fuse",
+                .colour = from_hex(0x45AAF2),
+                .colour_noise = true,
                 .corrosion_resist = 0.1f,
                 .flammability = 0.25f,
                 .put_out_surrounded = 0.0f,
                 .put_out = 0.0f,
                 .burn_out_chance = 0.1f
             };
-            return px;
+            return m;
         }
         case pixel_type::ember: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "ember",
+                .colour = from_hex(0xFFFFFF),
+                .starts_burning = true,
                 .phase = pixel_phase::gas,
                 .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
@@ -147,10 +184,13 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out = 0.0f,
                 .burn_out_chance = 0.2f
             };
-            return px;
+            return m;
         }
         case pixel_type::oil: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "oil",
+                .colour = from_hex(0x650C30),
+                .colour_noise = true,
                 .phase = pixel_phase::liquid,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
@@ -161,10 +201,14 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out = 0.02f,
                 .burn_out_chance = 0.005f
             };
-            return px;
+            return m;
         }
         case pixel_type::gunpowder: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "gunpowder",
+                .colour = from_hex(0x485460),
+                .colour_noise = true,
+                .starts_falling = true,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.1f,
@@ -175,10 +219,13 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .burn_out_chance = 0.1f,
                 .explosion_chance = 0.001f
             };
-            return px;
+            return m;
         }
         case pixel_type::methane: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "methane",
+                .colour = from_hex(0xCED6E0),
+                .colour_noise = true,
                 .phase = pixel_phase::gas,
                 .can_move_diagonally = true,
                 .gravity_factor = -1.0f,
@@ -189,19 +236,24 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .put_out = 0.0f,
                 .burn_out_chance = 0.1f
             };
-            return px;
+            return m;
         }
         case pixel_type::battery: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "battery",
+                .colour = from_hex(0xF0932B),
                 .always_awake = true,
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::source,
                 .power_max = 5
             };
-            return px;
+            return m;
         }
         case pixel_type::solder: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "solder",
+                .colour = from_hex(0xB2BEC3),
+                .starts_falling = true,
                 .can_move_diagonally = true,
                 .gravity_factor = 1.0f,
                 .inertial_resistance = 0.05f,
@@ -209,246 +261,89 @@ auto properties(const pixel& pix) -> const pixel_properties&
                 .power_type = pixel_power_type::conductor,
                 .power_max = 24
             };
-            return px;
+            return m;
         }
-        case pixel_type::diode_in:
-        case pixel_type::diode_out: {
-            static constexpr auto px = pixel_properties{
+        case pixel_type::diode_in: {
+            static constexpr auto m = material{
+                .name = "diode_in",
+                .colour = from_hex(0x22A6B3),
                 .corrosion_resist = 1.0f,
                 .power_type = pixel_power_type::conductor,
                 .power_max = 25
             };
-            return px;
+            return m;
+        }
+        case pixel_type::diode_out: {
+            static constexpr auto m = material{
+                .name = "diode_out",
+                .colour = from_hex(0xBE2EDD),
+                .corrosion_resist = 1.0f,
+                .power_type = pixel_power_type::conductor,
+                .power_max = 25
+            };
+            return m;
         }
         case pixel_type::spark: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "spark",
+                .colour = from_hex(0xE1B12C),
+                .starts_powered = true,
                 .always_awake = true,
                 .spontaneous_destroy = 0.3f,
                 .corrosion_resist = 0.1f,
                 .power_type = pixel_power_type::source,
                 .power_max = 100
             };
-            return px;
+            return m;
         }
         case pixel_type::c4: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "c4",
+                .colour = from_hex(0xB8E994),
                 .corrosion_resist = 0.95f,
                 .explodes_on_power = true,
                 .power_type = pixel_power_type::conductor,
                 .power_max = 10
             };
-            return px;
+            return m;
         }
         case pixel_type::relay: {
-            static constexpr auto px = pixel_properties{
+            static constexpr auto m = material{
+                .name = "relay",
+                .colour = from_hex(0x192A56),
                 .corrosion_resist = 1.0f
             };
-            return px;
+            return m;
         }
     }
 
     // Only reachable if the value is outside of pixel_type, e.g. from a corrupt save
     assert(false && "unknown pixel type");
-    std::print("ERROR: Unknown pixel type {}\n", static_cast<int>(pix.type));
-    static constexpr auto px = pixel_properties{};
-    return px;
+    std::print("ERROR: Unknown pixel type {}\n", static_cast<int>(type));
+    static constexpr auto m = material{};
+    return m;
 }
 #pragma warning(pop)
 
-auto pixel::air() -> pixel
+auto make_pixel(pixel_type type) -> pixel
 {
-    return pixel{
-        .type = pixel_type::none,
-        .colour = {0, 0, 0, 0}
-    };
-}
-
-auto pixel::sand() -> pixel
-{
+    const auto& m = material_of(type);
     auto p = pixel{
-        .type = pixel_type::sand,
-        .colour = with_noise(from_hex(0xF8EFBA))
+        .type = type,
+        .colour = m.colour_noise ? with_noise(m.colour) : m.colour
     };
-    p.flags[is_falling] = true;
+    p.flags[is_falling] = m.starts_falling;
+    p.flags[is_burning] = m.starts_burning;
+    if (m.starts_powered) {
+        p.power = m.power_max;
+    }
     return p;
-}
-
-auto pixel::coal() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::coal,
-        .colour = with_noise(from_hex(0x1E272E))
-    };
-    p.flags[is_falling] = true;
-    return p;
-}
-
-auto pixel::dirt() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::dirt,
-        .colour = with_noise(from_hex(0x5C1D06))
-    };
-    p.flags[is_falling] = true;
-    return p;
-}
-
-auto pixel::rock() -> pixel
-{
-    return {
-        .type = pixel_type::rock,
-        .colour = with_noise(from_hex(0xC8C8C8))
-    };
-}
-
-auto pixel::water() -> pixel
-{
-    return {
-        .type = pixel_type::water,
-        .colour = with_noise(from_hex(0x1B9CFC))
-    };
-}
-
-auto pixel::lava() -> pixel
-{
-    return {
-        .type = pixel_type::lava,
-        .colour = with_noise(from_hex(0xF97F51))
-    };
-}
-
-auto pixel::acid() -> pixel
-{
-    return {
-        .type = pixel_type::acid,
-        .colour = with_noise(from_hex(0x2ED573))
-    };
-}
-
-auto pixel::steam() -> pixel
-{
-    return {
-        .type = pixel_type::steam,
-        .colour = with_noise(from_hex(0x9AECDB))
-    };
-}
-
-auto pixel::titanium() -> pixel
-{
-    return {
-        .type = pixel_type::titanium,
-        .colour = from_hex(0xDFE4EA)
-    };
-}
-
-auto pixel::fuse() -> pixel
-{
-    return {
-        .type = pixel_type::fuse,
-        .colour = with_noise(from_hex(0x45AAF2))
-    };
-}
-
-auto pixel::ember() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::ember,
-        .colour = from_hex(0xFFFFFF)
-    };
-    p.flags[is_burning] = true;
-    return p;
-}
-
-auto pixel::oil() -> pixel
-{
-    return {
-        .type = pixel_type::oil,
-        .colour = with_noise(from_hex(0x650C30))
-    };
-}
-
-auto pixel::gunpowder() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::gunpowder,
-        .colour = with_noise(from_hex(0x485460))
-    };
-    p.flags[is_falling] = true;
-    return p;
-}
-
-auto pixel::methane() -> pixel
-{
-    return {
-        .type = pixel_type::methane,
-        .colour = with_noise(from_hex(0xCED6E0))
-    };
-}
-
-auto pixel::battery() -> pixel
-{
-    return {
-        .type = pixel_type::battery,
-        .colour = from_hex(0xF0932B)
-    };
-}
-
-auto pixel::solder() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::solder,
-        .colour = from_hex(0xB2BEC3)
-    };
-    p.flags[is_falling] = true;
-    return p;
-}
-
-auto pixel::diode_in() -> pixel
-{
-    return {
-        .type = pixel_type::diode_in,
-        .colour = from_hex(0x22A6B3)
-    };
-}
-
-auto pixel::diode_out() -> pixel
-{
-    return {
-        .type = pixel_type::diode_out,
-        .colour = from_hex(0xBE2EDD)
-    };
-}
-
-auto pixel::spark() -> pixel
-{
-    auto p = pixel{
-        .type = pixel_type::spark,
-        .colour = from_hex(0xE1B12C)
-    };
-    p.power = properties(p).power_max;
-    return p;
-}
-
-auto pixel::c4() -> pixel
-{
-    return {
-        .type = pixel_type::c4,
-        .colour = from_hex(0xB8E994)
-    };
-}
-
-auto pixel::relay() -> pixel
-{
-    return {
-        .type = pixel_type::relay,
-        .colour = from_hex(0x192A56)
-    };
 }
 
 auto is_active_power_source(const pixel& px) -> bool
 {
-    const auto& props = properties(px);
-    return props.power_type == pixel_power_type::source && px.power == props.power_max;
+    const auto& m = material_of(px);
+    return m.power_type == pixel_power_type::source && px.power == m.power_max;
 }
 
 }

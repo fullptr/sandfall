@@ -48,7 +48,7 @@ auto clear_world(sand::pixel_world& w) -> void
     for (sand::i32 x = 0; x != w.width_in_pixels(); ++x) {
         for (sand::i32 y = 0; y != w.height_in_pixels(); ++y) {
             w.visit_no_wake({x, y}, [](sand::pixel& p) {
-                p = sand::pixel::air();
+                p = sand::make_pixel(sand::pixel_type::none);
             });
         }
     }
@@ -214,9 +214,10 @@ auto main() -> int
             if (ImGui::RadioButton("Square", editor.brush_type == 1)) editor.brush_type = 1;
             if (ImGui::RadioButton("Explosion", editor.brush_type == 2)) editor.brush_type = 2;
 
-            for (std::size_t i = 0; i != editor.pixel_makers.size(); ++i) {
-                if (ImGui::Selectable(editor.pixel_makers[i].first.c_str(), editor.current == i)) {
-                    editor.current = i;
+            for (std::size_t i = 0; i != num_pixel_types; ++i) {
+                const auto type = static_cast<pixel_type>(i);
+                if (ImGui::Selectable(material_of(type).name, editor.current == type)) {
+                    editor.current = type;
                 }
             }
             ImGui::Separator();

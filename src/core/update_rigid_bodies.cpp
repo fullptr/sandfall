@@ -20,7 +20,7 @@ auto is_static_pixel(
     
     if (!w.is_valid_pixel(pos)) return false;
     const auto& pixel = w[pos];
-    const auto& props = sand::properties(pixel);
+    const auto& props = sand::material_of(pixel);
     return pixel.type != sand::pixel_type::none
         && props.phase == sand::pixel_phase::solid
         && !pixel.flags.test(sand::pixel_flags::is_falling);

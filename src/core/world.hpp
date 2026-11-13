@@ -53,7 +53,7 @@ public:
         d_chunks.resize(width_chunks * height_chunks);
     }
     pixel_world(i32 width, i32 height)
-        : pixel_world(width, height, std::vector<sand::pixel>(width * height, sand::pixel::air()))
+        : pixel_world(width, height, std::vector<sand::pixel>(width * height, sand::make_pixel(sand::pixel_type::none)))
     {}
     
     auto step() -> void;
