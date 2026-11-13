@@ -256,9 +256,11 @@ auto update_liquid_position(pixel_world& w, pixel_pos& pos) -> bool
     // downhill if possible, otherwise along the surface, turning around at walls
     const auto dir = vel.x > 0.0f ? 1 : vel.x < 0.0f ? -1 : (coin_flip() ? 1 : -1);
 
-    // Landing turns part of the fall into sideways speed, like a splash. Since splash
-    // is below 1 this can only lose speed, and a gentle landing gains almost nothing.
-    const auto flow = glm::max(glm::abs(vel.x), fall_speed * splash);
+    // Landing turns part of the fall into sideways speed, like a splash. Each pixel gets
+    // a random share (weighted towards the top by the sqrt), so a splash throws water
+    // out at a continuous spread of speeds rather than all at once. Since splash is
+    // below 1 this can only lose speed, and a gentle landing gains almost nothing.
+    const auto flow = glm::max(glm::abs(vel.x), fall_speed * splash * glm::sqrt(random_unit()));
 
     // The sideways speed after moving in direction dx. Only flowing downhill builds
     // speed (up to the liquid's normal speed); on the flat, or above normal speed after
